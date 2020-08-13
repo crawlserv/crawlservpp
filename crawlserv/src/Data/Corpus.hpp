@@ -239,11 +239,13 @@ namespace crawlservpp::Data {
 				const std::vector<std::string>& sentenceModels,
 				const std::vector<std::uint16_t>& wordManipulators,
 				const std::vector<std::string>& wordModels,
+				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
 		bool tokenizeCustom(
 				std::optional<SentenceFunc> callbackSentence,
 				std::optional<WordFunc> callbackWord,
+				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
 
@@ -1932,7 +1934,7 @@ namespace crawlservpp::Data {
 	 *   consistency checks have been enabled
 	 *   and
 	 *   - the article, the date map and/or
-	 *      the sentence map  contradict each
+	 *      the sentence map contradict each
 	 *      other
 	 *   - one of the chunks created is larger
 	 *      than the maximum chunk size given
@@ -2053,7 +2055,7 @@ namespace crawlservpp::Data {
 
 				for(
 						auto tokenIt = this->tokens.begin() + sentence.first;
-						tokenIt != this->tokens.begin() + sentence.first + sentence.second;
+						tokenIt != this->tokens.end();
 						++tokenIt
 				) {
 					bytes += tokenIt->size() + 1;
@@ -2088,24 +2090,39 @@ namespace crawlservpp::Data {
 
 			// check for beginning of next article
 			if(nextArticleIndex < this->articleMap.size()) {
-				const auto& nextArticle = this->articleMap.at(nextArticleIndex);
+				while(this->articleMap.at(nextArticleIndex).pos == sentence.first) {
+					const auto& nextArticle = this->articleMap.at(nextArticleIndex);
 
-				if(nextArticle.pos == sentence.first) {
-					currentArticleMap.emplace_back(
-							nextArticle.pos - chunkOffset,
-							nextArticle.length,
-							nextArticle.value
-					);
+					if(nextArticle.length > 0) {
+						currentArticleMap.emplace_back(
+								nextArticle.pos - chunkOffset,
+								nextArticle.length,
+								nextArticle.value
+						);
+					}
 
 					++nextArticleIndex;
+
+					if(nextArticleIndex == this->articleMap.size()) {
+						break;
+					}
 				}
-				else if(nextArticle.pos < sentence.first) {
+
+				if(
+						this->checkConsistency
+						&& nextArticleIndex < this->articleMap.size()
+						&& this->articleMap.at(nextArticleIndex).pos < sentence.first
+				) {
+					const auto& nextArticle = this->articleMap.at(nextArticleIndex);
+
 					std::ostringstream exceptionStrStr;
 
 					exceptionStrStr.imbue(std::locale(""));
 
 					exceptionStrStr <<	"Corpus::copyChunksTokenized():"
-										" Unexpected begin of article"
+										" Unexpected begin of article '";
+					exceptionStrStr <<	nextArticle.value;
+					exceptionStrStr <<	"'"
 										" (@";
 					exceptionStrStr <<	nextArticle.pos;
 					exceptionStrStr <<	")"
@@ -2121,24 +2138,39 @@ namespace crawlservpp::Data {
 
 			// check for beginning of next date
 			if(nextDateIndex < this->dateMap.size()) {
-				const auto& nextDate = this->dateMap.at(nextDateIndex);
+				while(this->dateMap.at(nextDateIndex).pos == sentence.first) {
+					const auto& nextDate = this->dateMap.at(nextDateIndex);
 
-				if(nextDate.pos == sentence.first) {
-					currentDateMap.emplace_back(
-							nextDate.pos - chunkOffset,
-							nextDate.length,
-							nextDate.value
-					);
+					if(nextDate.length > 0) {
+						currentDateMap.emplace_back(
+								nextDate.pos - chunkOffset,
+								nextDate.length,
+								nextDate.value
+						);
+					}
 
 					++nextDateIndex;
+
+					if(nextDateIndex == this->dateMap.size()) {
+						break;
+					}
 				}
-				else if(nextDate.pos < sentence.first) {
+
+				if(
+						this->checkConsistency
+						&& nextDateIndex < this->dateMap.size()
+						&& this->dateMap.at(nextDateIndex).pos < sentence.first
+				) {
+					const auto& nextDate = this->dateMap.at(nextDateIndex);
+
 					std::ostringstream exceptionStrStr;
 
 					exceptionStrStr.imbue(std::locale(""));
 
 					exceptionStrStr <<	"Corpus::copyChunksTokenized():"
-										" Unexpected begin of date"
+										" Unexpected begin of date '";
+					exceptionStrStr <<	nextDate.value;
+					exceptionStrStr <<	"'"
 										" (@";
 					exceptionStrStr <<	nextDate.pos;
 					exceptionStrStr <<	")"
@@ -2378,9 +2410,6 @@ namespace crawlservpp::Data {
 	 *   map contradict each other, or they
 	 *   contain other inconsistencies – or if
 	 *   the corpus has been tokenized.
-	 *
-	 * \todo Filtering a tokenized text
-	 *   corpus is not implemented yet.
 	 */
 	inline bool Corpus::filterByDate(const std::string& from, const std::string& to) {
 		// check arguments
@@ -2473,16 +2502,13 @@ namespace crawlservpp::Data {
 
 			this->tokenBytes -= deleteBytes;
 		}
-		else if(offset > 0) {
-			// replace the current corpus with the trimmed one, and release memory
-			this->corpus = this->corpus.substr(offset, len);
-
-			this->corpus.shrink_to_fit();
-		}
 		else {
-			// resize corpus to remove trailing texts
-			this->corpus.resize(len);
+			// replace the current corpus with the trimmed one, and release memory
+			if(offset > 0) {
+				this->corpus.erase(0, offset);
+			}
 
+			this->corpus.resize(len);
 			this->corpus.shrink_to_fit();
 		}
 
@@ -2692,6 +2718,11 @@ namespace crawlservpp::Data {
 	 * \param wordModels Vector of strings
 	 *   containing the models used by the
 	 *   word manipulators.
+	 * \param freeMemoryEvery Number of
+	 *   processed bytes in a continuous
+	 *   corpus after which memory will be
+	 *   freed. If zero, memory will only be
+	 *   freed after processing is complete.
 	 * \param statusSetter Reference to a
 	 *   structure containing callbacks
 	 *   for updating the status and
@@ -2711,6 +2742,7 @@ namespace crawlservpp::Data {
 			const std::vector<std::string>& sentenceModels,
 			const std::vector<std::uint16_t>& wordManipulators,
 			const std::vector<std::string>& /*wordModels*/,
+			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
 		bool sentenceManipulation{false};
@@ -2816,6 +2848,7 @@ namespace crawlservpp::Data {
 		return this->tokenizeCustom(
 				sentenceManipulation ? std::optional<SentenceFunc>{sentenceLambda} : std::nullopt,
 				wordManipulation ? std::optional<WordFunc>{wordLambda} : std::nullopt,
+				freeMemoryEvery,
 				statusSetter
 		);
 	}
@@ -2858,6 +2891,11 @@ namespace crawlservpp::Data {
 	 *   corpus. A word will not be added to
 	 *   the tokens of the corpus, if the
 	 *   callback function empties it.
+	 * \param freeMemoryEvery Number of
+	 *   processed bytes in a continuous
+	 *   corpus after which memory will be
+	 *   freed. If zero, memory will only be
+	 *   freed after processing is complete.
 	 * \param statusSetter Reference to a
 	 *   structure containing callbacks for
 	 *   updating the status and checking
@@ -2867,10 +2905,16 @@ namespace crawlservpp::Data {
 	 * \returns True, if the corpus has been
 	 *   successfully tokenized. False, if
 	 *   tokenization has been cancelled.
+	 *
+	 * \throws Corpus::Exception if consistency
+	 *   checks are enabled, and article and/or
+	 *   date map are inconsistent with the
+	 *   content of the corpus.
 	 */
 	inline bool Corpus::tokenizeCustom(
 			std::optional<SentenceFunc> callbackSentence,
 			std::optional<WordFunc> callbackWord,
+			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
 		if(this->tokenized) {
@@ -3001,9 +3045,11 @@ namespace crawlservpp::Data {
 			std::size_t sentenceFirstWord{0};
 			std::size_t currentWord{0};
 			std::size_t statusCounter{0};
+			std::size_t corpusTrimmed{0};
 
 			bool inArticle{false};
 			bool inDate{false};
+
 			std::size_t articleFirstWord{0};
 			std::size_t dateFirstWord{0};
 			std::size_t articleEnd{0};
@@ -3017,8 +3063,8 @@ namespace crawlservpp::Data {
 			newArticleMap.reserve(this->articleMap.size());
 			newDateMap.reserve(this->dateMap.size());
 
-			// go through all charaters in the continous text corpus
-			for(std::size_t pos{0}; pos < this->corpus.size(); ++pos) {
+			// go through all characters in the continous text corpus
+			for(std::size_t pos{0}; pos < this->corpus.size() + corpusTrimmed; ++pos) {
 				bool sentenceEnd{false};
 				bool noSeparator{false};
 
@@ -3046,7 +3092,7 @@ namespace crawlservpp::Data {
 
 						newArticleMap.emplace_back(
 								articleFirstWord,
-								currentWord,
+								currentWord - articleFirstWord,
 								this->articleMap[nextArticle - 1].value
 						);
 
@@ -3078,7 +3124,7 @@ namespace crawlservpp::Data {
 
 						newDateMap.emplace_back(
 								dateFirstWord,
-								currentWord,
+								currentWord - dateFirstWord,
 								this->dateMap[nextDate - 1].value
 						);
 
@@ -3087,7 +3133,7 @@ namespace crawlservpp::Data {
 				}
 
 				// check for end of sentence
-				switch(this->corpus[pos]) {
+				switch(this->corpus[pos - corpusTrimmed]) {
 				case '.':
 				case ':':
 				case ';':
@@ -3119,9 +3165,17 @@ namespace crawlservpp::Data {
 				}
 
 				if(wordLength > 0) {
-					sentence.emplace_back(this->corpus, wordBegin, wordLength);
+					sentence.emplace_back(this->corpus, wordBegin - corpusTrimmed, wordLength);
 
 					++currentWord;
+				}
+
+				if(freeMemoryEvery > 0 && pos - corpusTrimmed > freeMemoryEvery) {
+					// free memory, i.e. remove the already processed beginning of the corpus
+					this->corpus.erase(0, pos - corpusTrimmed);
+					this->corpus.shrink_to_fit();
+
+					corpusTrimmed = pos;
 				}
 
 				wordBegin = pos + 1;
@@ -3175,7 +3229,7 @@ namespace crawlservpp::Data {
 					if(statusCounter == tokenizeUpdateEvery) {
 						if(!statusSetter.update(
 								static_cast<float>(pos + 1)
-								/ this->corpus.size(),
+								/ (this->corpus.size() + corpusTrimmed),
 								true
 						)) {
 							return false;
@@ -3186,9 +3240,41 @@ namespace crawlservpp::Data {
 				}
 			}
 
+			// check for end of last article
+			if(
+					inArticle
+					&& this->corpus.size() + corpusTrimmed == articleEnd
+			) {
+				inArticle = false;
+
+				newArticleMap.emplace_back(
+						articleFirstWord,
+						currentWord - articleFirstWord,
+						this->articleMap[nextArticle - 1].value
+				);
+			}
+
+			// check for end of last date
+			if(
+					inDate
+					&& this->corpus.size() + corpusTrimmed == dateEnd
+			) {
+				inDate = false;
+
+				newDateMap.emplace_back(
+						dateFirstWord,
+						currentWord - dateFirstWord,
+						this->dateMap[nextDate - 1].value
+				);
+			}
+
 			// add last word if not added yet
-			if(wordBegin < this->corpus.size()) {
-				sentence.emplace_back(this->corpus, wordBegin, this->corpus.size() - wordBegin);
+			if(wordBegin - corpusTrimmed < this->corpus.size()) {
+				sentence.emplace_back(
+						this->corpus,
+						wordBegin - corpusTrimmed,
+						this->corpus.size() + corpusTrimmed - wordBegin
+				);
 			}
 
 			// add last sentence if not added yet
@@ -3229,6 +3315,45 @@ namespace crawlservpp::Data {
 			}
 
 			std::string{}.swap(this->corpus);
+
+			// check consistency
+			if(this->checkConsistency) {
+				if(inArticle) {
+					throw Exception(
+							"Corpus::tokenizeCustom():"
+							" Last article '"
+							+ this->articleMap[nextArticle - 1].value
+							+ "' has not been finished"
+					);
+				}
+
+				if(inDate) {
+					throw Exception(
+							"Corpus::tokenizeCustom():"
+							" Last date '"
+							+ this->dateMap[nextDate - 1].value
+							+ "' has not been finished"
+					);
+				}
+
+				if(nextArticle < this->articleMap.size()) {
+					throw Exception(
+							"Corpus::tokenizeCustom():"
+							" Unexpected article '"
+							+ this->articleMap[nextArticle].value
+							+ "' after end of corpus"
+					);
+				}
+
+				if(nextDate < this->dateMap.size()) {
+					throw Exception(
+							"Corpus::tokenizeCustom():"
+							" Unexpected date '"
+							+ this->dateMap[nextDate].value
+							+ "' after end of corpus"
+					);
+				}
+			}
 
 			newArticleMap.swap(this->articleMap);
 			newDateMap.swap(this->dateMap);
