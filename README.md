@@ -90,6 +90,7 @@ Even without access to the frontend you can shut down the server from the termin
 
 * `#define MG_ENABLE_HTTP_STREAMING_MULTIPART`
 * `#define PCRE2_CODE_UNIT_WIDTH 8`
+* `#define RAPIDJSON_NO_SIZETYPEDEFINE`
 * `#define RAPIDJSON_HAS_STDSTRING`
 * `#define ZLIB_CONST`
 * `#define JSONCONS_NO_DEPRECATED` (optional, but recommended)
@@ -97,7 +98,7 @@ Even without access to the frontend you can shut down the server from the termin
 
 If you use `gcc`, add the following arguments to set all of these definitions:
 
-`-DMG_ENABLE_HTTP_STREAMING_MULTIPART -DPCRE2_CODE_UNIT_WIDTH=8 -DRAPIDJSON_HAS_STDSTRING -DZLIB_CONST -DJSONCONS_NO_DEPRECATED -DNDEBUG`
+`-DMG_ENABLE_HTTP_STREAMING_MULTIPART -DPCRE2_CODE_UNIT_WIDTH=8 -DRAPIDJSON_NO_SIZETYPEDEFINE -DRAPIDJSON_HAS_STDSTRING -DZLIB_CONST -DJSONCONS_NO_DEPRECATED -DNDEBUG`
 
 ## Command-and-Control Server
 

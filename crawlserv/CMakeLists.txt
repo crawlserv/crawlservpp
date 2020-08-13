@@ -298,6 +298,7 @@ target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 # set required library options
 target_compile_definitions(${PROJECT_NAME} PRIVATE MG_ENABLE_HTTP_STREAMING_MULTIPART)
 target_compile_definitions(${PROJECT_NAME} PRIVATE PCRE2_CODE_UNIT_WIDTH=8)
+target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_NO_SIZETYPEDEFINE)
 target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_HAS_STDSTRING)
 target_compile_definitions(${PROJECT_NAME} PRIVATE ZLIB_CONST)
 
