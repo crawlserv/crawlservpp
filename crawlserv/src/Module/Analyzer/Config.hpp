@@ -88,7 +88,7 @@ namespace crawlservpp::Module::Analyzer {
 	inline constexpr auto defaultPercentageCorpusSlices{30};
 
 	//! Default number of processed bytes in a continuous corpus after which memory will be freed.
-	inline constexpr auto defaultFreeMemoryEvery{1000000000};
+	inline constexpr auto defaultFreeMemoryEvery{100000000};
 
 	///@}
 
@@ -174,10 +174,10 @@ namespace crawlservpp::Module::Analyzer {
 
 			//! Steps after which the corpus will be stored in the database.
 			/*!
-			 * Zero means that the unmanipulated corpus will
-			 *  be stored. After that, the numbering starts
-			 *  with the sentence manipulators, and continues
-			 *  with the word manipulators.
+			 * If zero, the unmanipulated corpus will be
+			 *  stored. After that, the numbering starts
+			 *  with the sentence manipulators, and
+			 *  continues with the word manipulators.
 			 */
 			std::vector<std::uint16_t> tokenizerSavePoints{0};
 
@@ -210,7 +210,7 @@ namespace crawlservpp::Module::Analyzer {
 
 			//! Number of processed bytes in a continuous corpus after which memory will be freed.
 			/*!
-			 * Zero means memory will only be freed after
+			 * If zero, memory will only be freed after
 			 *  processing is complete.
 			 */
 			std::uint64_t tokenizerFreeMemoryEvery{defaultFreeMemoryEvery};

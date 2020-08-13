@@ -62,8 +62,8 @@
 	"free.memory.every": {
 		"type": "number",
 		"min": 0,
-		"default": 1000000000,
-		"description": "Number of bytes in a continuous corpus after which memory will be freed. Zero means memory will only be freed after processing is complete.",
+		"default": 100000000,
+		"description": "Number of processed bytes in a continuous corpus after which memory will be freed. If zero, memory will only be freed after processing is complete.",
 		"simple": false
 	}
 }
