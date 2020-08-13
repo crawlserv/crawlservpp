@@ -81,7 +81,10 @@ namespace crawlservpp::Module::Analyzer {
 	 *   data types of the fields in the
 	 *   target table
 	 */
-	void Database::setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types) {
+	void Database::setTargetFields(
+			const std::vector<std::string>& fields,
+			const std::vector<std::string>& types
+	) {
 		this->targetFieldNames = fields;
 		this->targetFieldTypes = types;
 
@@ -174,7 +177,8 @@ namespace crawlservpp::Module::Analyzer {
 		) {
 			throw Exception(
 					"Analyzer::Database::initTargetTable():"
-					" No target fields have been specified (only empty strings)"
+					" No target fields have been specified"
+					" (only empty strings)"
 			);
 		}
 
@@ -241,11 +245,15 @@ namespace crawlservpp::Module::Analyzer {
 		this->tablePrefix = "crawlserv_";
 
 		if(!(this->getOptions().websiteNamespace.empty())) {
-			this->tablePrefix += this->getOptions().websiteNamespace + "_";
+			this->tablePrefix += this->getOptions().websiteNamespace;
+
+			this->tablePrefix.push_back('_');
 		}
 
 		if(!(this->getOptions().urlListNamespace.empty())) {
-			this->tablePrefix += this->getOptions().urlListNamespace + "_";
+			this->tablePrefix += this->getOptions().urlListNamespace;
+
+			this->tablePrefix.push_back('_');
 		}
 
 		// check connection to database
@@ -256,13 +264,12 @@ namespace crawlservpp::Module::Analyzer {
 
 		try {
 			// prepare SQL statements for analyzer
-			if(this->ps.getCorpusFirst == 0) {
-				this->log(verbose, "prepares getCorpus() [1/2]...");
+			if(this->ps.getCorpusInfo == 0) {
+				this->log(verbose, "prepares getCorpus() [1/5]...");
 
-				this->ps.getCorpusFirst = this->addPreparedStatement(
-						"SELECT id, corpus, articlemap, datemap, sources, chunks"
+				this->ps.getCorpusInfo = this->addPreparedStatement(
+						"SELECT created"
 						" FROM `crawlserv_corpora`"
-						" USE INDEX(urllist)"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
@@ -274,11 +281,70 @@ namespace crawlservpp::Module::Analyzer {
 				);
 			}
 
+			if(this->ps.checkCorpusSavePoint == 0) {
+				this->log(verbose, "prepares getCorpus() [2/5...");
+
+				this->ps.checkCorpusSavePoint = this->addPreparedStatement(
+						"SELECT EXISTS("
+							" SELECT 1"
+							" FROM `crawlserv_corpora`"
+							" WHERE website = "	+ this->getWebsiteIdString() +
+							" AND urllist = " + this->getUrlListIdString() +
+							" AND source_type = ?"
+							" AND source_table LIKE ?"
+							" AND source_field LIKE ?"
+							" AND created LIKE ?"
+							" AND savepoint LIKE ?"
+							" AND previous IS NULL"
+						") AS result"
+				);
+			}
+
+			if(this->ps.getCorpusFirst == 0) {
+				this->log(verbose, "prepares getCorpus() [3/5]...");
+
+				this->ps.getCorpusFirst = this->addPreparedStatement(
+						"SELECT id, corpus, articlemap, datemap, sources, chunks"
+						" FROM `crawlserv_corpora`"
+						" USE INDEX(urllist)"
+						" WHERE website = "	+ this->getWebsiteIdString() +
+						" AND urllist = " + this->getUrlListIdString() +
+						" AND source_type = ?"
+						" AND source_table LIKE ?"
+						" AND source_field LIKE ?"
+						" AND created LIKE ?"
+						" AND savepoint IS NULL"
+						" AND previous IS NULL"
+						" ORDER BY created DESC"
+						" LIMIT 1"
+				);
+			}
+
+			if(this->ps.getCorpusSavePoint == 0) {
+				this->log(verbose, "prepares getCorpus() [4/5]...");
+
+				this->ps.getCorpusSavePoint = this->addPreparedStatement(
+						"SELECT id, corpus, articlemap, datemap, sentencemap, sources, chunks, words"
+						" FROM `crawlserv_corpora`"
+						" USE INDEX(urllist)"
+						" WHERE website = "	+ this->getWebsiteIdString() +
+						" AND urllist = " + this->getUrlListIdString() +
+						" AND source_type = ?"
+						" AND source_table LIKE ?"
+						" AND source_field LIKE ?"
+						" AND created LIKE ?"
+						" AND savepoint LIKE ?"
+						" AND previous IS NULL"
+						" ORDER BY created DESC"
+						" LIMIT 1"
+				);
+			}
+
 			if(this->ps.getCorpusNext == 0) {
-				this->log(verbose, "prepares getCorpus() [2/2]...");
+				this->log(verbose, "prepares getCorpus() [5/5]...");
 
 				this->ps.getCorpusNext = this->addPreparedStatement(
-						"SELECT id, corpus, articlemap, datemap"
+						"SELECT id, corpus, articlemap, datemap, sentencemap, words"
 						" FROM `crawlserv_corpora`"
 						" WHERE previous = ?"
 						" LIMIT 1"
@@ -345,7 +411,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(this->ps.deleteCorpus == 0) {
-				this->log(verbose, "prepares createCorpus() [1/4]...");
+				this->log(verbose, "prepares createCorpus() [1/5]...");
 
 				this->ps.deleteCorpus = this->addPreparedStatement(
 						"DELETE"
@@ -355,14 +421,13 @@ namespace crawlservpp::Module::Analyzer {
 						" AND source_type = ?"
 						" AND source_table LIKE ?"
 						" AND source_field LIKE ?"
-						" LIMIT 1"
 				);
 			}
 
-			if(this->ps.addChunk == 0) {
-				this->log(verbose, "prepares createCorpus() [2/4]...");
+			if(this->ps.addChunkContinuous == 0) {
+				this->log(verbose, "prepares createCorpus() [2/5]...");
 
-				this->ps.addChunk = this->addPreparedStatement(
+				this->ps.addChunkContinuous = this->addPreparedStatement(
 						"INSERT INTO `crawlserv_corpora`"
 						" ("
 							" website,"
@@ -381,11 +446,52 @@ namespace crawlservpp::Module::Analyzer {
 						" (" +
 							this->getWebsiteIdString() + ", " +
 							this->getUrlListIdString() + ","
-							" ?, "
 							" ?,"
 							" ?,"
 							" ?,"
-							" CONVERT( ?  USING utf8mb4 ),"
+							" ?,"
+							" CONVERT( ? USING utf8mb4 ),"
+							" CONVERT( ? USING utf8mb4 ),"
+							" ?,"
+							" ?,"
+							" ?"
+						")"
+				);
+			}
+
+			if(this->ps.addChunkTokenized == 0) {
+				this->log(verbose, "prepares createCorpus() [3/5]...");
+
+				this->ps.addChunkTokenized = this->addPreparedStatement(
+						"INSERT INTO `crawlserv_corpora`"
+						" ("
+							" website,"
+							" urllist,"
+							" source_type,"
+							" source_table,"
+							" source_field,"
+							" savepoint,"
+							" corpus,"
+							" articlemap,"
+							" datemap,"
+							" sentencemap,"
+							" previous,"
+							" sources,"
+							" chunks,"
+							" words"
+						") "
+						"VALUES"
+						" (" +
+							this->getWebsiteIdString() + ", " +
+							this->getUrlListIdString() + ","
+							" ?,"
+							" ?,"
+							" ?,"
+							" ?,"
+							" ?,"
+							" CONVERT( ? USING utf8mb4 ),"
+							" CONVERT( ? USING utf8mb4 ),"
+							" CONVERT( ? USING utf8mb4 ),"
 							" ?,"
 							" ?,"
 							" ?,"
@@ -395,7 +501,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(this->ps.measureChunk == 0) {
-				this->log(verbose, "prepares createCorpus() [3/4]...");
+				this->log(verbose, "prepares createCorpus() [4/5]...");
 
 				this->ps.measureChunk = this->addPreparedStatement(
 						"UPDATE `crawlserv_corpora`"
@@ -407,7 +513,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			if(this->ps.measureCorpus == 0) {
-				this->log(verbose, "prepares createCorpus() [4/4]...");
+				this->log(verbose, "prepares createCorpus() [5/5]...");
 
 				this->ps.measureCorpus = this->addPreparedStatement(
 						"UPDATE `crawlserv_corpora` AS dest,"
@@ -487,7 +593,7 @@ namespace crawlservpp::Module::Analyzer {
 	 *    error occured while retrieving the
 	 *    prepared SQL statement.
 	 */
-	sql::PreparedStatement& Database::getPreparedAlgoStatement(uint16_t sqlStatementId) {
+	sql::PreparedStatement& Database::getPreparedAlgoStatement(std::size_t sqlStatementId) {
 		return this->getPreparedStatement(sqlStatementId);
 	}
 
@@ -497,21 +603,22 @@ namespace crawlservpp::Module::Analyzer {
 
 	//! Gets the text corpus after creating it if it is out-of-date or does not yet exist.
 	/*!
-	 * \param corpusProperties Constant reference to
-	 *   a structure containing the properties of
+	 * \param corpusProperties Constant reference
+	 *   to structure containing the properties of
 	 *   the text corpus.
-	 * \param filterDateFrom Constant reference to a
-	 *   string contaning the starting date from
-	 *   which on the text corpus should be created,
-	 *   or to an empty string if the source of the
-	 *   corpus should not be filtered by a
-	 *   starting date. Can only be used if the
-	 *   source of the corpus is parsed data.
-	 * \param filterDateTo Constant reference to a
-	 *   string contaning the ending date until
+	 * \param filterDateFrom Constant reference to
+	 *   a string contaning the starting date from
+	 *   which on the text corpus should be
+	 *   created, or to an empty string if the
+	 *   source of the corpus should not be
+	 *   filtered by a starting date. Can only be
+	 *   used if the source of the corpus is parsed
+	 *   data.
+	 * \param filterDateTo Constant reference to
+	 *   a string contaning the ending date until
 	 *   which the text corpus should be created,
-	 *   or to an empty string if the source of the
-	 *   corpus should not be filtered by an
+	 *   or to an empty string if the source of
+	 *   the corpus should not be filtered by an
 	 *   ending date. Can only be used if the
 	 *   source of the corpus is parsed data.
 	 * \param corpusTo Reference to which the
@@ -563,15 +670,18 @@ namespace crawlservpp::Module::Analyzer {
 
 		sourcesTo = 0;
 
+		// copy properties
+		CorpusProperties properties(corpusProperties);
+
 		{ // wait for source table lock
 			DatabaseLock(
 					*this,
 					"corpusCreation."
-					+ std::to_string(corpusProperties.sourceType)
+					+ std::to_string(properties.sourceType)
 					+ "."
-					+ corpusProperties.sourceTable
+					+ properties.sourceTable
 					+ "."
-					+ corpusProperties.sourceColumn,
+					+ properties.sourceColumn,
 					this->isRunning
 			);
 
@@ -580,149 +690,16 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			// check whether text corpus needs to be created
-			if(this->isCorpusChanged(corpusProperties)) {
-				this->createCorpus(corpusProperties, corpusTo, sourcesTo, statusSetter);
+			if(this->corpusIsChanged(properties)) {
+				this->corpusCreate(properties, corpusTo, sourcesTo, statusSetter);
 			}
 			else {
-				// start timer
-				Timer::Simple timer;
-
-				// get all the chunks of the corpus from the database
-				std::vector<std::string> chunks;
-				std::vector<Struct::TextMap> articleMaps;
-				std::vector<Struct::TextMap> dateMaps;
-
-				// check connection
-				this->checkConnection();
-
-				// check prepared SQL statements
-				if(this->ps.getCorpusFirst == 0 || this->ps.getCorpusNext == 0) {
-					throw Exception(
-							"Analyzer::Database::getCorpus():"
-							" Missing prepared SQL statement(s) for getting the corpus"
-					);
-				}
-
-				// get prepared SQL statements
-				auto& sqlStatementFirst{
-					this->getPreparedStatement(this->ps.getCorpusFirst)
-				};
-				auto& sqlStatementNext{
-					this->getPreparedStatement(this->ps.getCorpusNext)
-				};
-
-				try {
-					// execute SQL query for getting a chunk of the corpus
-					std::uint64_t count{0};
-					std::uint64_t total{0};
-					std::uint64_t previous{0};
-
-					sqlStatementFirst.setUInt(sqlArg1, corpusProperties.sourceType);
-					sqlStatementFirst.setString(sqlArg2, corpusProperties.sourceTable);
-					sqlStatementFirst.setString(sqlArg3, corpusProperties.sourceColumn);
-
-					while(true) {
-						SqlResultSetPtr sqlResultSet;
-
-						if(previous > 0) {
-							sqlStatementNext.setUInt64(sqlArg1, previous);
-
-							SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementNext)).swap(sqlResultSet);
-						}
-						else {
-							SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementFirst)).swap(sqlResultSet);
-						}
-
-						if(sqlResultSet && sqlResultSet->next()) {
-							if(previous == 0) {
-								// first chunk: save sources and reserve memory
-								sourcesTo = sqlResultSet->getUInt64("sources");
-
-								total = sqlResultSet->getUInt64("chunks");
-
-								chunks.reserve(total);
-							}
-
-							// get text of chunk
-							chunks.emplace_back(sqlResultSet->getString("corpus"));
-
-							if(!(sqlResultSet->isNull("articlemap"))) {
-								// parse article map
-								try {
-									articleMaps.emplace_back(
-											Helper::Json::parseTextMapJson(
-													sqlResultSet->getString("articlemap").c_str()
-											)
-									);
-								}
-								catch(const JsonException& e) {
-									throw Exception(
-											"Analyzer::Database::getCorpus():"
-											" Could not parse article map - "
-											+ std::string(e.view())
-									);
-								}
-							}
-
-							if(!(sqlResultSet->isNull("datemap"))) {
-								// parse date map
-								try {
-									dateMaps.emplace_back(
-											Helper::Json::parseTextMapJson(
-													sqlResultSet->getString("datemap").c_str()
-											)
-									);
-								}
-								catch(const JsonException& e) {
-									throw Exception(
-											"Analyzer::Database::getCorpus():"
-											" Could not parse date map - "
-											+ std::string(e.view())
-									);
-								}
-							}
-
-							previous = sqlResultSet->getUInt64("id");
-
-							++count;
-
-							if(total > 0) {
-								statusSetter.update(
-										static_cast<float>(count)
-										/ total
-										* progressReceivedCorpus,
-										false
-								);
-							}
-						}
-						else {
-							break;
-						}
-					}
-				}
-				catch(const sql::SQLException &e) {
-					Database::sqlException("Analyzer::Database::getCorpus", e);
-				}
-
-				// combine chunks to corpus (and delete the input data)
-				corpusTo.combine(chunks, articleMaps, dateMaps, true);
-
-				// log size of text combined corpus and time it took to receive it
-				std::ostringstream logStrStr;
-
-				logStrStr.imbue(std::locale(""));
-
-				logStrStr	<< "got text corpus of "
-							<< corpusTo.size()
-							<< " bytes in "
-							<< timer.tickStr()
-							<< ".";
-
-				this->log(this->getLoggingMin(), logStrStr.str());
-
-				statusSetter.finish();
+				this->corpusLoad(properties, corpusTo, sourcesTo, statusSetter);
 			}
 		}
+
+		// run missing manipulators on corpus
+		this->corpusManipulate(properties, corpusTo, sourcesTo, statusSetter);
 
 		// filter corpus by date(s) if necessary
 		if(corpusTo.filterByDate(filterDateFrom, filterDateTo)) {
@@ -958,39 +935,14 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	/*
-	 * TEXT CORPUS HELPERS (protected)
+	 * INTERNAL CORPUS FUNCTIONS (private)
 	 */
 
-	//! Checks whether the source of a text corpus has changed since the corpus has been created.
-	/*!
-	 * \param corpusProperties Constant reference
-	 *   to a structure containing the properties
-	 *   of the text corpus whose source will be
-	 *   checked.
-	 *
-	 * \returns True, if the source of the given
-	 *   text corpus has changed since the corpus
-	 *   has been created, if the text corpus has
-	 *   not been created yet, or if the source of
-	 *   the text corpus is raw crawling data, in
-	 *   which case the corpus will always be re-
-	 *   created. False, if the source of the text
-	 *   corpus has not changed, and the corpus can
-	 *   be used as previously generated.
-	 *
-	 * \throws Module::Analyzer::Exception if a
-	 *   prepared SQL statement for checking the
-	 *   source of the corpus is missing, or
-	 *   the source specified for the text corpus
-	 *   is invalid.
-	 * \throws Main::Database::Exception if a MySQL
-	 *   error occured while checking the source
-	 *   of the given text corpus.
-	 */
-	bool Database::isCorpusChanged(const CorpusProperties& corpusProperties) {
+	// checks whether the source of the corpus has changed, throws Corpus::Exception
+	bool Database::corpusIsChanged(const CorpusProperties& properties) {
 		bool result{true};
 
-		// check connection
+		// check connection to database
 		this->checkConnection();
 
 		// check prepared SQL statements
@@ -1008,7 +960,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		std::uint16_t sourceStatement{0};
 
-		switch(corpusProperties.sourceType) {
+		switch(properties.sourceType) {
 		case generalInputSourcesParsing:
 			sourceStatement = this->ps.isCorpusChangedParsing;
 
@@ -1043,11 +995,13 @@ namespace crawlservpp::Module::Analyzer {
 			);
 		}
 
-		auto& tableStatement{this->getPreparedStatement(sourceStatement)};
+		auto& tableStatement{
+			this->getPreparedStatement(sourceStatement)
+		};
 
 		try {
 			// execute SQL query for getting the update time of the source table
-			tableStatement.setString(sqlArg1, corpusProperties.sourceTable);
+			tableStatement.setString(sqlArg1, properties.sourceTable);
 
 			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(tableStatement)};
 
@@ -1056,9 +1010,9 @@ namespace crawlservpp::Module::Analyzer {
 				const std::string updateTime{sqlResultSet->getString("updated")};
 
 				// execute SQL query for comparing the creation time of the corpus with the update time of the table
-				corpusStatement.setUInt(sqlArg1, corpusProperties.sourceType);
-				corpusStatement.setString(sqlArg2, corpusProperties.sourceTable);
-				corpusStatement.setString(sqlArg3, corpusProperties.sourceColumn);
+				corpusStatement.setUInt(sqlArg1, properties.sourceType);
+				corpusStatement.setString(sqlArg2, properties.sourceTable);
+				corpusStatement.setString(sqlArg3, properties.sourceColumn);
 				corpusStatement.setString(sqlArg4, updateTime);
 
 				SqlResultSetPtr(Database::sqlExecuteQuery(corpusStatement)).swap(sqlResultSet);
@@ -1076,39 +1030,9 @@ namespace crawlservpp::Module::Analyzer {
 		return result;
 	}
 
-	//! Generates and adds a text corpus to the database.
-	/*!
-	 * If an old corpus exists for the specified
-	 *  source, it will be deleted.
-	 *
-	 * When using parsed data, a date and an
-	 *  article map will be created for the
-	 *  generated text corpus.
-	 *
-	 * \param corpusProperties Constant reference
-	 *   to a structure containing the properties
-	 *   of the text corpus to generate.
-	 * \param corpusTo Reference to which the
-	 *   newly generated text corpus will be
-	 *   written.
-	 * \param sourcesTo Reference to which the
-	 *   number of sources used for the newly
-	 *   generated text corpus will be written.
-	 * \param statusSetter Data needed to keep
-	 *   the status of the thread updated.
-	 *
-	 * \throws Module::Analyzer::Exception if any
-	 *   of the prepared SQL statements for
-	 *   deleting, adding, and measuring the newly
-	 *   generatd text corpus is missing, or if
-	 *   underlying source data could not be
-	 *   retrieved from the database.
-	 * \throws Main::Database::Exception if a MySQL
-	 *   error occured while deleting, adding, or
-	 *   measuring the newly generated text corpus.
-	 */
-	void Database::createCorpus(
-			const CorpusProperties& corpusProperties,
+	// creates corpus from scratch
+	void Database::corpusCreate(
+			const CorpusProperties& properties,
 			Data::Corpus& corpusTo,
 			std::size_t& sourcesTo,
 			StatusSetter& statusSetter
@@ -1116,30 +1040,46 @@ namespace crawlservpp::Module::Analyzer {
 		// initialize values
 		corpusTo.clear();
 
-		sourcesTo = 0;
+		auto savePoints{
+			properties.savePoints
+		};
 
-		// check connection
+		std::sort(savePoints.begin(), savePoints.end());
+
+		// check connection to database
 		this->checkConnection();
 
 		// check prepared SQL statements
 		if(this->ps.deleteCorpus == 0) {
 			throw Exception(
-					"Analyzer::Database::createCorpus():"
-					" Missing prepared SQL statement for deleting the text corpus"
+					"Analyzer::Database::corpusCreate():"
+					" Missing prepared SQL statement"
+					" for deleting the text corpus"
 			);
 		}
 
-		if(this->ps.addChunk == 0) {
+		if(this->ps.addChunkContinuous == 0) {
 			throw Exception(
-					"Analyzer::Database::createCorpus():"
-					" Missing prepared SQL statement for adding a chunk to text corpus"
+					"Analyzer::Database::corpusCreate():"
+					" Missing prepared SQL statement"
+					" for adding a continuous corpus chunk"
+					" to the database"
+			);
+		}
+
+		if(this->ps.measureChunk == 0) {
+			throw Exception(
+					"Analyzer::Database::corpusCreate():"
+					" Missing prepared SQL statement"
+					" for measuring a text corpus chunk"
 			);
 		}
 
 		if(this->ps.measureCorpus == 0) {
 			throw Exception(
-					"Analyzer::Database::createCorpus():"
-					" Missing prepared SQL statement for measuring the text corpus"
+					"Analyzer::Database::corpusCreate():"
+					" Missing prepared SQL statement"
+					" for measuring the text corpus"
 			);
 		}
 
@@ -1147,8 +1087,8 @@ namespace crawlservpp::Module::Analyzer {
 		auto& deleteStatement{
 			this->getPreparedStatement(this->ps.deleteCorpus)
 		};
-		auto& addStatement{
-			this->getPreparedStatement(this->ps.addChunk)
+		auto& addStatementContinuous{
+			this->getPreparedStatement(this->ps.addChunkContinuous)
 		};
 		auto& measureChunkStatement{
 			this->getPreparedStatement(this->ps.measureChunk)
@@ -1159,24 +1099,26 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check your sources
 		this->checkSource(
-				corpusProperties.sourceType,
-				corpusProperties.sourceTable,
-				corpusProperties.sourceColumn
+				properties.sourceType,
+				properties.sourceTable,
+				properties.sourceColumn
 		);
 
 		// show warning when using raw crawled data and logging is enabled
-		if(corpusProperties.sourceType == generalInputSourcesCrawling) {
+		if(properties.sourceType == generalInputSourcesCrawling) {
 			this->log(
 					this->getLoggingMin(),
 					"WARNING:"
-					" Corpus will always be re-created when created from raw crawled data."
+					" Corpus will always be re-created"
+					" when created from raw crawled data."
 			);
 			this->log(
 					this->getLoggingMin(),
-					"It is highly recommended to use parsed data instead!"
+					"It is highly recommended"
+					" to use parsed data instead!"
 			);
 
-			if(!corpusProperties.sourceTable.empty()) {
+			if(!properties.sourceTable.empty()) {
 				this->log(
 						this->getLoggingMin(),
 						"WARNING:"
@@ -1184,7 +1126,7 @@ namespace crawlservpp::Module::Analyzer {
 				);
 			}
 
-			if(!corpusProperties.sourceColumn.empty()) {
+			if(!properties.sourceColumn.empty()) {
 				this->log(
 						this->getLoggingMin(),
 						"WARNING:"
@@ -1198,14 +1140,14 @@ namespace crawlservpp::Module::Analyzer {
 
 		const auto tableName{
 			this->getSourceTableName(
-					corpusProperties.sourceType,
-					corpusProperties.sourceTable
+					properties.sourceType,
+					properties.sourceTable
 			)
 		};
 		const auto columnName{
 			getSourceColumnName(
-					corpusProperties.sourceType,
-					corpusProperties.sourceColumn
+					properties.sourceType,
+					properties.sourceColumn
 			)
 		};
 
@@ -1218,28 +1160,37 @@ namespace crawlservpp::Module::Analyzer {
 				+ "..."
 		);
 
+		bool saveCorpus{
+			!savePoints.empty()
+			&& savePoints.at(0) == 0
+		};
+
 		try {
-			// execute SQL query for deleting old text corpus (if it exists)
-			deleteStatement.setUInt(sqlArg1, corpusProperties.sourceType);
-			deleteStatement.setString(sqlArg2, corpusProperties.sourceTable);
-			deleteStatement.setString(sqlArg3, corpusProperties.sourceColumn);
+			if(saveCorpus) {
+				// execute SQL query for deleting old text corpus (if it exists)
+				deleteStatement.setUInt(sqlArg1, properties.sourceType);
+				deleteStatement.setString(sqlArg2, properties.sourceTable);
+				deleteStatement.setString(sqlArg3, properties.sourceColumn);
 
-			Database::sqlExecute(deleteStatement);
+				Database::sqlExecute(deleteStatement);
 
-			statusSetter.update(progressDeletedCorpus, false);
+				if(!statusSetter.update(progressDeletedCorpus, false)) {
+					return;
+				}
+			}
 
 			// get texts and possibly parsed date/times and IDs from database
 			Data::GetColumns data;
 
 			data.table = tableName;
 
-			if(corpusProperties.sourceType == generalInputSourcesParsing) {
+			if(properties.sourceType == generalInputSourcesParsing) {
 				data.columns.reserve(maxNumCorpusColumns);
 			}
 
 			data.columns.emplace_back(columnName);
 
-			if(corpusProperties.sourceType == generalInputSourcesParsing) {
+			if(properties.sourceType == generalInputSourcesParsing) {
 				data.columns.emplace_back("parsed_id");
 				data.columns.emplace_back("parsed_datetime");
 
@@ -1255,12 +1206,15 @@ namespace crawlservpp::Module::Analyzer {
 
 			if(data.values.empty()) {
 				throw Exception(
-						"Analyzer::Database::createCorpus():"
-						" Could not get requested data from database"
+						"Analyzer::Database::corpusCreate():"
+						" Could not get requested data"
+						" from database"
 				);
 			}
 
-			statusSetter.update(progressReceivedSources, false);
+			if(!statusSetter.update(progressReceivedSources, false)) {
+				return;
+			}
 
 			// move received column data to vector(s) of strings
 			std::vector<std::string> texts;
@@ -1278,8 +1232,12 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			for(auto it{data.values.at(column1).begin()}; it != data.values.at(column1).end(); ++it) {
-				const auto index{it - data.values.at(column1).begin()};
-				auto& text{data.values.at(column1).at(index)};
+				const auto index{
+					it - data.values.at(column1).begin()
+				};
+				auto& text{
+					data.values.at(column1).at(index)
+				};
 
 				if(!text._isnull && !text._s.empty()) {
 					// add text as source
@@ -1314,7 +1272,9 @@ namespace crawlservpp::Module::Analyzer {
 				}
 			}
 
-			statusSetter.update(progressMovedData, false);
+			if(!statusSetter.update(progressMovedData, false)) {
+				return;
+			}
 
 			// create corpus (and delete the input data)
 			if(data.values.size() > numColumns1) {
@@ -1324,118 +1284,126 @@ namespace crawlservpp::Module::Analyzer {
 				corpusTo.create(texts, true);
 			}
 
-			statusSetter.update(progressCreatedCorpus, false);
+			if(!statusSetter.update(progressCreatedCorpus, false)) {
+				return;
+			}
 
-			// slice corpus into chunks for the database
-			std::vector<std::string> chunks;
-			std::vector<Struct::TextMap> articleMaps;
-			std::vector<Struct::TextMap> dateMaps;
+			if(saveCorpus) {
+				// slice continuous corpus into chunks for the database
+				std::vector<std::string> chunks;
+				std::vector<TextMap> articleMaps;
+				std::vector<TextMap> dateMaps;
 
-			corpusTo.copyChunks(
-					static_cast<std::size_t>(
-							this->getMaxAllowedPacketSize()
-							* (
-									static_cast<float>(this->corpusSlicing)
-									* corpusSlicingFactor
-							)
-					),
-					chunks,
-					articleMaps,
-					dateMaps
-			);
-
-			statusSetter.update(progressSlicedCorpus, false);
-
-			// add corpus chunks to the database
-			std::uint64_t last{0};
-
-			for(std::size_t n{0}; n < chunks.size(); ++n) {
-				addStatement.setUInt(sqlArg1, corpusProperties.sourceType);
-				addStatement.setString(sqlArg2, corpusProperties.sourceTable);
-				addStatement.setString(sqlArg3, corpusProperties.sourceColumn);
-				addStatement.setString(sqlArg4, chunks.at(n));
-
-				if(articleMaps.size() > n) {
-					addStatement.setString(sqlArg5, Helper::Json::stringify(articleMaps.at(n)));
-				}
-				else {
-					addStatement.setNull(sqlArg5, 0);
-				}
-
-				if(dateMaps.size() > n) {
-					addStatement.setString(sqlArg6, Helper::Json::stringify(dateMaps.at(n)));
-				}
-				else {
-					addStatement.setNull(sqlArg6, 0);
-				}
-
-				if(last > 0) {
-					addStatement.setUInt64(sqlArg7, last);
-				}
-				else {
-					addStatement.setNull(sqlArg7, 0);
-				}
-
-				addStatement.setUInt64(sqlArg8, sourcesTo);
-				addStatement.setUInt64(sqlArg9, chunks.size());
-
-				Database::sqlExecute(addStatement);
-
-				last = this->getLastInsertedId();
-
-				// free memory early
-				std::string().swap(chunks.at(n));
-
-				if(articleMaps.size() > n) {
-					Struct::TextMap().swap(articleMaps.at(n));
-				}
-
-				if(dateMaps.size() > n) {
-					Struct::TextMap().swap(dateMaps.at(n));
-				}
-
-				// measure chunk
-				measureChunkStatement.setUInt64(sqlArg1, last);
-
-				Database::sqlExecute(measureChunkStatement);
-
-				statusSetter.update(
-						progressSlicedCorpus
-						+ progressAddingCorpus
-						* (
-								static_cast<float>(n + 1)
-								/ chunks.size()
+				corpusTo.copyChunksContinuous(
+						static_cast<std::size_t>(
+								this->getMaxAllowedPacketSize()
+								* (
+										static_cast<float>(this->corpusSlicing)
+										* corpusSlicingFactor
+								)
 						),
-						false
+						chunks,
+						articleMaps,
+						dateMaps
 				);
+
+				if(!statusSetter.update(progressSlicedCorpus, false)) {
+					return;
+				}
+
+				// add corpus chunks to the database
+				std::uint64_t last{0};
+
+				for(std::size_t n{0}; n < chunks.size(); ++n) {
+					addStatementContinuous.setUInt(sqlArg1, properties.sourceType);
+					addStatementContinuous.setString(sqlArg2, properties.sourceTable);
+					addStatementContinuous.setString(sqlArg3, properties.sourceColumn);
+					addStatementContinuous.setString(sqlArg4, chunks.at(n));
+
+					if(articleMaps.size() > n) {
+						addStatementContinuous.setString(sqlArg5, Helper::Json::stringify(articleMaps.at(n)));
+					}
+					else {
+						addStatementContinuous.setNull(sqlArg5, 0);
+					}
+
+					if(dateMaps.size() > n) {
+						addStatementContinuous.setString(sqlArg6, Helper::Json::stringify(dateMaps.at(n)));
+					}
+					else {
+						addStatementContinuous.setNull(sqlArg6, 0);
+					}
+
+					if(last > 0) {
+						addStatementContinuous.setUInt64(sqlArg7, last);
+					}
+					else {
+						addStatementContinuous.setNull(sqlArg7, 0);
+					}
+
+					addStatementContinuous.setUInt64(sqlArg8, sourcesTo);
+					addStatementContinuous.setUInt64(sqlArg9, chunks.size());
+
+					Database::sqlExecute(addStatementContinuous);
+
+					last = this->getLastInsertedId();
+
+					// free memory early
+					std::string().swap(chunks.at(n));
+
+					if(articleMaps.size() > n) {
+						TextMap().swap(articleMaps.at(n));
+					}
+
+					if(dateMaps.size() > n) {
+						TextMap().swap(dateMaps.at(n));
+					}
+
+					// measure chunk
+					measureChunkStatement.setUInt64(sqlArg1, last);
+
+					Database::sqlExecute(measureChunkStatement);
+
+					statusSetter.update(
+							progressSlicedCorpus
+							+ progressAddingCorpus
+							* (
+									static_cast<float>(n + 1)
+									/ chunks.size()
+							),
+							false
+					);
+				}
 			}
 
 			statusSetter.finish();
 		}
 		catch(const sql::SQLException &e) {
-			Database::sqlException("Analyzer::Database::createCorpus", e);
+			Database::sqlException("Analyzer::Database::corpusCreate", e);
 		}
 
-		// check connection to MySQL server
-		this->checkConnection();
+		if(saveCorpus) {
+			// check connection to database
+			this->checkConnection();
 
-		try {
-			// measure corpus
-			measureCorpusStatement.setUInt(sqlArg1, corpusProperties.sourceType);
-			measureCorpusStatement.setString(sqlArg2, corpusProperties.sourceTable);
-			measureCorpusStatement.setString(sqlArg3, corpusProperties.sourceColumn);
-			measureCorpusStatement.setUInt(sqlArg4, corpusProperties.sourceType);
-			measureCorpusStatement.setString(sqlArg5, corpusProperties.sourceTable);
-			measureCorpusStatement.setString(sqlArg6, corpusProperties.sourceColumn);
+			try {
+				// measure corpus
+				measureCorpusStatement.setUInt(sqlArg1, properties.sourceType);
+				measureCorpusStatement.setString(sqlArg2, properties.sourceTable);
+				measureCorpusStatement.setString(sqlArg3, properties.sourceColumn);
+				measureCorpusStatement.setUInt(sqlArg4, properties.sourceType);
+				measureCorpusStatement.setString(sqlArg5, properties.sourceTable);
+				measureCorpusStatement.setString(sqlArg6, properties.sourceColumn);
 
-			Database::sqlExecute(measureCorpusStatement);
-		}
-		catch(const sql::SQLException &e) {
-			// log and ignore errors when measuring corpus (total text might be too long)
-			this->log(
-					this->getLoggingMin(),
-					"WARNING: Could not measure corpus - "
-					+ std::string(e.what()));
+				Database::sqlExecute(measureCorpusStatement);
+			}
+			catch(const sql::SQLException &e) {
+				// log and ignore errors when measuring corpus (total text might be too long)
+				this->log(
+						this->getLoggingMin(),
+						"WARNING: Could not measure corpus - "
+						+ std::string(e.what()));
+			}
 		}
 
 		// write log entry if necessary
@@ -1450,6 +1418,679 @@ namespace crawlservpp::Module::Analyzer {
 					<< ".";
 
 		this->log(this->getLoggingMin(), logStrStr.str());
+
+		if(this->isRunning()) {
+			return;
+		}
+	}
+
+	// loads a corpus from the database
+	void Database::corpusLoad(
+			CorpusProperties& properties,
+			Data::Corpus& corpusTo,
+			std::size_t& sourcesTo,
+			StatusSetter& statusSetter
+	) {
+		// start timer
+		Timer::Simple timer;
+
+		// get all the chunks of the corpus from the database
+		std::vector<std::string> chunks;
+		std::vector<std::size_t> wordNums;
+		std::vector<TextMap> articleMaps;
+		std::vector<TextMap> dateMaps;
+		std::vector<SentenceMap> sentenceMaps;
+		std::string savePoint;
+
+		// check connection to database
+		this->checkConnection();
+
+		// check prepared SQL statements
+		if(
+				this->ps.getCorpusInfo == 0
+				|| this->ps.getCorpusFirst == 0
+				|| this->ps.getCorpusSavePoint == 0
+				|| this->ps.getCorpusNext == 0
+		) {
+			throw Exception(
+					"Analyzer::Database::corpusLoad():"
+					" Missing prepared SQL statement(s)"
+					" for getting the corpus"
+			);
+		}
+
+
+		// get prepared SQL statements
+		auto& sqlStatementInfo{
+			this->getPreparedStatement(this->ps.getCorpusInfo)
+		};
+		auto& sqlStatementFirst{
+			this->getPreparedStatement(this->ps.getCorpusFirst)
+		};
+		auto& sqlStatementSavePoint{
+			this->getPreparedStatement(this->ps.getCorpusSavePoint)
+		};
+		auto& sqlStatementNext{
+			this->getPreparedStatement(this->ps.getCorpusNext)
+		};
+
+		try {
+			// execute SQL query for getting the creation date of the corpus
+			sqlStatementInfo.setUInt(sqlArg1, properties.sourceType);
+			sqlStatementInfo.setString(sqlArg2, properties.sourceTable);
+			sqlStatementInfo.setString(sqlArg3, properties.sourceColumn);
+
+			SqlResultSetPtr sqlResultSet{
+				Database::sqlExecuteQuery(sqlStatementInfo)
+			};
+
+			if(!sqlResultSet || !(sqlResultSet->next())) {
+				throw Exception(
+						"Database::corpusLoad():"
+						" Could not get creation date of corpus"
+				);
+			}
+
+			std::string corpusCreationTime{
+				sqlResultSet->getString("created")
+			};
+
+			// find suitable save point, if it exists
+			savePoint = this->corpusFindSavePoint(
+					properties,
+					corpusCreationTime
+			);
+
+			// execute SQL query for getting a chunk of the corpus
+			std::uint64_t count{0};
+			std::uint64_t total{0};
+			std::uint64_t previous{0};
+
+			if(savePoint.empty()) {
+				sqlStatementFirst.setUInt(sqlArg1, properties.sourceType);
+				sqlStatementFirst.setString(sqlArg2, properties.sourceTable);
+				sqlStatementFirst.setString(sqlArg3, properties.sourceColumn);
+				sqlStatementFirst.setString(sqlArg4, corpusCreationTime);
+			}
+			else {
+				sqlStatementSavePoint.setUInt(sqlArg1, properties.sourceType);
+				sqlStatementSavePoint.setString(sqlArg2, properties.sourceTable);
+				sqlStatementSavePoint.setString(sqlArg3, properties.sourceColumn);
+				sqlStatementSavePoint.setString(sqlArg4, corpusCreationTime);
+				sqlStatementSavePoint.setString(sqlArg5, savePoint);
+			}
+
+			while(true) {
+				if(previous > 0) {
+					sqlStatementNext.setUInt64(sqlArg1, previous);
+
+					SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementNext)).swap(sqlResultSet);
+				}
+				else if(savePoint.empty()) {
+					SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementFirst)).swap(sqlResultSet);
+				}
+				else {
+					SqlResultSetPtr(Database::sqlExecuteQuery(sqlStatementSavePoint)).swap(sqlResultSet);
+				}
+
+				if(!sqlResultSet || !(sqlResultSet->next())) {
+					break;
+				}
+
+				if(previous == 0) {
+					// first chunk: save sources and reserve memory
+					sourcesTo = sqlResultSet->getUInt64("sources");
+
+					total = sqlResultSet->getUInt64("chunks");
+
+					chunks.reserve(total);
+				}
+
+				// get text of chunk
+				chunks.emplace_back(sqlResultSet->getString("corpus"));
+
+				if(!savePoint.empty()) {
+					if(sqlResultSet->isNull("words")) {
+						throw Exception(
+								"Database::corpusLoad():"
+								" Could not get number of words"
+								" in a corpus chunk"
+						);
+					}
+
+					wordNums.push_back(
+							sqlResultSet->getUInt64("words")
+					);
+				}
+
+				if(!(sqlResultSet->isNull("articlemap"))) {
+					// parse article map
+					try {
+						articleMaps.emplace_back(
+								Helper::Json::parseTextMapJson(
+										sqlResultSet->getString(
+												"articlemap"
+										).c_str()
+								)
+						);
+					}
+					catch(const JsonException& e) {
+						throw Exception(
+								"Analyzer::Database::corpusLoad():"
+								" Could not parse article map - "
+								+ std::string(e.view())
+						);
+					}
+				}
+
+				if(!(sqlResultSet->isNull("datemap"))) {
+					// parse date map
+					try {
+						dateMaps.emplace_back(
+								Helper::Json::parseTextMapJson(
+										sqlResultSet->getString("datemap").c_str()
+								)
+						);
+					}
+					catch(const JsonException& e) {
+						throw Exception(
+								"Analyzer::Database::corpusLoad():"
+								" Could not parse date map - "
+								+ std::string(e.view())
+						);
+					}
+				}
+
+				if(!savePoint.empty()) {
+					if(sqlResultSet->isNull("sentencemap")) {
+						throw Exception(
+								"Database::corpusLoad():"
+								" Could not get sentence map"
+								" for a corpus chunk"
+						);
+					}
+
+
+					// parse sentence map
+					try {
+						sentenceMaps.emplace_back(
+								Helper::Json::parsePosLenPairsJson(
+										sqlResultSet->getString("sentencemap").c_str()
+								)
+						);
+					}
+					catch(const JsonException& e) {
+						throw Exception(
+								"Analyzer::Database::corpusLoad():"
+								" Could not parse sentence map - "
+								+ std::string(e.view())
+						);
+					}
+				}
+
+				previous = sqlResultSet->getUInt64("id");
+
+				++count;
+
+				if(total > 0) {
+					if(!statusSetter.update(
+							static_cast<float>(count)
+							/ total
+							* progressReceivedCorpus,
+							false
+					)) {
+						return;
+					}
+				}
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Analyzer::Database::corpusLoad", e);
+		}
+
+		// combine chunks to corpus (and delete the input data)
+		if(savePoint.empty()) {
+			corpusTo.combineContinuous(
+					chunks,
+					articleMaps,
+					dateMaps,
+					true
+			);
+		}
+		else {
+			corpusTo.combineTokenized(
+					chunks,
+					wordNums,
+					articleMaps,
+					dateMaps,
+					sentenceMaps,
+					true
+			);
+		}
+
+		// log the size of the combined corpus and the time it took to receive it
+		std::ostringstream logStrStr;
+
+		logStrStr.imbue(std::locale(""));
+
+		logStrStr	<< "got text corpus of "
+					<< corpusTo.size()
+					<< " bytes in "
+					<< timer.tickStr()
+					<< ".";
+
+		this->log(this->getLoggingMin(), logStrStr.str());
+
+		statusSetter.finish();
+	}
+
+	// find an already tokenized corpus for the given properties and update them accordingly, return empty string if none is found
+	std::string Database::corpusFindSavePoint(
+			CorpusProperties& properties,
+			const std::string& corpusCreationTime
+	) {
+		std::string savePoint;
+		std::string result;
+		std::size_t numSentenceManipulators{0};
+		std::size_t numWordManipulators{0};
+
+		// check connection to database
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(this->ps.checkCorpusSavePoint == 0) {
+			throw Exception(
+					"Analyzer::Database::corpusFindSavePoint():"
+					" Missing prepared SQL statement"
+			);
+		}
+
+		// get prepared SQL statement
+		auto& sqlStatement{
+			this->getPreparedStatement(this->ps.checkCorpusSavePoint)
+		};
+
+		try {
+			sqlStatement.setUInt(sqlArg1, properties.sourceType);
+			sqlStatement.setString(sqlArg2, properties.sourceTable);
+			sqlStatement.setString(sqlArg3, properties.sourceColumn);
+			sqlStatement.setString(sqlArg4, corpusCreationTime);
+
+			for(
+					auto it{properties.sentenceManipulators.cbegin()};
+					it != properties.sentenceManipulators.cend();
+					++it
+			) {
+				const auto index{
+					static_cast<std::size_t>(
+							it
+							- properties.sentenceManipulators.cbegin()
+					)
+				};
+
+				savePoint += "s";
+				savePoint += std::to_string(*it);
+				savePoint += "[";
+				savePoint += properties.sentenceModels.at(index);
+				savePoint += "]";
+
+				// execute SQL query for
+				sqlStatement.setString(sqlArg5, savePoint);
+
+				SqlResultSetPtr sqlResultSet{
+					Database::sqlExecuteQuery(sqlStatement)
+				};
+
+				// get result
+				if(sqlResultSet && sqlResultSet->next()) {
+					if(sqlResultSet->getBoolean("result")) {
+						result = savePoint;
+
+						numSentenceManipulators = index + 1;
+					}
+				}
+			}
+
+			for(
+					auto it{properties.wordManipulators.cbegin()};
+					it != properties.wordManipulators.cend();
+					++it
+			) {
+				const auto index{
+					static_cast<std::size_t>(
+							it
+							- properties.wordManipulators.cbegin()
+					)
+				};
+
+				savePoint += "w";
+				savePoint += std::to_string(*it);
+				savePoint += "[";
+				savePoint += properties.wordModels.at(index);
+				savePoint += "]";
+
+				// execute SQL query for
+				sqlStatement.setString(sqlArg5, savePoint);
+
+				SqlResultSetPtr sqlResultSet{
+					Database::sqlExecuteQuery(sqlStatement)
+				};
+
+				// get result
+				if(sqlResultSet && sqlResultSet->next()) {
+					if(sqlResultSet->getBoolean("result")) {
+						result = savePoint;
+
+						numWordManipulators = index + 1;
+					}
+				}
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Analyzer::Database::corpusFindSavePoint", e);
+		}
+
+		// remove manipulators that have already been run on save point
+		if(numWordManipulators > 0) {
+			properties.sentenceManipulators.clear();
+
+			properties.wordManipulators.erase(
+					properties.wordManipulators.begin(),
+					properties.wordManipulators.begin() + numWordManipulators
+			);
+		}
+		else if(numSentenceManipulators > 0) {
+			properties.sentenceManipulators.erase(
+					properties.sentenceManipulators.begin(),
+					properties.sentenceManipulators.begin() + numSentenceManipulators
+			);
+		}
+
+		// remove save points before already run manipulators
+		properties.savePoints.erase(
+				properties.savePoints.begin(),
+				std::upper_bound(
+						properties.savePoints.begin(),
+						properties.savePoints.end(),
+						numSentenceManipulators + numWordManipulators
+				)
+		);
+
+		return result;
+	}
+
+	// run remaining manipulators on corpus
+	void Database::corpusManipulate(
+			const CorpusProperties& properties,
+			Data::Corpus& corpusRef,
+			std::size_t numSources,
+			StatusSetter& statusSetter
+	) {
+		// tokenize and manipulate corpus, from savepoint to savepoint
+		std::string savePointName;
+		std::size_t done{0};
+
+		for(const auto savePoint : properties.savePoints) {
+			if(savePoint == 0) {
+				continue;
+			}
+
+			if(
+					savePoint
+					> properties.sentenceManipulators.size()
+					+ properties.wordManipulators.size()
+			) {
+				continue;
+			}
+
+			std::vector<std::uint16_t> sentenceManipulators;
+			std::vector<std::string> sentenceModels;
+			std::vector<std::uint16_t> wordManipulators;
+			std::vector<std::string> wordModels;
+
+			for(auto manipulator{done}; manipulator < savePoint; ++manipulator) {
+				if(manipulator >= properties.sentenceManipulators.size()) {
+					// add word manipulator
+					const auto index{
+						manipulator - properties.sentenceManipulators.size()
+					};
+
+					wordManipulators.push_back(
+							properties.wordManipulators.at(index)
+					);
+					wordModels.push_back(
+							properties.wordModels.at(index)
+					);
+
+					savePointName += "w";
+					savePointName += std::to_string(wordManipulators.back());
+					savePointName += "[";
+					savePointName += wordModels.back();
+					savePointName += "]";
+				}
+				else {
+					// add sentence manipulator
+					sentenceManipulators.push_back(
+							properties.sentenceManipulators.at(manipulator)
+					);
+					sentenceModels.push_back(
+							properties.sentenceModels.at(manipulator)
+					);
+
+					savePointName += "s";
+					savePointName += std::to_string(sentenceManipulators.back());
+					savePointName += "[";
+					savePointName += sentenceModels.back();
+					savePointName += "]";
+				}
+
+				++done;
+			}
+
+			statusSetter.change("Processing corpus...");
+
+			corpusRef.tokenize(
+					sentenceManipulators,
+					sentenceModels,
+					wordManipulators,
+					wordModels,
+					properties.freeMemoryEvery,
+					statusSetter
+			);
+
+			// save savepoint in database
+			statusSetter.change("Saving processed corpus to the database...");
+
+			this->corpusSaveSavePoint(
+					properties,
+					corpusRef,
+					numSources,
+					savePointName,
+					statusSetter
+			);
+		}
+
+		// run remaining manipulators, if necessary (result will not be saved to the database)
+		const auto total{
+			properties.sentenceManipulators.size()
+			+ properties.wordManipulators.size()
+		};
+
+		if(done < total) {
+			std::vector<std::uint16_t> sentenceManipulators;
+			std::vector<std::string> sentenceModels;
+			std::vector<std::uint16_t> wordManipulators;
+			std::vector<std::string> wordModels;
+
+			for(auto manipulator{done}; manipulator < total; ++manipulator) {
+				if(manipulator >= properties.sentenceManipulators.size()) {
+					// add word manipulator
+					const auto index{
+						manipulator - properties.sentenceManipulators.size()
+					};
+
+					wordManipulators.push_back(
+							properties.wordManipulators.at(index)
+					);
+					wordModels.push_back(
+							properties.wordModels.at(index)
+					);
+				}
+				else {
+					// add sentence manipulator
+					sentenceManipulators.push_back(
+							properties.sentenceManipulators.at(manipulator)
+					);
+					sentenceModels.push_back(
+							properties.sentenceModels.at(manipulator)
+					);
+				}
+			}
+
+			statusSetter.change("Processing corpus...");
+
+			corpusRef.tokenize(
+					sentenceManipulators,
+					sentenceModels,
+					wordManipulators,
+					wordModels,
+					properties.freeMemoryEvery,
+					statusSetter
+			);
+		}
+	}
+
+	// save corpus savepoint, throws Database::Exception
+	void Database::corpusSaveSavePoint(
+			const CorpusProperties& properties,
+			const Data::Corpus& corpus,
+			std::size_t numSources,
+			const std::string& savePoint,
+			StatusSetter& statusSetter
+	) {
+		// slice tokenized corpus into chunks for the database
+		std::vector<std::string> chunks;
+		std::vector<TextMap> articleMaps;
+		std::vector<TextMap> dateMaps;
+		std::vector<SentenceMap> sentenceMaps;
+		std::vector<std::size_t> wordNums;
+
+		corpus.copyChunksTokenized(
+				static_cast<std::size_t>(
+						this->getMaxAllowedPacketSize()
+						* (
+								static_cast<float>(this->corpusSlicing)
+								* corpusSlicingFactor
+						)
+				),
+				chunks,
+				wordNums,
+				articleMaps,
+				dateMaps,
+				sentenceMaps
+		);
+
+		// update status
+		statusSetter.update(progressGeneratedSavePoint, false);
+
+		// check connection to database
+		this->checkConnection();
+
+		// check prepared SQL statements
+		if(ps.addChunkTokenized == 0) {
+			throw Exception(
+					"Analyzer::Database::corpusSaveSavePoint():"
+					" Missing prepared SQL statement(s)"
+					" for adding a tokenized chunk to the corpus"
+			);
+		}
+
+		// get prepared SQL statement
+		auto& addStatementTokenized{
+			this->getPreparedStatement(this->ps.addChunkTokenized)
+		};
+
+		try {
+			// save tokenized and sliced corpus to database
+			std::uint64_t last{0};
+
+			for(std::size_t n{0}; n < chunks.size(); ++n) {
+				addStatementTokenized.setUInt(sqlArg1, properties.sourceType);
+				addStatementTokenized.setString(sqlArg2, properties.sourceTable);
+				addStatementTokenized.setString(sqlArg3, properties.sourceColumn);
+				addStatementTokenized.setString(sqlArg4, savePoint);
+				addStatementTokenized.setString(sqlArg5, chunks.at(n));
+
+				if(articleMaps.size() > n) {
+					addStatementTokenized.setString(
+							sqlArg6,
+							Helper::Json::stringify(articleMaps.at(n))
+					);
+				}
+				else {
+					addStatementTokenized.setNull(sqlArg6, 0);
+				}
+
+				if(dateMaps.size() > n) {
+					addStatementTokenized.setString(
+							sqlArg7,
+							Helper::Json::stringify(dateMaps.at(n))
+					);
+				}
+				else {
+					addStatementTokenized.setNull(sqlArg7, 0);
+				}
+
+				if(sentenceMaps.size() > n) {
+					addStatementTokenized.setString(
+							sqlArg8,
+							Helper::Json::stringify(sentenceMaps.at(n))
+					);
+				}
+				else {
+					addStatementTokenized.setNull(sqlArg8, 0);
+				}
+
+				if(last > 0) {
+					addStatementTokenized.setUInt64(sqlArg9, last);
+				}
+				else {
+					addStatementTokenized.setNull(sqlArg9, 0);
+				}
+
+				addStatementTokenized.setUInt64(sqlArg10, numSources);
+				addStatementTokenized.setUInt64(sqlArg11, chunks.size());
+				addStatementTokenized.setUInt64(sqlArg12, wordNums.at(n));
+
+				Database::sqlExecute(addStatementTokenized);
+
+				last = this->getLastInsertedId();
+
+				// free memory early
+				std::string().swap(chunks.at(n));
+
+				if(articleMaps.size() > n) {
+					TextMap().swap(articleMaps.at(n));
+				}
+
+				if(dateMaps.size() > n) {
+					TextMap().swap(dateMaps.at(n));
+				}
+
+				statusSetter.update(
+						progressGeneratedSavePoint
+						+ progressSavingSavePoint
+						* (
+								static_cast<float>(n + 1)
+								/ chunks.size()
+						),
+						false
+				);
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Analyzer::Database::corpusSaveSavePoint", e);
+		}
 	}
 
 } /* namespace crawlservpp::Module::Analyzer */

@@ -56,7 +56,7 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <algorithm>	// std::find_if
+#include <algorithm>	// std::find_if, std::sort, std::upper_bound
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint8_t, std::uint16_t, std::uint64_t
@@ -65,7 +65,7 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
-#include <utility>		// std::move
+#include <utility>		// std::move, std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer {
@@ -78,89 +78,106 @@ namespace crawlservpp::Module::Analyzer {
 	///@{
 
 	//! The default percentage of the maximum package size allowed by the MySQL server to be used for the maximum size of the corpus.
-	constexpr auto defaultCorpusSlicing{30};
+	inline constexpr auto defaultCorpusSlicing{30};
 
 	//! The factor used for corpus slicing percentage points (1/100).
-	constexpr auto corpusSlicingFactor{1.F / 100};
+	inline constexpr auto corpusSlicingFactor{1.F / 100};
 
 	//! The maximum number of columns used when creating a text corpus.
-	constexpr auto maxNumCorpusColumns{3};
+	inline constexpr auto maxNumCorpusColumns{3};
 
 	//! The number of prepared SQL statements to reserve memory for.
-	constexpr auto numPreparedStatements{10};
+	inline constexpr auto numPreparedStatements{10};
 
 	//! The progress with creating a corpus after the old corpus has been deleted.
-	constexpr auto progressDeletedCorpus{0.05F};
+	inline constexpr auto progressDeletedCorpus{0.05F};
 
 	//! The progress with creating a corpus after the source texts have been received.
-	constexpr auto progressReceivedSources{0.35F};
+	inline constexpr auto progressReceivedSources{0.35F};
 
 	//! The progress with creating a corpus after the data has been moved.
-	constexpr auto progressMovedData{0.4F};
+	inline constexpr auto progressMovedData{0.4F};
 
 	//! The progress with creating a corpus after the server created the corpus.
-	constexpr auto progressCreatedCorpus{0.6F};
+	inline constexpr auto progressCreatedCorpus{0.6F};
 
 	//! The progress with creating a corpus after the corpus has been sliced.
-	constexpr auto progressSlicedCorpus{0.65F};
+	inline constexpr auto progressSlicedCorpus{0.65F};
 
 	//! The remaining progress, attributed to adding the corpus to the database.
-	constexpr auto progressAddingCorpus{
+	inline constexpr auto progressAddingCorpus{
 		1.F - progressSlicedCorpus
 	};
 
 	//! The progress with getting an existing corpus after its contents have been received from the database.
-	constexpr auto progressReceivedCorpus{0.8F};
+	inline constexpr auto progressReceivedCorpus{0.8F};
+
+	//! The progress of saving a savepoint after generating it.
+	inline constexpr auto progressGeneratedSavePoint{0.1F};
+
+	//! The remaining progress, attributed to saving a savepoint to the database.
+	inline constexpr auto progressSavingSavePoint{
+		1.F - progressGeneratedSavePoint
+	};
 
 	///@}
 	///@name Constants for SQL Queries
 	///@{
 
 	//! First argument in a SQL query.
-	constexpr auto sqlArg1{1};
+	inline constexpr auto sqlArg1{1};
 
 	//! Second argument in a SQL query.
-	constexpr auto sqlArg2{2};
+	inline constexpr auto sqlArg2{2};
 
 	//! Third argument in a SQL query.
-	constexpr auto sqlArg3{3};
+	inline constexpr auto sqlArg3{3};
 
 	//! Fourth argument in a SQL query.
-	constexpr auto sqlArg4{4};
+	inline constexpr auto sqlArg4{4};
 
 	//! Fifth argument in a SQL query.
-	constexpr auto sqlArg5{5};
+	inline constexpr auto sqlArg5{5};
 
 	//! Sixth argument in a SQL query.
-	constexpr auto sqlArg6{6};
+	inline constexpr auto sqlArg6{6};
 
 	//! Seventh argument in a SQL query.
-	constexpr auto sqlArg7{7};
+	inline constexpr auto sqlArg7{7};
 
 	//! Eighth argument in a SQL query.
-	constexpr auto sqlArg8{8};
+	inline constexpr auto sqlArg8{8};
 
 	//! Ninth argument in a SQL query.
-	constexpr auto sqlArg9{9};
+	inline constexpr auto sqlArg9{9};
+
+	//! Tenth argument in a SQL query.
+	inline constexpr auto sqlArg10{10};
+
+	//! Eleventh argument in a SQL query.
+	inline constexpr auto sqlArg11{11};
+
+	//! Twelfth argument in a SQL query.
+	inline constexpr auto sqlArg12{12};
 
 	///@}
 	///@name Constants for Table Columns
 	///@{
 
 	//! First column in a table.
-	constexpr auto column1{0};
+	inline constexpr auto column1{0};
 
 	//! Second column in a table.
-	constexpr auto column2{1};
+	inline constexpr auto column2{1};
 
 	//! Third column in a table.
-	constexpr auto column3{2};
+	inline constexpr auto column3{2};
 
 	//! One table column.
-	constexpr auto numColumns1{1};
+	inline constexpr auto numColumns1{1};
 
 	//! Two table columns.
-	constexpr auto numColumns2{2};
+	inline constexpr auto numColumns2{2};
 
 	///@}
 
@@ -179,10 +196,12 @@ namespace crawlservpp::Module::Analyzer {
 		using CorpusProperties = Struct::CorpusProperties;
 		using StatusSetter = Struct::StatusSetter;
 		using TableColumn = Struct::TableColumn;
+		using TextMap = Struct::TextMap;
 
 		using DatabaseLock = Wrapper::DatabaseLock<Database>;
 
 		using IsRunningCallback = std::function<bool()>;
+		using SentenceMap = std::vector<std::pair<std::size_t, std::size_t>>;
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
 
 	public:
@@ -212,7 +231,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		void prepare();
 		void prepareAlgo(const std::vector<std::string>& statements, std::vector<std::uint16_t>& idsTo);
-		[[nodiscard]] sql::PreparedStatement& getPreparedAlgoStatement(std::uint16_t sqlStatementId);
+		[[nodiscard]] sql::PreparedStatement& getPreparedAlgoStatement(std::size_t sqlStatementId);
 
 		///@}
 		///@name Text Corpus
@@ -278,31 +297,21 @@ namespace crawlservpp::Module::Analyzer {
 		 */
 		std::uint8_t corpusSlicing{defaultCorpusSlicing};
 
-		///@}
-		///@name Text Corpus Helpers
-		///@{
-
-		[[nodiscard]] bool isCorpusChanged(const CorpusProperties& corpusProperties);
-		void createCorpus(
-				const CorpusProperties& corpusProperties,
-				Data::Corpus& corpusTo,
-				std::size_t& sourcesTo,
-				StatusSetter& statusSetter
-		);
-
-		///@}
-
 	private:
 		// IDs of prepared SQL statements
 		struct _ps {
+			std::uint16_t getCorpusInfo;
+			std::uint16_t checkCorpusSavePoint;
 			std::uint16_t getCorpusFirst;
+			std::uint16_t getCorpusSavePoint;
 			std::uint16_t getCorpusNext;
 			std::uint16_t isCorpusChanged;
 			std::uint16_t isCorpusChangedParsing;
 			std::uint16_t isCorpusChangedExtracting;
 			std::uint16_t isCorpusChangedAnalyzing;
 			std::uint16_t deleteCorpus;
-			std::uint16_t addChunk;
+			std::uint16_t addChunkContinuous;
+			std::uint16_t addChunkTokenized;
 			std::uint16_t measureChunk;
 			std::uint16_t measureCorpus;
 
@@ -311,6 +320,40 @@ namespace crawlservpp::Module::Analyzer {
 
 		// function for checking whether the parent thread is still running
 		IsRunningCallback isRunning;
+
+		// internal corpus functions
+		[[nodiscard]] bool corpusIsChanged(
+				const CorpusProperties& properties
+		);
+		void corpusCreate(
+				const CorpusProperties& properties,
+				Data::Corpus& corpusTo,
+				std::size_t& sourcesTo,
+				StatusSetter& statusSetter
+		);
+		void corpusLoad(
+				CorpusProperties& properties,
+				Data::Corpus& corpusTo,
+				std::size_t& sourcesTo,
+				StatusSetter& statusSetter
+		);
+		[[nodiscard]] std::string corpusFindSavePoint(
+				CorpusProperties& properties,
+				const std::string& corpusCreationTime
+		);
+		void corpusManipulate(
+				const CorpusProperties& properties,
+				Data::Corpus& corpusRef,
+				std::size_t numSources,
+				StatusSetter& statusSetter
+		);
+		void corpusSaveSavePoint(
+				const CorpusProperties& properties,
+				const Data::Corpus& corpus,
+				std::size_t numSources,
+				const std::string& savePoint,
+				StatusSetter& statusSetter
+		);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer */
