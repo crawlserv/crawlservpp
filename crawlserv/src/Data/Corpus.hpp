@@ -2238,15 +2238,15 @@ namespace crawlservpp::Data {
 					};
 
 					for(auto token{sentence.first}; token < sentenceEnd; ++token) {
-						chunkEnd += this->tokens.at(token).size();
+						chunkEnd += this->tokens.at(token).size() + 1;
 
-						if(chunkEnd > chunkSize) {
+						if(chunkEnd - 1 > chunkSize) {
 							break;
 						}
 
 						--restNumTokens;
 
-						if(chunkEnd == chunkSize) {
+						if(chunkEnd - 1 == chunkSize) {
 							splitToken = false;
 
 							break;
@@ -2324,7 +2324,6 @@ namespace crawlservpp::Data {
 					++(wordNumsTo.back());
 				}
 
-				// move maps to result
 				sentenceMapsTo.emplace_back(std::move(currentSentenceMap));
 
 				currentSentenceMap.clear();
@@ -2652,8 +2651,8 @@ namespace crawlservpp::Data {
 			}
 			else {
 				// only remove trailing sentences
-				this->sentenceMap.resize(std::distance(
-						this->sentenceMap.cbegin(), smEnd)
+				this->sentenceMap.resize(
+						std::distance(this->sentenceMap.cbegin(), smEnd)
 				);
 			}
 		}
@@ -2761,12 +2760,16 @@ namespace crawlservpp::Data {
 		for(const auto manipulator : sentenceManipulators) {
 			if(manipulator > 0) {
 				sentenceManipulation = true;
+
+				break;
 			}
 		}
 
 		for(const auto manipulator : wordManipulators) {
 			if(manipulator > 0) {
 				wordManipulation = true;
+
+				break;
 			}
 		}
 
@@ -2835,6 +2838,18 @@ namespace crawlservpp::Data {
 				case wordManipNone:
 					return;
 
+				case wordManipRemoveSingleUtf8Chars:
+					if(
+							word.size() <= maxSingleUtf8CharSize
+							&& word.size() >= minSingleUtf8CharSize
+					) {
+						if(Helper::Utf8::isSingleUtf8Char(word)) {
+							std::string{}.swap(word);
+						}
+					}
+
+					break;
+
 				case wordManipPorter2Stemmer:
 					Data::Stemmer::stemEnglish(word);
 
@@ -2842,18 +2857,6 @@ namespace crawlservpp::Data {
 
 				case wordManipGermanStemmer:
 					Data::Stemmer::stemGerman(word);
-
-					break;
-
-				case wordManipRemoveSingleUtf8Chars:
-					if(
-							word.size() >= minSingleUtf8CharSize
-							&& word.size() <= maxSingleUtf8CharSize
-					) {
-						if(Helper::Utf8::isSingleUtf8Char(word)) {
-							word.clear();
-						}
-					}
 
 					break;
 
