@@ -1437,7 +1437,6 @@ namespace crawlservpp::Data::wapiti {
 		const double  *x = mdl->theta;
 		const uint32_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
-		double (*psi)[T][Y][Y] = (double(*)[T][Y][Y]) grd_st->psi;
 		for (uint32_t t = 0; t < T; t++) {
 			const pos_t *pos = &(seq->pos[t]);
 			for (uint32_t y = 0; y < Y; y++) {
@@ -1447,7 +1446,7 @@ namespace crawlservpp::Data::wapiti {
 					sum += x[mdl->uoff[o] + y];
 				}
 				for (uint32_t yp = 0; yp < Y; yp++)
-					(*psi)[t][yp][y] = sum;
+					map(grd_st->psi, Y, Y, t, yp, y) = sum;
 			}
 		}
 		for (uint32_t t = 1; t < T; t++) {
@@ -1459,13 +1458,13 @@ namespace crawlservpp::Data::wapiti {
 						const uint64_t o = pos->bobs[n];
 						sum += x[mdl->boff[o] + d];
 					}
-					(*psi)[t][yp][y] += sum;
+					map(grd_st->psi, Y, Y, t, yp, y) += sum;
 				}
 			}
 		}
 		xvm_expma(
-				reinterpret_cast<double *>(psi),
-				reinterpret_cast<double *>(psi),
+				grd_st->psi,
+				grd_st->psi,
 				0.0,
 				static_cast<uint64_t>(T) * Y * Y
 		);
@@ -1496,39 +1495,36 @@ namespace crawlservpp::Data::wapiti {
 		const mdl_t *mdl = grd_st->mdl;
 		const uint64_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
-		const double (*psi)[T][Y][Y] = (const double (*)[T][Y][Y]) grd_st->psi;
-		double (*alpha)[T][Y] = (double(*)[T][Y]) grd_st->alpha;
-		double (*beta )[T][Y] = (double(*)[T][Y]) grd_st->beta;
 		double  *scale        =         grd_st->scale;
 		double  *unorm        =         grd_st->unorm;
 		double  *bnorm        =         grd_st->bnorm;
 		for (uint32_t y = 0; y < Y; y++)
-			(*alpha)[0][y] = (*psi)[0][0][y];
-		scale[0] = xvm_unit((*alpha)[0], (*alpha)[0], Y);
+			map(grd_st->alpha, Y, 0, y) = map(grd_st->psi, Y, Y, 0, 0, y);
+		scale[0] = xvm_unit(row(grd_st->alpha, Y, 0), row(grd_st->alpha, Y, 0), Y);
 		for (uint32_t t = 1; t < grd_st->last + 1; t++) {
 			for (uint32_t y = 0; y < Y; y++) {
 				double sum = 0.0;
 				for (uint32_t yp = 0; yp < Y; yp++)
-					sum += (*alpha)[t - 1][yp] * (*psi)[t][yp][y];
-				(*alpha)[t][y] = sum;
+					sum += map(grd_st->alpha, Y, t - 1, yp) * map(grd_st->psi, Y, Y, t, yp, y);
+				map(grd_st->alpha, Y, t, y) = sum;
 			}
-			scale[t] = xvm_unit((*alpha)[t], (*alpha)[t], Y);
+			scale[t] = xvm_unit(row(grd_st->alpha, Y, t), row(grd_st->alpha, Y, t), Y);
 		}
 		for (uint32_t yp = 0; yp < Y; yp++)
-			(*beta)[T - 1][yp] = 1.0 / Y;
+			map(grd_st->beta, Y, T - 1, yp) = 1.0 / Y;
 		for (uint32_t t = T - 1; t > grd_st->first; t--) {
 			for (uint32_t yp = 0; yp < Y; yp++) {
 				double sum = 0.0;
 				for (uint32_t y = 0; y < Y; y++)
-					sum += (*beta)[t][y] * (*psi)[t][yp][y];
-				(*beta)[t - 1][yp] = sum;
+					sum += map(grd_st->beta, Y, t, y) * map(grd_st->psi, Y, Y, t, yp, y);
+				map(grd_st->beta, Y, t - 1, yp) = sum;
 			}
-			xvm_unit((*beta)[t - 1], (*beta)[t - 1], Y);
+			xvm_unit(row(grd_st->beta, Y, t - 1), row(grd_st->beta, Y, t - 1), Y);
 		}
 		for (uint32_t t = 0; t < T; t++) {
 			double z = 0.0;
 			for (uint32_t y = 0; y < Y; y++)
-				z += (*alpha)[t][y] * (*beta)[t][y];
+				z += map(grd_st->alpha, Y, t, y) * map(grd_st->beta, Y, t, y);
 			unorm[t] = 1.0 / z;
 			bnorm[t] = scale[t] / z;
 		}
@@ -1649,7 +1645,7 @@ namespace crawlservpp::Data::wapiti {
 		const double  *x = mdl->theta;
 		const uint32_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
-		double (*psi)[T][Y][Y] = (double(*)[T][Y][Y]) vpsi;
+
 		// We first have to compute the Ψ_t(y',y,x_t) weights defined as
 		//   Ψ_t(y',y,x_t) = \exp( ∑_k θ_k f_k(y',y,x_t) )
 		// So at position 't' in the sequence, for each couple (y',y) we have
@@ -1683,7 +1679,7 @@ namespace crawlservpp::Data::wapiti {
 					sum += x[mdl->uoff[o] + y];
 				}
 				for (uint32_t yp = 0; yp < Y; yp++)
-					(*psi)[t][yp][y] = sum;
+					map(vpsi, Y, Y, t, yp, y) = sum;
 			}
 		}
 		for (uint32_t t = 1; t < T; t++) {
@@ -1695,7 +1691,7 @@ namespace crawlservpp::Data::wapiti {
 						const uint64_t o = pos->bobs[n];
 						sum += x[mdl->boff[o] + d];
 					}
-					(*psi)[t][yp][y] += sum;
+					map(vpsi, Y, Y, t, yp, y) += sum;
 				}
 			}
 		}
@@ -1713,14 +1709,13 @@ namespace crawlservpp::Data::wapiti {
 		const uint32_t T = seq->len;
 		tag_expsc(mdl, seq, vpsi);
 		xvm_expma(vpsi, vpsi, 0.0, T * Y * Y);
-		double (*psi)[T][Y][Y] = (double(*)[T][Y][Y]) vpsi;
 		for (uint32_t t = 0; t < T; t++) {
 			for (uint32_t yp = 0; yp < Y; yp++) {
 				double sum = 0.0;
 				for (uint32_t y = 0; y < Y; y++)
-					sum += (*psi)[t][yp][y];
+					sum += map(vpsi, Y, Y, t, yp, y);
 				for (uint32_t y = 0; y < Y; y++)
-					(*psi)[t][yp][y] /= sum;
+					map(vpsi, Y, Y, t, yp, y) /= sum;
 			}
 		}
 		return 1;
@@ -1735,7 +1730,6 @@ namespace crawlservpp::Data::wapiti {
 	static int tag_postsc(mdl_t *mdl, const seq_t *seq, double *vpsi) {
 		const uint32_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
-		double (*psi)[T][Y][Y] = (double(*)[T][Y][Y]) vpsi;
 		grd_st_t *grd_st = grd_stnew(mdl, NULL);
 		grd_st->first = 0;
 		grd_st->last  = T - 1;
@@ -1744,14 +1738,12 @@ namespace crawlservpp::Data::wapiti {
 		grd_fldopsi(grd_st, seq);
 		grd_flfwdbwd(grd_st, seq);
 
-		double (*alpha)[T][Y] = (double(*)[T][Y]) grd_st->alpha;
-		double (*beta )[T][Y] = (double(*)[T][Y]) grd_st->beta;
 		double  *unorm        =         grd_st->unorm;
 		for (uint32_t t = 0; t < T; t++) {
 			for (uint32_t y = 0; y < Y; y++) {
-				double e = (*alpha)[t][y] * (*beta)[t][y] * unorm[t];
+				double e = map(grd_st->alpha, Y, t, y) * map(grd_st->beta, Y, t, y) * unorm[t];
 				for (uint32_t yp = 0; yp < Y; yp++)
-					(*psi)[t][yp][y] = e;
+					map(vpsi, Y, Y, t, yp, y) = e;
 			}
 		}
 		grd_stfree(grd_st);
@@ -1768,7 +1760,6 @@ namespace crawlservpp::Data::wapiti {
 		const uint32_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
 		const double v = op ? 0.0 : -HUGE_VAL;
-		double (*psi)[T][Y][Y] = (double(*)[T][Y][Y]) vpsi;
 		for (uint32_t t = 0; t < T; t++) {
 			const uint32_t cyr = seq->pos[t].lbl;
 			if (cyr == std::numeric_limits<uint32_t>::max())
@@ -1777,12 +1768,12 @@ namespace crawlservpp::Data::wapiti {
 				for (uint32_t y = 0; y < Y; y++)
 					if (y != cyr)
 						for (uint32_t yp = 0; yp < Y; yp++)
-							(*psi)[t][yp][y] = v;
+							map(vpsi, Y, Y, t, yp, y) = v;
 			if (t != T - 1)
 				for (uint32_t y = 0; y < Y; y++)
 					if (y != cyr)
 						for (uint32_t yn = 0; yn < Y; yn++)
-							(*psi)[t + 1][y][yn] = v;
+							map(vpsi, Y, Y, t + 1, y, yn) = v;
 		}
 		const uint32_t yr = seq->pos[0].lbl;
 		if (yr != std::numeric_limits<uint32_t>::max()) {
@@ -1790,7 +1781,7 @@ namespace crawlservpp::Data::wapiti {
 				if (yr == y)
 					continue;
 				for (uint32_t yp = 0; yp < Y; yp++)
-					(*psi)[0][yp][y] = v;
+					map(vpsi, Y, Y, 0, yp, y) = v;
 			}
 		}
 	}
@@ -1814,8 +1805,6 @@ namespace crawlservpp::Data::wapiti {
 		const uint32_t T = seq->len;
 		double   *vpsi  = xvm_new(T * Y * Y);
 		uint32_t *vback = static_cast<uint32_t*>(xmalloc(sizeof(uint32_t) * T * Y));
-		double   (*psi) [T][Y][Y] = (double(*)[T][Y][Y]) vpsi;
-		uint32_t (*back)[T][Y]    = (uint32_t(*)[T][Y]) vback;
 		double *cur = static_cast<double*>(xmalloc(sizeof(double) * Y));
 		double *old = static_cast<double*>(xmalloc(sizeof(double) * Y));
 		// We first compute the scores for each transitions in the lattice of
@@ -1843,7 +1832,7 @@ namespace crawlservpp::Data::wapiti {
 		// we only need the current and previous value of the α vectors, not
 		// the full matrix.
 		for (uint32_t y = 0; y < Y; y++)
-			cur[y] = (*psi)[0][0][y];
+			cur[y] = map(vpsi, Y, Y, 0, 0, y);
 		for (uint32_t t = 1; t < T; t++) {
 			for (uint32_t y = 0; y < Y; y++)
 				old[y] = cur[y];
@@ -1853,15 +1842,15 @@ namespace crawlservpp::Data::wapiti {
 				for (uint32_t yp = 0; yp < Y; yp++) {
 					double val = old[yp];
 					if (op)
-						val *= (*psi)[t][yp][y];
+						val *= map(vpsi, Y, Y, t, yp, y);
 					else
-						val += (*psi)[t][yp][y];
+						val += map(vpsi, Y, Y, t, yp, y);
 					if (val > bst) {
 						bst = val;
 						idx = yp;
 					}
 				}
-				(*back)[t][y] = idx;
+				map(vback, Y, t, y) = idx;
 				cur[y]        = bst;
 			}
 		}
@@ -1876,11 +1865,11 @@ namespace crawlservpp::Data::wapiti {
 		if (sc != NULL)
 			*sc = cur[bst];
 		for (uint32_t t = T; t > 0; t--) {
-			const uint32_t yp = (t != 1) ? (*back)[t - 1][bst] : 0;
+			const uint32_t yp = (t != 1) ? map(vback, Y, t - 1, bst) : 0;
 			const uint32_t y  = bst;
 			out[t - 1] = y;
 			if (psc != NULL)
-				psc[t - 1] = (*psi)[t - 1][yp][y];
+				psc[t - 1] = map(vpsi, Y, Y, t - 1, yp, y);
 			bst = yp;
 		}
 		free(old);

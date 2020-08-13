@@ -113,6 +113,36 @@ namespace crawlservpp::Data::wapiti {
 	 */
 
 	/*
+	 * HELPERS
+	 */
+
+	/*
+	 * Maps a three-dimensional array into a one-dimensional array.
+	 */
+	inline double& map(double * array, uint32_t B, uint32_t C, uint32_t i, uint32_t j, uint32_t k) {
+		return array[k + C * (j + B * i)];
+	}
+
+	/*
+	 * Maps a two-dimensional array into a one-dimensional array.
+	 */
+	inline double& map(double * array, uint32_t B, uint32_t i, uint32_t j) {
+		return array[i * B + j];
+	}
+
+	inline uint32_t& map(uint32_t * array, uint32_t B, uint32_t i, uint32_t j) {
+		return array[i * B + j];
+	}
+
+	/*
+	 * Jumps to a specific row of a mapped array.
+	 */
+
+	inline double * row(double * array, uint32_t B, uint32_t i) {
+		return array + i * B;
+	}
+
+	/*
 	 * TOOLS.H
 	 */
 
