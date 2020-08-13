@@ -100,14 +100,14 @@ namespace crawlservpp::Data {
 	//! Do not manipulate words.
 	inline constexpr std::uint16_t wordManipNone{0};
 
+	//! Remove tokens that contain only one UTF-8 codepoint.
+	inline constexpr std::uint16_t wordManipRemoveSingleUtf8Chars{1};
+
 	//! The @c porter2_stemmer algorithm for English only, implemented by Sean Massung.
-	inline constexpr std::uint16_t wordManipPorter2Stemmer{1};
+	inline constexpr std::uint16_t wordManipPorter2Stemmer{2};
 
 	//! Simple stemmer for German only, based on @c CISTEM by Leonie Weißweiler and Alexander Fraser.
-	inline constexpr std::uint16_t wordManipGermanStemmer{2};
-
-	//! Remove tokens that contain only one UTF-8 codepoint.
-	inline constexpr std::uint16_t wordManipRemoveSingleUtf8Chars{3};
+	inline constexpr std::uint16_t wordManipGermanStemmer{3};
 
 	///@}
 

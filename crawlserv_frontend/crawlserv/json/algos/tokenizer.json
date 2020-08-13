@@ -41,9 +41,9 @@
 		"item-type": "enum",
 		"enum-values": [
 			"none",
+			"Single UTF-8 code point removal",
 			"English stemmer (porter2)",
-			"German stemmer (cistem)",
-			"Single UTF-8 code point removal (utf8cpp)"
+			"German stemmer (cistem)"
 		],
 		"default": [],
 		"label": "Word Manipulators:",
