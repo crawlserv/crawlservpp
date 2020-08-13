@@ -202,10 +202,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				statusStrStr << ", ";
 
 				if(tokens == 1) {
-					statusStrStr << "one token";
+					statusStrStr << "one word";
 				}
 				else {
-					statusStrStr << tokens << " tokens";
+					statusStrStr << tokens << " words";
 				}
 			}
 
