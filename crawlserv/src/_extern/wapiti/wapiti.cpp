@@ -1437,7 +1437,8 @@ namespace crawlservpp::Data::wapiti {
 		const double  *x = mdl->theta;
 		const uint32_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
-		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(grd_st->psi);
+		auto * tmp{grd_st->psi};
+		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(tmp);
 		for (uint32_t t = 0; t < T; t++) {
 			const pos_t *pos = &(seq->pos[t]);
 			for (uint32_t y = 0; y < Y; y++) {
@@ -1496,9 +1497,12 @@ namespace crawlservpp::Data::wapiti {
 		const mdl_t *mdl = grd_st->mdl;
 		const uint64_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
-		const double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(grd_st->psi);
-		double (*alpha)[T][Y] = reinterpret_cast<double(*)[T][Y]>(grd_st->alpha);
-		double (*beta )[T][Y] = reinterpret_cast<double(*)[T][Y]>(grd_st->beta);
+		auto * tmp{grd_st->psi};
+		const double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(tmp);
+		auto * tmpAlpha{grd_st->alpha};
+		double (*alpha)[T][Y] = reinterpret_cast<double(*)[T][Y]>(tmpAlpha);
+		auto * tmpBeta{grd_st->beta};
+		double (*beta )[T][Y] = reinterpret_cast<double(*)[T][Y]>(tmpBeta);
 		double  *scale        =         grd_st->scale;
 		double  *unorm        =         grd_st->unorm;
 		double  *bnorm        =         grd_st->bnorm;
@@ -1649,7 +1653,8 @@ namespace crawlservpp::Data::wapiti {
 		const double  *x = mdl->theta;
 		const uint32_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
-		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(vpsi);
+		auto * tmp{vpsi};
+		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(tmp);
 		// We first have to compute the Ψ_t(y',y,x_t) weights defined as
 		//   Ψ_t(y',y,x_t) = \exp( ∑_k θ_k f_k(y',y,x_t) )
 		// So at position 't' in the sequence, for each couple (y',y) we have
@@ -1713,7 +1718,8 @@ namespace crawlservpp::Data::wapiti {
 		const uint32_t T = seq->len;
 		tag_expsc(mdl, seq, vpsi);
 		xvm_expma(vpsi, vpsi, 0.0, T * Y * Y);
-		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(vpsi);
+		auto * tmp{vpsi};
+		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(tmp);
 		for (uint32_t t = 0; t < T; t++) {
 			for (uint32_t yp = 0; yp < Y; yp++) {
 				double sum = 0.0;
@@ -1735,17 +1741,20 @@ namespace crawlservpp::Data::wapiti {
 	static int tag_postsc(mdl_t *mdl, const seq_t *seq, double *vpsi) {
 		const uint32_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
-		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(vpsi);
+		auto * tmp{vpsi};
+		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(tmp);
 		grd_st_t *grd_st = grd_stnew(mdl, NULL);
 		grd_st->first = 0;
 		grd_st->last  = T - 1;
 		grd_stcheck(grd_st, seq->len);
 
-			grd_fldopsi(grd_st, seq);
-			grd_flfwdbwd(grd_st, seq);
+		grd_fldopsi(grd_st, seq);
+		grd_flfwdbwd(grd_st, seq);
 
-		double (*alpha)[T][Y] = reinterpret_cast<double(*)[T][Y]>(grd_st->alpha);
-		double (*beta )[T][Y] = reinterpret_cast<double(*)[T][Y]>(grd_st->beta);
+		auto * tmpAlpha{grd_st->alpha};
+		double (*alpha)[T][Y] = reinterpret_cast<double(*)[T][Y]>(tmpAlpha);
+		auto * tmpBeta{grd_st->beta};
+		double (*beta )[T][Y] = reinterpret_cast<double(*)[T][Y]>(tmpBeta);
 		double  *unorm        =         grd_st->unorm;
 		for (uint32_t t = 0; t < T; t++) {
 			for (uint32_t y = 0; y < Y; y++) {
@@ -1768,7 +1777,8 @@ namespace crawlservpp::Data::wapiti {
 		const uint32_t Y = mdl->nlbl;
 		const uint32_t T = seq->len;
 		const double v = op ? 0.0 : -HUGE_VAL;
-		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(vpsi);
+		auto * tmp{vpsi};
+		double (*psi)[T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(tmp);
 		for (uint32_t t = 0; t < T; t++) {
 			const uint32_t cyr = seq->pos[t].lbl;
 			if (cyr == std::numeric_limits<uint32_t>::max())
@@ -1814,8 +1824,10 @@ namespace crawlservpp::Data::wapiti {
 		const uint32_t T = seq->len;
 		double   *vpsi  = xvm_new(T * Y * Y);
 		uint32_t *vback = static_cast<uint32_t*>(xmalloc(sizeof(uint32_t) * T * Y));
-		double   (*psi) [T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(vpsi);
-		uint32_t (*back)[T][Y]    = reinterpret_cast<uint32_t(*)[T][Y]>(vback);
+		auto * tmp{vpsi};
+		double   (*psi) [T][Y][Y] = reinterpret_cast<double(*)[T][Y][Y]>(tmp);
+		auto * tmpBack{vback};
+		uint32_t (*back)[T][Y]    = reinterpret_cast<uint32_t(*)[T][Y]>(tmpBack);
 		double *cur = static_cast<double*>(xmalloc(sizeof(double) * Y));
 		double *old = static_cast<double*>(xmalloc(sizeof(double) * Y));
 		// We first compute the scores for each transitions in the lattice of
