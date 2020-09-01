@@ -35,6 +35,7 @@
 #ifndef DATA_CORPUS_HPP_
 #define DATA_CORPUS_HPP_
 
+#include "Lemmatizer.hpp"
 #include "Stemmer/English.hpp"
 #include "Stemmer/German.hpp"
 #include "Tagger.hpp"
@@ -108,6 +109,9 @@ namespace crawlservpp::Data {
 
 	//! Simple stemmer for German only, based on @c CISTEM by Leonie Weißweiler and Alexander Fraser.
 	inline constexpr std::uint16_t wordManipGermanStemmer{3};
+
+	//! Multilingual lemmatizer.
+	inline constexpr std::uint16_t wordManipLemmatizer{4};
 
 	///@}
 
@@ -2750,7 +2754,7 @@ namespace crawlservpp::Data {
 			const std::vector<std::uint16_t>& sentenceManipulators,
 			const std::vector<std::string>& sentenceModels,
 			const std::vector<std::uint16_t>& wordManipulators,
-			const std::vector<std::string>& /*wordModels*/,
+			const std::vector<std::string>& wordModels,
 			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
@@ -2828,12 +2832,16 @@ namespace crawlservpp::Data {
 			}
 		};
 
-		auto wordLambda = [&wordManipulators](std::string& word) {
+		auto wordLambda = [&wordManipulators, &wordModels](std::string& word) {
 			for(
 					auto it{wordManipulators.cbegin()};
 					it != wordManipulators.cend();
 					++it
 			) {
+				const auto index{
+					it - wordManipulators.cbegin()
+				};
+
 				switch(*it) {
 				case wordManipNone:
 					return;
@@ -2857,6 +2865,11 @@ namespace crawlservpp::Data {
 
 				case wordManipGermanStemmer:
 					Data::Stemmer::stemGerman(word);
+
+					break;
+
+				case wordManipLemmatizer:
+					Data::Lemmatizer::lemmatize(word, wordModels.at(index));
 
 					break;
 

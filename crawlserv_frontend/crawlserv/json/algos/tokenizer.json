@@ -43,7 +43,8 @@
 			"none",
 			"Single UTF-8 code point removal",
 			"English stemmer (porter2)",
-			"German stemmer (cistem)"
+			"German stemmer (cistem)",
+			"Multilingual lemmatizer (from dictionary)"
 		],
 		"default": [],
 		"label": "Word Manipulators:",
@@ -55,8 +56,8 @@
 		"type": "array",
 		"item-type": "string",
 		"default": [],
-		"label": "Word Models:",
-		"description": "Model for the word manipulator with the same array index. Empty strings will be ignored.",
+		"label": "Dictionaries:",
+		"description": "Dictionary for the word manipulator with the same array index. Empty strings will be ignored.",
 		"simple": true,
 		"position": 4
 	},
