@@ -89,7 +89,7 @@ namespace crawlservpp::Helper::DateTime {
 	//! The length of English ordinal suffixes to be stripped from numbers
 	inline constexpr auto englishOrdinalSuffixLength{2};
 
-	//! The date/time format used by the MySQL database.
+	//! The date/time format used by the MySQL database (as @c C string).
 	inline constexpr auto sqlTimeStamp{"%F %T"};
 
 	//! The length of a formatted time stamp in the MySQL database.
@@ -173,6 +173,7 @@ namespace crawlservpp::Helper::DateTime {
 	///@{
 
 	[[nodiscard]] bool isValidISODate(const std::string& isoDate);
+	[[nodiscard]] bool isValidCTime(const std::tm& cTime);
 
 	///@}
 	///@name Comparison
@@ -316,7 +317,7 @@ namespace crawlservpp::Helper::DateTime {
 						+ dateTime
 						+ "\' [expected format: \'"
 						+ customFormat
-						+ "\'] to date/time "
+						+ "\'] to date/time"
 				);
 			}
 
@@ -343,7 +344,7 @@ namespace crawlservpp::Helper::DateTime {
 			}
 			else {
 				// try good old C time
-				struct std::tm cTime{};
+				std::tm cTime{};
 
 				{
 					std::istringstream inStringStream(dateTime);
@@ -352,13 +353,13 @@ namespace crawlservpp::Helper::DateTime {
 
 					inStringStream >> std::get_time(&cTime, customFormat.c_str());
 
-					if(inStringStream.fail()) {
+					if(!isValidCTime(cTime)) {
 						throw Exception(
 								"Could not convert '"
 								+ dateTime
 								+ "' [expected format: '"
 								+ customFormat
-								+ "'] to date/time "
+								+ "'] to date/time"
 						);
 					}
 				}
@@ -378,7 +379,7 @@ namespace crawlservpp::Helper::DateTime {
 							+ dateTime
 							+ "' [expected format: '"
 							+ customFormat
-							+ "'] to date/time "
+							+ "'] to date/time"
 					);
 				}
 			}
@@ -450,26 +451,26 @@ namespace crawlservpp::Helper::DateTime {
 		in >> date::parse(customFormat, tp);
 
 		if(bool(in)) {
-			dateTime = date::format("%F %T", tp);
+			dateTime = date::format(sqlTimeStamp, tp);
 		}
 		else {
 			// try good old C time
-			struct ::tm cTime{};
+			std::tm cTime{};
 
 			{
 				std::istringstream inStringStream(dateTime);
 
-				inStringStream.imbue(std::locale(std::setlocale(LC_TIME, locale.c_str())));
+				inStringStream.imbue(std::locale(locale));
 
 				inStringStream >> std::get_time(&cTime, customFormat.c_str());
 
-				if(inStringStream.fail()) {
+				if(!isValidCTime(cTime)) {
 					throw Exception(
 							"Could not convert '"
 							+ dateTime
 							+ "' [expected format: '"
 							+ customFormat
-							+ "'] to date/time "
+							+ "'] to date/time"
 					);
 				}
 			}
@@ -477,7 +478,7 @@ namespace crawlservpp::Helper::DateTime {
 			std::array<char, sqlTimeStampLength + 1> out{};
 
 			const auto len{
-				std::strftime(out.data(), sqlTimeStampLength + 1, "%F %T", &cTime)
+				std::strftime(out.data(), sqlTimeStampLength + 1, sqlTimeStamp, &cTime)
 			};
 
 			if(len > 0) {
@@ -535,7 +536,7 @@ namespace crawlservpp::Helper::DateTime {
 		std::istringstream in(timeStamp);
 		date::sys_seconds tp;
 
-		in >> date::parse("%F %T", tp);
+		in >> date::parse(sqlTimeStamp, tp);
 
 		if(!bool(in)) {
 			throw Exception(
@@ -742,7 +743,7 @@ namespace crawlservpp::Helper::DateTime {
 	 */
 	inline std::string now() {
 		return date::format(
-				"%F %T",
+				sqlTimeStamp,
 				date::floor<std::chrono::seconds>(
 						std::chrono::system_clock::now()
 				)
@@ -769,9 +770,20 @@ namespace crawlservpp::Helper::DateTime {
 		return bool(in);
 	}
 
+	//! Checks whether a @c C time structure is valid.
+	/*!
+	 * \param cTime Constant reference to the @c C time structure to be
+	 *   checked.
+	 *
+	 * \returns True, if the given structure is valid, i.e. a valid day
+	 *   of the month has been set. False otherwise.
+	 */
+	inline bool isValidCTime(const std::tm& cTime) {
+		return cTime.tm_mday > 0;
+	}
+
 	//! Checks whether the given ISO date is in the given range of dates.
 	/*!
-	 *
 	 * \note Only the first ten characters of the given dates will be
 	 *    considered.
 	 *
