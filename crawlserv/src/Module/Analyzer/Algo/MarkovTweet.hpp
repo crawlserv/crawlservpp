@@ -88,15 +88,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * The implementation of the algorithm itself
 	 *  is done by the slightly modified @c rawr
 	 *  class, originally by Kelly Rauchenberger
-	 *   – see the
-	 *   <a href="https://github.com/hatkirby/rawr-ebooks">
-	 *   GitHub repository</a>. 👌
+	 *  – see the
+	 *  <a href="https://github.com/hatkirby/rawr-ebooks">
+	 *  GitHub repository</a>. 👌
 	 *
 	 * \warning This algorithm may use A LOT of
 	 *   memory when parsing large corpora, adjust
 	 *   your swap size accordingly to prevent the
 	 *   server from being killed by the operating
 	 *   system!
+	 *
+	 * \deprecated This class is deprecated
+	 *   and will be removed in the future.
 	 */
 	class MarkovTweet : public Module::Analyzer::Thread {
 		// for convenience

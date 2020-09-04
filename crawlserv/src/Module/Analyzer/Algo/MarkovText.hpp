@@ -98,8 +98,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *  <a href="https://rosettacode.org/wiki/Markov_chain_text_generator>
 	 *  Rosetta Code</a>.
 	 *
-	 *  \deprecated This class is deprecated
-	 *    and will be removed in the future.
+	 * \deprecated This class is deprecated
+	 *   and will be removed in the future.
 	 */
 	class MarkovText : public Module::Analyzer::Thread {
 		// for convenience

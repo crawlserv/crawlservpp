@@ -88,6 +88,12 @@ namespace crawlservpp {
  * **crawlserv++ command-and-control server**
  *
  * See https://github.com/crawlserv/crawlservpp/ for the latest version of the application.
+ *
+ * <b>Navigation</b>
+ *
+ * - <a href="namespaces.html">Namespace List</a>
+ * - <a href="annotated.html">Class List</a>
+ * - <a href="files.html">File List</a>
  */
 
 //! Namespace for data compression.
