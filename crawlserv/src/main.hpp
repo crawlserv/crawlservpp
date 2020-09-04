@@ -31,6 +31,8 @@
 #ifndef MAIN_HPP_
 #define MAIN_HPP_
 
+#include "Main/App.hpp"
+
 #include <string>	// std::string
 #include <vector>	// std::vector
 

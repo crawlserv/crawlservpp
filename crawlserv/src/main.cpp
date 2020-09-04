@@ -30,8 +30,6 @@
  *      Author: ans
  */
 
-#include "Main/App.hpp"
-
 #include "main.hpp"
 
 //! Entry point of the application.
