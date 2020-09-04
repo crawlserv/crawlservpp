@@ -300,6 +300,9 @@ namespace crawlservpp::Data {
 		bool checkConsistency{false};
 		std::size_t tokenBytes{0};
 
+		// lemmatizer
+		Lemmatizer lemmatizer;
+
 		// internal static helper functions
 		[[nodiscard]] static std::size_t getValidLengthOfChunk(
 				const std::string& source,
@@ -2832,7 +2835,7 @@ namespace crawlservpp::Data {
 			}
 		};
 
-		auto wordLambda = [&wordManipulators, &wordModels](std::string& word) {
+		auto wordLambda = [&wordManipulators, &wordModels, this](std::string& word) {
 			for(
 					auto it{wordManipulators.cbegin()};
 					it != wordManipulators.cend();
@@ -2869,7 +2872,7 @@ namespace crawlservpp::Data {
 					break;
 
 				case wordManipLemmatizer:
-					Data::Lemmatizer::lemmatize(word, wordModels.at(index));
+					this->lemmatizer.lemmatize(word, wordModels.at(index));
 
 					break;
 
@@ -3273,7 +3276,7 @@ namespace crawlservpp::Data {
 					if(statusCounter == tokenizeUpdateEvery) {
 						if(!statusSetter.update(
 								static_cast<float>(pos + 1)
-								/ (this->corpus.size() + corpusTrimmed),
+								/ static_cast<float>(this->corpus.size() + corpusTrimmed),
 								true
 						)) {
 							return false;
