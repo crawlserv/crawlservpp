@@ -43,7 +43,7 @@
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// std::setlocale
 #include <cmath>		// std::lround
-#include <cstdint>		// std::int64_t, std::uint16_t, std::uint64_t
+#include <cstdint>		// std::uint8_t, std::int64_t, std::uint16_t, std::uint64_t
 #include <ctime>		// std::tm, std::strftime, std::time_t
 #include <exception>	// std::exception
 #include <iomanip>		// std::get_time
@@ -74,20 +74,38 @@ namespace crawlservpp::Helper::DateTime {
 	//! The keyword to use a UNIX time format plus an offset.
 	inline constexpr auto unixTimeFormatPlus{"UNIX+"sv};
 
-	//! The keyword to use a UNIX time format minus an offset
+	//! The keyword to use a UNIX time format minus an offset.
 	inline constexpr auto unixTimeFormatMinus{"UNIX-"sv};
 
-	//! The length of the keyword to use a UNIX time format with offset
+	//! The length of the keyword to use a UNIX time format with offset.
 	inline constexpr auto unixTimeFormatXLength{5};
 
 	//! The position of the beginning of a UNIX time format offset.
 	inline constexpr auto unixTimeFormatXOffset{4};
 
-	//! An array containing English ordinal suffixes to be stripped from numbers
+	//! An array containing English ordinal suffixes to be stripped from numbers.
 	inline constexpr std::array englishOrdinalSuffixes{"st"sv, "nd"sv, "rd"sv, "th"sv};
 
-	//! The length of English ordinal suffixes to be stripped from numbers
+	//! The length of English ordinal suffixes to be stripped from numbers.
 	inline constexpr auto englishOrdinalSuffixLength{2};
+
+	//! An array containing 1-letter Russian ordinal suffixes to be stripped from numbers.
+	inline constexpr std::array russianOrdinalSuffixes{"-й"sv, "-я"sv, "-е"sv, "-м"sv, "-х"sv};
+
+	//! The length of 1-letter Russian ordinal suffixes to be stripped from numbers, in bytes.
+	inline constexpr auto russianOrdinalSuffixLength{3};
+
+	//! An array containing 2-letter Russian ordinal suffixes to be stripped from numbers.
+	inline constexpr std::array russianOrdinalSuffixes2{"-ый"sv, "-го"sv, "-му"sv, "-ми"sv};
+
+	//! The length of 2-letter Russian ordinal suffixes to be stripped from numbers, in bytes.
+	inline constexpr auto russianOrdinalSuffixLength2{5};
+
+	//! An array containing Ukrainian ordinal suffixes to be stripped from numbers.
+	inline constexpr std::array ukrainianOrdinalSuffixes{"-а"sv, "-е"sv, "-і"sv, "-я"sv, "-є"sv};
+
+	//! The length of Ukrainian ordinal suffixes to be stripped from numbers, in bytes.
+	inline constexpr auto ukrainianOrdinalSuffixLength{3};
 
 	//! The date/time format used by the MySQL database (as @c C string).
 	inline constexpr auto sqlTimeStamp{"%F %T"};
@@ -95,8 +113,29 @@ namespace crawlservpp::Helper::DateTime {
 	//! The length of a formatted time stamp in the MySQL database.
 	inline constexpr auto sqlTimeStampLength{19};
 
-	//! The prefix for French locale.
+	//! The prefix for French locales.
 	inline constexpr auto frenchLocalePrefix{"fr"sv};
+
+	//! The prefix for Russian locales.
+	inline constexpr auto russianLocalePrefix{"ru"sv};
+
+	//! The prefix for Ukrainian locales.
+	inline constexpr auto ukrainianLocalePrefix{"uk"sv};
+
+	//! The length of the 12-h suffix (AM/PM).
+	inline constexpr auto amPmLength{2};
+
+	//! The number of hours to be added to a PM time, or to be subtracted from a 12th hour AM time.
+	inline constexpr auto hourChange{12};
+
+	//! The hour of noon and midnight.
+	inline constexpr auto hourNoonMidnight{12};
+
+	//! The two digits from which two-digit years will be interpreted as years after 2000.
+	inline constexpr auto centuryFrom{69};
+
+	//! The number of years in a century.
+	inline constexpr auto yearsPerCentury{100};
 
 	//! The number of microseconds per day used for date/time formatting.
 	inline constexpr auto microsecondsPerDay{86400000000};
@@ -134,7 +173,7 @@ namespace crawlservpp::Helper::DateTime {
 	//! The number of microseconds per millisecond used for date/time formatting.
 	inline constexpr auto microsecondsPerMillisecond{1000};
 
-	//! The length of a date in valid ISO Format (YYYY-MM-DD)
+	//! The length of a date in valid ISO Format (YYYY-MM-DD).
 	inline constexpr auto isoDateLength{10};
 
 	///@}
@@ -158,6 +197,7 @@ namespace crawlservpp::Helper::DateTime {
 	);
 	void convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	void convertSQLTimeStampToTimeStamp(std::string& timeStamp);
+	void convert12hTo24h(int& hour, bool isPm);
 
 	///@}
 	///@name Formatting
@@ -173,7 +213,6 @@ namespace crawlservpp::Helper::DateTime {
 	///@{
 
 	[[nodiscard]] bool isValidISODate(const std::string& isoDate);
-	[[nodiscard]] bool isValidCTime(const std::tm& cTime);
 
 	///@}
 	///@name Comparison
@@ -185,8 +224,20 @@ namespace crawlservpp::Helper::DateTime {
 	///@name Helpers
 	///@{
 
-	void removeEnglishOrdinals(std::string& inOut);
-	void fixFrenchMonths(std::string_view locale, std::string& inOut);
+	void removeEnglishOrdinals(std::string& strInOut);
+	void removeRussianOrdinals(std::string_view locale, std::string& strInOut);
+	void removeUkrainianOrdinals(std::string_view locale, std::string& strInOut);
+	void fixFrenchMonths(std::string_view locale, std::string& strInOut);
+	void fixRussianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut);
+	void fixUkrainianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut);
+	void extendSingleDigits(std::string& dateTimeString);
+	void fixYear(std::string_view format, int& year);
+	void handle12hTime(
+			std::string& formatString,
+			const std::string& dateTimeString,
+			bool& outIsAm,
+			bool& outIsPm
+	);
 
 	///@}
 
@@ -331,7 +382,7 @@ namespace crawlservpp::Helper::DateTime {
 			);
 		}
 		else {
-			// remove English ordinal endings (st, nd, rd, th)
+			// remove English and Ukrainian ordinal endings (st, nd, rd, th)
 			removeEnglishOrdinals(dateTime);
 
 			std::istringstream in(dateTime);
@@ -344,25 +395,35 @@ namespace crawlservpp::Helper::DateTime {
 			}
 			else {
 				// try good old C time
+				std::string formatString{customFormat};
+				bool isAm{false};
+				bool isPm{false};
 				std::tm cTime{};
 
-				{
-					std::istringstream inStringStream(dateTime);
+				extendSingleDigits(dateTime);
+				handle12hTime(formatString, dateTime, isAm, isPm);
 
-					inStringStream.imbue(std::locale(std::setlocale(LC_ALL, nullptr)));
+				std::istringstream inStringStream(dateTime);
 
-					inStringStream >> std::get_time(&cTime, customFormat.c_str());
+				inStringStream.imbue(std::locale(std::setlocale(LC_ALL, nullptr)));
 
-					if(!isValidCTime(cTime)) {
-						throw Exception(
-								"Could not convert '"
-								+ dateTime
-								+ "' [expected format: '"
-								+ customFormat
-								+ "'] to date/time"
-						);
-					}
+				inStringStream >> std::get_time(&cTime, formatString.c_str());
+
+				if(inStringStream.fail()) {
+					throw Exception(
+							"Could not convert '"
+							+ dateTime
+							+ "' [expected format: '"
+							+ formatString
+							+ "'] to date/time"
+					);
 				}
+
+				if(isAm || isPm) {
+					convert12hTo24h(cTime.tm_hour, isPm);
+				}
+
+				fixYear(formatString, cTime.tm_year);
 
 				std::array<char, sqlTimeStampLength + 1> out{};
 
@@ -436,7 +497,14 @@ namespace crawlservpp::Helper::DateTime {
 		// fix French months ("avr." -> "avril")
 		fixFrenchMonths(locale, dateTime);
 
+		// fix Russian and Ukrainian months
+		std::string formatString{customFormat};
+		fixRussianMonths(locale, dateTime, formatString);
+		fixUkrainianMonths(locale, dateTime, formatString);
+
+		// remove ordinals
 		removeEnglishOrdinals(dateTime);
+		removeUkrainianOrdinals(locale, dateTime);
 
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
@@ -448,32 +516,41 @@ namespace crawlservpp::Helper::DateTime {
 			throw LocaleException("Unknown locale \'" + locale + "\'");
 		}
 
-		in >> date::parse(customFormat, tp);
+		in >> date::parse(formatString, tp);
 
 		if(bool(in)) {
 			dateTime = date::format(sqlTimeStamp, tp);
 		}
 		else {
 			// try good old C time
+			bool isAm{false};
+			bool isPm{false};
 			std::tm cTime{};
 
-			{
-				std::istringstream inStringStream(dateTime);
+			extendSingleDigits(dateTime);
+			handle12hTime(formatString, dateTime, isAm, isPm);
 
-				inStringStream.imbue(std::locale(locale));
+			std::istringstream inStringStream(dateTime);
 
-				inStringStream >> std::get_time(&cTime, customFormat.c_str());
+			inStringStream.imbue(std::locale(locale));
 
-				if(!isValidCTime(cTime)) {
-					throw Exception(
-							"Could not convert '"
-							+ dateTime
-							+ "' [expected format: '"
-							+ customFormat
-							+ "'] to date/time"
-					);
-				}
+			inStringStream >> std::get_time(&cTime, formatString.c_str());
+
+			if(inStringStream.fail()) {
+				throw Exception(
+						"Could not convert '"
+						+ dateTime
+						+ "' [expected format: '"
+						+ formatString
+						+ "'] to date/time"
+				);
 			}
+
+			if(isAm || isPm) {
+				convert12hTo24h(cTime.tm_hour, isPm);
+			}
+
+			fixYear(formatString, cTime.tm_year);
 
 			std::array<char, sqlTimeStampLength + 1> out{};
 
@@ -489,7 +566,7 @@ namespace crawlservpp::Helper::DateTime {
 						"Could not convert '"
 						+ dateTime
 						+ "' [expected format: '"
-						+ customFormat
+						+ formatString
 						+ "', locale: '"
 						+ locale
 						+ "'] to date/time"
@@ -547,6 +624,27 @@ namespace crawlservpp::Helper::DateTime {
 		}
 
 		timeStamp = date::format("%Y%m%d%H%M%S", tp);
+	}
+
+	//! Converts an hour from the 12h to the 24h system.
+	/*!
+	 * \param hour Reference to the hour which will be
+	 *   changed accordingly, if necessary.
+	 * \param isPm Indicates whether the given hour is @c
+	 *   PM. If false, it will be interpreted as @c AM.
+	 */
+	inline void convert12hTo24h(
+			int& hour,
+			bool isPm
+	) {
+		if(isPm) {
+			if(hour < hourNoonMidnight) { /* not 12 PM [noon] */
+				hour += hourChange;
+			}
+		}
+		else if(hour == hourNoonMidnight) { /* at 12 AM [midnight] */
+			hour = 0;
+		}
 	}
 
 	//! Converts microseconds into a well-formatted string.
@@ -770,18 +868,6 @@ namespace crawlservpp::Helper::DateTime {
 		return bool(in);
 	}
 
-	//! Checks whether a @c C time structure is valid.
-	/*!
-	 * \param cTime Constant reference to the @c C time structure to be
-	 *   checked.
-	 *
-	 * \returns True, if the given structure is valid, i.e. a valid day
-	 *   of the month has been set. False otherwise.
-	 */
-	inline bool isValidCTime(const std::tm& cTime) {
-		return cTime.tm_mday > 0;
-	}
-
 	//! Checks whether the given ISO date is in the given range of dates.
 	/*!
 	 * \note Only the first ten characters of the given dates will be
@@ -878,7 +964,194 @@ namespace crawlservpp::Helper::DateTime {
 		}
 	}
 
-	//! Replaces the abbreviation "avr." for the month of april (avril) in the given string, if the locale is French.
+	//! Removes all Russian ordinal suffixes after numbers in the given string, if the locale is Russian.
+	/*!
+	 * \param locale String view containing the locale.
+	 * \param strInOut A reference to the string containing the date/time,
+	 *   from which the Russian ordinal suffixes will be removed in situ,
+	 *   if the given locale is Russian.
+	 */
+	inline void removeRussianOrdinals(std::string_view locale, std::string& strInOut) {
+		std::string prefix(locale, 0, russianLocalePrefix.length());
+
+		std::transform(
+				prefix.begin(),
+				prefix.end(),
+				prefix.begin(),
+				[](const auto c) {
+					return std::tolower(c);
+				}
+		);
+
+		if(prefix == russianLocalePrefix) {
+			std::size_t pos{0};
+
+			// remove 2-letter suffixes
+			while(pos + russianOrdinalSuffixLength2 <= strInOut.length()) {
+				std::size_t next{std::string::npos};
+
+				for(const auto& suffix : russianOrdinalSuffixes2) {
+					const auto search{strInOut.find(suffix, pos)};
+
+					if(search < next) {
+						next = search;
+					}
+				}
+
+				pos = next;
+
+				if(pos == std::string::npos) {
+					break;
+				}
+
+				if(pos > 0) {
+					if(std::isdigit(strInOut.at(pos - 1)) != 0) {
+						const auto end{pos + russianOrdinalSuffixLength2};
+
+						if(
+								end == strInOut.length()
+								|| std::isspace(strInOut.at(end)) != 0
+								|| std::ispunct(strInOut.at(end)) != 0
+						) {
+							// remove -ый, -го, -му and -ми
+							strInOut.erase(pos, russianOrdinalSuffixLength2);
+
+							// skip whitespace/punctuation afterwards
+							++pos;
+						}
+						else {
+							pos += russianOrdinalSuffixLength2 + 1;
+						}
+					}
+					else {
+						pos += russianOrdinalSuffixLength2 + 1;
+					}
+				}
+				else {
+					pos += russianOrdinalSuffixLength2 + 1;
+				}
+			}
+
+			// remove 1-letter suffixes
+			pos = 0;
+
+			while(pos + russianOrdinalSuffixLength <= strInOut.length()) {
+				std::size_t next{std::string::npos};
+
+				for(const auto& suffix : russianOrdinalSuffixes) {
+					const auto search{strInOut.find(suffix, pos)};
+
+					if(search < next) {
+						next = search;
+					}
+				}
+
+				pos = next;
+
+				if(pos == std::string::npos) {
+					break;
+				}
+
+				if(pos > 0) {
+					if(std::isdigit(strInOut.at(pos - 1)) != 0) {
+						const auto end{pos + russianOrdinalSuffixLength};
+
+						if(
+								end == strInOut.length()
+								|| std::isspace(strInOut.at(end)) != 0
+								|| std::ispunct(strInOut.at(end)) != 0
+						) {
+							// remove -й, -я, -е, -м and -х
+							strInOut.erase(pos, russianOrdinalSuffixLength);
+
+							// skip whitespace/punctuation afterwards
+							++pos;
+						}
+						else {
+							pos += russianOrdinalSuffixLength + 1;
+						}
+					}
+					else {
+						pos += russianOrdinalSuffixLength + 1;
+					}
+				}
+				else {
+					pos += russianOrdinalSuffixLength + 1;
+				}
+			}
+		}
+	}
+
+	//! Removes all Ukrainian ordinal suffixes after numbers in the given string, if the locale is Ukrainian.
+	/*!
+	 * \param locale String view containing the locale.
+	 * \param strInOut A reference to the string containing the date/time,
+	 *   from which the Ukrainian ordinal suffixes will be removed in situ,
+	 *   if the given locale is Ukrainian.
+	 */
+	inline void removeUkrainianOrdinals(std::string_view locale, std::string& strInOut) {
+		std::string prefix(locale, 0, ukrainianLocalePrefix.length());
+
+		std::transform(
+				prefix.begin(),
+				prefix.end(),
+				prefix.begin(),
+				[](const auto c) {
+					return std::tolower(c);
+				}
+		);
+
+		if(prefix == ukrainianLocalePrefix) {
+			std::size_t pos{0};
+
+			while(pos + ukrainianOrdinalSuffixLength <= strInOut.length()) {
+				std::size_t next{std::string::npos};
+
+				for(const auto& suffix : ukrainianOrdinalSuffixes) {
+					const auto search{strInOut.find(suffix, pos)};
+
+					if(search < next) {
+						next = search;
+					}
+				}
+
+				pos = next;
+
+				if(pos == std::string::npos) {
+					break;
+				}
+
+				if(pos > 0) {
+					if(std::isdigit(strInOut.at(pos - 1)) != 0) {
+						const auto end{pos + ukrainianOrdinalSuffixLength};
+
+						if(
+								end == strInOut.length()
+								|| std::isspace(strInOut.at(end)) != 0
+								|| std::ispunct(strInOut.at(end)) != 0
+						) {
+							// remove -а, -е, -і, -я and -є
+							strInOut.erase(pos, ukrainianOrdinalSuffixLength);
+
+							// skip whitespace/punctuation afterwards
+							++pos;
+						}
+						else {
+							pos += ukrainianOrdinalSuffixLength + 1;
+						}
+					}
+					else {
+						pos += ukrainianOrdinalSuffixLength + 1;
+					}
+				}
+				else {
+					pos += ukrainianOrdinalSuffixLength + 1;
+				}
+			}
+		}
+	}
+
+	//! Replaces the abbreviation @c avr. for the month of april (avril) in the given string, if the locale is French.
 	/*!
 	 * If the given locale is not French, the function call will
 	 *  be without consequences.
@@ -903,6 +1176,348 @@ namespace crawlservpp::Helper::DateTime {
 			if(prefix == frenchLocalePrefix) {
 				Helper::Strings::replaceAll(strInOut, "avr.", "avril");
 			}
+		}
+	}
+
+	//! Shortens Russian month names and replaces the abbreviations @c май and @c сент, if the locale is Russian.
+	/*!
+	 * If the given locale is not Russian, the function
+	 *  call will be without consequences.
+	 *
+	 * \param locale A string view containing the locale to
+	 *   be checked for Russian.
+	 * \param strInOut A reference to the string containing
+	 *   the date/time, in which the months will be
+          replaced, if the given locale is Russian.
+	 * \param formatInOut A reference to the string
+	 *   containing the formatting string that will be
+	 *   changed accordingly, if necessary.
+	 */
+	inline void fixRussianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut) {
+		if(locale.length() >= russianLocalePrefix.length()) {
+			std::string prefix(locale, 0, russianLocalePrefix.length());
+
+			std::transform(
+					prefix.begin(),
+					prefix.end(),
+					prefix.begin(),
+					[](const auto c) {
+						return std::tolower(c);
+					}
+			);
+
+			if(prefix == russianLocalePrefix) {
+				Helper::Strings::replaceAll(strInOut, "январь", "янв");
+				Helper::Strings::replaceAll(strInOut, "Январь", "янв");
+				Helper::Strings::replaceAll(strInOut, "Январь", "янв");
+
+				Helper::Strings::replaceAll(strInOut, "февраль", "фев");
+				Helper::Strings::replaceAll(strInOut, "Февраль", "фев");
+				Helper::Strings::replaceAll(strInOut, "ФЕВРАЛЬ", "фев");
+
+				Helper::Strings::replaceAll(strInOut, "март", "мар ");
+				Helper::Strings::replaceAll(strInOut, "Март", "мар ");
+				Helper::Strings::replaceAll(strInOut, "МАРТ", "мар ");
+
+				Helper::Strings::replaceAll(strInOut, "апрель", "апр");
+				Helper::Strings::replaceAll(strInOut, "Апрель", "апр");
+				Helper::Strings::replaceAll(strInOut, "АПРЕЛЬ", "апр");
+
+				Helper::Strings::replaceAll(strInOut, "май", "мая");
+				Helper::Strings::replaceAll(strInOut, "Май", "мая");
+				Helper::Strings::replaceAll(strInOut, "МАЙ", "мая");
+
+				Helper::Strings::replaceAll(strInOut, "июнь", "июн");
+				Helper::Strings::replaceAll(strInOut, "Июнь", "июн");
+				Helper::Strings::replaceAll(strInOut, "ИЮНь", "июн");
+
+				Helper::Strings::replaceAll(strInOut, "июль", "июл");
+				Helper::Strings::replaceAll(strInOut, "Июль", "июл");
+				Helper::Strings::replaceAll(strInOut, "ИЮЛь", "июл");
+
+				Helper::Strings::replaceAll(strInOut, "август", "авг");
+				Helper::Strings::replaceAll(strInOut, "Август", "авг");
+				Helper::Strings::replaceAll(strInOut, "АВГУСТ", "авг");
+
+				Helper::Strings::replaceAll(strInOut, "сентябрь", "сен");
+				Helper::Strings::replaceAll(strInOut, "Сентябрь", "сен");
+				Helper::Strings::replaceAll(strInOut, "СЕНТЯБРЬ", "сен");
+
+				Helper::Strings::replaceAll(strInOut, "сент", "сен");
+				Helper::Strings::replaceAll(strInOut, "Сент", "сен");
+				Helper::Strings::replaceAll(strInOut, "СЕНТ", "сен");
+
+				Helper::Strings::replaceAll(strInOut, "октябрь", "окт");
+				Helper::Strings::replaceAll(strInOut, "Октябрь", "окт");
+				Helper::Strings::replaceAll(strInOut, "ОКТЯБРЬ", "окт");
+
+				Helper::Strings::replaceAll(strInOut, "ноябрь", "ноя");
+				Helper::Strings::replaceAll(strInOut, "Ноябрь", "ноя");
+				Helper::Strings::replaceAll(strInOut, "НОЯБРЬ", "ноя");
+
+				Helper::Strings::replaceAll(strInOut, "декабрь", "дек");
+				Helper::Strings::replaceAll(strInOut, "Декабрь", "дек");
+				Helper::Strings::replaceAll(strInOut, "ДЕКАБРЬ", "дек");
+
+				Helper::Strings::replaceAll(formatInOut, "%B", "%b");
+			}
+		}
+	}
+
+	//! Shortens Ukrainian month names, if the locale is Ukrainian.
+	/*!
+	 * If the given locale is not Ukrainian, the function
+	 *  call will be without consequences.
+	 *
+	 * \param locale A string view containing the locale to
+	 *   be checked for Ukrainian.
+	 * \param strInOut A reference to the string containing
+	 *   the date/time, in which the months will be
+		  replaced, if the given locale is Ukrainian.
+	 * \param formatInOut A reference to the string
+	 *   containing the formatting string that will be
+	 *   changed accordingly, if necessary.
+	 */
+	inline void fixUkrainianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut) {
+		if(locale.length() >= ukrainianLocalePrefix.length()) {
+			std::string prefix(locale, 0, ukrainianLocalePrefix.length());
+
+			std::transform(
+					prefix.begin(),
+					prefix.end(),
+					prefix.begin(),
+					[](const auto c) {
+						return std::tolower(c);
+					}
+			);
+
+			if(prefix == ukrainianLocalePrefix) {
+				Helper::Strings::replaceAll(strInOut, "січень", "січ");
+				Helper::Strings::replaceAll(strInOut, "Січень", "січ");
+				Helper::Strings::replaceAll(strInOut, "СІЧЕНЬ", "січ");
+
+				Helper::Strings::replaceAll(strInOut, "лютий", "лют");
+				Helper::Strings::replaceAll(strInOut, "Лютий", "лют");
+				Helper::Strings::replaceAll(strInOut, "ЛЮТИЙ", "лют");
+
+				Helper::Strings::replaceAll(strInOut, "березень", "бер");
+				Helper::Strings::replaceAll(strInOut, "Березень", "бер");
+				Helper::Strings::replaceAll(strInOut, "БЕРЕЗЕНЬ", "бер");
+
+				Helper::Strings::replaceAll(strInOut, "квітень", "кві");
+				Helper::Strings::replaceAll(strInOut, "Квітень", "кві");
+				Helper::Strings::replaceAll(strInOut, "КВІТЕНЬ", "кві");
+
+				Helper::Strings::replaceAll(strInOut, "травень", "тра");
+				Helper::Strings::replaceAll(strInOut, "Травень", "тра");
+				Helper::Strings::replaceAll(strInOut, "ТРАВЕНЬ", "тра");
+
+				Helper::Strings::replaceAll(strInOut, "червень", "чер");
+				Helper::Strings::replaceAll(strInOut, "Червень", "чер");
+				Helper::Strings::replaceAll(strInOut, "ЧЕРВЕНЬ", "чер");
+
+				Helper::Strings::replaceAll(strInOut, "липень", "лип");
+				Helper::Strings::replaceAll(strInOut, "Липень", "лип");
+				Helper::Strings::replaceAll(strInOut, "ЛИПЕНЬ", "лип");
+
+				Helper::Strings::replaceAll(strInOut, "серпень", "сер");
+				Helper::Strings::replaceAll(strInOut, "Серпень", "сер");
+				Helper::Strings::replaceAll(strInOut, "СЕРПЕНЬ", "сер");
+
+				Helper::Strings::replaceAll(strInOut, "вересень", "вер");
+				Helper::Strings::replaceAll(strInOut, "Вересень", "вер");
+				Helper::Strings::replaceAll(strInOut, "ВЕРЕСЕНЬ", "вер");
+
+				Helper::Strings::replaceAll(strInOut, "жовтень", "жов");
+				Helper::Strings::replaceAll(strInOut, "Жовтень", "жов");
+				Helper::Strings::replaceAll(strInOut, "ЖОВТЕНЬ", "жов");
+
+				Helper::Strings::replaceAll(strInOut, "листопад", "лис");
+				Helper::Strings::replaceAll(strInOut, "Листопад", "лис");
+				Helper::Strings::replaceAll(strInOut, "ЛИСТОПАД", "лис");
+
+				Helper::Strings::replaceAll(strInOut, "грудень", "гру");
+				Helper::Strings::replaceAll(strInOut, "Грудень", "гру");
+				Helper::Strings::replaceAll(strInOut, "ГРУДЕНЬ", "гру");
+
+				Helper::Strings::replaceAll(formatInOut, "%B", "%b");
+			}
+		}
+	}
+
+	//! Extends single digits (@c 1-9) by adding a leading zero to each of them.
+	/*!
+	 * \param dateTimeString Reference to the string
+	 *   in which all single digits will be extended.
+	 */
+	inline void extendSingleDigits(std::string& dateTimeString) {
+		std::size_t pos{0};
+
+		while(pos < dateTimeString.length()) {
+			pos = dateTimeString.find_first_of("123456789", pos);
+
+			if(pos == std::string::npos) {
+				break;
+			}
+
+			if(
+					(
+							pos == 0
+							|| !std::isdigit(dateTimeString[pos - 1])
+					) &&
+					(
+							pos == dateTimeString.length() - 1
+							|| !std::isdigit(dateTimeString[pos + 1])
+					)
+			) {
+				// extend digit by adding leading zero
+				dateTimeString.insert(pos, 1, '0');
+
+				++pos;
+			}
+
+			++pos;
+		}
+	}
+
+	//! Changes a year before 1969 into a year after 2000, if it has been parsed from two digits.
+	/*!
+	 * \param format View to the string containing the
+	 *   format. If it does not contain @c %y, the
+	 *   call to the function will have no effect.
+	 * \param year Reference to the year to be changed,
+	 *   if necessary.
+	 */
+	inline void fixYear(std::string_view format, int& year) {
+		if(
+				format.find("%y") != std::string_view::npos
+				&& year < centuryFrom
+		) {
+			year += yearsPerCentury;
+		}
+	}
+
+	//! Handles 12h-time manually to avoid buggy standard library implementations.
+	/*!
+	 * If the format contains a 12h suffix (@c %p),
+	 *  it will be replaced by the actual content
+	 *  of the suffix. For times after noon (@c pm),
+	 *  the 12 hours before noon need to be manually
+	 *  added during conversion. For times in the
+	 *  12th hour, 12 hours need to be subtracted
+	 *  manually from the AM time.
+	 *
+	 * \param formatString Reference to a string
+	 *   containing the format of the date/time.
+	 * \param dateTimeString Constant reference to a
+	 *   string containing the date/time.
+	 * \param outIsAm Reference to a boolean value
+	 *   that will be set to @c true, if an AM time
+	 *   has been encountered, i.e. during conversion,
+	 *   twelve hours need to be manually subtracted
+	 *   if the given time is in the 12th hour.
+	 *   Otherwise its value will not be changed.
+	 * \param outIsPm Reference to a boolean value
+	 *   that will be set to @c true, if an PM time
+	 *   has been encountered, i.e. during conversion,
+	 *   twelve hours need to be manually added.
+	 *   Otherwise its value will not be changed.
+	 *
+	 * \note Replaced will be the first @c am, @c AM,
+	 *   @c pm, or @c PM that is surrounded by white
+	 *   spaces, punctuation, digits and/or the
+	 *   beginning/end of the string, regardless
+	 *   of its actual position.
+	 */
+	inline void handle12hTime(
+			std::string& formatString,
+			const std::string& dateTimeString,
+			bool& outIsAm,
+			bool& outIsPm
+	) {
+		const auto formatPos{formatString.find("%p")};
+
+		if(formatPos == std::string::npos) {
+			return;
+		}
+
+		std::size_t pos{0};
+
+		while(pos < dateTimeString.length()) {
+			auto newPos{pos};
+			auto amPos1{dateTimeString.find("am", pos)};
+			auto amPos2{dateTimeString.find("AM", pos)};
+			auto amPos{std::min(amPos1, amPos2)};
+
+			if(amPos != std::string::npos) {
+				newPos = amPos;
+
+				if(
+						(
+								amPos == 0
+								|| std::isspace(dateTimeString[amPos - 1])
+								|| std::ispunct(dateTimeString[amPos - 1])
+								|| std::isdigit(dateTimeString[amPos - 1])
+						) && (
+								amPos == dateTimeString.length() - amPmLength
+								|| std::isspace(dateTimeString[amPos + amPmLength])
+								|| std::ispunct(dateTimeString[amPos + amPmLength])
+								|| std::isdigit(dateTimeString[amPos + amPmLength])
+						)
+				) {
+					// found am/AM -> replace it in format string
+					Helper::Strings::replaceAll(
+							formatString,
+							"%p",
+							dateTimeString.substr(amPos, amPmLength)
+					);
+
+					outIsAm = true;
+
+					return;
+				}
+			}
+
+			auto pmPos1{dateTimeString.find("pm", pos)};
+			auto pmPos2{dateTimeString.find("PM", pos)};
+			auto pmPos{std::min(pmPos1, pmPos2)};
+
+			if(pmPos != std::string::npos) {
+				if(pmPos > newPos) {
+					newPos = pmPos;
+				}
+
+				if(
+						(
+								pmPos == 0
+								|| std::isspace(dateTimeString[pmPos - 1])
+								|| std::ispunct(dateTimeString[pmPos - 1])
+								|| std::isdigit(dateTimeString[pmPos - 1])
+						) && (
+								pmPos == dateTimeString.length() - amPmLength
+								|| std::isspace(dateTimeString[pmPos + amPmLength])
+								|| std::ispunct(dateTimeString[pmPos + amPmLength])
+								|| std::isdigit(dateTimeString[pmPos + amPmLength])
+						)
+				) {
+					// found pm/PM -> replace it in format string
+					Helper::Strings::replaceAll(
+							formatString,
+							"%p",
+							dateTimeString.substr(pmPos, amPmLength)
+					);
+
+					outIsPm = true;
+
+					return;
+				}
+			}
+
+			if(newPos == pos) {
+				break;
+			}
+
+			pos = newPos;
 		}
 	}
 
