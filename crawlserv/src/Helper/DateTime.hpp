@@ -1144,13 +1144,27 @@ namespace crawlservpp::Helper::DateTime {
 		}
 
 		// if the locale is not Russian, replace the Russified "maj" with English "may"
+		const bool bigB{
+			formatInOut.find("%B") != std::string::npos
+		};
+
 		if(
-				formatInOut.find("%b") != std::string::npos
-				|| formatInOut.find("%B") != std::string::npos
+				bigB
+				|| formatInOut.find("%b") != std::string::npos
 		) {
+			std::string oldString;
+
+			if(bigB) {
+				oldString = strInOut;
+			}
+
 			Helper::Strings::replaceAll(strInOut, "maj", "may");
 			Helper::Strings::replaceAll(strInOut, "Maj", "may");
 			Helper::Strings::replaceAll(strInOut, "MAJ", "may");
+
+			if(bigB && oldString != strInOut) {
+				Helper::Strings::replaceAll(formatInOut, "%B", "%b");
+			}
 		}
 	}
 
