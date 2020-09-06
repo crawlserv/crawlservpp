@@ -57,7 +57,7 @@ namespace crawlservpp::Helper::Utf8 {
 	//! Bit mask to extract the top two bits of a multibyte character.
 	inline constexpr auto bitmaskTopTwoBits{0xc0};
 
-	//! Shift six bits
+	//! Shift six bits.
 	inline constexpr auto shiftSixBits{6};
 
 	//! Bit mask to check the last six bits for 0b000001.
@@ -121,7 +121,7 @@ namespace crawlservpp::Helper::Utf8 {
 	//! Converts a string from ISO-8859-1 to UTF-8.
 	/*!
 	 * \param strIn View of the string to be
-	 *   converted
+	 *   converted.
 	 *
 	 * \returns A copy of the converted string.
 	 */
@@ -261,7 +261,8 @@ namespace crawlservpp::Helper::Utf8 {
 	 *   will be replaced.
 	 * \param strOut Reference to a string
 	 *   that will be replaced with the
-	 *   resulting string.
+	 *   resulting string, if invalid UTF-8
+	 *   characters have been encountered.
 	 *
 	 * \returns True, if the given string
 	 *   contains invalid UTF-8 characters
