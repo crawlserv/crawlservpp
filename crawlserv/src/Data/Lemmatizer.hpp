@@ -201,7 +201,7 @@ namespace crawlservpp::Data {
 		}
 
 		// return lemma with most equal characters in tag and most occurences
-		for(const auto property : entry->second) {
+		for(const auto& property : entry->second) {
 			if(property.count == max) {
 				word = property.lemma;
 
