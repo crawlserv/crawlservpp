@@ -86,32 +86,25 @@ namespace crawlservpp::Helper::DateTime {
 	//! An array containing English ordinal suffixes to be stripped from numbers.
 	inline constexpr std::array englishOrdinalSuffixes{"st"sv, "nd"sv, "rd"sv, "th"sv};
 
-	//! The length of English ordinal suffixes to be stripped from numbers.
-	inline constexpr auto englishOrdinalSuffixLength{2};
+	//! An array containing French ordinal suffix to be stripped from numbers.
+	inline constexpr std::array frenchOrdinalSuffixes{"e"sv, "er"sv};
 
-	//! An array containing 1-letter Russian ordinal suffixes to be stripped from numbers.
-	inline constexpr std::array russianOrdinalSuffixes{"-й"sv, "-я"sv, "-е"sv, "-м"sv, "-х"sv};
-
-	//! The length of 1-letter Russian ordinal suffixes to be stripped from numbers, in bytes.
-	inline constexpr auto russianOrdinalSuffixLength{3};
-
-	//! An array containing 2-letter Russian ordinal suffixes to be stripped from numbers.
-	inline constexpr std::array russianOrdinalSuffixes2{"-ый"sv, "-го"sv, "-му"sv, "-ми"sv};
-
-	//! The length of 2-letter Russian ordinal suffixes to be stripped from numbers, in bytes.
-	inline constexpr auto russianOrdinalSuffixLength2{5};
+	//! An array containing Russian ordinal suffixes to be stripped from numbers.
+	inline constexpr std::array russianOrdinalSuffixes{
+		"-ый"sv, "-го"sv, "-му"sv, "-ми"sv, "-й"sv, "-я"sv, "-е"sv, "-м"sv, "-х"sv
+	};
 
 	//! An array containing Ukrainian ordinal suffixes to be stripped from numbers.
 	inline constexpr std::array ukrainianOrdinalSuffixes{"-а"sv, "-е"sv, "-і"sv, "-я"sv, "-є"sv};
-
-	//! The length of Ukrainian ordinal suffixes to be stripped from numbers, in bytes.
-	inline constexpr auto ukrainianOrdinalSuffixLength{3};
 
 	//! The date/time format used by the MySQL database (as @c C string).
 	inline constexpr auto sqlTimeStamp{"%F %T"};
 
 	//! The length of a formatted time stamp in the MySQL database.
 	inline constexpr auto sqlTimeStampLength{19};
+
+	//! The prefix for English locales.
+	inline constexpr auto englishLocalePrefix{"en"sv};
 
 	//! The prefix for French locales.
 	inline constexpr auto frenchLocalePrefix{"fr"sv};
@@ -224,9 +217,18 @@ namespace crawlservpp::Helper::DateTime {
 	///@name Helpers
 	///@{
 
-	void removeEnglishOrdinals(std::string& strInOut);
-	void removeRussianOrdinals(std::string_view locale, std::string& strInOut);
-	void removeUkrainianOrdinals(std::string_view locale, std::string& strInOut);
+	template<std::size_t N>
+	void removeOrdinals(
+			const std::array<std::string_view, N>& suffixes,
+			std::string& strInOut
+	);
+	template<std::size_t N>
+	void removeOrdinals(
+			std::string_view currentLocale,
+			std::string_view localePrefix,
+			const std::array<std::string_view, N>& suffixes,
+			std::string& strInOut
+	);
 	void fixFrenchMonths(std::string_view locale, std::string& strInOut);
 	void fixRussianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut);
 	void fixUkrainianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut);
@@ -382,8 +384,8 @@ namespace crawlservpp::Helper::DateTime {
 			);
 		}
 		else {
-			// remove English and Ukrainian ordinal endings (st, nd, rd, th)
-			removeEnglishOrdinals(dateTime);
+			// remove English ordinal endings (st, nd, rd, th)
+			removeOrdinals(englishOrdinalSuffixes, dateTime);
 
 			std::istringstream in(dateTime);
 			date::sys_seconds tp;
@@ -503,8 +505,10 @@ namespace crawlservpp::Helper::DateTime {
 		fixUkrainianMonths(locale, dateTime, formatString);
 
 		// remove ordinals
-		removeEnglishOrdinals(dateTime);
-		removeUkrainianOrdinals(locale, dateTime);
+		removeOrdinals(englishOrdinalSuffixes, dateTime);
+		removeOrdinals(locale, frenchLocalePrefix, frenchOrdinalSuffixes, dateTime);
+		removeOrdinals(locale, russianLocalePrefix, russianOrdinalSuffixes, dateTime);
+		removeOrdinals(locale, ukrainianLocalePrefix, ukrainianOrdinalSuffixes, dateTime);
 
 		std::istringstream in(dateTime);
 		date::sys_seconds tp;
@@ -910,22 +914,31 @@ namespace crawlservpp::Helper::DateTime {
 				&& isoDate <= rangeTo.substr(0, isoDateLength);
 	}
 
-	//! Removes all English ordinal suffixes after numbers in the given string.
+	//! Removes all ordinal suffixes after numbers in the given string.
 	/*!
-	 * \param strInOut A reference to the string containing the date/time,
-	 *   from which the English ordinal suffixes will be removed in situ.
+	 * \param suffixes Constant reference to an array containing
+	 *   the suffixes to be removed from the end of numbers in
+	 *   the given string.
+	 * \param strInOut A reference to the string containing the
+	 *   date/time, from which the ordinal suffixes will be removed
+	 *   in situ.
 	 */
-	inline void removeEnglishOrdinals(std::string& strInOut) {
+	template<std::size_t N> void removeOrdinals(
+			const std::array<std::string_view, N>& suffixes,
+			std::string& strInOut
+	) {
 		std::size_t pos{0};
 
-		while(pos + englishOrdinalSuffixLength <= strInOut.length()) {
-			std::size_t next{std::string::npos};
+		while(pos < strInOut.length()) {
+			auto next{std::string::npos};
+			std::size_t len{0};
 
-			for(const auto& suffix : englishOrdinalSuffixes) {
+			for(const auto& suffix : suffixes) {
 				const auto search{strInOut.find(suffix, pos)};
 
 				if(search < next) {
 					next = search;
+					len = suffix.length();
 				}
 			}
 
@@ -937,7 +950,7 @@ namespace crawlservpp::Helper::DateTime {
 
 			if(pos > 0) {
 				if(std::isdigit(strInOut.at(pos - 1)) != 0) {
-					const auto end{pos + englishOrdinalSuffixLength};
+					const auto end{pos + len};
 
 					if(
 							end == strInOut.length()
@@ -945,208 +958,59 @@ namespace crawlservpp::Helper::DateTime {
 							|| std::ispunct(strInOut.at(end)) != 0
 					) {
 						// remove st, nd, rd or th
-						strInOut.erase(pos, englishOrdinalSuffixLength);
+						strInOut.erase(pos, len);
 
 						// skip whitespace/punctuation afterwards
 						++pos;
 					}
 					else {
-						pos += englishOrdinalSuffixLength + 1;
+						pos += len + 1;
 					}
 				}
 				else {
-					pos += englishOrdinalSuffixLength + 1;
+					pos += len + 1;
 				}
 			}
 			else {
-				pos += englishOrdinalSuffixLength + 1;
+				pos += len + 1;
 			}
 		}
 	}
 
-	//! Removes all Russian ordinal suffixes after numbers in the given string, if the locale is Russian.
+	//! Removes all ordinal suffixes after numbers in the given string, if the current locale matches the given locale.
 	/*!
-	 * \param locale String view containing the locale.
-	 * \param strInOut A reference to the string containing the date/time,
-	 *   from which the Russian ordinal suffixes will be removed in situ,
-	 *   if the given locale is Russian.
+	 * \param currentLocale View of a string containing the current
+	 *   locale.
+	 * \param localePrefix View of a string containing the language
+	 *   prefix of the locale of the given suffixes.
+	 * \param suffixes Constant reference to an array containing
+	 *   the suffixes to be removed from the end of numbers in
+	 *   the given string, if the current locale.
+	 * \param strInOut A reference to the string containing the
+	 *   date/time, from which the ordinal suffixes will be removed
+	 *   in situ, if the current locale starts with the given
+	 *   language prefix.
 	 */
-	inline void removeRussianOrdinals(std::string_view locale, std::string& strInOut) {
-		std::string prefix(locale, 0, russianLocalePrefix.length());
+	template<std::size_t N> void removeOrdinals(
+			std::string_view currentLocale,
+			std::string_view localePrefix,
+			const std::array<std::string_view, N>& suffixes,
+			std::string& strInOut
+	) {
+		if(currentLocale.length() >= localePrefix.length()) {
+			std::string prefix(currentLocale, 0, localePrefix.length());
 
-		std::transform(
-				prefix.begin(),
-				prefix.end(),
-				prefix.begin(),
-				[](const auto c) {
-					return std::tolower(c);
-				}
-		);
-
-		if(prefix == russianLocalePrefix) {
-			std::size_t pos{0};
-
-			// remove 2-letter suffixes
-			while(pos + russianOrdinalSuffixLength2 <= strInOut.length()) {
-				std::size_t next{std::string::npos};
-
-				for(const auto& suffix : russianOrdinalSuffixes2) {
-					const auto search{strInOut.find(suffix, pos)};
-
-					if(search < next) {
-						next = search;
+			std::transform(
+					prefix.begin(),
+					prefix.end(),
+					prefix.begin(),
+					[](const auto c) {
+						return std::tolower(c);
 					}
-				}
+			);
 
-				pos = next;
-
-				if(pos == std::string::npos) {
-					break;
-				}
-
-				if(pos > 0) {
-					if(std::isdigit(strInOut.at(pos - 1)) != 0) {
-						const auto end{pos + russianOrdinalSuffixLength2};
-
-						if(
-								end == strInOut.length()
-								|| std::isspace(strInOut.at(end)) != 0
-								|| std::ispunct(strInOut.at(end)) != 0
-						) {
-							// remove -ый, -го, -му and -ми
-							strInOut.erase(pos, russianOrdinalSuffixLength2);
-
-							// skip whitespace/punctuation afterwards
-							++pos;
-						}
-						else {
-							pos += russianOrdinalSuffixLength2 + 1;
-						}
-					}
-					else {
-						pos += russianOrdinalSuffixLength2 + 1;
-					}
-				}
-				else {
-					pos += russianOrdinalSuffixLength2 + 1;
-				}
-			}
-
-			// remove 1-letter suffixes
-			pos = 0;
-
-			while(pos + russianOrdinalSuffixLength <= strInOut.length()) {
-				std::size_t next{std::string::npos};
-
-				for(const auto& suffix : russianOrdinalSuffixes) {
-					const auto search{strInOut.find(suffix, pos)};
-
-					if(search < next) {
-						next = search;
-					}
-				}
-
-				pos = next;
-
-				if(pos == std::string::npos) {
-					break;
-				}
-
-				if(pos > 0) {
-					if(std::isdigit(strInOut.at(pos - 1)) != 0) {
-						const auto end{pos + russianOrdinalSuffixLength};
-
-						if(
-								end == strInOut.length()
-								|| std::isspace(strInOut.at(end)) != 0
-								|| std::ispunct(strInOut.at(end)) != 0
-						) {
-							// remove -й, -я, -е, -м and -х
-							strInOut.erase(pos, russianOrdinalSuffixLength);
-
-							// skip whitespace/punctuation afterwards
-							++pos;
-						}
-						else {
-							pos += russianOrdinalSuffixLength + 1;
-						}
-					}
-					else {
-						pos += russianOrdinalSuffixLength + 1;
-					}
-				}
-				else {
-					pos += russianOrdinalSuffixLength + 1;
-				}
-			}
-		}
-	}
-
-	//! Removes all Ukrainian ordinal suffixes after numbers in the given string, if the locale is Ukrainian.
-	/*!
-	 * \param locale String view containing the locale.
-	 * \param strInOut A reference to the string containing the date/time,
-	 *   from which the Ukrainian ordinal suffixes will be removed in situ,
-	 *   if the given locale is Ukrainian.
-	 */
-	inline void removeUkrainianOrdinals(std::string_view locale, std::string& strInOut) {
-		std::string prefix(locale, 0, ukrainianLocalePrefix.length());
-
-		std::transform(
-				prefix.begin(),
-				prefix.end(),
-				prefix.begin(),
-				[](const auto c) {
-					return std::tolower(c);
-				}
-		);
-
-		if(prefix == ukrainianLocalePrefix) {
-			std::size_t pos{0};
-
-			while(pos + ukrainianOrdinalSuffixLength <= strInOut.length()) {
-				std::size_t next{std::string::npos};
-
-				for(const auto& suffix : ukrainianOrdinalSuffixes) {
-					const auto search{strInOut.find(suffix, pos)};
-
-					if(search < next) {
-						next = search;
-					}
-				}
-
-				pos = next;
-
-				if(pos == std::string::npos) {
-					break;
-				}
-
-				if(pos > 0) {
-					if(std::isdigit(strInOut.at(pos - 1)) != 0) {
-						const auto end{pos + ukrainianOrdinalSuffixLength};
-
-						if(
-								end == strInOut.length()
-								|| std::isspace(strInOut.at(end)) != 0
-								|| std::ispunct(strInOut.at(end)) != 0
-						) {
-							// remove -а, -е, -і, -я and -є
-							strInOut.erase(pos, ukrainianOrdinalSuffixLength);
-
-							// skip whitespace/punctuation afterwards
-							++pos;
-						}
-						else {
-							pos += ukrainianOrdinalSuffixLength + 1;
-						}
-					}
-					else {
-						pos += ukrainianOrdinalSuffixLength + 1;
-					}
-				}
-				else {
-					pos += ukrainianOrdinalSuffixLength + 1;
-				}
+			if(prefix == localePrefix) {
+				removeOrdinals<N>(suffixes, strInOut);
 			}
 		}
 	}
@@ -1156,9 +1020,11 @@ namespace crawlservpp::Helper::DateTime {
 	 * If the given locale is not French, the function call will
 	 *  be without consequences.
 	 *
-	 * \param locale A string view containing the locale to be checked for French.
-	 * \param strInOut A reference to the string containing the date/time,
-	 *   in which the abbreviation will be replaced if the given locale is French.
+	 * \param locale A string view containing the locale to be
+	 *   checked for French.
+	 * \param strInOut A reference to the string containing the
+	 *   date/time, in which the abbreviation will be replaced if
+	 *   the given locale is French.
 	 */
 	inline void fixFrenchMonths(std::string_view locale, std::string& strInOut) {
 		if(locale.length() >= frenchLocalePrefix.length()) {
@@ -1272,7 +1138,19 @@ namespace crawlservpp::Helper::DateTime {
 				if(strInOut != oldString) {
 					Helper::Strings::replaceAll(formatInOut, "%B", "%b");
 				}
+
+				return;
 			}
+		}
+
+		// if the locale is not Russian, replace the Russified "maj" with English "may"
+		if(
+				formatInOut.find("%b") != std::string::npos
+				|| formatInOut.find("%B") != std::string::npos
+		) {
+			Helper::Strings::replaceAll(formatInOut, "maj", "may");
+			Helper::Strings::replaceAll(formatInOut, "Maj", "may");
+			Helper::Strings::replaceAll(formatInOut, "MAJ", "may");
 		}
 	}
 
@@ -1383,11 +1261,11 @@ namespace crawlservpp::Helper::DateTime {
 			if(
 					(
 							pos == 0
-							|| !std::isdigit(dateTimeString[pos - 1])
+							|| std::isdigit(dateTimeString[pos - 1]) == 0
 					) &&
 					(
 							pos == dateTimeString.length() - 1
-							|| !std::isdigit(dateTimeString[pos + 1])
+							|| std::isdigit(dateTimeString[pos + 1]) == 0
 					)
 			) {
 				// extend digit by adding leading zero
@@ -1475,14 +1353,14 @@ namespace crawlservpp::Helper::DateTime {
 				if(
 						(
 								amPos == 0
-								|| std::isspace(dateTimeString[amPos - 1])
-								|| std::ispunct(dateTimeString[amPos - 1])
-								|| std::isdigit(dateTimeString[amPos - 1])
+								|| std::isspace(dateTimeString[amPos - 1]) != 0
+								|| std::ispunct(dateTimeString[amPos - 1]) != 0
+								|| std::isdigit(dateTimeString[amPos - 1]) != 0
 						) && (
 								amPos == dateTimeString.length() - amPmLength
-								|| std::isspace(dateTimeString[amPos + amPmLength])
-								|| std::ispunct(dateTimeString[amPos + amPmLength])
-								|| std::isdigit(dateTimeString[amPos + amPmLength])
+								|| std::isspace(dateTimeString[amPos + amPmLength]) != 0
+								|| std::ispunct(dateTimeString[amPos + amPmLength]) != 0
+								|| std::isdigit(dateTimeString[amPos + amPmLength]) != 0
 						)
 				) {
 					// found am/AM -> replace it in format string
@@ -1510,14 +1388,14 @@ namespace crawlservpp::Helper::DateTime {
 				if(
 						(
 								pmPos == 0
-								|| std::isspace(dateTimeString[pmPos - 1])
-								|| std::ispunct(dateTimeString[pmPos - 1])
-								|| std::isdigit(dateTimeString[pmPos - 1])
+								|| std::isspace(dateTimeString[pmPos - 1]) != 0
+								|| std::ispunct(dateTimeString[pmPos - 1]) != 0
+								|| std::isdigit(dateTimeString[pmPos - 1]) != 0
 						) && (
 								pmPos == dateTimeString.length() - amPmLength
-								|| std::isspace(dateTimeString[pmPos + amPmLength])
-								|| std::ispunct(dateTimeString[pmPos + amPmLength])
-								|| std::isdigit(dateTimeString[pmPos + amPmLength])
+								|| std::isspace(dateTimeString[pmPos + amPmLength]) != 0
+								|| std::ispunct(dateTimeString[pmPos + amPmLength]) != 0
+								|| std::isdigit(dateTimeString[pmPos + amPmLength]) != 0
 						)
 				) {
 					// found pm/PM -> replace it in format string
