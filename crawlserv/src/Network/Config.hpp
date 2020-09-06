@@ -180,7 +180,7 @@ namespace crawlservpp::Network {
 		/*!
 		 * Will be ignored when empty.
 		 *
-		 * Will be overwritten if a cookie is set during dynamic redirect.
+		 * Will be overwritten, if a cookie is set during dynamic redirect.
 		 *
 		 * Used by the crawler only.
 		 */
