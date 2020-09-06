@@ -746,7 +746,7 @@ namespace crawlservpp::Module::Extractor {
 			//! Specifies whether to (try to) repair broken HTML/XML comments.
 			bool extractingRepairComments{true};
 
-			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML/XML content.
+			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML content.
 			bool extractingRemoveXmlInstructions{true};
 
 			///@}

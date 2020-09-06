@@ -308,7 +308,7 @@
 		"remove.xml.instructions": {
 			"type": "bool",
 			"default": true,
-			"description": "Remove XML processing instructions ('<?xml:...>')' before parsing HTML/XML.",
+			"description": "Remove XML processing instructions ('<?xml:...>')' before parsing HTML.",
 			"simple": false
 		},
 		"repair.cdata": {
