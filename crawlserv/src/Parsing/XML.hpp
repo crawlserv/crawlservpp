@@ -35,7 +35,6 @@
 
 #include "HTML.hpp"
 
-#include "../Helper/Utf8.hpp"
 #include "../Main/Exception.hpp"
 
 #include <pugixml.hpp>
@@ -366,21 +365,21 @@ namespace crawlservpp::Parsing {
 			bool removeXmlInstructions,
 			std::queue<std::string>& warningsTo
 	) {
-		// remove whitespaces at the beginning
+		// remove whitespaces at the beginning and null characters
 		std::size_t begin{0};
 
-		while(content.size() > begin && std::isspace(content.at(begin)) != 0) {
+		while(content.length() > begin && std::isspace(content.at(begin)) != 0) {
 			++begin;
 		}
 
-		std::string xml(content, begin, std::string::npos);
-		std::string repairedXml;
+		std::string xml;
 
-		// remove invalid UTF-8 characters
-		if(Helper::Utf8::repairUtf8(xml, repairedXml)) {
-			xml.swap(repairedXml);
+		xml.reserve(content.size() - begin);
 
-			warningsTo.emplace("Removed invalid UTF-8 characters from content");
+		for(std::size_t i{begin}; i < content.length(); ++i) {
+			if(content[i] != '\0') {
+				xml.push_back(content[i]);
+			}
 		}
 
 		// if necessary, try to tidy HTML and convert it to XML
