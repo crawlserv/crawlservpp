@@ -1144,9 +1144,12 @@ namespace crawlservpp::Helper::DateTime {
 					Helper::Strings::replaceAll(strInOut, "ФЕВ", "фев");
 				}
 
-				Helper::Strings::replaceAll(strInOut, "март", "мар ");
-				Helper::Strings::replaceAll(strInOut, "Март", "мар ");
-				Helper::Strings::replaceAll(strInOut, "МАРТ", "мар ");
+				Helper::Strings::replaceAll(strInOut, "марта", "мар");
+				Helper::Strings::replaceAll(strInOut, "Марта", "мар");
+				Helper::Strings::replaceAll(strInOut, "МАРТА", "мар");
+				Helper::Strings::replaceAll(strInOut, "март", "мар");
+				Helper::Strings::replaceAll(strInOut, "Март", "мар");
+				Helper::Strings::replaceAll(strInOut, "МАРТ", "мар");
 
 				if(!bigB) {
 					Helper::Strings::replaceAll(strInOut, "Мар", "мар ");
@@ -1189,6 +1192,9 @@ namespace crawlservpp::Helper::DateTime {
 					Helper::Strings::replaceAll(strInOut, "ИЮЛ", "июл");
 				}
 
+				Helper::Strings::replaceAll(strInOut, "августа", "авг");
+				Helper::Strings::replaceAll(strInOut, "Августа", "авг");
+				Helper::Strings::replaceAll(strInOut, "АВГУСТА", "авг");
 				Helper::Strings::replaceAll(strInOut, "август", "авг");
 				Helper::Strings::replaceAll(strInOut, "Август", "авг");
 				Helper::Strings::replaceAll(strInOut, "АВГУСТ", "авг");
