@@ -1207,6 +1207,8 @@ namespace crawlservpp::Helper::DateTime {
 			);
 
 			if(prefix == russianLocalePrefix) {
+				std::string oldString{strInOut};
+
 				Helper::Strings::replaceAll(strInOut, "январь", "янв");
 				Helper::Strings::replaceAll(strInOut, "Январь", "янв");
 				Helper::Strings::replaceAll(strInOut, "Январь", "янв");
@@ -1243,9 +1245,17 @@ namespace crawlservpp::Helper::DateTime {
 				Helper::Strings::replaceAll(strInOut, "Сентябрь", "сен");
 				Helper::Strings::replaceAll(strInOut, "СЕНТЯБРЬ", "сен");
 
-				Helper::Strings::replaceAll(strInOut, "сент", "сен");
-				Helper::Strings::replaceAll(strInOut, "Сент", "сен");
-				Helper::Strings::replaceAll(strInOut, "СЕНТ", "сен");
+				if(strInOut.find("сентября") == std::string::npos) {
+					Helper::Strings::replaceAll(strInOut, "сент", "сен");
+				}
+
+				if(strInOut.find("Сентября") == std::string::npos) {
+					Helper::Strings::replaceAll(strInOut, "Сент", "сен");
+				}
+
+				if(strInOut.find("СЕНТЯБРЯ") == std::string::npos) {
+					Helper::Strings::replaceAll(strInOut, "СЕНТ", "сен");
+				}
 
 				Helper::Strings::replaceAll(strInOut, "октябрь", "окт");
 				Helper::Strings::replaceAll(strInOut, "Октябрь", "окт");
@@ -1259,7 +1269,9 @@ namespace crawlservpp::Helper::DateTime {
 				Helper::Strings::replaceAll(strInOut, "Декабрь", "дек");
 				Helper::Strings::replaceAll(strInOut, "ДЕКАБРЬ", "дек");
 
-				Helper::Strings::replaceAll(formatInOut, "%B", "%b");
+				if(strInOut != oldString) {
+					Helper::Strings::replaceAll(formatInOut, "%B", "%b");
+				}
 			}
 		}
 	}
@@ -1292,9 +1304,15 @@ namespace crawlservpp::Helper::DateTime {
 			);
 
 			if(prefix == ukrainianLocalePrefix) {
+				std::string oldString{strInOut};
+
 				Helper::Strings::replaceAll(strInOut, "січень", "січ");
 				Helper::Strings::replaceAll(strInOut, "Січень", "січ");
 				Helper::Strings::replaceAll(strInOut, "СІЧЕНЬ", "січ");
+
+				Helper::Strings::replaceAll(strInOut, "стд", "січ");
+				Helper::Strings::replaceAll(strInOut, "Стд", "січ");
+				Helper::Strings::replaceAll(strInOut, "СТД", "січ");
 
 				Helper::Strings::replaceAll(strInOut, "лютий", "лют");
 				Helper::Strings::replaceAll(strInOut, "Лютий", "лют");
@@ -1340,7 +1358,9 @@ namespace crawlservpp::Helper::DateTime {
 				Helper::Strings::replaceAll(strInOut, "Грудень", "гру");
 				Helper::Strings::replaceAll(strInOut, "ГРУДЕНЬ", "гру");
 
-				Helper::Strings::replaceAll(formatInOut, "%B", "%b");
+				if(strInOut != oldString) {
+					Helper::Strings::replaceAll(formatInOut, "%B", "%b");
+				}
 			}
 		}
 	}
