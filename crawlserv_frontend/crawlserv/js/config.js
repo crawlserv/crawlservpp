@@ -1212,7 +1212,7 @@ class Config {
 		
 		array.data("count", count + 1);
 		array.children("div").last().children(
-				"input[type=text], input[type=number], input[type=date]"
+				"input[type=text], input[type=number], input[type=date], select"
 		).focus();
 	}
 	
