@@ -312,6 +312,11 @@ namespace crawlservpp::Parsing {
 				xml.size() < xmlBegin.length()
 				|| xml.substr(0, xmlBegin.length()) != xmlBegin
 		) {
+			// remove XML processing instructions
+			if(removeXmlInstructions) {
+				removeXmlProcessingInstructions(xml);
+			}
+
 			HTML tidy;
 
 			try {
@@ -334,11 +339,6 @@ namespace crawlservpp::Parsing {
 		if(repairComments) {
 			replaceInvalidConditionalComments(xml);
 			replaceInvalidComments(xml);
-		}
-
-		// remove XML processing instructions
-		if(removeXmlInstructions) {
-			removeXmlProcessingInstructions(xml);
 		}
 
 		// create XML document
@@ -616,7 +616,10 @@ namespace crawlservpp::Parsing {
 			}
 
 			const auto end{
-				content.find(xmlInstructionEnd, pos + 1)
+				content.find(
+						xmlInstructionEnd,
+						pos + xmlInstructionBegin.length()
+				)
 			};
 
 			if(end == std::string::npos) {
