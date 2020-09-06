@@ -296,8 +296,8 @@ namespace crawlservpp::Helper::DateTime {
 	 *  Howard Hinnant's paper about his date.h
 	 *  library</a>.
 	 *
-	 * Alternatively, @c UNIX, @c UNIX+<offset>, or
-	 *  @c UNIX<-offset> can be used to convert from
+	 * Alternatively, @c UNIX, @c UNIX+&lt;offset&gt;, or
+	 *  @c UNIX&lt;-offset&gt; can be used to convert from
 	 *  a UNIX time plus/minus the given offset.
 	 *
 	 * \note A string view cannot be used, because
