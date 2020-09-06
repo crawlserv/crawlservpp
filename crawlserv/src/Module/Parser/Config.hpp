@@ -301,7 +301,7 @@ namespace crawlservpp::Module::Parser {
 			bool parsingRepairComments{true};
 
 			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML/XML content.
-			bool parsingRemoveXmlInstructions{false};
+			bool parsingRemoveXmlInstructions{true};
 
 			//! Number of @c tidyhtml errors to write to the log.
 			/*!

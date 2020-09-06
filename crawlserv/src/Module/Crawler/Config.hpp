@@ -297,7 +297,7 @@ namespace crawlservpp::Module::Crawler {
 			bool crawlerRepairComments{true};
 
 			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML/XML content.
-			bool crawlerRemoveXmlInstructions{false};
+			bool crawlerRemoveXmlInstructions{true};
 
 			//! Number of re-tries on connection errors (-1=infinite).
 			std::int64_t crawlerReTries{defaultReTries};
