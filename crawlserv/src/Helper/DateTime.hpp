@@ -166,7 +166,7 @@ namespace crawlservpp::Helper::DateTime {
 	//! The number of microseconds per millisecond used for date/time formatting.
 	inline constexpr auto microsecondsPerMillisecond{1000};
 
-	//! The length of a date in valid ISO Format (YYYY-MM-DD).
+	//! The length of a date in valid ISO Format (@c YYYY-MM-DD).
 	inline constexpr auto isoDateLength{10};
 
 	///@}
@@ -266,15 +266,17 @@ namespace crawlservpp::Helper::DateTime {
 	 * IMPLEMENTATION
 	 */
 
-	//! Converts a date/time formatted in a 'long' format into the format YYYY-MM-DD HH:MM:SS.
+	//! Converts a date/time formatted in a “long” format into the format @c YYYY-MM-DD HH:MM:SS.
 	/*!
-	 * Calling this function with an empty input string
-	 *  will have no consequences.
+	 * Calling this function with an empty input
+	 *  string will have no consequences.
 	 *
-	 * \param dateTime String containing the date/time formatted
-	 *   in a 'long' format and to be converted in situ.
+	 * \param dateTime String containing the
+	 *   date/time formatted in a “long” format and
+	 *   to be converted in situ.
 	 *
-	 * \throws DateTime::Exception if the conversion fails.
+	 * \throws DateTime::Exception if the conversion
+	 *   fails.
 	 *
 	 * \sa convertCustomDateTimeToSQLTimeStamp
 	 */
@@ -282,30 +284,37 @@ namespace crawlservpp::Helper::DateTime {
 		convertCustomDateTimeToSQLTimeStamp(dateTime, longDateTime);
 	}
 
-	//! Converts date/time with a custom format into the format YYYY-MM-DD HH:MM:SS.
+	//! Converts date/time with a custom format into the format @c YYYY-MM-DD HH:MM:SS.
 	/*!
 	 *
-	 * Calling this function with an empty input string
-	 *  will have no consequences.
+	 * Calling this function with an empty input
+	 *  string will have no consequences.
 	 *
-	 * For more information about the format string, see
+	 * For more information about the format string,
+	 *  see
 	 *  <a href="https://howardhinnant.github.io/date/date.html#from_stream_formatting">
-	 *  Howard Hinnant's paper about his date.h library</a>.
+	 *  Howard Hinnant's paper about his date.h
+	 *  library</a>.
 	 *
-	 * Alternatively, "UNIX", "UNIX+<offset>", or "UNIX<-offset>"
-	 *  can be used to convert from a UNIX time plus/minus the given offset.
+	 * Alternatively, @c UNIX, @c UNIX+<offset>, or
+	 *  @c UNIX<-offset> can be used to convert from
+	 *  a UNIX time plus/minus the given offset.
 	 *
-	 * \note A string view cannot be used, because the underlying
-	 *   C function requires a null-terminated string.
+	 * \note A string view cannot be used, because
+	 *   the underlying @c C function requires a
+	 *   null-terminated string.
 	 *
-	 * \param dateTime Reference to a string containing the date/time
-	 *   formatted in the custom format and to be converted in situ.
+	 * \param dateTime Reference to a string
+	 *   containing the date/time formatted in the
+	 *   custom format and to be converted in situ.
 	 *
-	 * \param customFormat A const reference to the string containing
-	 *   the date/time format to be converted from.
+	 * \param customFormat A const reference to the
+	 *   string containing the date/time format to be
+	 *   converted from.
 	 *
-	 * \throws DateTime::Exception of the custom format is invalid
-	 *   or empty, or if the date/time conversion fails.
+	 * \throws DateTime::Exception of the custom
+	 *   format is invalid or empty, or if the
+	 *   date/time conversion fails.
 	 */
 	inline void convertCustomDateTimeToSQLTimeStamp(
 			std::string& dateTime,
@@ -449,29 +458,36 @@ namespace crawlservpp::Helper::DateTime {
 		}
 	}
 
-	//! Converts date/time with a custom format into the format YYYY-MM-DD HH:MM:SS.
+	//! Converts date/time with a custom format into the format @c YYYY-MM-DD HH:MM:SS.
 	/*!
-	 * Calling this function with an empty input string
-	 *  will have no consequences.
+	 * Calling this function with an empty input
+	 *  string will have no consequences.
 	 *
-	 * For more information about the format string, see
+	 * For more information about the format string,
+	 *  see
 	 *  <a href="https://howardhinnant.github.io/date/date.html#from_stream_formatting">
-	 *  Howard Hinnant's paper about his date.h library</a>.
+	 *  Howard Hinnant's paper about his date.h
+	 *  library</a>.
 	 *
-	 * \note String views cannot be used, because the underlying
-	 *   functions require null-terminated strings.
+	 * \note String views cannot be used, because
+	 *   the underlying functions require
+	 *   null-terminated strings.
 	 *
-	 * \param dateTime A reference to the string containing the date/time
-	 *   formatted in the custom format and to be converted in situ.
+	 * \param dateTime A reference to the string
+	 *   containing the date/time formatted in the
+	 *   custom format and to be converted in situ.
 	 *
-	 * \param customFormat A const reference to the string containing
-	 *   the date/time format to be converted from.
+	 * \param customFormat A const reference to the
+	 *   string containing the date/time format to
+	 *   be converted from.
 	 *
-	 * \param locale A const reference to the string containing the
-	 *   locale to be used during the conversion.
+	 * \param locale A const reference to the string
+	 *   containing the locale to be used during the
+	 *   conversion.
 	 *
-	 * \throws DateTime::Exception of the custom format is invalid
-	 *   or empty, or if the date/time conversion fails.
+	 * \throws DateTime::Exception of the custom
+	 *   format is invalid or empty, or if the
+	 *   date/time conversion fails.
 	 */
 	inline void convertCustomDateTimeToSQLTimeStamp(
 			std::string& dateTime,
@@ -579,15 +595,18 @@ namespace crawlservpp::Helper::DateTime {
 		}
 	}
 
-	//! Converts a timestamp in YYYYMMDDHHMMSS format to a MySQL timestamp in YYYY-MM-DD HH:MM:SS format.
+	//! Converts a timestamp in the @c YYYYMMDDHHMMSS format to a MySQL timestamp in the @c YYYY-MM-DD HH:MM:SS format.
 	/*!
-	 * Calling this function with an empty input string
-	 *  will have no consequences.
+	 * Calling this function with an empty input
+	 *  string will have no consequences.
 	 *
-	 * \param timeStamp A reference to the string containing a timestamp
-	 *  in the YYYYMMDDHHMMSS format to be converted in situ.
+	 * \param timeStamp A reference to the string
+	 *   containing a timestamp in the @c
+	 *   YYYYMMDDHHMMSS format to be converted in
+	 *   situ.
 	 *
-	 * \throws DateTime::Exception if the conversion fails.
+	 * \throws DateTime::Exception if the conversion
+	 *   fails.
 	 *
 	 * \sa convertCustomDateTimeToSQLTimeStamp
 	 */
@@ -595,16 +614,18 @@ namespace crawlservpp::Helper::DateTime {
 		convertCustomDateTimeToSQLTimeStamp(timeStamp, "%Y%m%d%H%M%S");
 	}
 
-	//! Converts a MySQL timestamp in YYYY-MM-DD HH:MM:SS format to a timestamp in YYYYMMDDHHMMSS format.
+	//! Converts a MySQL timestamp in the @c YYYY-MM-DD HH:MM:SS format to a timestamp in the @c YYYYMMDDHHMMSS format.
 	/*!
-	 * Calling this function with an empty input string
-	 *  will have no consequences.
+	 * Calling this function with an empty input
+	 *  string will have no consequences.
 	 *
-	 * \param timeStamp A reference to the string containing a
-	 *   MySQL timestamp in the YYYY-MM-DD HH:MM:SS format to be
-	 *   converted in situ.
+	 * \param timeStamp A reference to the string
+	 *   containing a MySQL timestamp in the @c
+	 *   YYYY-MM-DD HH:MM:SS format to be converted in
+	 *   situ.
 	 *
-	 * \throws DateTime::Exception if the conversion fails.
+	 * \throws DateTime::Exception if the conversion
+	 *   fails.
 	 *
 	 * \sa convertTimeStampToSQLTimeStamp
 	 */
@@ -634,8 +655,9 @@ namespace crawlservpp::Helper::DateTime {
 	/*!
 	 * \param hour Reference to the hour which will be
 	 *   changed accordingly, if necessary.
-	 * \param isPm Indicates whether the given hour is @c
-	 *   PM. If false, it will be interpreted as @c AM.
+	 * \param isPm Indicates whether the given hour is
+	 *   @c PM. If false, it will be interpreted as @c
+	 *   AM.
 	 */
 	inline void convert12hTo24h(
 			int& hour,
@@ -653,9 +675,11 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Converts microseconds into a well-formatted string.
 	/*!
-	 * \param microseconds The number of microseconds to convert.
+	 * \param microseconds The number of microseconds
+	 *   to convert.
 	 *
-	 * \returns A copy of the string containing the well-formatted output.
+	 * \returns A copy of the string containing the
+	 *   well-formatted output.
 	 *
 	 * \sa millisecondsToString, secondsToString
 	 */
@@ -725,7 +749,8 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Converts milliseconds into a well-formatted string.
 	/*!
-	 * \param milliseconds The number of milliseconds to convert.
+	 * \param milliseconds The number of milliseconds
+	 *   to convert.
 	 *
 	 * \returns A copy of the string containing the
 	 *   well-formatted output.
@@ -838,10 +863,11 @@ namespace crawlservpp::Helper::DateTime {
 		return result;
 	}
 
-	//! Formats the current date/time as string in the format YYYY-MM-DD HH:MM:SS
+	//! Formats the current date/time as string in the format @c YYYY-MM-DD HH:MM:SS
 	/*!
-	 * \returns A copy of the string containing the current date/time
-	 *   of the system as string in the format YYYY-MM-DD HH:MM:SS.
+	 * \returns A copy of the string containing the
+	 *   current date/time of the system as string in
+	 *   the format @c YYYY-MM-DD HH:MM:SS.
 	 */
 	inline std::string now() {
 		return date::format(
@@ -852,16 +878,18 @@ namespace crawlservpp::Helper::DateTime {
 		);
 	}
 
-	//! Checks whether a string contains a valid date in ISO format
+	//! Checks whether a string contains a valid date in the ISO format.
 	/*!
-	 * \note A string view is not being used, because the underlying
-	 *   string stream requires a copy of the string.
+	 * \note A string view is not being used, because
+	 *   the underlying string stream requires a copy
+	 *   of the string.
 	 *
-	 * \param isoDate A string containing the date to check.
+	 * \param isoDate A string containing the date to
+	 *   check.
 	 *
-	 * \returns True if the given string contains a valid date
-	 *   in ISO format, i.e. a date in the format YYY-MM-DD.
-	 *   False otherwise.
+	 * \returns True if the given string contains a
+	 *   valid date in ISO format, i.e. a date in the
+	 *   format @c YYY-MM-DD. False otherwise.
 	 */
 	inline bool isValidISODate(const std::string& isoDate) {
 		std::istringstream in(isoDate);
@@ -874,20 +902,24 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Checks whether the given ISO date is in the given range of dates.
 	/*!
-	 * \note Only the first ten characters of the given dates will be
-	 *    considered.
+	 * \note Only the first ten characters of the
+	 *    given dates will be considered.
 	 *
-	 * \param isoDate A string view containing the date in valid ISO format,
-	 *   i.e. a date in the format YYY-MM-DD.
-	 * \param rangeFrom A string view containing the start date of the range
-	 *   in valid ISO format, i.e. a date in the format YYY-MM-DD.
-	 * \param rangeTo A string view containing the end date of the range
-	 *   in valid ISO format, i.e. a date in the format YYY-MM-DD.
+	 * \param isoDate A string view containing the date
+	 *   in valid ISO format, i.e. a date in the format
+	 *   @c YYY-MM-DD.
+	 * \param rangeFrom A string view containing the
+	 *   start date of the range in valid ISO format,
+	 *   i.e. a date in the format @c YYY-MM-DD.
+	 * \param rangeTo A string view containing the end
+	 *   date of the range in valid ISO format, i.e. a
+	 *   date in the format @c YYY-MM-DD.
 	 *
-	 * \returns True, if the given date falls into the given range of dates
-	 *   or one of the two dates defining this range are too short.
-	 *   False, if the given date does not fall into the given range of
-	 *   dates, or the given date is too short.
+	 * \returns True, if the given date falls into the
+	 *   given range of dates or one of the two dates
+	 *   defining this range are too short. False, if
+	 *   the given date does not fall into the given
+	 *   range of dates, or the given date is too short.
 	 */
 	inline bool isISODateInRange(
 			std::string_view isoDate,
@@ -916,12 +948,12 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Removes all ordinal suffixes after numbers in the given string.
 	/*!
-	 * \param suffixes Constant reference to an array containing
-	 *   the suffixes to be removed from the end of numbers in
-	 *   the given string.
-	 * \param strInOut A reference to the string containing the
-	 *   date/time, from which the ordinal suffixes will be removed
-	 *   in situ.
+	 * \param suffixes Constant reference to an array
+	 *   containing the suffixes to be removed from
+	 *   the end of numbers in the given string.
+	 * \param strInOut A reference to the string
+	 *   containing the date/time, from which the
+	 *   ordinal suffixes will be removed in situ.
 	 */
 	template<std::size_t N> void removeOrdinals(
 			const std::array<std::string_view, N>& suffixes,
@@ -979,17 +1011,21 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Removes all ordinal suffixes after numbers in the given string, if the current locale matches the given locale.
 	/*!
-	 * \param currentLocale View of a string containing the current
-	 *   locale.
-	 * \param localePrefix View of a string containing the language
-	 *   prefix of the locale of the given suffixes.
-	 * \param suffixes Constant reference to an array containing
-	 *   the suffixes to be removed from the end of numbers in
-	 *   the given string, if the current locale.
-	 * \param strInOut A reference to the string containing the
-	 *   date/time, from which the ordinal suffixes will be removed
-	 *   in situ, if the current locale starts with the given
-	 *   language prefix.
+	 * \param currentLocale View of a string
+	 *   containing the current locale.
+	 * \param localePrefix View of a string containing
+	 *   the language prefix of the locale of the
+	 *   given suffixes.
+	 * \param suffixes Constant reference to an array
+	 *   containing the suffixes to be removed from
+	 *   the end of numbers in the given string, if
+	 *   the current locale fits the given locale
+	 *   prefix.
+	 * \param strInOut A reference to the string
+	 *   containing the date/time, from which the
+	 *   ordinal suffixes will be removed in situ, if
+	 *   the current locale starts with the given
+	 *   locale prefix.
 	 */
 	template<std::size_t N> void removeOrdinals(
 			std::string_view currentLocale,
@@ -1017,14 +1053,15 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Replaces the abbreviation @c avr. for the month of april (avril) in the given string, if the locale is French.
 	/*!
-	 * If the given locale is not French, the function call will
-	 *  be without consequences.
+	 * If the given locale is not French, the function
+	 *  call will be without consequences.
 	 *
-	 * \param locale A string view containing the locale to be
-	 *   checked for French.
-	 * \param strInOut A reference to the string containing the
-	 *   date/time, in which the abbreviation will be replaced if
-	 *   the given locale is French.
+	 * \param locale A string view containing the
+	 *   locale to be checked for French.
+	 * \param strInOut A reference to the string
+	 *   containing the date/time, in which the
+	 *   abbreviation will be replaced if the given
+	 *   locale is French.
 	 */
 	inline void fixFrenchMonths(std::string_view locale, std::string& strInOut) {
 		if(locale.length() >= frenchLocalePrefix.length()) {
@@ -1047,14 +1084,20 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Shortens Russian month names and replaces the abbreviations @c май and @c сент, if the locale is Russian.
 	/*!
-	 * If the given locale is not Russian, the function
-	 *  call will be without consequences.
+	 * If the given locale is English, and the format
+	 *  contains @c %b or @c %B, the function will
+	 *  replace the Russified month names @c maj,
+	 *  @c Maj and @c MAJ with the English @c May.
 	 *
-	 * \param locale A string view containing the locale to
-	 *   be checked for Russian.
-	 * \param strInOut A reference to the string containing
-	 *   the date/time, in which the months will be
-          replaced, if the given locale is Russian.
+	 * Otherwise, the function call will be without
+	 *  consequences.
+	 *
+	 * \param locale A string view containing the
+	 *   locale to be checked for Russian or English.
+	 * \param strInOut A reference to the string
+	 *   containing the date/time, in which the months
+	 *   will be replaced, if the given locale is
+	 *   Russian or English.
 	 * \param formatInOut A reference to the string
 	 *   containing the formatting string that will be
 	 *   changed accordingly, if necessary.
@@ -1143,27 +1186,28 @@ namespace crawlservpp::Helper::DateTime {
 			}
 		}
 
-		// if the locale is not Russian, replace the Russified "maj" with English "may"
-		const bool bigB{
-			formatInOut.find("%B") != std::string::npos
-		};
-
+		// if the locale is English, replace the Russified "maj"/"Maj"/"MAJ" with English "May"
 		if(
-				bigB
-				|| formatInOut.find("%b") != std::string::npos
+				formatInOut.find("%b") != std::string::npos
+				|| formatInOut.find("%B") != std::string::npos
 		) {
-			std::string oldString;
+			if(locale.length() >= englishLocalePrefix.length()) {
+				std::string prefix(locale, 0, russianLocalePrefix.length());
 
-			if(bigB) {
-				oldString = strInOut;
-			}
+				std::transform(
+						prefix.begin(),
+						prefix.end(),
+						prefix.begin(),
+						[](const auto c) {
+							return std::tolower(c);
+						}
+				);
 
-			Helper::Strings::replaceAll(strInOut, "maj", "may");
-			Helper::Strings::replaceAll(strInOut, "Maj", "may");
-			Helper::Strings::replaceAll(strInOut, "MAJ", "may");
-
-			if(bigB && oldString != strInOut) {
-				Helper::Strings::replaceAll(formatInOut, "%B", "%b");
+				if(prefix == englishLocalePrefix) {
+					Helper::Strings::replaceAll(strInOut, "maj", "May");
+					Helper::Strings::replaceAll(strInOut, "Maj", "May");
+					Helper::Strings::replaceAll(strInOut, "MAJ", "May");
+				}
 			}
 		}
 	}
