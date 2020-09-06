@@ -274,6 +274,12 @@
 			"simple": true,
 			"position": 2
 		},
+		"remove.xml.instructions": {
+			"type": "bool",
+			"default": false,
+			"description": "Remove XML processing instructions ('<?xml:...>')' before parsing HTML/XML.",
+			"simple": false
+		},
 		"repair.cdata": {
 			"type": "bool",
 			"default": true,

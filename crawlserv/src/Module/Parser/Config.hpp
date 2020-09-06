@@ -300,6 +300,9 @@ namespace crawlservpp::Module::Parser {
 			//! Specifies whether to (try to) repair broken HTML/XML comments.
 			bool parsingRepairComments{true};
 
+			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML/XML content.
+			bool parsingRemoveXmlInstructions{false};
+
 			//! Number of @c tidyhtml errors to write to the log.
 			/*!
 			 * \note Logging needs to be enabled in order
@@ -383,6 +386,7 @@ namespace crawlservpp::Module::Parser {
 		this->option("id.ignore", this->config.parsingIdIgnore);
 		this->option("id.queries", this->config.parsingIdQueries);
 		this->option("id.sources", this->config.parsingIdSources);
+		this->option("remove.xml.instructions", this->config.parsingRemoveXmlInstructions);
 		this->option("repair.cdata", this->config.parsingRepairCData);
 		this->option("repair.comments", this->config.parsingRepairComments);
 		this->option("tidy.errors", this->config.parsingTidyErrors);

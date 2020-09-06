@@ -296,6 +296,9 @@ namespace crawlservpp::Module::Crawler {
 			//! Specifies whether to (try to) repair broken HTML/XML comments.
 			bool crawlerRepairComments{true};
 
+			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML/XML content.
+			bool crawlerRemoveXmlInstructions{false};
+
 			//! Number of re-tries on connection errors (-1=infinite).
 			std::int64_t crawlerReTries{defaultReTries};
 
@@ -562,6 +565,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("recrawl", this->config.crawlerReCrawl);
 		this->option("recrawl.always", this->config.crawlerReCrawlAlways);
 		this->option("recrawl.start", this->config.crawlerReCrawlStart);
+		this->option("remove.xml.instructions", this->config.crawlerRemoveXmlInstructions);
 		this->option("repair.cdata", this->config.crawlerRepairCData);
 		this->option("repair.comments", this->config.crawlerRepairComments);
 		this->option("retries", this->config.crawlerReTries);

@@ -141,6 +141,7 @@ namespace crawlservpp::Query {
 
 		void setRepairCData(bool isRepairCData);
 		void setRepairComments(bool isRepairComments);
+		void setRemoveXmlInstructions(bool isRemoveXmlInstructions);
 		void setMinimizeMemory(bool isMinimizeMemory);
 		void setTidyErrorsAndWarnings(bool warnings, std::uint32_t numOfErrors);
 		void setQueryTarget(const std::string& content, const std::string& source);
@@ -260,6 +261,7 @@ namespace crawlservpp::Query {
 		// options
 		bool repairCData{true};						// try to repair CData when parsing HTML/XML
 		bool repairComments{true};					// try to repair broken HTML/XML comments
+		bool removeXmlInstructions{false};			// remove XML processing instructions
 		bool minimizeMemory{false};					// minimize memory usage
 
 		// content pointers and parsing
@@ -331,6 +333,15 @@ namespace crawlservpp::Query {
 	 */
 	inline void Container::setRepairComments(bool isRepairComments) {
 		this->repairComments = isRepairComments;
+	}
+
+	//! Sets whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML/XML content.
+	/*!
+	 * \param isRemoveXmlInstructions Sets whether
+	 *   to remove XML processing instructions.
+	 */
+	inline void Container::setRemoveXmlInstructions(bool isRemoveXmlInstructions) {
+		this->removeXmlInstructions = isRemoveXmlInstructions;
 	}
 
 	//! Sets whether to minimize memory usage.
@@ -3605,6 +3616,7 @@ namespace crawlservpp::Query {
 						*(this->queryTargetPtr),
 						this->repairCData,
 						this->repairComments,
+						this->removeXmlInstructions,
 						warningsTo
 				);
 
@@ -3745,6 +3757,7 @@ namespace crawlservpp::Query {
 						this->stringifiedSubSets.at(this->subSetCurrent - 1),
 						this->repairCData,
 						this->repairComments,
+						this->removeXmlInstructions,
 						warningsTo
 				);
 

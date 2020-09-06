@@ -4804,7 +4804,7 @@ namespace crawlservpp::Main {
 							Parsing::XML xmlDocumentTest;
 
 							xmlDocumentTest.setOptions(xmlWarnings, xmlWarningsDefault);
-							xmlDocumentTest.parse(text, true, true, warnings);
+							xmlDocumentTest.parse(text, true, true, false, warnings);
 
 							while(!warnings.empty()) {
 								result += "WARNING: " + warnings.front() + '\n';
@@ -5214,7 +5214,7 @@ namespace crawlservpp::Main {
 							Parsing::XML xmlDocumentTest;
 
 							xmlDocumentTest.setOptions(xmlWarnings, xmlWarningsDefault);
-							xmlDocumentTest.parse(text, true, true, warnings);
+							xmlDocumentTest.parse(text, true, true, false, warnings);
 
 							while(!warnings.empty()) {
 								result += "WARNING: " + warnings.front() + '\n';

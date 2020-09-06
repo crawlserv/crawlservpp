@@ -44,7 +44,7 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::istringstream, std::ostringstream
 #include <string>		// std::string, std::to_string
-#include <string_view>	// std::string_view
+#include <string_view>	// std::string_view, , std::string_view_literals
 
 namespace crawlservpp::Query {
 
@@ -58,26 +58,28 @@ namespace crawlservpp::Parsing {
 	 * CONSTANTS
 	 */
 
+	using std::string_view_literals::operator""sv;
+
 	///@name Constants
 	///@{
 
 	//! The beginning of XML markup
-	inline constexpr std::string_view xmlBegin{"<?xml "};
+	inline constexpr auto xmlBegin{"<?xml "sv};
 
 	//! The beginning of a CDATA element.
-	inline constexpr std::string_view cDataBegin{"<![CDATA["};
+	inline constexpr auto cDataBegin{"<![CDATA["sv};
 
 	//! The end of a CDATA element.
-	inline constexpr std::string_view cDataEnd{"]]>"};
+	inline constexpr auto cDataEnd{"]]>"sv};
 
 	//! The beginning of a conditional comment
-	inline constexpr std::string_view conditionalBegin{"<![if "};
+	inline constexpr auto conditionalBegin{"<![if "sv};
 
 	//! The end of a conditional comment
-	inline constexpr std::string_view conditionalEnd{"<![endif]>"};
+	inline constexpr auto conditionalEnd{"<![endif]>"sv};
 
 	//! Characters to be inserted/replaced to make conditional comments valid
-	inline constexpr std::string_view conditionalInsert{"--"};
+	inline constexpr auto conditionalInsert{"--"sv};
 
 	//! Offset at which to insert at the beginning to make conditional comments valid
 	inline constexpr auto conditionalInsertOffsetBegin{2};
@@ -89,22 +91,22 @@ namespace crawlservpp::Parsing {
 	inline constexpr auto conditionalInsertOffsetStrayEnd{2};
 
 	//! Characters to be replaced inside comments
-	inline constexpr std::string_view commentCharsToReplace{"--"};
+	inline constexpr auto commentCharsToReplace{"--"sv};
 
 	//! Characters used as replacement inside comments
-	inline constexpr std::string_view commentCharsReplaceBy{"=="};
+	inline constexpr auto commentCharsReplaceBy{"=="sv};
 
 	//! The beginning of an invalid comment
-	inline constexpr std::string_view invalidBegin{"<? "};
+	inline constexpr auto invalidBegin{"<? "sv};
 
 	//! The end of an invalid comment
-	inline constexpr std::string_view invalidEnd{" ?>"};
+	inline constexpr auto invalidEnd{" ?>"sv};
 
 	//! Characters to be inserted at the beginning to make invalid comments valid
-	inline constexpr std::string_view invalidInsertBegin{"!--"};
+	inline constexpr auto invalidInsertBegin{"!--"sv};
 
 	//! Characters to be inserted at the end to make invalid comments valid
-	inline constexpr std::string_view invalidInsertEnd{"--"};
+	inline constexpr auto invalidInsertEnd{"--"sv};
 
 	//! Offset at which to insert at the beginning to make invalid comments valid
 	inline constexpr auto invalidInsertOffsetBegin{1};
@@ -114,6 +116,12 @@ namespace crawlservpp::Parsing {
 
 	//! The maximum number of characters to be shown in error messages.
 	inline constexpr auto numDebugCharacters{50};
+
+	//! The beginning of a XML processing instruction.
+	inline constexpr auto xmlInstructionBegin{"<?xml:"sv};
+
+	//! The end of a XML processing instruction.
+	inline constexpr auto xmlInstructionEnd{">"sv};
 
 	///@}
 
@@ -166,6 +174,7 @@ namespace crawlservpp::Parsing {
 				std::string_view content,
 				bool repairCData,
 				bool repairComments,
+				bool removeXmlInstructions,
 				std::queue<std::string>& warningsTo
 		);
 
@@ -220,6 +229,7 @@ namespace crawlservpp::Parsing {
 		static void cDataRepair(std::string& content);
 		static void replaceInvalidConditionalComments(std::string& content);
 		static void replaceInvalidComments(std::string& content);
+		static void removeXmlProcessingInstructions(std::string& content);
 	};
 
 	/*
@@ -285,6 +295,7 @@ namespace crawlservpp::Parsing {
 			std::string_view content,
 			bool repairCData,
 			bool repairComments,
+			bool removeXmlInstructions,
 			std::queue<std::string>& warningsTo
 	) {
 		// remove whitespaces at the beginning
@@ -323,6 +334,11 @@ namespace crawlservpp::Parsing {
 		if(repairComments) {
 			replaceInvalidConditionalComments(xml);
 			replaceInvalidComments(xml);
+		}
+
+		// remove XML processing instructions
+		if(removeXmlInstructions) {
+			removeXmlProcessingInstructions(xml);
 		}
 
 		// create XML document
@@ -585,6 +601,29 @@ namespace crawlservpp::Parsing {
 					+ invalidEnd.length()
 					+ invalidInsertBegin.length()
 					+ invalidInsertEnd.length();
+		}
+	}
+
+	// internal static helper function: remove XML processing instructions (<?xml:...>)
+	inline void XML::removeXmlProcessingInstructions(std::string& content) {
+		std::size_t pos{0};
+
+		while(pos < content.length()) {
+			pos = content.find(xmlInstructionBegin, pos);
+
+			if(pos == std::string::npos) {
+				return;
+			}
+
+			const auto end{
+				content.find(xmlInstructionEnd, pos + 1)
+			};
+
+			if(end == std::string::npos) {
+				return;
+			}
+
+			content.erase(pos, end - pos + xmlInstructionEnd.length());
 		}
 	}
 

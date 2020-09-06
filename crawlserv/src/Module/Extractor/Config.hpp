@@ -746,6 +746,9 @@ namespace crawlservpp::Module::Extractor {
 			//! Specifies whether to (try to) repair broken HTML/XML comments.
 			bool extractingRepairComments{true};
 
+			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML/XML content.
+			bool extractingRemoveXmlInstructions{false};
+
 			///@}
 			///@name Linked Data
 			///@{
@@ -1087,6 +1090,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("recursive", this->config.extractingRecursive);
 		this->option("recursive.max.depth", this->config.extractingRecursiveMaxDepth);
 		this->option("remove.duplicates", this->config.extractingRemoveDuplicates);
+		this->option("remove.xml.instructions", this->config.extractingRemoveXmlInstructions);
 		this->option("repair.cdata", this->config.extractingRepairCData);
 		this->option("repair.comments", this->config.extractingRepairComments);
 

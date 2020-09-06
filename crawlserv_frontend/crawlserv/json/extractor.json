@@ -620,6 +620,12 @@
 			"description": "Remove duplicate datasets over multiple pages before checking the expected number of datasets.",
 			"simple": false
 		},
+		"remove.xml.instructions": {
+			"type": "bool",
+			"default": false,
+			"description": "Remove XML processing instructions ('<?xml:...>')' before parsing HTML/XML.",
+			"simple": false
+		},
 		"repair.cdata": {
 			"type": "bool",
 			"default": true,

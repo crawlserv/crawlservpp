@@ -144,6 +144,7 @@ namespace crawlservpp::Module::Extractor {
 		// set query container options
 		this->setRepairCData(this->config.extractingRepairCData);
 		this->setRepairComments(this->config.extractingRepairComments);
+		this->setRemoveXmlInstructions(this->config.extractingRemoveXmlInstructions);
 		this->setMinimizeMemory(this->config.generalMinimizeMemory);
 		this->setTidyErrorsAndWarnings(
 				this->config.generalTidyWarnings,

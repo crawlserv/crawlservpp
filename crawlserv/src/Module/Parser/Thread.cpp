@@ -108,6 +108,7 @@ namespace crawlservpp::Module::Parser {
 		// set query container options
 		this->setRepairCData(this->config.parsingRepairCData);
 		this->setRepairComments(this->config.parsingRepairComments);
+		this->setRemoveXmlInstructions(this->config.parsingRemoveXmlInstructions);
 		this->setTidyErrorsAndWarnings(
 				this->config.parsingTidyWarnings,
 				this->config.parsingTidyErrors
