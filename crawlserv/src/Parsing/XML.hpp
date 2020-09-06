@@ -35,6 +35,7 @@
 
 #include "HTML.hpp"
 
+#include "../Helper/Utf8.hpp"
 #include "../Main/Exception.hpp"
 
 #include <pugixml.hpp>
@@ -372,7 +373,15 @@ namespace crawlservpp::Parsing {
 			++begin;
 		}
 
-		std::string xml(content, begin, content.length() - begin);
+		std::string xml(content, begin, std::string::npos);
+		std::string repairedXml;
+
+		// remove invalid UTF-8 characters
+		if(Helper::Utf8::repairUtf8(xml, repairedXml)) {
+			xml.swap(repairedXml);
+
+			warningsTo.emplace("Removed invalid UTF-8 characters from content");
+		}
 
 		// if necessary, try to tidy HTML and convert it to XML
 		if(
