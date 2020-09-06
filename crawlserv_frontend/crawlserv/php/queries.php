@@ -503,6 +503,17 @@ if(!isset($_POST["test-nonewtab"])) {
 
 <br>
 
+<input type="checkbox" id="query-fix-cdata" checked />
+ <span id="query-fix-cdata-label">Fix CDATA</span> &ensp;
+ 
+<input type="checkbox" id="query-fix-comments" checked />
+ <span id="query-fix-comments-label">Fix comments</span> &ensp;
+ 
+<input type="checkbox" id="query-remove-xml" />
+ <span id="query-remove-xml-label">Remove XML instructions</span>
+
+<br>
+
 <span id="query-datetime-format-label">Format: </span>
 
 <input id="query-datetime-format" class="entry-input-inline" type="input" />

@@ -103,6 +103,18 @@ jQuery(function($) {
 				$("#query-xml-warnings").prop("checked", false);
 				$("#query-xml-warnings").prop("disabled", true);
 				$("#query-xml-warnings-label").addClass("check-label-disabled");
+				
+				$("#query-fix-cdata").prop("checked", false);
+				$("#query-fix-cdata").prop("disabled", true);
+				$("#query-fix-cdata-label").addClass("check-label-disabled");
+				
+				$("#query-fix-comments").prop("checked", false);
+				$("#query-fix-comments").prop("disabled", true);
+				$("#query-fix-comments-label").addClass("check-label-disabled");
+				
+				$("#query-remove-xml").prop("checked", false);
+				$("#query-remove-xml").prop("disabled", true);
+				$("#query-remove-xml-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "xpath") {
 				if(!helperRegEx) {
@@ -143,6 +155,18 @@ jQuery(function($) {
 				$("#query-xml-warnings").prop("checked", false);
 				$("#query-xml-warnings").prop("disabled", true);
 				$("#query-xml-warnings-label").addClass("check-label-disabled");
+				
+				$("#query-fix-cdata").prop("checked", false);
+				$("#query-fix-cdata").prop("disabled", true);
+				$("#query-fix-cdata-label").addClass("check-label-disabled");
+				
+				$("#query-fix-comments").prop("checked", false);
+				$("#query-fix-comments").prop("disabled", true);
+				$("#query-fix-comments-label").addClass("check-label-disabled");
+				
+				$("#query-remove-xml").prop("checked", false);
+				$("#query-remove-xml").prop("disabled", true);
+				$("#query-remove-xml-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "jsonpath") {
 				if(!helperRegEx) {
@@ -166,6 +190,18 @@ jQuery(function($) {
 				$("#query-xml-warnings").prop("checked", false);
 				$("#query-xml-warnings").prop("disabled", true);
 				$("#query-xml-warnings-label").addClass("check-label-disabled");
+				
+				$("#query-fix-cdata").prop("checked", false);
+				$("#query-fix-cdata").prop("disabled", true);
+				$("#query-fix-cdata-label").addClass("check-label-disabled");
+				
+				$("#query-fix-comments").prop("checked", false);
+				$("#query-fix-comments").prop("disabled", true);
+				$("#query-fix-comments-label").addClass("check-label-disabled");
+				
+				$("#query-remove-xml").prop("checked", false);
+				$("#query-remove-xml").prop("disabled", true);
+				$("#query-remove-xml-label").addClass("check-label-disabled");
 			}
 			else if($("#query-type-select").val() == "xpathjsonpointer") {
 				if(!helperRegEx) {
@@ -973,6 +1009,18 @@ jQuery(function($) {
 			$("#query-xml-warnings").prop("disabled", true);
 			$("#query-xml-warnings-label").addClass("check-label-disabled");
 			
+			$("#query-fix-cdata").prop("checked", false);
+			$("#query-fix-cdata").prop("disabled", true);
+			$("#query-fix-cdata-label").addClass("check-label-disabled");
+			
+			$("#query-fix-comments").prop("checked", false);
+			$("#query-fix-comments").prop("disabled", true);
+			$("#query-fix-comments-label").addClass("check-label-disabled");
+			
+			$("#query-remove-xml").prop("checked", false);
+			$("#query-remove-xml").prop("disabled", true);
+			$("#query-remove-xml-label").addClass("check-label-disabled");
+			
 			if(helperRegEx) {
 				helperRegEx.insertAfter("#query-properties");
 				
@@ -1002,6 +1050,17 @@ jQuery(function($) {
 			
 			$("#query-xml-warnings").prop("disabled", false);
 			$("#query-xml-warnings-label").removeClass("check-label-disabled");
+			
+			$("#query-fix-cdata").prop("checked", true);
+			$("#query-fix-cdata").prop("disabled", false);
+			$("#query-fix-cdata-label").removeClass("check-label-disabled");
+			
+			$("#query-fix-comments").prop("checked", true);
+			$("#query-fix-comments").prop("disabled", false);
+			$("#query-fix-comments-label").removeClass("check-label-disabled");
+			
+			$("#query-remove-xml").prop("disabled", false);
+			$("#query-remove-xml-label").removeClass("check-label-disabled");
 			
 			if(helperXPath) {
 				helperXPath.insertAfter("#query-properties");
@@ -1034,6 +1093,18 @@ jQuery(function($) {
 			$("#query-xml-warnings").prop("disabled", true);
 			$("#query-xml-warnings-label").addClass("check-label-disabled");
 			
+			$("#query-fix-cdata").prop("checked", false);
+			$("#query-fix-cdata").prop("disabled", true);
+			$("#query-fix-cdata-label").addClass("check-label-disabled");
+			
+			$("#query-fix-comments").prop("checked", false);
+			$("#query-fix-comments").prop("disabled", true);
+			$("#query-fix-comments-label").addClass("check-label-disabled");
+			
+			$("#query-remove-xml").prop("checked", false);
+			$("#query-remove-xml").prop("disabled", true);
+			$("#query-remove-xml-label").addClass("check-label-disabled");
+			
 			if(helperJSONPointer) {
 				helperJSONPointer.insertAfter("#query-properties");
 				
@@ -1065,6 +1136,18 @@ jQuery(function($) {
 			$("#query-xml-warnings").prop("disabled", true);
 			$("#query-xml-warnings-label").addClass("check-label-disabled");
 			
+			$("#query-fix-cdata").prop("checked", false);
+			$("#query-fix-cdata").prop("disabled", true);
+			$("#query-fix-cdata-label").addClass("check-label-disabled");
+			
+			$("#query-fix-comments").prop("checked", false);
+			$("#query-fix-comments").prop("disabled", true);
+			$("#query-fix-comments-label").addClass("check-label-disabled");
+			
+			$("#query-remove-xml").prop("checked", false);
+			$("#query-remove-xml").prop("disabled", true);
+			$("#query-remove-xml-label").addClass("check-label-disabled");
+			
 			if(helperJSONPath) {
 				helperJSONPath.insertAfter("#query-properties");
 				
@@ -1094,6 +1177,17 @@ jQuery(function($) {
 			
 			$("#query-xml-warnings").prop("disabled", false);
 			$("#query-xml-warnings-label").removeClass("check-label-disabled");
+			
+			$("#query-fix-cdata").prop("checked", true);
+			$("#query-fix-cdata").prop("disabled", false);
+			$("#query-fix-cdata-label").removeClass("check-label-disabled");
+			
+			$("#query-fix-comments").prop("checked", true);
+			$("#query-fix-comments").prop("disabled", false);
+			$("#query-fix-comments-label").removeClass("check-label-disabled");
+			
+			$("#query-remove-xml").prop("disabled", false);
+			$("#query-remove-xml-label").removeClass("check-label-disabled");
 			
 			if(helperXPath) {
 				helperXPath.insertAfter("#query-properties");
@@ -1418,6 +1512,9 @@ jQuery(function($) {
 							"textonly" : $("#query-text-only").is(":checked"),
 							"text" : $("#query-test-text").val(),
 							"xmlwarnings" : $("#query-xml-warnings").is(":checked"),
+							"fixcdata" : $("#query-fix-cdata").is(":checked"),
+							"fixcomments" : $("#query-fix-comments").is(":checked"),
+							"removexml" : $("#query-remove-xml").is(":checked"),
 							"datetimeformat" : $("#query-datetime").is(":checked") ? $("#query-datetime-format").val() : "",
 							"datetimelocale" : $("#query-datetime").is(":checked") ? $("#query-datetime-locale").val() : ""
 						};

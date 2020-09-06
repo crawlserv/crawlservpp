@@ -4654,6 +4654,9 @@ namespace crawlservpp::Main {
 			bool textOnly{false};
 			std::string text;
 			bool xmlWarnings{false};
+			bool fixCData{true};
+			bool fixComments{true};
+			bool removeXml{false};
 			std::string dateTimeFormat;
 			std::string dateTimeLocale;
 			std::string error;
@@ -4668,6 +4671,9 @@ namespace crawlservpp::Main {
 					|| !Server::getArgument(json, "textonly", textOnly, false, error)
 					|| !Server::getArgument(json, "text", text, false, false, error)
 					|| !Server::getArgument(json, "xmlwarnings", xmlWarnings, false, error)
+					|| !Server::getArgument(json, "fixcdata", fixCData, false, error)
+					|| !Server::getArgument(json, "fixcomments", fixComments, false, error)
+					|| !Server::getArgument(json, "removexml", removeXml, false, error)
 					|| !Server::getArgument(json, "datetimeformat", dateTimeFormat, true, false, error)
 					|| !Server::getArgument(json, "datetimelocale", dateTimeLocale, true, false, error)
 			) {
@@ -4804,7 +4810,7 @@ namespace crawlservpp::Main {
 							Parsing::XML xmlDocumentTest;
 
 							xmlDocumentTest.setOptions(xmlWarnings, xmlWarningsDefault);
-							xmlDocumentTest.parse(text, true, true, false, warnings);
+							xmlDocumentTest.parse(text, fixCData, fixComments, removeXml, warnings);
 
 							while(!warnings.empty()) {
 								result += "WARNING: " + warnings.front() + '\n';
@@ -5214,7 +5220,7 @@ namespace crawlservpp::Main {
 							Parsing::XML xmlDocumentTest;
 
 							xmlDocumentTest.setOptions(xmlWarnings, xmlWarningsDefault);
-							xmlDocumentTest.parse(text, true, true, false, warnings);
+							xmlDocumentTest.parse(text, fixCData, fixComments, removeXml, warnings);
 
 							while(!warnings.empty()) {
 								result += "WARNING: " + warnings.front() + '\n';
