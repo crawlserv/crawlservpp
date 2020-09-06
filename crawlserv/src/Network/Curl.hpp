@@ -920,7 +920,7 @@ namespace crawlservpp::Network {
 	inline void Curl::setConfigCurrent(const Config& currentConfig) {
 		// overwrite cookies
 		for(const auto& cookie : currentConfig.cookiesOverwrite) {
-			this->setOption(CURLOPT_COOKIELIST, cookie);
+			this->setOption(CURLOPT_COOKIELIST, "Set-Cookie:" + cookie);
 		}
 	}
 
