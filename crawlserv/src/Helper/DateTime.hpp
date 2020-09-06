@@ -1148,9 +1148,9 @@ namespace crawlservpp::Helper::DateTime {
 				formatInOut.find("%b") != std::string::npos
 				|| formatInOut.find("%B") != std::string::npos
 		) {
-			Helper::Strings::replaceAll(formatInOut, "maj", "may");
-			Helper::Strings::replaceAll(formatInOut, "Maj", "may");
-			Helper::Strings::replaceAll(formatInOut, "MAJ", "may");
+			Helper::Strings::replaceAll(strInOut, "maj", "may");
+			Helper::Strings::replaceAll(strInOut, "Maj", "may");
+			Helper::Strings::replaceAll(strInOut, "MAJ", "may");
 		}
 	}
 
