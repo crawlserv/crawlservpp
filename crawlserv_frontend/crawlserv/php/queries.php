@@ -509,7 +509,7 @@ if(!isset($_POST["test-nonewtab"])) {
 <input type="checkbox" id="query-fix-comments" checked />
  <span id="query-fix-comments-label">Fix comments</span> &ensp;
  
-<input type="checkbox" id="query-remove-xml" />
+<input type="checkbox" id="query-remove-xml" checked />
  <span id="query-remove-xml-label">Remove XML instructions</span>
 
 <br>

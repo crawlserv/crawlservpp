@@ -1059,6 +1059,7 @@ jQuery(function($) {
 			$("#query-fix-comments").prop("disabled", false);
 			$("#query-fix-comments-label").removeClass("check-label-disabled");
 			
+			$("#query-remove-xml").prop("checked", true);
 			$("#query-remove-xml").prop("disabled", false);
 			$("#query-remove-xml-label").removeClass("check-label-disabled");
 			
@@ -1186,6 +1187,7 @@ jQuery(function($) {
 			$("#query-fix-comments").prop("disabled", false);
 			$("#query-fix-comments-label").removeClass("check-label-disabled");
 			
+			$("#query-remove-xml").prop("checked", true);
 			$("#query-remove-xml").prop("disabled", false);
 			$("#query-remove-xml-label").removeClass("check-label-disabled");
 			
