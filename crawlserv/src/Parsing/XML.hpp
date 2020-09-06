@@ -66,10 +66,10 @@ namespace crawlservpp::Parsing {
 	//! The beginning of XML markup
 	inline constexpr auto xmlBegin{"<?xml "sv};
 
-	//! The beginning of a CDATA element.
+	//! The beginning of a @c CDATA element.
 	inline constexpr auto cDataBegin{"<![CDATA["sv};
 
-	//! The end of a CDATA element.
+	//! The end of a @c CDATA element.
 	inline constexpr auto cDataEnd{"]]>"sv};
 
 	//! The beginning of a conditional comment
@@ -137,7 +137,8 @@ namespace crawlservpp::Parsing {
 	 *  and to convert it into clean %XML markup.
 	 *
 	 * For more information about pugixml, see its
-	 *  <a href="https://github.com/zeux/pugixml">GitHub repository</a>.
+	 *  <a href="https://github.com/zeux/pugixml">
+	 *  GitHub repository</a>.
 	 *
 	 */
 	class XML {
@@ -189,10 +190,12 @@ namespace crawlservpp::Parsing {
 		//! Class for %XML exceptions.
 		/*!
 		 * This exception is being thrown when
-		 * - a HTML::Exception occured while parsing %HTML markup
-		 * - an error occured while parsing the %XML markup
-		 *    returned by Parsing::HTML
-		 * - content has been requested but none has been generated
+		 * - a HTML::Exception occured while parsing
+		 *    %HTML markup
+		 * - an error occured while parsing the %XML
+		 *    markup returned by Parsing::HTML
+		 * - content has been requested but none has
+		 *    been generated
 		 *
 		 * \sa parse, getContent
 		 */
@@ -236,10 +239,14 @@ namespace crawlservpp::Parsing {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor creating a new %XML document from an existing %XML node.
 	/*!
-	 * \param node The node which should be added as root node
-	 *  to the new %XML document.
+	 * \param node The node which should be added as
+	 *   root node to the new %XML document.
 	 */
 	inline XML::XML(const pugi::xml_node& node) {
 		// create XML document
@@ -253,15 +260,66 @@ namespace crawlservpp::Parsing {
 		this->clear();
 	}
 
+	/*
+	 * GETTERS
+	 */
+
+	//! Returns whether the underlying document is valid.
+	/*!
+	 * \returns True, if the underlying document is
+	 *   valid, i.e. %XML content has been
+	 *   sucessfully parsed. False otherwise.
+	 */
+	inline bool XML::valid() const {
+		return this->doc.operator bool();
+	}
+
+	//! Gets the stringified content inside the underlying document.
+	/*!
+	 * The result will be intended with tabs (\\t).
+	 *
+	 * The output string will be overwritten, if no
+	 *  exception is thrown.
+	 *
+	 * \warning Should only be called if %XML markup
+	 *   has been successfully parsed.
+	 *
+	 * \param resultTo A reference to the string that
+	 *   will be replaced with the content from the
+	 *   underlying document.
+	 *
+	 * \throws XML::Exception if no content is
+	 *   available.
+	 */
+	inline void XML::getContent(std::string& resultTo) const {
+		if(!(this->doc)) {
+			throw XML::Exception("No content has been parsed.");
+		}
+
+		std::ostringstream out;
+
+		if(!resultTo.empty()) {
+			std::string().swap(resultTo);
+		}
+
+		this->doc->print(out);
+
+		resultTo += out.str();
+	}
+
+	/*
+	 * SETTER
+	 */
+
 	//! Sets logging options.
 	/*!
 	 * Forwards the given values to the underlying Parsing::HTML document.
 	 *
-	 * \param showWarnings Specify whether to report simple warnings.
-	 *  The default is false.
+	 * \param showWarnings Specify whether to report
+	 *   simple warnings. The default is false.
 	 *
-	 * \param numOfErrors Set the number of errors to be reported.
-	 *  The default is zero.
+	 * \param numOfErrors Set the number of errors
+	 *   to be reported. The default is zero.
 	 *
 	 * \sa Parsing::HTML::tidyAndConvert
 	 */
@@ -270,24 +328,33 @@ namespace crawlservpp::Parsing {
 		this->errors = numOfErrors;
 	}
 
+	/*
+	 * PARSING
+	 */
+
 	//! Parses the given %HTML markup into the underlying %XML document.
 	/*!
-	 * A copy of the given markup will be created and ASCII whitespaces
-	 *  at the beginning of the input will be removed.
+	 * A copy of the given markup will be created
+	 *  and ASCII whitespaces at the beginning of
+	 *  the input will be removed.
 	 *
-	 * \param content A view into the %HTML markup to be parsed.
+	 * \param content A view into the %HTML markup
+	 *   to be parsed.
+	 * \param repairCData Specifies whether the
+	 *   class should try to repair broken @c CDATA
+	 *   elements in the input.
+	 * \param repairComments Specifies whether the
+	 *   class should try to replace broken comments
+	 *   in the input.
+	 * \param removeXmlInstructions Specifies whether
+	 *   the class should remove XML processing
+	 *   instructions before parsing HTML content.
+	 * \param warningsTo A reference to a queue of
+	 *   strings to which warnings and errors will
+	 *   be added according to the specified options.
 	 *
-	 * \param repairCData Specify whether the class should
-	 *  try to repair broken CDATA elements in the input.
-	 *
-	 * \param repairComments Specify whether the class should
-	 *  try to replace broken comments in the input.
-	 *
-	 * \param warningsTo A reference to a queue of strings
-	 *  to which warnings and errors will be added according
-	 *   to the specified options.
-	 *
-	 * \throws XML::Exception if a HTML::Exception has been thrown.
+	 * \throws XML::Exception if a HTML::Exception
+	 *   has been thrown.
 	 *
 	 *  \sa setOptions, getContent
 	 */
@@ -330,7 +397,7 @@ namespace crawlservpp::Parsing {
 			}
 		}
 
-		// try to repair CData
+		// try to repair CDATA
 		if(repairCData) {
 			cDataRepair(xml);
 		}
@@ -392,9 +459,14 @@ namespace crawlservpp::Parsing {
 		}
 	}
 
+	/*
+	 * CLEANUP
+	 */
+
 	//! Clears the content of the underlying %XML document.
 	/*!
-	 * Does not have any effect if no content has been parsed.
+	 * Does not have any effect if no content has
+	 *  been parsed.
 	 */
 	inline void XML::clear() {
 		if(this->doc) {
@@ -402,46 +474,11 @@ namespace crawlservpp::Parsing {
 		}
 	}
 
-	//! Returns whether the underlying document is valid.
-	/*!
-	 * \returns True, if the underlying document is valid,
-	 *   i.e. %XML content has been sucessfully parsed.
-	 *   False otherwise.
+	/*
+	 * INTERNAL STATIC HELPER FUNCTIONS (private)
 	 */
-	inline bool XML::valid() const {
-		return this->doc.operator bool();
-	}
 
-	//! Gets the stringified content inside the underlying document.
-	/*!
-	 * The result will be intended with tabs (\\t).
-	 *
-	 * The output string will be overwritten, if no exception is thrown.
-	 *
-	 * \warning Should only be called if %XML markup has been successfully parsed.
-	 *
-	 * \param resultTo A reference to the string that will be replaced
-	 *   with the content from the underlying document.
-	 *
-	 * \throws XML::Exception if no content is available.
-	 */
-	inline void XML::getContent(std::string& resultTo) const {
-		if(!(this->doc)) {
-			throw XML::Exception("No content has been parsed.");
-		}
-
-		std::ostringstream out;
-
-		if(!resultTo.empty()) {
-			std::string().swap(resultTo);
-		}
-
-		this->doc->print(out);
-
-		resultTo += out.str();
-	}
-
-	// internal static helper function: try to fix CData error (invalid ']]>' inside CData tag)
+	// internal static helper function: try to fix CDATA error (invalid ']]>' inside CDATA tag)
 	inline void XML::cDataRepair(std::string& content) {
 		auto pos{content.find(cDataBegin)};
 
