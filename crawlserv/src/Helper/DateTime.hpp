@@ -1152,8 +1152,8 @@ namespace crawlservpp::Helper::DateTime {
 				Helper::Strings::replaceAll(strInOut, "МАРТ", "мар");
 
 				if(!bigB) {
-					Helper::Strings::replaceAll(strInOut, "Мар", "мар ");
-					Helper::Strings::replaceAll(strInOut, "МАР", "мар ");
+					Helper::Strings::replaceAll(strInOut, "Мар", "мар");
+					Helper::Strings::replaceAll(strInOut, "МАР", "мар");
 				}
 
 				Helper::Strings::replaceAll(strInOut, "апрель", "апр");
