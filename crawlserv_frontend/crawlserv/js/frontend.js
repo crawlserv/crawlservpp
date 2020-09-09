@@ -2066,6 +2066,13 @@ jQuery(function($) {
 		return false;
 	});
 	
+	// CLICK EVENT: click on URL ID or URL text selects it
+	$("#content-url, #content-url-text").on("click", function() {
+		$(this).select();
+		
+		return true;
+	});
+	
 	// CLICK EVENT: go to specific content
 	$("#content-goto").on("click", function() {
 		disableInputs();
