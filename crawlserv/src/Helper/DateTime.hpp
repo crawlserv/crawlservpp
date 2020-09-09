@@ -115,6 +115,9 @@ namespace crawlservpp::Helper::DateTime {
 	//! The prefix for Ukrainian locales.
 	inline constexpr auto ukrainianLocalePrefix{"uk"sv};
 
+	//! The prefix for Finnish locales.
+	inline constexpr auto finnishLocalePrefix{"fi"sv};
+
 	//! The length of the 12-h suffix (AM/PM).
 	inline constexpr auto amPmLength{2};
 
@@ -232,6 +235,7 @@ namespace crawlservpp::Helper::DateTime {
 	void fixFrenchMonths(std::string_view locale, std::string& strInOut);
 	void fixRussianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut);
 	void fixUkrainianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut);
+	void fixFinnishMonths(std::string_view locale, std::string_view format, std::string& strInOut);
 	void extendSingleDigits(std::string& dateTimeString);
 	void fixYear(std::string_view format, int& year);
 	void handle12hTime(
@@ -1368,6 +1372,88 @@ namespace crawlservpp::Helper::DateTime {
 				if(strInOut != oldString) {
 					Helper::Strings::replaceAll(formatInOut, "%B", "%b");
 				}
+			}
+		}
+	}
+
+	//! Fixes semi-abbreviated Finnish month names (@c huhtik, @c touko, etc.), if the locale is Finnish.
+	/*!
+	 * If the given locale is not Finnish, the function
+	 *  call will be without consequences.
+	 *
+	 * If abbreviated month names (@c %b) are not
+	 *  considered in the given format string, the
+	 *  function call will be without consequences.
+	 *
+	 * \param locale A string view containing the locale to
+	 *   be checked for Finnish.
+	 * \param format A reference to the string
+	 *   containing the formatting string that will be
+	 *   checked for abbreviated month names (@c %b).
+	 * \param strInOut A reference to the string containing
+	 *   the date/time, in which the semi-abbreviated months
+	 *    will be replaced, if the given locale is Finnish.
+	 */
+	inline void fixFinnishMonths(std::string_view locale, std::string_view format, std::string& strInOut) {
+		if(
+				format.find("%b") != std::string::npos
+				&& locale.length() >= finnishLocalePrefix.length()
+		) {
+			std::string prefix(locale, 0, finnishLocalePrefix.length());
+
+			std::transform(
+					prefix.begin(),
+					prefix.end(),
+					prefix.begin(),
+					[](const auto c) {
+						return std::tolower(c);
+					}
+			);
+
+			if(prefix == finnishLocalePrefix) {
+				Helper::Strings::replaceAll(strInOut, "tammik", "tammi");
+				Helper::Strings::replaceAll(strInOut, "Tammik", "tammi");
+				Helper::Strings::replaceAll(strInOut, "TAMMIK", "tammi");
+
+				Helper::Strings::replaceAll(strInOut, "helmik", "helmi");
+				Helper::Strings::replaceAll(strInOut, "Helmik", "helmi");
+				Helper::Strings::replaceAll(strInOut, "HELMIK", "helmi");
+
+				Helper::Strings::replaceAll(strInOut, "maalisk", "maalis");
+				Helper::Strings::replaceAll(strInOut, "Maalisk", "maalis");
+				Helper::Strings::replaceAll(strInOut, "MAALISK", "maalis");
+
+				Helper::Strings::replaceAll(strInOut, "huhtik", "huhti");
+				Helper::Strings::replaceAll(strInOut, "Huhtik", "huhti");
+				Helper::Strings::replaceAll(strInOut, "HUHTIK", "huhti");
+
+				Helper::Strings::replaceAll(strInOut, "toukok", "touko");
+				Helper::Strings::replaceAll(strInOut, "Toukok", "touko");
+				Helper::Strings::replaceAll(strInOut, "TOUKOK", "touko");
+
+				Helper::Strings::replaceAll(strInOut, "kesäk", "kesä");
+				Helper::Strings::replaceAll(strInOut, "Kesäk", "kesä");
+				Helper::Strings::replaceAll(strInOut, "KESÄK", "kesä");
+
+				Helper::Strings::replaceAll(strInOut, "heinäk", "heinä");
+				Helper::Strings::replaceAll(strInOut, "Heinäk", "heinä");
+				Helper::Strings::replaceAll(strInOut, "HEINÄK", "heinä");
+
+				Helper::Strings::replaceAll(strInOut, "elok", "elo");
+				Helper::Strings::replaceAll(strInOut, "Elok", "elo");
+				Helper::Strings::replaceAll(strInOut, "ELOK", "elo");
+
+				Helper::Strings::replaceAll(strInOut, "syysk", "syys");
+				Helper::Strings::replaceAll(strInOut, "Syysk", "syys");
+				Helper::Strings::replaceAll(strInOut, "SYYSK", "syys");
+
+				Helper::Strings::replaceAll(strInOut, "marrask", "marras");
+				Helper::Strings::replaceAll(strInOut, "Marrask", "marras");
+				Helper::Strings::replaceAll(strInOut, "MARRASK", "marras");
+
+				Helper::Strings::replaceAll(strInOut, "jouluk", "joulu");
+				Helper::Strings::replaceAll(strInOut, "Jouluk", "joulu");
+				Helper::Strings::replaceAll(strInOut, "JOULUK", "joulu");
 			}
 		}
 	}
