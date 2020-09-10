@@ -66,6 +66,9 @@ namespace crawlservpp::Parsing {
 	//! The beginning of XML markup
 	inline constexpr auto xmlBegin{"<?xml "sv};
 
+	//! Array containing additional XML markup tags to be removed.
+	inline constexpr std::array xmlTags{"<?i>"sv};
+
 	//! The beginning of a @c CDATA element.
 	inline constexpr auto cDataBegin{"<![CDATA["sv};
 
@@ -657,7 +660,7 @@ namespace crawlservpp::Parsing {
 			pos = content.find(xmlInstructionBegin, pos);
 
 			if(pos == std::string::npos) {
-				return;
+				break;
 			}
 
 			const auto end{
@@ -672,6 +675,20 @@ namespace crawlservpp::Parsing {
 			}
 
 			content.erase(pos, end - pos + xmlInstructionEnd.length());
+		}
+
+		for(const auto& tag : xmlTags) {
+			pos = 0;
+
+			while(pos < content.length()) {
+				pos = content.find(tag, pos);
+
+				if(pos == std::string::npos) {
+					break;
+				}
+
+				content.erase(pos, tag.length());
+			}
 		}
 	}
 
