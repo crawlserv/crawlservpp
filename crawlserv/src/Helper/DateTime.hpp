@@ -523,6 +523,7 @@ namespace crawlservpp::Helper::DateTime {
 		std::string formatString{customFormat};
 		fixRussianMonths(locale, dateTime, formatString);
 		fixUkrainianMonths(locale, dateTime, formatString);
+		fixFinnishMonths(locale, formatString, dateTime);
 
 		// remove ordinals
 		removeOrdinals(englishOrdinalSuffixes, dateTime);
@@ -1357,6 +1358,10 @@ namespace crawlservpp::Helper::DateTime {
 				Helper::Strings::replaceAll(strInOut, "жовтень", "жов");
 				Helper::Strings::replaceAll(strInOut, "Жовтень", "жов");
 				Helper::Strings::replaceAll(strInOut, "ЖОВТЕНЬ", "жов");
+
+				Helper::Strings::replaceAll(strInOut, "жнв", "жов");
+				Helper::Strings::replaceAll(strInOut, "Жнв", "жов");
+				Helper::Strings::replaceAll(strInOut, "ЖНВ", "жов");
 
 				Helper::Strings::replaceAll(strInOut, "листопада", "лис");
 				Helper::Strings::replaceAll(strInOut, "Листопада", "лис");
