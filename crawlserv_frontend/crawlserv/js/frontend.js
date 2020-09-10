@@ -2066,8 +2066,8 @@ jQuery(function($) {
 		return false;
 	});
 	
-	// CLICK EVENT: click on URL ID or URL text selects it
-	$("#content-url, #content-url-text").on("click", function() {
+	// FOCUS EVENT: focus on URL ID or URL text selects it
+	$("#content-url, #content-url-text").on("focus", function() {
 		$(this).select();
 		
 		return true;
