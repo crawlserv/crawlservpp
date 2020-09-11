@@ -57,7 +57,7 @@
 		"cookies.set": {
 			"type": "string",
 			"default": "",
-			"description": "Custom HTTP Cookie header independent from internal cookie engine (will be overwritten if cookie is set on dynamic redirect).",
+			"description": "Custom HTTP Cookie header independent from internal cookie engine (will be overwritten if cookie is set on dynamic redirect). Example: cookie1=value1; cookie2=value2; [...].",
 			"simple": false
 		},
 		"dns.cachetimeout": {
