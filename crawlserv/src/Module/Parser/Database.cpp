@@ -475,7 +475,6 @@ namespace crawlservpp::Module::Parser {
 			this->ps.getLatestContent = this->addPreparedStatement(
 					"SELECT id, content"
 					" FROM `" + this->urlListTable + "_crawled`"
-					" FORCE INDEX(url)"
 					" WHERE url = ?"
 					" ORDER BY crawltime DESC"
 					" LIMIT ?, 1"
@@ -489,6 +488,7 @@ namespace crawlservpp::Module::Parser {
 					"SELECT id, content"
 					" FROM `" + this->urlListTable + "_crawled`"
 					" WHERE url = ?"
+					" ORDER BY crawltime DESC"
 			);
 		}
 
