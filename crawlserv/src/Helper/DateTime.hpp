@@ -1355,6 +1355,10 @@ namespace crawlservpp::Helper::DateTime {
 				Helper::Strings::replaceAll(strInOut, "Вересень", "вер");
 				Helper::Strings::replaceAll(strInOut, "ВЕРЕСЕНЬ", "вер");
 
+				Helper::Strings::replaceAll(strInOut, "врс", "вер");
+				Helper::Strings::replaceAll(strInOut, "Врс", "вер");
+				Helper::Strings::replaceAll(strInOut, "ВРС", "вер");
+
 				Helper::Strings::replaceAll(strInOut, "жовтень", "жов");
 				Helper::Strings::replaceAll(strInOut, "Жовтень", "жов");
 				Helper::Strings::replaceAll(strInOut, "ЖОВТЕНЬ", "жов");
