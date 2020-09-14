@@ -1309,63 +1309,114 @@ namespace crawlservpp::Helper::DateTime {
 			);
 
 			if(prefix == ukrainianLocalePrefix) {
-				std::string oldString{strInOut};
+				const bool bigB{
+					formatInOut.find("%B") != std::string::npos
+				};
+				std::string oldString;
+
+				if(bigB) {
+					oldString = strInOut;
+				}
 
 				Helper::Strings::replaceAll(strInOut, "січень", "січ");
 				Helper::Strings::replaceAll(strInOut, "Січень", "січ");
 				Helper::Strings::replaceAll(strInOut, "СІЧЕНЬ", "січ");
 
-				Helper::Strings::replaceAll(strInOut, "стд", "січ");
-				Helper::Strings::replaceAll(strInOut, "Стд", "січ");
-				Helper::Strings::replaceAll(strInOut, "СТД", "січ");
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Січ", "січ");
+					Helper::Strings::replaceAll(strInOut, "СІЧ", "січ");
+					Helper::Strings::replaceAll(strInOut, "стд", "січ");
+					Helper::Strings::replaceAll(strInOut, "Стд", "січ");
+					Helper::Strings::replaceAll(strInOut, "СТД", "січ");
+				}
 
 				Helper::Strings::replaceAll(strInOut, "лютий", "лют");
 				Helper::Strings::replaceAll(strInOut, "Лютий", "лют");
 				Helper::Strings::replaceAll(strInOut, "ЛЮТИЙ", "лют");
 
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Лют", "лют");
+					Helper::Strings::replaceAll(strInOut, "ЛЮТ", "лют");
+				}
+
 				Helper::Strings::replaceAll(strInOut, "березень", "бер");
 				Helper::Strings::replaceAll(strInOut, "Березень", "бер");
 				Helper::Strings::replaceAll(strInOut, "БЕРЕЗЕНЬ", "бер");
+
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Бер", "бер");
+					Helper::Strings::replaceAll(strInOut, "БЕР", "бер");
+				}
 
 				Helper::Strings::replaceAll(strInOut, "квітень", "кві");
 				Helper::Strings::replaceAll(strInOut, "Квітень", "кві");
 				Helper::Strings::replaceAll(strInOut, "КВІТЕНЬ", "кві");
 
-				Helper::Strings::replaceAll(strInOut, "крс", "кві");
-				Helper::Strings::replaceAll(strInOut, "Крс", "кві");
-				Helper::Strings::replaceAll(strInOut, "КРС", "кві");
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "крс", "кві");
+					Helper::Strings::replaceAll(strInOut, "Крс", "кві");
+					Helper::Strings::replaceAll(strInOut, "КРС", "кві");
+				}
 
 				Helper::Strings::replaceAll(strInOut, "травень", "тра");
 				Helper::Strings::replaceAll(strInOut, "Травень", "тра");
 				Helper::Strings::replaceAll(strInOut, "ТРАВЕНЬ", "тра");
 
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Тра", "тра");
+					Helper::Strings::replaceAll(strInOut, "ТРА", "тра");
+				}
+
 				Helper::Strings::replaceAll(strInOut, "червень", "чер");
 				Helper::Strings::replaceAll(strInOut, "Червень", "чер");
 				Helper::Strings::replaceAll(strInOut, "ЧЕРВЕНЬ", "чер");
+
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Чер", "чер");
+					Helper::Strings::replaceAll(strInOut, "ЧЕР", "чер");
+				}
 
 				Helper::Strings::replaceAll(strInOut, "липень", "лип");
 				Helper::Strings::replaceAll(strInOut, "Липень", "лип");
 				Helper::Strings::replaceAll(strInOut, "ЛИПЕНЬ", "лип");
 
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Лип", "лип");
+					Helper::Strings::replaceAll(strInOut, "ЛИП", "лип");
+				}
+
 				Helper::Strings::replaceAll(strInOut, "серпень", "сер");
 				Helper::Strings::replaceAll(strInOut, "Серпень", "сер");
 				Helper::Strings::replaceAll(strInOut, "СЕРПЕНЬ", "сер");
+
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Сер", "сер");
+					Helper::Strings::replaceAll(strInOut, "СЕР", "сер");
+				}
 
 				Helper::Strings::replaceAll(strInOut, "вересень", "вер");
 				Helper::Strings::replaceAll(strInOut, "Вересень", "вер");
 				Helper::Strings::replaceAll(strInOut, "ВЕРЕСЕНЬ", "вер");
 
-				Helper::Strings::replaceAll(strInOut, "врс", "вер");
-				Helper::Strings::replaceAll(strInOut, "Врс", "вер");
-				Helper::Strings::replaceAll(strInOut, "ВРС", "вер");
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Вер", "вер");
+					Helper::Strings::replaceAll(strInOut, "ВЕР", "вер");
+					Helper::Strings::replaceAll(strInOut, "врс", "вер");
+					Helper::Strings::replaceAll(strInOut, "Врс", "вер");
+					Helper::Strings::replaceAll(strInOut, "ВРС", "вер");
+				}
 
 				Helper::Strings::replaceAll(strInOut, "жовтень", "жов");
 				Helper::Strings::replaceAll(strInOut, "Жовтень", "жов");
 				Helper::Strings::replaceAll(strInOut, "ЖОВТЕНЬ", "жов");
 
-				Helper::Strings::replaceAll(strInOut, "жнв", "жов");
-				Helper::Strings::replaceAll(strInOut, "Жнв", "жов");
-				Helper::Strings::replaceAll(strInOut, "ЖНВ", "жов");
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Жов", "жов");
+					Helper::Strings::replaceAll(strInOut, "ЖОВ", "жов");
+					Helper::Strings::replaceAll(strInOut, "жнв", "жов");
+					Helper::Strings::replaceAll(strInOut, "Жнв", "жов");
+					Helper::Strings::replaceAll(strInOut, "ЖНВ", "жов");
+				}
 
 				Helper::Strings::replaceAll(strInOut, "листопада", "лис");
 				Helper::Strings::replaceAll(strInOut, "Листопада", "лис");
@@ -1374,11 +1425,21 @@ namespace crawlservpp::Helper::DateTime {
 				Helper::Strings::replaceAll(strInOut, "Листопад", "лис");
 				Helper::Strings::replaceAll(strInOut, "ЛИСТОПАД", "лис");
 
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Лис", "лис");
+					Helper::Strings::replaceAll(strInOut, "ЛИС", "лис");
+				}
+
 				Helper::Strings::replaceAll(strInOut, "грудень", "гру");
 				Helper::Strings::replaceAll(strInOut, "Грудень", "гру");
 				Helper::Strings::replaceAll(strInOut, "ГРУДЕНЬ", "гру");
 
-				if(strInOut != oldString) {
+				if(!bigB) {
+					Helper::Strings::replaceAll(strInOut, "Гру", "гру");
+					Helper::Strings::replaceAll(strInOut, "ГРУ", "гру");
+				}
+
+				if(bigB && strInOut != oldString) {
 					Helper::Strings::replaceAll(formatInOut, "%B", "%b");
 				}
 			}
