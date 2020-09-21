@@ -44,6 +44,7 @@
 #include <clocale>		// std::setlocale
 #include <cmath>		// std::lround
 #include <cstdint>		// std::uint8_t, std::int64_t, std::uint16_t, std::uint64_t
+#include <cstdlib>		// std::strtoul
 #include <ctime>		// std::tm, std::strftime, std::time_t
 #include <exception>	// std::exception
 #include <iomanip>		// std::get_time
@@ -84,10 +85,14 @@ namespace crawlservpp::Helper::DateTime {
 	inline constexpr auto unixTimeFormatXOffset{4};
 
 	//! An array containing English ordinal suffixes to be stripped from numbers.
-	inline constexpr std::array englishOrdinalSuffixes{"st"sv, "nd"sv, "rd"sv, "th"sv};
+	inline constexpr std::array englishOrdinalSuffixes{
+		"st"sv, "nd"sv, "rd"sv, "th"sv
+	};
 
 	//! An array containing French ordinal suffix to be stripped from numbers.
-	inline constexpr std::array frenchOrdinalSuffixes{"e"sv, "er"sv};
+	inline constexpr std::array frenchOrdinalSuffixes{
+		"e"sv, "er"sv
+	};
 
 	//! An array containing Russian ordinal suffixes to be stripped from numbers.
 	inline constexpr std::array russianOrdinalSuffixes{
@@ -95,7 +100,9 @@ namespace crawlservpp::Helper::DateTime {
 	};
 
 	//! An array containing Ukrainian ordinal suffixes to be stripped from numbers.
-	inline constexpr std::array ukrainianOrdinalSuffixes{"-а"sv, "-е"sv, "-і"sv, "-я"sv, "-є"sv};
+	inline constexpr std::array ukrainianOrdinalSuffixes{
+		"-а"sv, "-е"sv, "-і"sv, "-я"sv, "-є"sv
+	};
 
 	//! The date/time format used by the MySQL database (as @c C string).
 	inline constexpr auto sqlTimeStamp{"%F %T"};
@@ -172,6 +179,15 @@ namespace crawlservpp::Helper::DateTime {
 	//! The length of a date in valid ISO Format (@c YYYY-MM-DD).
 	inline constexpr auto isoDateLength{10};
 
+	//! The length of a year.
+	inline constexpr auto yearLength{4};
+
+	//! Consider two-digit years before this year as being in the 2000s.
+	inline constexpr auto minTwoDigitYear{1969};
+
+	//! Base of decimal numbers.
+	inline constexpr auto base10{10};
+
 	///@}
 
 	/*
@@ -237,7 +253,7 @@ namespace crawlservpp::Helper::DateTime {
 	void fixUkrainianMonths(std::string_view locale, std::string& strInOut, std::string& formatInOut);
 	void fixFinnishMonths(std::string_view locale, std::string_view format, std::string& strInOut);
 	void extendSingleDigits(std::string& dateTimeString);
-	void fixYear(std::string_view format, int& year);
+	void fixYear(std::string& sqlTimeStamp, std::string_view format);
 	void handle12hTime(
 			std::string& formatString,
 			const std::string& dateTimeString,
@@ -438,8 +454,6 @@ namespace crawlservpp::Helper::DateTime {
 					convert12hTo24h(cTime.tm_hour, isPm);
 				}
 
-				fixYear(formatString, cTime.tm_year);
-
 				std::array<char, sqlTimeStampLength + 1> out{};
 
 				const auto len{
@@ -460,6 +474,8 @@ namespace crawlservpp::Helper::DateTime {
 				}
 			}
 		}
+
+		fixYear(dateTime, customFormat);
 	}
 
 	//! Converts date/time with a custom format into the format @c YYYY-MM-DD HH:MM:SS.
@@ -575,8 +591,6 @@ namespace crawlservpp::Helper::DateTime {
 				convert12hTo24h(cTime.tm_hour, isPm);
 			}
 
-			fixYear(formatString, cTime.tm_year);
-
 			std::array<char, sqlTimeStampLength + 1> out{};
 
 			const auto len{
@@ -598,6 +612,8 @@ namespace crawlservpp::Helper::DateTime {
 				);
 			}
 		}
+
+		fixYear(dateTime, customFormat);
 	}
 
 	//! Converts a timestamp in the @c YYYYMMDDHHMMSS format to a MySQL timestamp in the @c YYYY-MM-DD HH:MM:SS format.
@@ -1565,18 +1581,25 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Changes a year before 1969 into a year after 2000, if it has been parsed from two digits.
 	/*!
+	 * \param sqlTimeStamp Reference to the string
+	 *   containing the timestamp that will be
+	 *   changed, if necessary.
 	 * \param format View to the string containing the
 	 *   format. If it does not contain @c %y, the
 	 *   call to the function will have no effect.
-	 * \param year Reference to the year to be changed,
-	 *   if necessary.
 	 */
-	inline void fixYear(std::string_view format, int& year) {
+	inline void fixYear(std::string& sqlTimeStamp, std::string_view format) {
 		if(
 				format.find("%y") != std::string_view::npos
-				&& year < centuryFrom
+				&& sqlTimeStamp.length() > yearLength
+				&& std::strtoul(
+						sqlTimeStamp.substr(0, yearLength).c_str(),
+						nullptr,
+						base10
+				) < minTwoDigitYear
 		) {
-			year += yearsPerCentury;
+			sqlTimeStamp[0] = '2';
+			sqlTimeStamp[1] = '0';
 		}
 	}
 
