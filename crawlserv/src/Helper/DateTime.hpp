@@ -125,10 +125,10 @@ namespace crawlservpp::Helper::DateTime {
 	//! The prefix for Finnish locales.
 	inline constexpr auto finnishLocalePrefix{"fi"sv};
 
-	//! The length of the 12-h suffix (AM/PM).
+	//! The length of the 12-h suffix (@c AM / @c PM).
 	inline constexpr auto amPmLength{2};
 
-	//! The number of hours to be added to a PM time, or to be subtracted from a 12th hour AM time.
+	//! The number of hours to be added to a PM time, or to be subtracted from a 12th hour @c AM time.
 	inline constexpr auto hourChange{12};
 
 	//! The hour of noon and midnight.
@@ -179,6 +179,12 @@ namespace crawlservpp::Helper::DateTime {
 	//! The length of a date in valid ISO Format (@c YYYY-MM-DD).
 	inline constexpr auto isoDateLength{10};
 
+	//! The length of a date/time with minutes only (@c YYYY-MM-DD HH:MM).
+	inline constexpr auto dateTimeLengthMinutes{16};
+
+	//! The length of a date/time with seconds (@c YYYY-MM-DD HH:MM:SS).
+	inline constexpr auto dateTimeLengthSeconds{19};
+
 	//! The length of a year.
 	inline constexpr auto yearLength{4};
 
@@ -187,6 +193,15 @@ namespace crawlservpp::Helper::DateTime {
 
 	//! Base of decimal numbers.
 	inline constexpr auto base10{10};
+
+	//! Length of date/time, reduced to minutes (@c YYYY-MM-DD HH:MM).
+	inline constexpr auto reducedToMinutesLength{16};
+
+	//! Length of date/time, reduced to hours (@c YYYY-MM-DD HH).
+	inline constexpr auto reducedToHoursLength{13};
+
+	//! Length of date, reduced to months (@c YYYY-MM)
+	inline constexpr auto reducedToMonthsLength{7};
 
 	///@}
 
@@ -210,6 +225,7 @@ namespace crawlservpp::Helper::DateTime {
 	void convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	void convertSQLTimeStampToTimeStamp(std::string& timeStamp);
 	void convert12hTo24h(int& hour, bool isPm);
+	void reduceDate(std::string& dateTime, std::uint8_t resolution);
 
 	///@}
 	///@name Formatting
@@ -284,6 +300,10 @@ namespace crawlservpp::Helper::DateTime {
 
 	/*
 	 * IMPLEMENTATION
+	 */
+
+	/*
+	 * CONVERSION
 	 */
 
 	//! Converts a date/time formatted in a “long” format into the format @c YYYY-MM-DD HH:MM:SS.
@@ -694,6 +714,88 @@ namespace crawlservpp::Helper::DateTime {
 		}
 	}
 
+	//! Reduce a date/time to the specified resolution.
+	/*
+	 * \param dateTime Reference to a string containing
+	 *   the date/time that will be reduced to the
+	 *   specified resolution, if necessary.
+	 * \param resolution One of the following values:
+	 *   - 0 – weeks
+	 *   - 1 – minutes
+	 *   - 2 – hours
+	 *   - 3 – days
+	 *   - 4 – months
+	 *   - 5 – years
+	 *   - 6 – unfiltered (seconds)
+	 *
+	 * \throws DateTime::Exception if the given date/time
+	 *   has an invalid length, or the specified resolution
+	 *   is invalid.
+	 */
+	inline void reduceDate(std::string& dateTime, std::uint8_t resolution) {
+		if(dateTime.empty()) {
+			return;
+		}
+
+		if(dateTime.length() == dateTimeLengthMinutes) {
+			dateTime = dateTime + ":00";
+		}
+
+		if(dateTime.length() != dateTimeLengthSeconds) {
+			throw Exception("Invalid length of date/time " + dateTime);
+		}
+
+		switch(resolution) {
+		case 0:
+			// reduce to year and week (YYYY-#WW)
+
+			//TODO
+
+			break;
+
+		case 1:
+			// reduce to minutes (YYYY-MM-DD HH:MM)
+			dateTime = dateTime.substr(0, reducedToMinutesLength);
+
+			break;
+
+		case 2:
+			// reduce to hours (YYYY-MM-DD HH)
+			dateTime = dateTime.substr(0, reducedToHoursLength);
+
+			break;
+
+		case 3:
+			// reduce to days, i.e. date (YYYY-MM-DD)
+			dateTime = dateTime.substr(0, isoDateLength);
+
+			break;
+
+		case 4:
+			// reduce to month (YYYY-MM)
+			dateTime = dateTime.substr(0, reducedToMonthsLength);
+
+			break;
+
+		case 5:
+			// reduce to year (YYYY)
+			dateTime = dateTime.substr(0, yearLength);
+
+			break;
+
+		case 6:
+			// do not filter
+			break;
+
+		default:
+			throw Exception("Invalid date/time resolution: " + std::to_string(resolution));
+		}
+	}
+
+	/*
+	 * FORMATTING
+	 */
+
 	//! Converts microseconds into a well-formatted string.
 	/*!
 	 * \param microseconds The number of microseconds
@@ -899,6 +1001,10 @@ namespace crawlservpp::Helper::DateTime {
 		);
 	}
 
+	/*
+	 * VERIFICATION
+	 */
+
 	//! Checks whether a string contains a valid date in the ISO format.
 	/*!
 	 * \note A string view is not being used, because
@@ -920,6 +1026,10 @@ namespace crawlservpp::Helper::DateTime {
 
 		return bool(in);
 	}
+
+	/*
+	 * COMPARISON
+	 */
 
 	//! Checks whether the given ISO date is in the given range of dates.
 	/*!
@@ -966,6 +1076,10 @@ namespace crawlservpp::Helper::DateTime {
 		return isoDate.substr(0, isoDateLength) >= rangeFrom.substr(0, isoDateLength)
 				&& isoDate <= rangeTo.substr(0, isoDateLength);
 	}
+
+	/*
+	 * HELPERS
+	 */
 
 	//! Removes all ordinal suffixes after numbers in the given string.
 	/*!
