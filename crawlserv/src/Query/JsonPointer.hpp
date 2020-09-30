@@ -233,11 +233,13 @@ namespace crawlservpp::Query {
 			else if(match->IsArray() && !(this->textOnly)) {
 				const auto& iterator{match->GetArray().Begin()};
 
-				if(iterator->IsString()) {
-					resultTo = std::string(iterator->GetString(), iterator->GetStringLength());
-				}
-				else {
-					resultTo = Helper::Json::stringify(*iterator);
+				if(iterator != nullptr) {
+					if(iterator->IsString()) {
+						resultTo = std::string(iterator->GetString(), iterator->GetStringLength());
+					}
+					else {
+						resultTo = Helper::Json::stringify(*iterator);
+					}
 				}
 			}
 			else {
