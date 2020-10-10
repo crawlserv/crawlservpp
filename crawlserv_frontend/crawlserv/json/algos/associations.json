@@ -1,0 +1,43 @@
+{
+	"label": "Associations",
+	"open": true,
+	
+	"categories": {
+		"type": "array",
+		"item-type": "query",
+		"query-results": [
+			"bool"
+		],
+		"query-types": [
+			"regex"
+		],
+		"default": [],
+		"label": "Categories:",
+		"description": "Queries identifying the categories with which the term should be checked for associations.",
+		"simple": true,
+		"position": 2		
+	},
+	"keyword": {
+		"type": "query",
+		"query-results": [
+			"bool"
+		],
+		"query-types": [
+			"regex"
+		],
+		"default": 0,
+		"description": "Query identifying the terms which should be checked for associations with the given categories.",
+		"simple": true,
+		"position": 3
+	},
+	"window.size": {
+		"type": "number",
+		"min": 1,
+		"max": 65535,
+		"default": 1,
+		"label": "Window size (+/-):",
+		"description": "Number of words around a term to check for associations with the given categories.",
+		"simple": true,
+		"position": 3
+	}
+}
