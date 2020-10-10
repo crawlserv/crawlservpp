@@ -160,8 +160,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	//! Counts the tokens in the text corpus.
 	/*!
-	 * The corpus has already been genererated on
-	 *  initialization.
+	 * One corpus will be processed in each tick.
+	 *
+	 * \note The corpus has already been genererated
+	 *   on initialization.
 	 *
 	 * \sa onAlgoInit
 	 *
@@ -169,60 +171,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 	void TokensOverTime::onAlgoTick() {
 		if(this->currentCorpus < this->corpora.size()) {
-			// count all tokens
-			if(this->corpora[this->currentCorpus].isTokenized()) {
-				for(const auto& token : this->corpora[this->currentCorpus].getcTokens()) {
-					++(this->tokenStats[token]);
-				}
-			}
+			//TODO count tokens (-> private member function)
 
 			++(this->currentCorpus);
 		}
 		else {
-			//TODO(ans)
-			/*
-			 * DEBUG: just show TOP 100 for now
-			 */
-
-			constexpr auto topN{100};
-
-			std::vector<std::pair<std::string, std::uint64_t>> mapVec;
-
-			for(const auto& mapEntry : this->tokenStats) {
-				mapVec.emplace_back(mapEntry.first, mapEntry.second);
-			}
-
-			std::sort(mapVec.begin(), mapVec.end(), [](const auto& a, const auto& b) {
-				return a.second > b.second;
-			});
-
-			std::size_t count{0};
-
-			std::cout << "\n\nTOKEN TOP 100";
-
-			const auto oldLocale = std::cout.imbue(std::locale(""));
-
-			for(const auto& mapEntry : mapVec) {
-				++count;
-
-				std::cout << "\n[" << count << "] " << mapEntry.first << " " << mapEntry.second;
-
-				if(count == topN) {
-					break;
-				}
-			}
-
-			std::cout << std::flush;
-
-			std::cout.imbue(oldLocale);
-
-			std::map<std::string, std::uint64_t>{}.swap(this->tokenStats);
-
-			this->corpora.clear();
-
-			/*
-			 * END DEBUG
-			 */
+			//TODO save tokens (-> private member function)
 
 			// sleep forever (i.e. until the thread is terminated)
 			this->finished();
