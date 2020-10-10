@@ -203,6 +203,27 @@ namespace crawlservpp::Helper::DateTime {
 	//! Length of date, reduced to months (@c YYYY-MM)
 	inline constexpr auto reducedToMonthsLength{7};
 
+	//! Group dates by weeks.
+	inline constexpr std::uint8_t dateWeeks{0};
+
+	//! Group dates by minutes.
+	inline constexpr std::uint8_t dateMinutes{1};
+
+	//! Group dates by hours.
+	inline constexpr std::uint8_t dateHours{2};
+
+	//! Group dates by minutes.
+	inline constexpr std::uint8_t dateDays{3};
+
+	//! Group dates by months.
+	inline constexpr std::uint8_t dateMonths{4};
+
+	//! Group dates by years.
+	inline constexpr std::uint8_t dateYears{5};
+
+	//! Group dates by seconds.
+	inline constexpr std::uint8_t dateSeconds{6};
+
 	///@}
 
 	/*
@@ -719,18 +740,15 @@ namespace crawlservpp::Helper::DateTime {
 	 * \param dateTime Reference to a string containing
 	 *   the date/time that will be reduced to the
 	 *   specified resolution, if necessary.
-	 * \param resolution One of the following values:
-	 *   - 0 – weeks
-	 *   - 1 – minutes
-	 *   - 2 – hours
-	 *   - 3 – days
-	 *   - 4 – months
-	 *   - 5 – years
-	 *   - 6 – unfiltered (seconds)
+	 * \param resolution Resolution to be used for
+	 *   reducing the date.
 	 *
 	 * \throws DateTime::Exception if the given date/time
 	 *   has an invalid length, or the specified resolution
 	 *   is invalid.
+	 *
+	 * \sa dateWeeks, dateMinutes, dateHours, dateDays,
+	 *   dateMonths, dateYears, dateSeconds
 	 */
 	inline void reduceDate(std::string& dateTime, std::uint8_t resolution) {
 		if(dateTime.empty()) {

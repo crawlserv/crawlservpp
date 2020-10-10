@@ -156,6 +156,22 @@ namespace crawlservpp::Module::Analyzer {
 			std::uint64_t generalSleepWhenFinished{defaultSleepWhenFinishedMs};
 
 			///@}
+			///@name Group by Date
+			///@{
+
+			//! The resolution to be used when grouping dates.
+			/*!
+			 * \sa Helper::DateTime::dateWeeks,
+			 *   Helper::DateTime::dateMinutes,
+			 *   Helper::DateTime::dateHours,
+			 *   Helper::DateTime::dateDays,
+			 *   Helper::DateTime::dateMonths,
+			 *   Helper::DateTime::dateYears,
+			 *   Helper::DateTime::dateSeconds
+			 */
+			std::uint8_t groupDateResolution{0};
+
+			///@}
 			///@name Filter by Date
 			///@{
 
@@ -303,6 +319,10 @@ namespace crawlservpp::Module::Analyzer {
 				this->config.generalTargetTable,
 				StringParsingOption::SQL
 		);
+
+		// group by date option
+		this->category("group-date");
+		this->option("resolution", this->config.groupDateResolution);
 
 		// filter by date options
 		this->category("filter-date");
