@@ -1,0 +1,22 @@
+{
+	"label": "Group by date",
+	"open": true,
+	
+	"resolution": {
+		"type": "enum",
+		"enum-values": [
+			"weeks",
+			"minutes",
+			"hours",
+			"days",
+			"months",
+			"years",
+			"seconds"
+		],
+		"default": 0,
+		"label": "Group by:",
+		"description": "Temporal resolution of the resulting data.",
+		"simple": true,
+		"position": 1
+	}
+}
