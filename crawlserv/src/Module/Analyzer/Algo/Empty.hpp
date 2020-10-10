@@ -147,7 +147,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 * TODO: add additional private member variables here
 		 */
 		//std::size_t sources{0};
-		//std::string source
+		//std::string source;
 
 		// algorithm options
 		/*
@@ -165,4 +165,4 @@ namespace crawlservpp::Module::Analyzer::Algo {
 /*
  * TODO: change the name of the include guard
  */
-#endif /* MODULE_ANALYZER_ALGO_MARKOVTEXT_HPP_ */
+#endif /* MODULE_ANALYZER_ALGO_EMPTY_HPP_ */
