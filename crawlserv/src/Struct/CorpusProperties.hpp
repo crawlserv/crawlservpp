@@ -90,6 +90,13 @@ namespace crawlservpp::Struct {
 		 */
 		std::uint64_t freeMemoryEvery{0};
 
+		//! Tokenization.
+		/*!
+		 * True, of the corpus will be tokenized.
+		 *  False otherwise.
+		 */
+		bool tokenize{false};
+
 		///@}
 		///@name Construction
 		///@{
@@ -97,10 +104,10 @@ namespace crawlservpp::Struct {
 		//! Default constructor.
 		CorpusProperties() = default;
 
-		//! Constructor setting type, table and column name of the corpus source.
+		//! Constructor setting properties for a tokenized corpus.
 		/*!
 		 * \param setSourceType The type of the source
-		 *   from which the corpus is created (see below).
+		 *   from which the corpus is created (see below).e
 		 * \param setSourceTable Constant reference to a
 		 *   string containing the name of the table from
 		 *   which the corpus is created.
@@ -145,8 +152,10 @@ namespace crawlservpp::Struct {
 		 *	 Data::Corpus::sentenceManipNone,
 		 *	 Data::Corpus::sentenceManipTagger,
 		 *	 Data::Corpus::wordManipNone,
+		 *	 Data::Corpus::wordManipRemoveSingleUtf8Chars,
 		 *	 Data::Corpus::wordManipPorter2Stemmer,
-		 *	 Data::Corpus::wordManipGermanStemmer
+		 *	 Data::Corpus::wordManipGermanStemmer,
+		 *	 Data::Corpus::wordManipLemmatizer
 		 */
 		CorpusProperties(
 				std::uint16_t setSourceType,
@@ -166,6 +175,37 @@ namespace crawlservpp::Struct {
 			wordManipulators{setWordManipulators},
 			wordModels{setWordModels},
 			savePoints{setSavePoints},
+			freeMemoryEvery{setFreeMemoryEvery},
+			tokenize{true} {}
+
+		//! Constructor setting properties for a continuous corpus.
+		/*!
+		 * \param setSourceType The type of the source
+		 *   from which the corpus is created (see below).e
+		 * \param setSourceTable Constant reference to a
+		 *   string containing the name of the table from
+		 *   which the corpus is created.
+		 * \param setSourceColumn Constant reference to a
+		 *   string containing the name of the table column
+		 *   from which the corpus is created.
+		 * \param setFreeMemoryEvery Number of processed bytes
+		 *   in a continuous corpus after which memory will
+		 *   be freed. If zero, memory will only be freed
+		 *   after processing is complete.
+		 *
+		 * \sa Module::Analyzer::generalInputSourcesParsing,
+		 *   Module::Analyzer::generalInputSourcesExtracting,
+		 *   Module::Analyzer::generalInputSourcesAnalyzing,
+		 *   Module::Analyzer::generalInputSourcesCrawling
+		 */
+		CorpusProperties(
+				std::uint16_t setSourceType,
+				const std::string& setSourceTable,
+				const std::string& setSourceColumn,
+				std::uint64_t setFreeMemoryEvery
+		) : sourceType{setSourceType},
+			sourceTable{setSourceTable},
+			sourceColumn{setSourceColumn},
 			freeMemoryEvery{setFreeMemoryEvery} {}
 
 		///@}
