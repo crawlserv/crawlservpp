@@ -26,7 +26,7 @@
  *  Duplicate this (and the header) file to implement a new algorithm,
  *  then add it to 'All.cpp' in the same directory.
  *
- * TODO: change name and description of the file
+ * TODO: change name, date and description of the file
  *
  *  Created on: Jul 23, 2020
  *      Author: ans
