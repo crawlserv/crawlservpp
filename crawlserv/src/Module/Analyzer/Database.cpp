@@ -1958,6 +1958,10 @@ namespace crawlservpp::Module::Analyzer {
 					statusSetter
 			);
 		}
+		else if(!corpusRef.isTokenized()) {
+			// tokenize without manipulators
+			corpusRef.tokenizeCustom({}, {}, properties.freeMemoryEvery, statusSetter);
+		}
 	}
 
 	// save corpus savepoint, throws Database::Exception
