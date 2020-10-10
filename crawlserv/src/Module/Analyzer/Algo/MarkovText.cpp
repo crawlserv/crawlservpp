@@ -157,11 +157,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 							this->config.generalInputSources.at(n),
 							this->config.generalInputTables.at(n),
 							this->config.generalInputFields.at(n),
-							this->config.tokenizerSentenceManipulators,
-							this->config.tokenizerSentenceModels,
-							this->config.tokenizerWordManipulators,
-							this->config.tokenizerWordModels,
-							this->config.tokenizerSavePoints,
 							this->config.tokenizerFreeMemoryEvery
 					),
 					dateFrom,
