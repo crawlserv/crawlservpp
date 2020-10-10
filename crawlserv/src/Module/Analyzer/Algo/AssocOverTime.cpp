@@ -203,7 +203,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Parses a configuration option for the algorithm.
 	void AssocOverTime::parseAlgoOption() {
 		// algorithm options
-		this->category("assocations");
+		this->category("associations");
 		this->option("categories", this->categoryQueries);
 		this->option("keyword", this->keyWordQuery);
 		this->option("window.size", this->windowSize);
@@ -243,12 +243,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// add terms and categories from current corpus
 	void AssocOverTime::addCurrent() {
-
+		const auto& corpus = this->corpora[this->currentCorpus];
+		const auto& dateMap = corpus.getcDateMap();
+		const auto& articleMap = corpus.getcArticleMap();
+		const auto& tokens = corpus.getcTokens();
 	}
 
 	// calculate and save associations
 	void AssocOverTime::saveAssociations() {
-
+		//TODO
 	}
 
 	/*
