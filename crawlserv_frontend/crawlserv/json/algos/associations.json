@@ -26,9 +26,10 @@
 			"regex"
 		],
 		"default": 0,
+		"label": "Keyword:",
 		"description": "Query identifying the terms which should be checked for associations with the given categories.",
 		"simple": true,
-		"position": 3
+		"position": 1
 	},
 	"window.size": {
 		"type": "number",
