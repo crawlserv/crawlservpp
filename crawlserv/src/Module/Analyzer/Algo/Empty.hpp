@@ -151,8 +151,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: add additional private member variables here
 		 */
-		//std::size_t sources{0};
-		//std::string source;
+		//std::size_t currentCorpus{0};
+		//std::vector<Data::Corpus> corpora;
 
 		// algorithm options
 		/*

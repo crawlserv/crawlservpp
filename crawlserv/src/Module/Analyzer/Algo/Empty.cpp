@@ -139,36 +139,32 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 * TODO: [OPTIONAL] get text corpus, filtered by date
 		 */
 
-		// get text corpus
 		/*
+		// request text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");
 
+		std::size_t bytes{0};
+		std::size_t sources{0};
+
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
-			std::string dateFrom;
-			std::string dateTo;
 			std::size_t corpusSources{0};
 
-			if(this->config.filterDateEnable) {
-				dateFrom = this->config.filterDateFrom;
-				dateTo = this->config.filterDateTo;
-			}
-
-			Data::Corpus corpus(this->config.generalCorpusChecks);
+			this->corpora.emplace_back(this->config.generalCorpusChecks);
 
 			std::string statusStr;
 
 			if(this->config.generalInputSources.size() > 1) {
-				std::ostringstream statusStrStr;
+				std::ostringstream corpusStatusStrStr;
 
-				statusStrStr.imbue(std::locale(""));
+				corpusStatusStrStr.imbue(std::locale(""));
 
-				statusStrStr << "Getting text corpus ";
-				statusStrStr << n + 1;
-				statusStrStr << "/";
-				statusStrStr << this->config.generalInputSources.size();
-				statusStrStr << "...";
+				corpusStatusStrStr << "Getting text corpus #";
+				corpusStatusStrStr << n + 1;
+				corpusStatusStrStr << "/";
+				corpusStatusStrStr << this->config.generalInputSources.size();
+				corpusStatusStrStr << "...";
 
-				statusStr = statusStrStr.str();
+				statusStr = corpusStatusStrStr.str();
 			}
 			else {
 				statusStr = "Getting text corpus...";
@@ -182,6 +178,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					},
 					[this](const auto progress) {
 						this->setProgress(progress);
+					},
+					[this]() {
+						return this->isRunning();
 					}
 			);
 
@@ -197,21 +196,20 @@ namespace crawlservpp::Module::Analyzer::Algo {
 							this->config.tokenizerSavePoints,
 							this->config.tokenizerFreeMemoryEvery
 					),
-					dateFrom,
-					dateTo,
-					corpus,
+					this->config.filterDateEnable ? this->config.filterDateFrom : std::string(),
+					this->config.filterDateEnable ? this->config.filterDateTo : std::string(),
+					this->corpora.back(),
 					corpusSources,
 					statusSetter
 			);
 
-			this->sources += corpusSources;
-			this->source += corpus.getcCorpus();
+			if(this->corpora.back().empty()) {
+				this->corpora.pop_back();
+			}
 
-			this->source.push_back(' ');
-		}
+			bytes += this->corpora.back().size();
 
-		if(!(this->source.empty())) {
-			this->source.pop_back();
+			sources += corpusSources;
 		}
 		*/
 
