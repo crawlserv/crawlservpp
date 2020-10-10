@@ -63,7 +63,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: [OPTIONAL] disallow pausing while initializing
 		 */
-		//this->disallowPausing();
+		//this->disallowPausing(); // disallow pausing while initializing
 	}
 
 	//! Starts a new algorithm run.
@@ -76,7 +76,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: [OPTIONAL] disallow pausing while initializing
 		 */
-		//this->disallowPausing();
+		//this->disallowPausing(); // disallow pausing while initializing
 	}
 
 	/*
