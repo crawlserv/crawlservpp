@@ -91,7 +91,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * This is an empty template class for adding
 	 *  new algorithms to the application.
 	 */
-	class Empty : public Module::Analyzer::Thread {
+	class Empty final : public Module::Analyzer::Thread {
 		// for convenience
 
 		/*
