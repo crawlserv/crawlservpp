@@ -48,6 +48,7 @@
 #include "../../../Main/Database.hpp"
 //#include "../../../Query/Container.hpp"
 //#include "../../../Struct/CorpusProperties.hpp"
+//#include "../../../Struct/QueryStruct.hpp"
 //#include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
