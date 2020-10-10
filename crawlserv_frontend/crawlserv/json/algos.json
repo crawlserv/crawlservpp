@@ -12,7 +12,7 @@
 		},
 		"Associations over Time": {
 			"algo-id": 42,
-			"config-cats": [ "tokenizer", "filter-date", "associations" ]
+			"config-cats": [ "tokenizer", "associations", "filter-date" ]
 		},
 		"Markov Text Generator": {
 			"algo-id": 43,
