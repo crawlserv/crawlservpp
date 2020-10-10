@@ -215,19 +215,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   if no keyword or no category has been defined.
 	 */
 	void AssocOverTime::checkAlgoOptions() {
-		if(this->queryKeyWord == 0) {
+		if(this->keyWordQuery == 0) {
 			throw Exception("No keyword defined");
 		}
 
 		if(
-				this->queriesCategories.empty()
+				this->categoryQueries.empty()
 				|| std::find_if(
-						this->queriesCategories.begin(),
-						this->queriesCategories.end(),
+						this->categoryQueries.begin(),
+						this->categoryQueries.end(),
 						[](const auto query) {
 							return query > 0;
 						}
-				) == this->queriesCategories.end()) {
+				) == this->categoryQueries.end()) {
 			throw Exception("No category defined");
 		}
 
