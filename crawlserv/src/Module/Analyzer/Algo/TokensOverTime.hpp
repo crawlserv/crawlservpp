@@ -35,6 +35,7 @@
 
 #include "../../../Data/Corpus.hpp"
 #include "../../../Data/Stemmer/German.hpp"
+#include "../../../Helper/DateTime.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
 #include "../../../Struct/StatusSetter.hpp"
@@ -45,6 +46,7 @@
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint16_t, std::uint64_t
 #include <functional>	// std::function
+#include <map>			// std::map
 #include <limits>		// std::numeric_limits
 #include <locale>		// std::locale
 #include <sstream>		// std::ostringstream
@@ -63,7 +65,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 
 	//! Algorithm counting tokens in a text corpus over time.
-	class TokensOverTime : public Module::Analyzer::Thread {
+	class TokensOverTime final : public Module::Analyzer::Thread {
 		// for convenience
 		using DataType = Data::Type;
 		using DataValue = Data::Value;
@@ -75,6 +77,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 
+		using DateCount = std::map<std::string, std::uint64_t>;
 		using TokenizerFunc = std::function<void(std::string&)>;
 
 	public:
@@ -111,10 +114,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		///@}
 
 	private:
-		// corpora and stats
+		// corpora and counts
 		std::size_t currentCorpus{0};
 		std::vector<Data::Corpus> corpora;
-		std::map<std::string, std::uint64_t> tokenStats;
+		std::vector<DateCount> dateCounts;
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
