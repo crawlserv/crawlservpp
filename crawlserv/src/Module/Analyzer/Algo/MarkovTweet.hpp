@@ -101,7 +101,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * \deprecated This class is deprecated
 	 *   and will be removed in the future.
 	 */
-	class MarkovTweet : public Module::Analyzer::Thread {
+	class MarkovTweet final : public Module::Analyzer::Thread {
 		// for convenience
 		using Exception = Module::Analyzer::Thread::Exception;
 

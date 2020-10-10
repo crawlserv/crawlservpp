@@ -51,7 +51,7 @@
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	//! Algorithm building a text corpus from the input data.
-	class CorpusGenerator : public Module::Analyzer::Thread {
+	class CorpusGenerator final : public Module::Analyzer::Thread {
 		// for convenience
 		using DataType = Data::Type;
 		using DataValue = Data::Value;
