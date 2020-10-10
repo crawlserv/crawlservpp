@@ -336,4 +336,49 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * TODO: [OPTIONAL] add the implementations of internal algorithm functions here
 	 */
 
+	/*
+	 * QUERY FUNCTIONS (private)
+	 */
+
+	/*
+	 * TODO: [OPTIONAL] add query functionality
+	 */
+
+	/*
+	// initialize algorithm-specific queries
+	void Empty::initQueries() {
+		//TODO: initialize queries
+	}
+
+	// add optional query
+	void Empty::addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo) {
+		if(queryId > 0) {
+			QueryProperties properties;
+
+			this->database.getQueryProperties(queryId, properties);
+
+			propertiesTo = this->addQuery(properties);
+		}
+	}
+
+	// add multiple queries at once, ignoring empty ones
+	void Empty::addQueries(
+			const std::vector<std::uint64_t>& queryIds,
+			std::vector<QueryStruct>& propertiesTo
+	) {
+		// reserve memory first
+		propertiesTo.reserve(queryIds.size());
+
+		for(const auto& queryId : queryIds) {
+			if(queryId > 0) {
+				QueryProperties properties;
+
+				this->database.getQueryProperties(queryId, properties);
+
+				propertiesTo.emplace_back(this->addQuery(properties));
+			}
+		}
+	}
+	*/
+
 } /* namespace crawlservpp::Module::Analyzer::Algo */

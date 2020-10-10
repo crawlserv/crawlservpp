@@ -48,6 +48,7 @@
 #include "../../../Main/Database.hpp"
 //#include "../../../Query/Container.hpp"
 //#include "../../../Struct/CorpusProperties.hpp"
+//#include "../../../Struct/QueryProperties.hpp"
 //#include "../../../Struct/QueryStruct.hpp"
 //#include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
@@ -93,12 +94,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * This is an empty template class for adding
 	 *  new algorithms to the application.
 	 */
-	class Empty final : public Module::Analyzer::Thread/*, private Query::Container*/ {
+	class Empty final : public Module::Analyzer::Thread/*, private Query::Container*/ { //TODO: decide whether queries are needed
 		// for convenience
 
 		/*
 		 * TODO: add aliases of used data structures
 		 */
+		//using QueryProperties = Struct::QueryProperties;
+		//using QueryStruct = Struct::QueryStruct;
 
 		using Exception = Module::Analyzer::Thread::Exception;
 
@@ -160,6 +163,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: add the definitions of internal algorithm functions here
 		 */
+
+		// query functions
+		/*
+		 * TODO: decide whether queries are needed
+		void initQueries();
+		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
+		void addQueries(
+				const std::vector<std::uint64_t>& queryIds,
+				std::vector<QueryStruct>& propertiesTo
+		);
+		*/
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
