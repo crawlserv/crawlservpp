@@ -352,14 +352,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t dateCounter{0};
 
 		// set status message and reset progress
-		std::string status{"Processing corpus #"};
+		std::string status{"corpus #"};
 
 		status += std::to_string(this->currentCorpus + 1);
 		status += "/";
 		status += std::to_string(this->corpora.size());
 		status += "...";
 
-		this->setStatusMessage(status);
+		this->setStatusMessage("Processing " + status);
+		this->log(generalLoggingDefault, "processes " + status);
 		this->setProgress(0.F);
 
 		for(const auto& date : dateMap) {
