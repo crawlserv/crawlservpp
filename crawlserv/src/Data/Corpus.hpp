@@ -56,6 +56,7 @@
 #include <optional>		// std::optional
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
+#include <string_view>	// std::string_view
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
@@ -311,6 +312,7 @@ namespace crawlservpp::Data {
 				std::size_t maxChunkSize
 		);
 		static void checkMap(
+				std::string_view name,
 				const TextMap& map,
 				std::size_t corpusSize,
 				bool isDateMap
@@ -2683,8 +2685,8 @@ namespace crawlservpp::Data {
 				this->tokenized ? this->tokens.size() : this->corpus.size()
 			};
 
-			Corpus::checkMap(this->dateMap, size, true);
-			Corpus::checkMap(this->articleMap, size, false);
+			Corpus::checkMap("date map", this->dateMap, size, true);
+			Corpus::checkMap("article map", this->articleMap, size, false);
 			Corpus::checkMap(this->sentenceMap, size);
 		}
 
@@ -3527,7 +3529,12 @@ namespace crawlservpp::Data {
 	}
 
 	// check article or date map for inconsistencies, throws Corpus::Exception
-	inline void Corpus::checkMap(const TextMap& map, std::size_t corpusSize, bool isDateMap) {
+	inline void Corpus::checkMap(
+			std::string_view name,
+			const TextMap& map,
+			std::size_t corpusSize,
+			bool isDateMap
+	) {
 		// check the argument
 		if(map.empty()) {
 			return;
@@ -3547,7 +3554,8 @@ namespace crawlservpp::Data {
 				exceptionStrStr << entry.pos;
 				exceptionStrStr << " (expected: #";
 				exceptionStrStr << last;
-				exceptionStrStr << ")";
+				exceptionStrStr << ") in ";
+				exceptionStrStr << name;
 
 				throw Exception(exceptionStrStr.str());
 			}
@@ -3563,7 +3571,8 @@ namespace crawlservpp::Data {
 				exceptionString +=	"'"
 									" (expected string of length ";
 				exceptionString +=	std::to_string(dateLength);
-				exceptionString +=	")";
+				exceptionString +=	") in ";
+				exceptionString += name;
 
 				throw Exception(exceptionString);
 			}
@@ -3582,7 +3591,8 @@ namespace crawlservpp::Data {
 			exceptionStrStr <<	back.pos + back.length;
 			exceptionStrStr <<	" (expected: at #";
 			exceptionStrStr <<	corpusSize;
-			exceptionStrStr <<	")";
+			exceptionStrStr <<	") in ";
+			exceptionStrStr << name;
 		}
 	}
 
@@ -3607,7 +3617,7 @@ namespace crawlservpp::Data {
 				exceptionStrStr << entry.first;
 				exceptionStrStr << " (expected: #";
 				exceptionStrStr << last - 1;
-				exceptionStrStr << ")";
+				exceptionStrStr << ") in sentence map";
 
 				throw Exception(exceptionStrStr.str());
 			}
@@ -3628,7 +3638,7 @@ namespace crawlservpp::Data {
 			exceptionStrStr <<	back.first + back.second;
 			exceptionStrStr <<	" (expected: at #";
 			exceptionStrStr <<	corpusSize;
-			exceptionStrStr <<	")";
+			exceptionStrStr <<	") in sentence map";
 		}
 	}
 
