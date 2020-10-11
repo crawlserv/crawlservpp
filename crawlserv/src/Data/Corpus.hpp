@@ -3193,6 +3193,8 @@ namespace crawlservpp::Data {
 
 				case ' ':
 				case ',':
+				case '/':
+				case '|':
 					break;
 
 				default:
