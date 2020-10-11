@@ -1328,10 +1328,14 @@ namespace crawlservpp::Data {
 													" Length of first sentence conflicts"
 													" with length given in previous chunk"
 													" (";
-								exceptionStrStr <<	lastSentenceEnd - chunkOffset;
-								exceptionStrStr <<	" != ";
 								exceptionStrStr <<	first.second;
-								exceptionStrStr <<	")";
+								exceptionStrStr <<	" != ";
+								exceptionStrStr <<	lastSentenceEnd;
+								exceptionStrStr << 	" - ";
+								exceptionStrStr <<	chunkOffset;
+								exceptionStrStr << 	" [";
+								exceptionStrStr <<	lastSentenceEnd - chunkOffset;
+								exceptionStrStr << 	"])";
 
 								throw Exception(exceptionStrStr.str());
 							}
@@ -2409,9 +2413,11 @@ namespace crawlservpp::Data {
 	 *
 	 * \param from Constant reference to a
 	 *   string containing the date to be
-	 *   filtered from.
+	 *   filtered from, in the format
+	 *   @c YYY-MM-DD.
 	 * \param to Constant reference to a string
-	 *   containing the date to be filtered to.
+	 *   containing the date to be filtered to,
+	 *   in the format @c YYY-MM-DD.
 	 *
 	 * \returns True, if the corpus has been
 	 *   changed as result of the filtering by
