@@ -125,7 +125,7 @@ namespace crawlservpp::Module::Analyzer {
 	/*!
 	 * \note Needs to be called by the
 	 *   algorithm class in order to create
-	 *   the fill target table name and the
+	 *   the full target table name and the
 	 *   required target fields.
 	 *
 	 * \param compressed Set whether to
