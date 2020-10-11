@@ -3202,7 +3202,6 @@ namespace crawlservpp::Data {
 				case '\v':
 				case '\f':
 				case '\r':
-				case '\e':
 				case '\0':
 					break;
 
