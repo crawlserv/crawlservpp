@@ -7441,7 +7441,8 @@ namespace crawlservpp::Main {
 	 *   column whose type will be retrieved.
 	 *
 	 * \returns A copy of the name of the given
-	 *   table column's data type.
+	 *   table column's data type, without
+	 *   specifiers like 'UNSIGNED'.
 	 *
 	 * \throws Main::Database::Exception if no table
 	 *   or column name has been specified, i.e.
@@ -7477,7 +7478,7 @@ namespace crawlservpp::Main {
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement{
 				this->connection->prepareStatement(
-						"SELECT DATA_TYPE"
+						"SELECT COLUMN_TYPE"
 						" FROM INFORMATION_SCHEMA.COLUMNS"
 						" WHERE TABLE_SCHEMA LIKE ?"
 						" AND TABLE_NAME LIKE ?"
@@ -7495,14 +7496,15 @@ namespace crawlservpp::Main {
 			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
 			if(sqlResultSet && sqlResultSet->next()) {
-				result = sqlResultSet->getString("DATA_TYPE");
+				result = sqlResultSet->getString("COLUMN_TYPE");
+
 			}
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Main::Database::getColumnType", e);
 		}
 
-		return result;
+		return std::string(result, 0, result.find(' '));
 	}
 
 	//! Locks tables in the database.
