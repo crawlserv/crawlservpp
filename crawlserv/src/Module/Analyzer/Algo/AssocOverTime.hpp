@@ -46,7 +46,7 @@
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
-#include <algorithm>		// std::find_if, std::min
+#include <algorithm>		// std::find_if, std::min, std::sort
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint16_t, std::uint64_t
 #include <limits>			// std::numeric_limits
