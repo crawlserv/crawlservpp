@@ -3534,7 +3534,7 @@ namespace crawlservpp::Data {
 									" Invalid position #";
 				exceptionStrStr << entry.pos;
 				exceptionStrStr << " (expected: #";
-				exceptionStrStr << last - 1;
+				exceptionStrStr << last;
 				exceptionStrStr << ")";
 
 				throw Exception(exceptionStrStr.str());
