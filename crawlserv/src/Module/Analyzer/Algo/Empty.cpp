@@ -203,6 +203,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					statusSetter
 			);
 
+			if(!(this->isRunning()) {
+				return;
+			}
+
 			if(this->corpora.back().empty()) {
 				this->corpora.pop_back();
 			}

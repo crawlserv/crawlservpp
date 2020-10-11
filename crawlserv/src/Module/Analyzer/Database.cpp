@@ -698,8 +698,16 @@ namespace crawlservpp::Module::Analyzer {
 			}
 		}
 
+		if(!(this->isRunning())) {
+			return;
+		}
+
 		// run missing manipulators on corpus
 		this->corpusManipulate(properties, corpusTo, sourcesTo, statusSetter);
+
+		if(!(this->isRunning())) {
+			return;
+		}
 
 		// filter corpus by date(s) if necessary
 		if(corpusTo.filterByDate(filterDateFrom, filterDateTo)) {
@@ -1897,6 +1905,10 @@ namespace crawlservpp::Module::Analyzer {
 					properties.freeMemoryEvery,
 					statusSetter
 			);
+
+			if(!(this->isRunning())) {
+				return;
+			}
 
 			// save savepoint in database
 			statusSetter.change("Saving processed corpus to the database...");

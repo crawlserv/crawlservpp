@@ -180,6 +180,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					statusSetter
 			);
 
+			if(!(this->isRunning())) {
+				return;
+			}
+
 			if(this->corpora.back().empty()) {
 				this->corpora.pop_back();
 			}
@@ -217,7 +221,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			// sleep forever (i.e. until the thread is terminated)
 			this->finished();
-			this->sleep(std::numeric_limits<std::uint64_t>::max());
+
+			if(this->isRunning()) {
+				this->sleep(std::numeric_limits<std::uint64_t>::max());
+			}
 		}
 	}
 
@@ -465,6 +472,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			++dateCounter;
 
 			this->setProgress(static_cast<float>(dateCounter) / dateMap.size());
+
+			if(!(this->isRunning())) {
+				return;
+			}
 		}
 	}
 
@@ -513,6 +524,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			++dateCounter;
 
 			this->setProgress(static_cast<float>(dateCounter) / this->associations.size());
+
+			if(!(this->isRunning())) {
+				return;
+			}
 		}
 
 		// clear memory

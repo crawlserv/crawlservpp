@@ -166,6 +166,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					statusSetter
 			);
 
+			if(!(this->isRunning())) {
+				return;
+			}
+
 			this->sources += corpusSources;
 			this->source += corpus.getcCorpus();
 

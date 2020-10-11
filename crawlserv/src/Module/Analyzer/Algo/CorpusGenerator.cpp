@@ -156,6 +156,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					statusSetter
 			);
 
+			if(!(this->isRunning())) {
+				return;
+			}
+
 			if(!corpus.empty()) {
 				++corpora;
 
