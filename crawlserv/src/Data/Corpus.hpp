@@ -3192,6 +3192,7 @@ namespace crawlservpp::Data {
 					break;
 
 				case ' ':
+				case ',':
 					break;
 
 				default:
