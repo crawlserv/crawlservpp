@@ -2,7 +2,16 @@
 	"label": "Associations",
 	"open": true,
 	
-	"categories": {
+	"cat.labels": {
+		"type": "array",
+		"item-type": "string",
+		"default": [],
+		"label": "Category Labels:",
+		"description": "Labels of the categories with which the term should be checked for associations.",
+		"simple": true,
+		"position": 2
+	},
+	"cat.queries": {
 		"type": "array",
 		"item-type": "query",
 		"query-results": [
@@ -12,10 +21,10 @@
 			"regex"
 		],
 		"default": [],
-		"label": "Categories:",
-		"description": "Queries identifying the categories with which the term should be checked for associations.",
+		"label": "Category Queries:",
+		"description": "Queries identifying the category with the same array index.",
 		"simple": true,
-		"position": 2		
+		"position": 3	
 	},
 	"keyword": {
 		"type": "query",
@@ -39,6 +48,6 @@
 		"label": "Window size (+/-):",
 		"description": "Number of words around a term to check for associations with the given categories.",
 		"simple": true,
-		"position": 3
+		"position": 4
 	}
 }
