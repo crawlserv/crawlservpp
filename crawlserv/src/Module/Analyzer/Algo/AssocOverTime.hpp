@@ -46,16 +46,16 @@
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
-#include <algorithm>	// std::find_if, std::min
-#include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint16_t, std::uint64_t
-#include <limits>		// std::numeric_limits
-#include <locale>		// std::locale
-#include <queue>		// std::queue
-#include <sstream>		// std::ostringstream
-#include <string>		// std::string
-#include <map>			// std::map
-#include <vector>		// std::vector
+#include <algorithm>		// std::find_if, std::min
+#include <cstddef>			// std::size_t
+#include <cstdint>			// std::uint16_t, std::uint64_t
+#include <limits>			// std::numeric_limits
+#include <locale>			// std::locale
+#include <queue>			// std::queue
+#include <sstream>			// std::ostringstream
+#include <string>			// std::string
+#include <unordered_map>	// std::unordered_map
+#include <vector>			// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
@@ -124,7 +124,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// corpora and associations
 		std::size_t currentCorpus{0};
 		std::vector<Data::Corpus> corpora;
-		std::map<std::string, std::map<std::string, Associations>> associations;
+		std::unordered_map<std::string, std::unordered_map<std::string, Associations>> associations;
 
 		// algorithm options
 		std::uint64_t keyWordQuery{0};
