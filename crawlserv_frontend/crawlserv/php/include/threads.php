@@ -60,8 +60,9 @@ function formatTime($seconds) {
         $seconds -= $months * 2629746;
     }
     
-    if($years)
+    if($years) {
         return substr($result, 0, strlen($result) - 1);
+    }
     
     if($seconds > 604800) {
         $weeks = floor($seconds / 604800);
@@ -71,8 +72,9 @@ function formatTime($seconds) {
         $seconds -= $weeks * 604800;
     }
     
-    if($months)
+    if($months) {
         return substr($result, 0, strlen($result) - 1);
+    }
     
     if($seconds > 86400) {
         $days = floor($seconds / 86400);
@@ -82,8 +84,9 @@ function formatTime($seconds) {
         $seconds -= $days * 86400;
     }
     
-    if($weeks)
+    if($weeks) {
         return substr($result, 0, strlen($result) - 1);
+    }
     
     if($seconds > 3600) {
         $hours = floor($seconds / 3600);
@@ -93,8 +96,9 @@ function formatTime($seconds) {
         $seconds -= $hours * 3600;
     }
     
-    if($days)
+    if($days) {
         return substr($result, 0, strlen($result) - 1);
+    }
     
     if($seconds > 60) {
         $minutes = floor($seconds / 60);
@@ -106,11 +110,13 @@ function formatTime($seconds) {
     
     $s = round($seconds);
     
-    if($s >= 1)
+    if($s >= 1) {
         $result .= $s."s ";
+    }
     
-    if(strlen($result))
+    if(strlen($result)) {
         return substr($result, 0, strlen($result) - 1);
+    }
     
     return "<1s";
 }
@@ -136,19 +142,22 @@ $result = $dbConnection->query(
     " FROM crawlserv_threads AS a"
 );
 
-if(!$result)
+if($result == NULL) {
     http_response_code(503);
+}
 
 $num = $result->num_rows;
 
-if($num) {
+if($num > 0) {
     echo "<div class=\"content-block\">\n";
     echo "<div class=\"entry-row\">\n";
     
-    if($num == 1)
+    if($num == 1) {
         echo "<div class=\"value\">One thread active.";
-    else
+    }
+    else {
         echo "<div class=\"value\">$num threads active.";
+    }
     
     echo "\n<span class=\"action-link-box\">\n";
     
@@ -173,13 +182,15 @@ if($num) {
                 " LIMIT 1"
         );
         
-        if(!$result2)
+        if($result2 == NULL) {
             http_response_code(503);
+        }
         
         $row2 = $result2->fetch_assoc();
         
-        if(!$row2)
+        if($row2 == NULL) {
             http_response_code(503);
+        }
         
         $website = $row2["namespace"];
         
@@ -194,13 +205,15 @@ if($num) {
                 " LIMIT 1"
         );
         
-        if(!$result2)
+        if($result2 == NULL) {
             http_response_code(503);
+        }
         
         $row2 = $result2->fetch_assoc();
         
-        if(!$row2)
+        if($row2 == NULL) {
             http_response_code(503);
+        }
         
         $urllist = $row2["namespace"];
         
@@ -215,13 +228,15 @@ if($num) {
                 " LIMIT 1"
         );
         
-        if(!$result2)
+        if($result2 == NULL) {
             http_response_code(503);
+        }
         
         $row2 = $result2->fetch_assoc();
         
-        if(!$row2)
+        if($row2 == NULL) {
             http_response_code(503);
+        }
         
         $config = $row2["name"];
         
@@ -234,25 +249,31 @@ if($num) {
         echo "<b>".$row["module"]." #".$row["id"]."</b>"
             ." - <i>".$config." on ".$website."_".$urllist."</i>\n";
         
-        // calculate remaining time
-        $tooltip = "Estimated time until completion.\n&gt; Click to jump to specific ID.";
-        
-        echo "<span class=\"remaining\" title=\"$tooltip\" label=\"$tooltip\" "
-            ."data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" " 
-            ."data-last=\"".$row["last"]."\">";
-        
-        if($row["remaining"] === null)
-            echo "+&infin;";
-        else
-            echo "+".formatTime($row["remaining"]);
+        if($row["module"] != "analyzer") {
+            // calculate remaining time
+            $tooltip = "Estimated time until completion.\n&gt; Click to jump to specific ID.";
             
-        echo "</span>";
+            echo "<span class=\"remaining\" title=\"$tooltip\" label=\"$tooltip\" "
+                ."data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" " 
+                ."data-last=\"".$row["last"]."\">";
+            
+            if($row["remaining"] === NULL) {
+                echo "+&infin;";
+            }
+            else {
+                echo "+".formatTime($row["remaining"]);
+            }
+                
+            echo "</span>";
+        }
+        
         echo "</div>\n";
         
         echo "<div class=\"entry-row";
         
-        if($row["paused"])
+        if($row["paused"]) {
             echo " value";
+        }
         
         echo "\">\n";
         
@@ -261,16 +282,20 @@ if($num) {
         // cut ERROR, INTERRUPTED or IDLE keyword and use CSS classes instead        
         $start = false;
         
-        if($row["status"][0] == "[")
+        if($row["status"][0] == "[") {
             $start = strpos($row["status"], "]", 1);
+        }
         
-        if($start === false)
+        if($start === false) {
             $start = 0;
-        else
+        }
+        else {
             $start += 2;
+        }
         
-        if(substr($row["status"], $start, 7) == "PAUSED ")
+        if(substr($row["status"], $start, 7) == "PAUSED ") {
             $start += 7;
+        }
         
         if(substr($row["status"], $start, 6) == "ERROR ") {
             $cut = htmlentities(
@@ -314,11 +339,12 @@ if($num) {
             
             echo " idle\" title=\"$cut\">$cut";
         }
-        else
+        else {
             echo "\" title=\"".
                  htmlentities($row["status"]).
                  "\">".
                  htmlentities($row["status"]);
+        }
         
         echo "</span>\n";
         echo "</div>\n";
@@ -326,12 +352,13 @@ if($num) {
         echo "<div class=\"action-link-box\">\n";
         echo "<div class=\"action-link\">";
         
-        if($row["paused"])
+        if($row["paused"]) {
             echo "<a href=\"#\" class=\"action-link thread-unpause\" data-id=\""
                 .$row["id"]
                 ."\" data-module=\""
                 .$row["module"]."\">"
                 ."Unpause</a>\n";
+        }
         else {
             echo "<progress value=\"";
             
@@ -340,10 +367,12 @@ if($num) {
                     .number_format(round(floatval($row["progress"]) * 100, 2), 2)
                     ."%\nlast: ";
                 
-                if($row["last"] > 0)
+                if($row["last"] > 0) {
                     echo "#".number_format($row["last"]);
-                else
-                    echo "&lt;none&gt";
+                }
+                else {
+                    echo "&lt;none&gt;";
+                }
                     
                 echo "\" max=\"1";        
             }
