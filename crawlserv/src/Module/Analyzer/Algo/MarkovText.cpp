@@ -102,7 +102,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(generalLoggingVerbose, "creates target table...");
 
-		this->database.initTargetTable(true);
+		this->database.initTargetTable(true, false);
 
 		// get text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");

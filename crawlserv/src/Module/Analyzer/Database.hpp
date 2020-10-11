@@ -223,7 +223,7 @@ namespace crawlservpp::Module::Analyzer {
 		///@name Target Table Initialization
 		///@{
 
-		void initTargetTable(bool compressed);
+		void initTargetTable(bool compressed, bool clear);
 
 		///@}
 		///@name Prepared SQL Statements

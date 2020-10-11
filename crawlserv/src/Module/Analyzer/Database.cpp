@@ -131,6 +131,8 @@ namespace crawlservpp::Module::Analyzer {
 	 * \param compressed Set whether to
 	 *   compress the data in the target
 	 *   table.
+	 * \param clear Set whether to clear
+	 *   an existing target table.
 	 *
 	 * \throws Analyzer::Database::Exception
 	 *   if no website or URL list has been
@@ -143,7 +145,7 @@ namespace crawlservpp::Module::Analyzer {
 	 * \sa setTargetTable, setTargetFields
 	 *
 	 */
-	void Database::initTargetTable(bool compressed) {
+	void Database::initTargetTable(bool compressed, bool clear) {
 		// check options
 		if(this->getOptions().websiteNamespace.empty()) {
 			throw Exception(
@@ -222,6 +224,10 @@ namespace crawlservpp::Module::Analyzer {
 
 		// add target table
 		this->addTargetTable(properties);
+
+		if(clear) {
+			this->clearTable(this->targetTableFull);
+		}
 	}
 
 	/*
