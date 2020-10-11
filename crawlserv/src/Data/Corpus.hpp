@@ -2483,11 +2483,6 @@ namespace crawlservpp::Data {
 			}
 		}
 
-		if(begin == this->dateMap.cbegin() && end == this->dateMap.cend()) {
-			// the whole corpus remains -> no changes necessary
-			return false;
-		}
-
 		// trim date map
 		if(begin != this->dateMap.cbegin()) {
 			// create trimmed date map and swap it with the existing one
