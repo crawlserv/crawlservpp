@@ -437,12 +437,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 								articleIt->second.offset
 								+ tokenIndex
 						);
-
-						//TODO DEBUG
-						if(reducedDate == "1992-05") {
-							std::cout << "\n#" << this->currentCorpus + 1 << ": " << tokens[tokenIndex] << " [" << articleIt->first << "]" << std::flush;
-						}
-						//TODO END DEBUG
 					}
 					else {
 						for(std::size_t catIndex{0}; catIndex < this->queriesCategories.size(); ++catIndex) {
