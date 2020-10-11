@@ -916,7 +916,7 @@ namespace crawlservpp::Main {
 	void Database::clearLogs(const std::string& logModule) {
 		if(logModule.empty()) {
 			// execute SQL query
-			this->execute("TRUNCATE TABLE `crawlserv_log`");
+			this->clearTable("crawlserv_log");
 		}
 		else {
 			// check connection
@@ -7505,6 +7505,45 @@ namespace crawlservpp::Main {
 		}
 
 		return std::string(result, 0, result.find(' '));
+	}
+
+	//! Clears a table, removing all rows.
+	/*!
+	 * \param tableName View to a string
+	 *   containing the name of the table to be
+	 *   cleared.
+	 *
+	 * \throws Main::Database::Exception if the
+	 *   table name is invalid, or a MySQL error
+	 *   occured while clearing the table, e.g.
+	 *   if the specified table does not exist.
+	 */
+	void Database::clearTable(std::string_view tableName) {
+		// check argument
+		if(!Helper::Strings::checkSQLName(tableName)) {
+			std::string exceptionString{"Invalid SQL table name: `"};
+
+			exceptionString += tableName;
+			exceptionString += '`';
+
+			throw Exception(exceptionString);
+		}
+
+		// check connection
+		this->checkConnection();
+
+		// execute SQL query
+		try {
+			std::string sqlQuery{"TRUNCATE TABLE `"};
+
+			sqlQuery += tableName;
+			sqlQuery += '`';
+
+			this->execute(sqlQuery);
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Main::Database::clearTable", e);
+		}
 	}
 
 	//! Locks tables in the database.

@@ -566,6 +566,7 @@ namespace crawlservpp::Main {
 		[[nodiscard]] bool isTableExists(const std::string& tableName);
 		[[nodiscard]] bool isColumnExists(const std::string& tableName, const std::string& columnName);
 		[[nodiscard]] std::string getColumnType(const std::string& tableName, const std::string& columnName);
+		void clearTable(std::string_view tableName);
 		void lockTables(std::queue<TableNameWriteAccess>& tableLocks);
 		void unlockTables();
 		void startTransaction(const std::string& isolationLevel);

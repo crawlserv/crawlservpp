@@ -53,6 +53,7 @@
 #include <functional>	// std::function
 #include <queue>		// std::queue
 #include <string>		// std::string
+#include <string_view>	// std::string_view
 #include <utility>		// std::pair
 
 namespace crawlservpp::Wrapper {
@@ -156,6 +157,7 @@ namespace crawlservpp::Wrapper {
 		[[nodiscard]] bool isTableExists(const std::string& tableName);
 		[[nodiscard]] bool isColumnExists(const std::string& tableName, const std::string& columnName);
 		[[nodiscard]] std::string getColumnType(const std::string& tableName, const std::string& columnName);
+		void clearTable(std::string_view tableName);
 
 		///@}
 		///@name Custom Data
@@ -377,6 +379,11 @@ namespace crawlservpp::Wrapper {
 	//! \copydoc Main::Database::getColumnType
 	inline std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
 		return this->database.getColumnType(tableName, columnName);
+	}
+
+	//! \copydoc Main::Database::clearTable
+	inline void Database::clearTable(std::string_view tableName) {
+		this->database.clearTable(tableName);
 	}
 
 	//! \copydoc Main::Database::getCustomData(Data::GetValue&)
