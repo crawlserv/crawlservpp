@@ -36,6 +36,7 @@
 
 #include "../../../Data/Corpus.hpp"
 #include "../../../Data/Data.hpp"
+#include "../../../Helper/DateTime.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Query/Container.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
@@ -45,38 +46,21 @@
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
-#include <algorithm>		// std::find_if
-#include <cstddef>			// std::size_t
-#include <cstdint>			// std::uint64_t, std::uint16_t
-#include <limits>			// std::numeric_limits
-#include <locale>			// std::locale
-#include <sstream>			// std::ostringstream
-#include <string>			// std::string, std::to_string
-#include <unordered_map>	// std::unordered_map
-#include <vector>			// std::vector
+#include <algorithm>	// std::find_if, std::min
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint16_t, std::uint64_t
+#include <limits>		// std::numeric_limits
+#include <locale>		// std::locale
+#include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
+#include <string>		// std::string
+#include <map>			// std::map
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	/*
-	 * CONSTANTS
-	 */
-
-	///@name Constants
-	///@{
-
-	/*
-	 * TODO: add constants for the algorithm here
-	 */
-	//inline constexpr auto ...{...};
-
-	//@}
-
-	/*
 	 * DECLARATION
-	 */
-
-	/*
-	 * TODO: change name and description of the class
 	 */
 
 	//! %Empty algorithm template.
@@ -140,10 +124,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// corpora and associations
 		std::size_t currentCorpus{0};
 		std::vector<Data::Corpus> corpora;
-		std::unordered_map<std::string, std::unordered_map<std::string, Associations>> associations;
+		std::map<std::string, std::map<std::string, Associations>> associations;
 
 		// algorithm options
 		std::uint64_t keyWordQuery{0};
+		std::vector<std::string> categoryLabels;
 		std::vector<std::uint64_t> categoryQueries;
 		std::uint16_t windowSize{1};
 
