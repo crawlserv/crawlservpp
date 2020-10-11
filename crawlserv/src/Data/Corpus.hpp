@@ -3194,6 +3194,7 @@ namespace crawlservpp::Data {
 				case ' ':
 				case ',':
 				case '/':
+				case '\\':
 				case '|':
 				case '\a':
 				case '\b':
