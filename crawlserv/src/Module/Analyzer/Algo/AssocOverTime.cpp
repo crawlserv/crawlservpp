@@ -408,6 +408,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					);
 				}
 
+				// skip tokens without date
+				while(
+						tokenIndex < tokens.size()
+						&& tokenIndex < articleMap[articleIndex].pos
+				) {
+					++tokenIndex;
+				}
+
 				// go through all tokens of the current article
 				while(
 						tokenIndex < tokens.size()
@@ -429,6 +437,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 								articleIt->second.offset
 								+ tokenIndex
 						);
+
+						//TODO DEBUG
+						if(reducedDate == "1992-05") {
+							std::cout << "\n#" << this->currentCorpus + 1 << ": " << tokens[tokenIndex] << " [" << articleIt->first << "]" << std::flush;
+						}
+						//TODO END DEBUG
 					}
 					else {
 						for(std::size_t catIndex{0}; catIndex < this->queriesCategories.size(); ++catIndex) {
@@ -531,7 +545,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// clear memory
-		std::map<std::string, std::map<std::string, Associations>>().swap(
+		std::unordered_map<std::string, std::unordered_map<std::string, Associations>>().swap(
 				this->associations
 		);
 	}
