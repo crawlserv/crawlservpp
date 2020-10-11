@@ -179,12 +179,6 @@ namespace crawlservpp::Helper::DateTime {
 	//! The length of a date in valid ISO Format (@c YYYY-MM-DD).
 	inline constexpr auto isoDateLength{10};
 
-	//! The length of a date/time with minutes only (@c YYYY-MM-DD HH:MM).
-	inline constexpr auto dateTimeLengthMinutes{16};
-
-	//! The length of a date/time with seconds (@c YYYY-MM-DD HH:MM:SS).
-	inline constexpr auto dateTimeLengthSeconds{19};
-
 	//! The length of a year.
 	inline constexpr auto yearLength{4};
 
@@ -194,35 +188,20 @@ namespace crawlservpp::Helper::DateTime {
 	//! Base of decimal numbers.
 	inline constexpr auto base10{10};
 
-	//! Length of date/time, reduced to minutes (@c YYYY-MM-DD HH:MM).
-	inline constexpr auto reducedToMinutesLength{16};
-
-	//! Length of date/time, reduced to hours (@c YYYY-MM-DD HH).
-	inline constexpr auto reducedToHoursLength{13};
-
 	//! Length of date, reduced to months (@c YYYY-MM)
 	inline constexpr auto reducedToMonthsLength{7};
 
 	//! Group dates by weeks.
 	inline constexpr std::uint8_t dateWeeks{0};
 
-	//! Group dates by minutes.
-	inline constexpr std::uint8_t dateMinutes{1};
-
-	//! Group dates by hours.
-	inline constexpr std::uint8_t dateHours{2};
-
-	//! Group dates by minutes.
-	inline constexpr std::uint8_t dateDays{3};
+	//! Group dates by days.
+	inline constexpr std::uint8_t dateDays{1};
 
 	//! Group dates by months.
-	inline constexpr std::uint8_t dateMonths{4};
+	inline constexpr std::uint8_t dateMonths{2};
 
 	//! Group dates by years.
-	inline constexpr std::uint8_t dateYears{5};
-
-	//! Group dates by seconds.
-	inline constexpr std::uint8_t dateSeconds{6};
+	inline constexpr std::uint8_t dateYears{3};
 
 	///@}
 
@@ -246,7 +225,9 @@ namespace crawlservpp::Helper::DateTime {
 	void convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	void convertSQLTimeStampToTimeStamp(std::string& timeStamp);
 	void convert12hTo24h(int& hour, bool isPm);
-	void reduceDate(std::string& dateTime, std::uint8_t resolution);
+	void getWeek(const std::string& date, std::string& weekTo);
+	std::string getYearAndWeek(const std::string& date);
+	void reduceDate(std::string& date, std::uint8_t resolution);
 
 	///@}
 	///@name Formatting
@@ -735,11 +716,59 @@ namespace crawlservpp::Helper::DateTime {
 		}
 	}
 
-	//! Reduce a date/time to the specified resolution.
+	//! Get the week number for a specific date.
 	/*
-	 * \param dateTime Reference to a string containing
-	 *   the date/time that will be reduced to the
-	 *   specified resolution, if necessary.
+	 * \param date Constant reference to a string
+	 *   containing the date in the format
+	 *   @c YYYY-MM-DD.
+	 * \param weekTo Reference to a string to
+	 *   be replaced with the number of the week.
+	 */
+	inline void getWeek(const std::string& date, std::string& weekTo) {
+		std::istringstream in(date);
+		date::sys_days tp;
+
+		in >> date::parse("%F", tp);
+
+		if(!bool(in)) {
+			throw Exception(
+					"Could not convert date \'"
+					+ date
+					+ "\' to week number"
+			);
+		}
+
+		weekTo = date::format("%W", tp);
+	}
+
+	//! Get the year and the week number for a specific date.
+	/*
+	 * \param date Constant reference to a string
+	 *   containing the date in the format
+	 *   @c YYYY-MM-DD.
+	 *
+	 * \returns The year and the week number in
+	 *   the format @c YYYY-#WW.
+	 */
+	inline std::string getYearAndWeek(const std::string& date) {
+		std::string week;
+
+		getWeek(date, week);
+
+		std::string result(date, 0, yearLength);
+
+		result += "-#";
+		result += week;
+
+		return result;
+	}
+
+	//! Reduce a date to the specified resolution.
+	/*
+	 * \param date Reference to a string containing
+	 *   the date in the format @c YYYY-MM-DD that
+	 *   will be reduced to the specified resolution,
+	 *   if necessary.
 	 * \param resolution Resolution to be used for
 	 *   reducing the date.
 	 *
@@ -747,66 +776,43 @@ namespace crawlservpp::Helper::DateTime {
 	 *   has an invalid length, or the specified resolution
 	 *   is invalid.
 	 *
-	 * \sa dateWeeks, dateMinutes, dateHours, dateDays,
-	 *   dateMonths, dateYears, dateSeconds
+	 * \sa dateWeeks, dateDays, dateMonths, dateYears
 	 */
-	inline void reduceDate(std::string& dateTime, std::uint8_t resolution) {
-		if(dateTime.empty()) {
+	inline void reduceDate(std::string& date, std::uint8_t resolution) {
+		if(date.empty()) {
 			return;
 		}
 
-		if(dateTime.length() == dateTimeLengthMinutes) {
-			dateTime = dateTime + ":00";
-		}
-
-		if(dateTime.length() != dateTimeLengthSeconds) {
-			throw Exception("Invalid length of date/time " + dateTime);
+		if(date.length() != isoDateLength) {
+			throw Exception("Invalid length of date " + date);
 		}
 
 		switch(resolution) {
-		case 0:
+		case dateWeeks:
 			// reduce to year and week (YYYY-#WW)
-
-			//TODO
-
-			break;
-
-		case 1:
-			// reduce to minutes (YYYY-MM-DD HH:MM)
-			dateTime = dateTime.substr(0, reducedToMinutesLength);
+			date = getYearAndWeek(date);
 
 			break;
 
-		case 2:
-			// reduce to hours (YYYY-MM-DD HH)
-			dateTime = dateTime.substr(0, reducedToHoursLength);
+		case dateDays:
+			// no reduction necessary
 
 			break;
 
-		case 3:
-			// reduce to days, i.e. date (YYYY-MM-DD)
-			dateTime = dateTime.substr(0, isoDateLength);
-
-			break;
-
-		case 4:
+		case dateMonths:
 			// reduce to month (YYYY-MM)
-			dateTime = dateTime.substr(0, reducedToMonthsLength);
+			date = date.substr(0, reducedToMonthsLength);
 
 			break;
 
-		case 5:
+		case dateYears:
 			// reduce to year (YYYY)
-			dateTime = dateTime.substr(0, yearLength);
+			date = date.substr(0, yearLength);
 
-			break;
-
-		case 6:
-			// do not filter
 			break;
 
 		default:
-			throw Exception("Invalid date/time resolution: " + std::to_string(resolution));
+			throw Exception("Invalid date resolution: " + std::to_string(resolution));
 		}
 	}
 
