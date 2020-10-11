@@ -72,6 +72,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// reset progress
 		this->setProgress(0.F);
 
+		// initialize queries
+		this->initQueries();
+
 		// check your sources
 		this->setStatusMessage("Checking sources...");
 
@@ -82,6 +85,37 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				this->config.generalInputTables,
 				this->config.generalInputFields
 		);
+
+		// set target fields
+		std::vector<std::string> fields;
+		std::vector<std::string> types;
+
+		const auto numFields{
+			this->categoryLabels.size()
+			+ 2
+		};
+
+		fields.reserve(numFields);
+		types.reserve(numFields);
+
+		fields.emplace_back("date");
+		fields.emplace_back("occurences");
+		types.emplace_back("VARCHAR(10)");
+		types.emplace_back("BIGINT UNSIGNED");
+
+		for(const auto& label : this->categoryLabels) {
+			fields.emplace_back(label);
+			types.emplace_back("BIGINT UNSIGNED");
+		}
+
+		this->database.setTargetFields(fields, types);
+
+		// initialize target table
+		this->setStatusMessage("Creating target table...");
+
+		this->log(generalLoggingVerbose, "creates target table...");
+
+		this->database.initTargetTable(true);
 
 		// request text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");
@@ -204,7 +238,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void AssocOverTime::parseAlgoOption() {
 		// algorithm options
 		this->category("associations");
-		this->option("categories", this->categoryQueries);
+		this->option("cat.labels", this->categoryLabels);
+		this->option("cat.queries", this->categoryQueries);
 		this->option("keyword", this->keyWordQuery);
 		this->option("window.size", this->windowSize);
 	}
@@ -215,10 +250,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   if no keyword or no category has been defined.
 	 */
 	void AssocOverTime::checkAlgoOptions() {
+		// check keyword query
 		if(this->keyWordQuery == 0) {
 			throw Exception("No keyword defined");
 		}
 
+		// check categories
 		if(
 				this->categoryQueries.empty()
 				|| std::find_if(
@@ -229,6 +266,59 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						}
 				) == this->categoryQueries.end()) {
 			throw Exception("No category defined");
+		}
+
+		const auto completeCategories{
+			std::min( // number of complete categories (= min. size of all arrays)
+					this->categoryLabels.size(),
+					this->categoryQueries.size()
+			)
+		};
+
+		bool incompleteCategories{false};
+
+		// remove category labels or queries that are not used
+		if(this->categoryLabels.size() > completeCategories) {
+			this->categoryLabels.resize(completeCategories);
+
+			incompleteCategories = true;
+		}
+		else if(this->categoryQueries.size() > completeCategories) {
+			this->categoryQueries.resize(completeCategories);
+
+			incompleteCategories = true;
+		}
+
+		if(incompleteCategories) {
+			this->warning(
+					"\'cat.labels\', \'.queries\'"
+					" should have the same number of elements."
+			);
+		}
+
+		// remove empty labels, invalid queries
+		for(std::size_t index{0}; index < this->categoryLabels.size(); ++index) {
+			if(
+					this->categoryLabels[index].empty()
+					|| this->categoryQueries[index] == 0
+			) {
+				this->categoryLabels.erase(this->categoryLabels.begin() + index);
+				this->categoryQueries.erase(this->categoryQueries.begin() + index);
+
+				incompleteCategories = true;
+			}
+		}
+
+		// warn about incomplete categories
+		if(incompleteCategories) {
+			this->warning(
+					"Incomplete categories removed from configuration."
+			);
+		}
+
+		// check window size
+		if(this->windowSize == 0) {
+			throw Exception("Invalid window size");
 		}
 
 		/*
@@ -243,15 +333,192 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// add terms and categories from current corpus
 	void AssocOverTime::addCurrent() {
+		std::queue<std::string> warnings;
+
 		const auto& corpus = this->corpora[this->currentCorpus];
 		const auto& dateMap = corpus.getcDateMap();
 		const auto& articleMap = corpus.getcArticleMap();
 		const auto& tokens = corpus.getcTokens();
+
+		std::size_t articleIndex{0};
+		std::size_t tokenIndex{0};
+		std::size_t dateCounter{0};
+
+		// set status message and reset progress
+		std::string status{"Processing corpus #"};
+
+		status += std::to_string(this->currentCorpus + 1);
+		status += "/";
+		status += std::to_string(this->corpora.size());
+		status += "...";
+
+		this->setStatusMessage(status);
+		this->setProgress(0.F);
+
+		for(const auto& date : dateMap) {
+			// skip articles without date
+			while(
+					articleIndex < articleMap.size()
+					&& articleMap[articleIndex].pos < date.pos
+			) {
+				++articleIndex;
+			}
+
+			// reduce date for grouping
+			std::string reducedDate{date.value};
+
+			Helper::DateTime::reduceDate(
+					reducedDate,
+					this->config.groupDateResolution
+			);
+
+			// add date if still necessary, and save its iterator
+			const auto dateIt{
+				this->associations.insert(
+						{
+								reducedDate,
+								{}
+						}
+				).first
+			};
+
+			// go through all articles of the current date
+			while(
+					articleIndex < articleMap.size()
+					&& articleMap[articleIndex].pos < date.pos + date.length
+			) {
+				// add article if still necessary, and save its iterator
+				const auto articleIt{
+					dateIt->second.insert({articleMap[articleIndex].value, {}}).first
+				};
+
+				if(articleIt->second.categoriesPositions.empty()) {
+					std::vector<std::vector<std::uint64_t>>(
+							this->queriesCategories.size(),
+							std::vector<std::uint64_t>{}
+					).swap(
+							articleIt->second.categoriesPositions
+					);
+				}
+
+				// go through all tokens of the current article
+				while(
+						tokenIndex < tokens.size()
+						&& tokenIndex < articleMap[articleIndex].pos + articleMap[articleIndex].length
+				) {
+					bool result{false};
+
+					if(
+							this->getBoolFromRegEx(
+									this->queryKeyWord,
+									tokens[tokenIndex],
+									result,
+									warnings
+							)
+							&& result
+					) {
+						// found keyword
+						articleIt->second.keywordPositions.push_back(
+								articleIt->second.offset
+								+ tokenIndex
+						);
+					}
+					else {
+						for(std::size_t catIndex{0}; catIndex < this->queriesCategories.size(); ++catIndex) {
+							bool result{false};
+
+							if(
+									this->getBoolFromRegEx(
+											this->queriesCategories[catIndex],
+											tokens[tokenIndex],
+											result,
+											warnings
+									)
+									&& result
+							) {
+								// found category
+								articleIt->second.categoriesPositions[catIndex].push_back(
+										articleIt->second.offset
+										+ tokenIndex
+								);
+							}
+						}
+					}
+
+					++tokenIndex;
+				}
+
+				// update offset of article
+				articleIt->second.offset += articleMap[articleIndex].length;
+
+				++articleIndex;
+			}
+
+			// log warnings if necessary
+			while(!warnings.empty()) {
+				this->log(generalLoggingExtended, warnings.front());
+
+				warnings.pop();
+			}
+
+			// update progress
+			++dateCounter;
+
+			this->setProgress(static_cast<float>(dateCounter) / dateMap.size());
+		}
 	}
 
 	// calculate and save associations
 	void AssocOverTime::saveAssociations() {
-		//TODO
+		// set status message and reset progress
+		this->setStatusMessage("Calculating and saving associations...");
+		this->setProgress(0.F);
+
+		std::size_t dateCounter{0};
+
+		for(const auto& date : this->associations) {
+			std::uint64_t occurences{0};
+			std::vector<std::uint64_t> catsCounters(this->categoryLabels.size(), 0);
+
+			for(const auto& article : date.second) {
+				for(const auto occurence : article.second.keywordPositions) {
+					++occurences;
+
+					for(std::size_t cat{0}; cat < this->categoryLabels.size(); ++cat) {
+						for(const auto catOccurence : article.second.categoriesPositions[cat]) {
+							if(catOccurence > occurence + this->windowSize) {
+								break;
+							}
+
+							if(
+									occurence < this->windowSize
+									|| catOccurence >= occurence - this->windowSize
+							) {
+								++(catsCounters[cat]);
+							}
+						}
+					}
+				}
+			}
+
+			//TODO DEBUG
+			std::cout << "\n" << date.first << ':' << occurences;
+			for(const auto counter : catsCounters) {
+				std::cout << '|' << counter;
+			}
+			std::cout << std::flush;
+			//TODO END DEBUG
+
+			// update progress
+			++dateCounter;
+
+			this->setProgress(static_cast<float>(dateCounter) / this->associations.size());
+		}
+
+		// clear memory
+		std::map<std::string, std::map<std::string, Associations>>().swap(
+				this->associations
+		);
 	}
 
 	/*
