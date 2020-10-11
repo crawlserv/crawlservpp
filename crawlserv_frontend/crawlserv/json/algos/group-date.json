@@ -6,12 +6,9 @@
 		"type": "enum",
 		"enum-values": [
 			"weeks",
-			"minutes",
-			"hours",
 			"days",
 			"months",
-			"years",
-			"seconds"
+			"years"
 		],
 		"default": 0,
 		"label": "Group by:",
