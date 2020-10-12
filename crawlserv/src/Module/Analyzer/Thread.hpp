@@ -133,6 +133,12 @@ namespace crawlservpp::Module::Analyzer {
 		void pause();
 
 		///@}
+		///@name Helper Function for Algorithms
+		///@{
+
+		[[nodiscard]] std::string getTargetTableName() const;
+
+		///@}
 
 		//! Class for analyzer exceptions to be used by algorithms.
 		MAIN_EXCEPTION_CLASS();

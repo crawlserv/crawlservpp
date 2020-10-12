@@ -244,13 +244,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		data.columns_types_values.reserve(2);
 
-		data.table =
-				"crawlserv_"
-				+ this->websiteNamespace
-				+ "_"
-				+ this->urlListNamespace
-				+ "_analyzed_"
-				+ this->config.generalTargetTable;
+		data.table = this->getTargetTableName();
 
 		data.columns_types_values.emplace_back(
 				"analyzed__" + this->markovTweetResultField,

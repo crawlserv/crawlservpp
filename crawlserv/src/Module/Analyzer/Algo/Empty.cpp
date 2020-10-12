@@ -240,8 +240,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		data.columns_types_values.reserve(...);
 
-		data.table = "crawlserv_" + this->websiteNamespace + "_"
-				+ this->urlListNamespace + "_analyzed_" + this->config.generalResultTable;
+		data.table = this->getTargetTableName();
 
 		data.columns_types_values.emplace_back(
 				"analyzed__" + ...,

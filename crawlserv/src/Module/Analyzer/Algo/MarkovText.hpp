@@ -82,6 +82,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Average word lenght the algorithm expects in the processed texts.
 	inline constexpr auto markovTextGuessedWordLength{10};
 
+	//! Number of columns to be written to the target table.
+	inline constexpr auto resultNumColumns{2};
+
 	//@}
 
 	/*

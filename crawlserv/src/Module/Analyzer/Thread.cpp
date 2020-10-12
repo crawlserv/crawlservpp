@@ -197,6 +197,21 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	/*
+	 * HELPER FUNCTION FOR ALGORITHMS (protected)
+	 */
+	std::string Thread::getTargetTableName() const {
+		std::string name{"crawlserv_"};
+
+		name += this->websiteNamespace;
+		name += '_';
+		name += this->urlListNamespace;
+		name += "_analyzed_";
+		name += this->config.generalTargetTable;
+
+		return name;
+	}
+
+	/*
 	 *  shadowing functions not to be used by thread (private)
 	 */
 
