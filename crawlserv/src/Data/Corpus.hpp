@@ -1246,8 +1246,9 @@ namespace crawlservpp::Data {
 						- chunks.begin()
 				)
 			};
-			const auto chunkOffset{this->tokens.size()};
-			bool tokenSplit{!lastWord.empty()};
+
+			auto chunkOffset{this->tokens.size()};
+			bool skipSeparator{false};
 			std::size_t begin{0};
 
 			while(begin < chunkIt->size()) {
@@ -1259,6 +1260,12 @@ namespace crawlservpp::Data {
 					}
 
 					++end;
+				}
+
+				if(!lastWord.empty() && end == 0) {
+					++chunkOffset;
+
+					skipSeparator = true;
 				}
 
 				if(end == chunkIt->size()) {
@@ -1333,9 +1340,9 @@ namespace crawlservpp::Data {
 							if(
 									this->checkConsistency
 									&&
-									lastSentenceEnd
+									first.second
+									!= lastSentenceEnd
 									- chunkOffset
-									!= first.second
 							) {
 								std::ostringstream exceptionStrStr;
 
@@ -1405,7 +1412,7 @@ namespace crawlservpp::Data {
 						// append current article to previous one
 						this->articleMap.back().length += first.length;
 
-						if(tokenSplit) {
+						if(!skipSeparator) {
 							// remove second part of previous token
 							--(this->articleMap.back().length);
 						}
@@ -1445,7 +1452,7 @@ namespace crawlservpp::Data {
 						// append current date to previous one
 						this->dateMap.back().length += first.length;
 
-						if(tokenSplit) {
+						if(!skipSeparator) {
 							// remove second part of previous token
 							--(this->dateMap.back().length);
 						}
