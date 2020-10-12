@@ -2186,68 +2186,68 @@ namespace crawlservpp::Main {
 		// pause crawlers
 		for(const auto& thread : this->crawlers) {
 			if(!(thread->isPaused())) {
-				thread->Module::Thread::pause();
+				if(thread->Module::Thread::pause()) {
+					this->database.log(
+							"crawler #"
+							+ std::to_string(thread->getId())
+							+ " paused by "
+							+ this->cmdIp
+							+ "."
+					);
 
-				this->database.log(
-						"crawler #"
-						+ std::to_string(thread->getId())
-						+ " paused by "
-						+ this->cmdIp
-						+ "."
-				);
-
-				++counter;
+					++counter;
+				}
 			}
 		}
 
 		// pause parsers
 		for(const auto& thread : this->parsers) {
 			if(!(thread->isPaused())) {
-				thread->Module::Thread::pause();
+				if(thread->Module::Thread::pause()) {
+					this->database.log(
+							"parser #"
+							+ std::to_string(thread->getId())
+							+ " paused by "
+							+ this->cmdIp
+							+ "."
+					);
 
-				this->database.log(
-						"parser #"
-						+ std::to_string(thread->getId())
-						+ " paused by "
-						+ this->cmdIp
-						+ "."
-				);
-
-				++counter;
+					++counter;
+				}
 			}
 		}
 
 		// pause extractors
 		for(const auto& thread : this->extractors) {
 			if(!(thread->isPaused())) {
-				thread->Module::Thread::pause();
+				if(thread->Module::Thread::pause()) {
+					this->database.log(
+							"extractor #"
+							+ std::to_string(thread->getId())
+							+ " paused by "
+							+ this->cmdIp
+							+ "."
+					);
 
-				this->database.log(
-						"extractor #"
-						+ std::to_string(thread->getId())
-						+ " paused by "
-						+ this->cmdIp
-						+ "."
-				);
-
-				++counter;
+					++counter;
+				}
 			}
 		}
 
 		// pause analyzers
 		for(const auto& thread : this->analyzers) {
 			if(!(thread->isPaused())) {
-				thread->Module::Thread::pause();
+				if(thread->Module::Thread::pause()) {
+					this->database.log(
+							"analyzer #"
+							+ std::to_string(thread->getId())
+							+ " paused by "
+							+ this->cmdIp
+							+ "."
+					);
 
-				this->database.log(
-						"analyzer #"
-						+ std::to_string(thread->getId())
-						+ " paused by "
-						+ this->cmdIp
-						+ "."
-				);
-
-				++counter;
+					++counter;
+				}
 			}
 		}
 
