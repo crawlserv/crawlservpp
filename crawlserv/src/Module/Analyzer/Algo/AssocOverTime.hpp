@@ -60,6 +60,21 @@
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! Indicates, while saving, after how many rows the progress of the thread will be updated.
+	inline constexpr auto updateProgressEvery{100};
+
+	//! Number of default columns to be written to the target table.
+	inline constexpr auto resultMinNumColumns{2};
+
+	//@}
+
+	/*
 	 * DECLARATION
 	 */
 
