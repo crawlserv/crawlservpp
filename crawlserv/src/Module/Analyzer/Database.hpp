@@ -237,7 +237,7 @@ namespace crawlservpp::Module::Analyzer {
 		///@name Text Corpus
 		///@{
 
-		void getCorpus(
+		[[nodiscard]] bool getCorpus(
 				const CorpusProperties& corpusProperties,
 				const std::string& filterDateFrom,
 				const std::string& filterDateTo,
@@ -341,7 +341,7 @@ namespace crawlservpp::Module::Analyzer {
 				CorpusProperties& properties,
 				const std::string& corpusCreationTime
 		);
-		void corpusManipulate(
+		[[nodiscard]] bool corpusManipulate(
 				const CorpusProperties& properties,
 				Data::Corpus& corpusRef,
 				std::size_t numSources,
