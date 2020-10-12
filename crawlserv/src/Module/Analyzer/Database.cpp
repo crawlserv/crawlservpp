@@ -635,6 +635,9 @@ namespace crawlservpp::Module::Analyzer {
 	 * \param statusSetter Data needed to keep
 	 *   the status of the thread updated.
 	 *
+	 * \returns True, if the thread is still
+	 *   running. False otherwise.
+	 *
 	 * \throws Module::Analyzer::Exception if a
 	 *   prepared SQL statement is missing, or
 	 *   an article or date map could not be parsed.
@@ -642,7 +645,7 @@ namespace crawlservpp::Module::Analyzer {
 	 *   error occured while getting or creating
 	 *   the text corpus.
 	 */
-	void Database::getCorpus(
+	bool Database::getCorpus(
 			const CorpusProperties& corpusProperties,
 			const std::string& filterDateFrom,
 			const std::string& filterDateTo,
@@ -658,7 +661,7 @@ namespace crawlservpp::Module::Analyzer {
 					" The name of the source table is empty."
 			);
 
-			return;
+			return statusSetter.isRunning();
 		}
 
 		if(corpusProperties.sourceColumn.empty()) {
@@ -668,7 +671,7 @@ namespace crawlservpp::Module::Analyzer {
 					" The name of the source field is empty."
 			);
 
-			return;
+			return statusSetter.isRunning();
 		}
 
 		// initialize values
@@ -692,7 +695,7 @@ namespace crawlservpp::Module::Analyzer {
 			);
 
 			if(!(this->isRunning())) {
-				return;
+				return false;
 			}
 
 			// check whether text corpus needs to be created
@@ -705,14 +708,12 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		if(!(this->isRunning())) {
-			return;
+			return false;
 		}
 
 		// run missing manipulators on corpus
-		this->corpusManipulate(properties, corpusTo, sourcesTo, statusSetter);
-
-		if(!(this->isRunning())) {
-			return;
+		if(!this->corpusManipulate(properties, corpusTo, sourcesTo, statusSetter)) {
+			return false;
 		}
 
 		// filter corpus by date(s) if necessary
@@ -728,6 +729,8 @@ namespace crawlservpp::Module::Analyzer {
 
 			this->log(this->getLoggingMin(), logStrStr.str());
 		}
+
+		return statusSetter.isRunning();
 	}
 
 	/*
@@ -1176,7 +1179,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		bool saveCorpus{
 			!savePoints.empty()
-			&& savePoints.at(0) == 0
+			&& savePoints.at(0) == 0 /* (save points are unsigned and sorted) */
 		};
 
 		try {
@@ -1834,7 +1837,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	// run remaining manipulators on corpus
-	void Database::corpusManipulate(
+	bool Database::corpusManipulate(
 			const CorpusProperties& properties,
 			Data::Corpus& corpusRef,
 			std::size_t numSources,
@@ -1901,19 +1904,19 @@ namespace crawlservpp::Module::Analyzer {
 				++done;
 			}
 
-			statusSetter.change("Processing corpus...");
+			if(!statusSetter.change("Processing corpus...")) {
+				return false;
+			}
 
-			corpusRef.tokenize(
+			if(!corpusRef.tokenize(
 					sentenceManipulators,
 					sentenceModels,
 					wordManipulators,
 					wordModels,
 					properties.freeMemoryEvery,
 					statusSetter
-			);
-
-			if(!(this->isRunning())) {
-				return;
+			)) {
+				return false;
 			}
 
 			// save savepoint in database
@@ -1967,7 +1970,7 @@ namespace crawlservpp::Module::Analyzer {
 
 			statusSetter.change("Processing corpus...");
 
-			corpusRef.tokenize(
+			return corpusRef.tokenize(
 					sentenceManipulators,
 					sentenceModels,
 					wordManipulators,
@@ -1976,10 +1979,13 @@ namespace crawlservpp::Module::Analyzer {
 					statusSetter
 			);
 		}
-		else if(!corpusRef.isTokenized()) {
+
+		if(!corpusRef.isTokenized()) {
 			// tokenize without manipulators
-			corpusRef.tokenizeCustom({}, {}, properties.freeMemoryEvery, statusSetter);
+			return corpusRef.tokenizeCustom({}, {}, properties.freeMemoryEvery, statusSetter);
 		}
+
+		return statusSetter.isRunning();
 	}
 
 	// save corpus savepoint, throws Database::Exception
