@@ -966,7 +966,8 @@ namespace crawlservpp::Module::Analyzer {
 		if(this->ps.isCorpusChanged == 0) {
 			throw Exception(
 					"Analyzer::Database::isCorpusChanged():"
-					" Missing prepared SQL statement for getting the corpus creation time"
+					" Missing prepared SQL statement"
+					" for getting the corpus creation time"
 			);
 		}
 
@@ -1503,7 +1504,7 @@ namespace crawlservpp::Module::Analyzer {
 
 			if(!sqlResultSet || !(sqlResultSet->next())) {
 				throw Exception(
-						"Database::corpusLoad():"
+						"Analyzer::Database::corpusLoad():"
 						" Could not get creation date of corpus"
 				);
 			}
@@ -1569,7 +1570,7 @@ namespace crawlservpp::Module::Analyzer {
 				if(!savePoint.empty()) {
 					if(sqlResultSet->isNull("words")) {
 						throw Exception(
-								"Database::corpusLoad():"
+								"Analyzer::Database::corpusLoad():"
 								" Could not get number of words"
 								" in a corpus chunk"
 						);
@@ -1621,7 +1622,7 @@ namespace crawlservpp::Module::Analyzer {
 				if(!savePoint.empty()) {
 					if(sqlResultSet->isNull("sentencemap")) {
 						throw Exception(
-								"Database::corpusLoad():"
+								"Analyzer::Database::corpusLoad():"
 								" Could not get sentence map"
 								" for a corpus chunk"
 						);
