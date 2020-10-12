@@ -3557,6 +3557,14 @@ namespace crawlservpp::Data {
 					wordBegin - corpusTrimmed,
 					this->corpus.size() + corpusTrimmed - wordBegin
 			);
+
+			if(endOfLastArticle) {
+				++(newDateMap.back().length);
+			}
+
+			if(endOfLastDate) {
+				++(newArticleMap.back().length);
+			}
 		}
 
 		// add last sentence if not added yet
