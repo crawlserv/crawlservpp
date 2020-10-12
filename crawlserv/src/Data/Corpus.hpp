@@ -3342,10 +3342,6 @@ namespace crawlservpp::Data {
 						&& nextDate < this->dateMap.size()
 						&& pos == this->dateMap[nextDate].pos
 				) {
-					if(this->dateMap[nextDate].value == "2003-12-05") {
-						bool debug{true};
-					}
-
 					dateFirstWord = currentWord;
 					dateEnd = pos + this->dateMap[nextDate].length;
 
