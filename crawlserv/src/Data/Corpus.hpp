@@ -2476,13 +2476,7 @@ namespace crawlservpp::Data {
 		// find first date in range
 		auto begin{this->dateMap.cbegin()};
 
-		//TODO DEBUG
-		std::size_t skipped{0};
-
 		for(; begin != this->dateMap.cend(); ++begin) {
-			//TODO DEBUG
-			++skipped;
-
 			if(Helper::DateTime::isISODateInRange(begin->value, from, to)) {
 				break;
 			}
@@ -2520,8 +2514,8 @@ namespace crawlservpp::Data {
 		const auto offset{this->dateMap.front().pos};
 		const auto len{
 			this->dateMap.back().pos
-					+ this->dateMap.back().length
-					- offset
+			+ this->dateMap.back().length
+			- offset
 		};
 
 		// trim corpus
@@ -2625,7 +2619,7 @@ namespace crawlservpp::Data {
 		++end; /* current article is in range as has already been checked */
 
 		for(; end != this->articleMap.cend(); ++end) {
-			if(end->pos > len) {
+			if(end->pos >= offset + len) {
 				break;
 			}
 		}
