@@ -127,7 +127,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					}
 			);
 
-			this->database.getCorpus(
+			if(!(this->database.getCorpus(
 					CorpusProperties(
 							this->config.generalInputSources.at(n),
 							this->config.generalInputTables.at(n),
@@ -144,9 +144,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					this->corpora.back(),
 					corpusSources,
 					statusSetter
-			);
-
-			if(!(this->isRunning())) {
+			))) {
 				return;
 			}
 
