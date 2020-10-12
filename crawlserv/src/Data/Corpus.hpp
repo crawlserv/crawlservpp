@@ -46,7 +46,7 @@
 #include "../Struct/StatusSetter.hpp"
 #include "../Struct/TextMap.hpp"
 
-#include <algorithm>	// std::find_if
+#include <algorithm>	// std::find_if, std::remove_if
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint8_t, std::uint16_t
 #include <functional>	// std::function
@@ -248,7 +248,7 @@ namespace crawlservpp::Data {
 		///@name Tokenization
 		///@{
 
-		bool tokenize(
+		[[nodiscard]] bool tokenize(
 				const std::vector<std::uint16_t>& sentenceManipulators,
 				const std::vector<std::string>& sentenceModels,
 				const std::vector<std::uint16_t>& wordManipulators,
@@ -256,7 +256,7 @@ namespace crawlservpp::Data {
 				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
-		bool tokenizeCustom(
+		[[nodiscard]] bool tokenizeCustom(
 				std::optional<SentenceFunc> callbackSentence,
 				std::optional<WordFunc> callbackWord,
 				std::uint64_t freeMemoryEvery,
@@ -304,6 +304,19 @@ namespace crawlservpp::Data {
 		// lemmatizer
 		Lemmatizer lemmatizer;
 
+		// internal helper functions
+		[[nodiscard]] bool tokenizeTokenized(
+				std::optional<SentenceFunc> callbackSentence,
+				std::optional<WordFunc> callbackWord,
+				StatusSetter& statusSetter
+		);
+		[[nodiscard]] bool tokenizeContinuous(
+				std::optional<SentenceFunc> callbackSentence,
+				std::optional<WordFunc> callbackWord,
+				std::uint64_t freeMemoryEvery,
+				StatusSetter& statusSetter
+		);
+
 		// internal static helper functions
 		[[nodiscard]] static std::size_t getValidLengthOfChunk(
 				const std::string& source,
@@ -315,11 +328,13 @@ namespace crawlservpp::Data {
 				std::string_view name,
 				const TextMap& map,
 				std::size_t corpusSize,
+				bool isTokenized,
 				bool isDateMap
 		);
 		static void checkMap(
 				const SentenceMap& map,
-				std::size_t corpusSize
+				std::size_t corpusSize,
+				bool isTokenized
 		);
 
 		template<class T> static void reserveCombined(
@@ -2461,7 +2476,13 @@ namespace crawlservpp::Data {
 		// find first date in range
 		auto begin{this->dateMap.cbegin()};
 
+		//TODO DEBUG
+		std::size_t skipped{0};
+
 		for(; begin != this->dateMap.cend(); ++begin) {
+			//TODO DEBUG
+			++skipped;
+
 			if(Helper::DateTime::isISODateInRange(begin->value, from, to)) {
 				break;
 			}
@@ -2497,29 +2518,52 @@ namespace crawlservpp::Data {
 
 		// save offset to be subtracted from all positions, (old) position of the last date and new total length of the corpus
 		const auto offset{this->dateMap.front().pos};
-		const auto last{this->dateMap.back().pos};
-		const auto len{last + this->dateMap.back().length - offset};
+		const auto len{
+			this->dateMap.back().pos
+					+ this->dateMap.back().length
+					- offset
+		};
 
 		// trim corpus
 		if(this->tokenized) {
 			// (and calculate new size, in bytes)
-			auto deleteFrom{this->tokens.begin() + offset};
-			auto deleteTo{this->tokens.begin() + offset + len};
-			auto deleteBytes{
-				std::accumulate(
-						deleteFrom,
+			std::size_t deleteBytes{0};
+
+			const auto deleteTo{this->tokens.begin() + offset};
+
+			if(deleteTo != this->tokens.begin()) {
+				deleteBytes = std::accumulate(
+						this->tokens.begin(),
 						deleteTo,
 						static_cast<std::size_t>(0),
 						[](const auto& a, const auto& b) {
 							return a + b.size();
 						}
-				)
-			};
+				);
 
-			this->tokens.erase(deleteFrom, deleteTo);
-			this->tokens.shrink_to_fit();
+				this->tokens.erase(this->tokens.begin(), deleteTo);
+			}
 
-			this->tokenBytes -= deleteBytes;
+			const auto deleteFrom{this->tokens.begin() + len};
+
+			if(deleteFrom != this->tokens.end()) {
+				deleteBytes += std::accumulate(
+						deleteFrom,
+						this->tokens.end(),
+						static_cast<std::size_t>(0),
+						[](const auto& a, const auto& b) {
+							return a + b.size();
+						}
+				);
+
+				this->tokens.erase(deleteFrom, this->tokens.end());
+			}
+
+			if(deleteBytes > 0) {
+				this->tokens.shrink_to_fit();
+
+				this->tokenBytes -= deleteBytes;
+			}
 		}
 		else {
 			// replace the current corpus with the trimmed one, and release memory
@@ -2685,9 +2729,9 @@ namespace crawlservpp::Data {
 				this->tokenized ? this->tokens.size() : this->corpus.size()
 			};
 
-			Corpus::checkMap("date map", this->dateMap, size, true);
-			Corpus::checkMap("article map", this->articleMap, size, false);
-			Corpus::checkMap(this->sentenceMap, size);
+			Corpus::checkMap("date map", this->dateMap, size, this->tokenized, true);
+			Corpus::checkMap("article map", this->articleMap, size, this->tokenized, false);
+			Corpus::checkMap(this->sentenceMap, size, this->tokenized);
 		}
 
 		return true;
@@ -2962,465 +3006,23 @@ namespace crawlservpp::Data {
 			StatusSetter& statusSetter
 	) {
 		if(this->tokenized) {
-			// reset number of bytes
-			this->tokenBytes = 0;
-
-			// run manipulators on already tokenized corpus
-			if(callbackSentence || callbackWord) {
-				std::size_t numDeletedWords{0};
-				std::size_t dateIndex{0};
-				std::size_t articleIndex{0};
-				bool inDate{false};
-				bool inArticle{false};
-
-				for(auto& sentenceEntry : this->sentenceMap) {
-					// skip dates before current sentence
-					while(
-							dateIndex < this->dateMap.size()
-							&& (
-									this->dateMap[dateIndex].pos
-									+ this->dateMap[dateIndex].length
-									< sentenceEntry.first
-									|| this->dateMap[dateIndex].length == 0
-							)
-					) {
-						inDate = false;
-
-						++dateIndex;
-					}
-
-					// skip articles before current sentence
-					while(
-							articleIndex < this->articleMap.size()
-							&& (
-									this->articleMap[articleIndex].pos
-									+ this->articleMap[articleIndex].length
-									< sentenceEntry.first
-									|| this->articleMap[articleIndex].length == 0
-							)
-					) {
-						inArticle = false;
-
-						++articleIndex;
-					}
-
-					// check for beginning of date
-					if(
-							dateIndex < this->dateMap.size()
-							&& this->dateMap[dateIndex].pos
-							== sentenceEntry.first
-					) {
-						inDate = true;
-
-						// update beginning of date
-						this->dateMap[dateIndex].pos -= numDeletedWords;
-					}
-
-					// check for beginning of article
-					if(
-							articleIndex < this->articleMap.size()
-							&& this->articleMap[articleIndex].pos
-							== sentenceEntry.first
-					) {
-						inArticle = true;
-
-						// update beginning of article
-						this->articleMap[articleIndex].pos -= numDeletedWords;
-					}
-
-					sentenceEntry.first -= numDeletedWords;
-
-					const auto sentenceEnd{
-						sentenceEntry.first
-						+ sentenceEntry.second
-					};
-
-					std::vector<std::string> sentence(
-							this->tokens.begin() + sentenceEntry.first,
-							this->tokens.begin() + sentenceEnd
-					);
-
-					if(callbackSentence) {
-						(*callbackSentence)(sentence);
-					}
-
-					for(auto n{sentenceEntry.first + 1}; n <= sentenceEnd; ++n) {
-						auto& word{
-							this->tokens.at(n - 1)
-						};
-
-						if(callbackWord) {
-							(*callbackWord)(word);
-						}
-
-						if(word.empty()) {
-							// delete empty word
-							this->tokens.erase(
-									this->tokens.begin()
-									+ n
-									- 1
-							);
-
-							--n;
-
-							if(inDate && this->dateMap[dateIndex].length > 0) {
-								// update length of date
-								--(this->dateMap[dateIndex].length);
-							}
-
-							if(inArticle && this->articleMap[articleIndex].length > 0) {
-								// update length of article
-								--(this->articleMap[articleIndex].length);
-							}
-
-							if(sentenceEntry.second > 0) {
-								// update length of sentence
-								--(sentenceEntry.second);
-							}
-
-							++numDeletedWords;
-						}
-						else {
-							this->tokenBytes += word.size();
-						}
-					}
-				}
+			if(!(this->tokenizeTokenized(
+					callbackSentence,
+					callbackWord,
+					statusSetter
+			))) {
+				return false;
 			}
 		}
 		else {
-			// tokenize continuous text corpus
-			std::vector<std::string> sentence;
-
-			std::size_t wordBegin{0};
-			std::size_t sentenceFirstWord{0};
-			std::size_t currentWord{0};
-			std::size_t statusCounter{0};
-			std::size_t corpusTrimmed{0};
-
-			bool inArticle{false};
-			bool inDate{false};
-
-			std::size_t articleFirstWord{0};
-			std::size_t dateFirstWord{0};
-			std::size_t articleEnd{0};
-			std::size_t dateEnd{0};
-			std::size_t nextArticle{0};
-			std::size_t nextDate{0};
-
-			TextMap newArticleMap;
-			TextMap newDateMap;
-
-			newArticleMap.reserve(this->articleMap.size());
-			newDateMap.reserve(this->dateMap.size());
-
-			// go through all characters in the continous text corpus
-			for(std::size_t pos{0}; pos < this->corpus.size() + corpusTrimmed; ++pos) {
-				bool sentenceEnd{false};
-				bool noSeparator{false};
-
-				if(!(this->articleMap.empty())) {
-					// check for beginning of article
-					if(
-							!inArticle
-							&& nextArticle < this->articleMap.size()
-							&& pos == this->articleMap[nextArticle].pos
-					) {
-						articleFirstWord = currentWord;
-						articleEnd = pos + this->articleMap[nextArticle].length;
-
-						inArticle = true;
-
-						++nextArticle;
-					}
-
-					// check for end of article
-					if(
-							inArticle
-							&& pos == articleEnd
-					) {
-						inArticle = false;
-
-						newArticleMap.emplace_back(
-								articleFirstWord,
-								currentWord - articleFirstWord,
-								this->articleMap[nextArticle - 1].value
-						);
-
-						sentenceEnd = true;
-					}
-				}
-
-				if(!(this->dateMap.empty())) {
-					// check for beginning of date
-					if(
-							!inDate
-							&& nextDate < this->dateMap.size()
-							&& pos == this->dateMap[nextDate].pos
-					) {
-						dateFirstWord = currentWord;
-						dateEnd = pos + this->dateMap[nextDate].length;
-
-						inDate = true;
-
-						++nextDate;
-					}
-
-					// check for end of date
-					if(
-							inDate
-							&& pos == dateEnd
-					) {
-						inDate = false;
-
-						newDateMap.emplace_back(
-								dateFirstWord,
-								currentWord - dateFirstWord,
-								this->dateMap[nextDate - 1].value
-						);
-
-						sentenceEnd = true;
-					}
-				}
-
-				// check for end of sentence
-				switch(this->corpus[pos - corpusTrimmed]) {
-				case '.':
-				case ':':
-				case ';':
-				case '!':
-				case '?':
-					sentenceEnd = true;
-
-					break;
-
-				case ' ':
-				case ',':
-				case '/':
-				case '\\':
-				case '|':
-				case '\a':
-				case '\b':
-				case '\t':
-				case '\n':
-				case '\v':
-				case '\f':
-				case '\r':
-				case '\0':
-					break;
-
-				default:
-					if(sentenceEnd) {
-						// end of word and sentence without separating character
-						noSeparator = true;
-					}
-					else {
-						// go to next character
-						continue;
-					}
-				}
-
-				// end word
-				auto wordLength = pos - wordBegin;
-
-				if(noSeparator) {
-					++wordLength;
-				}
-
-				if(wordLength > 0) {
-					sentence.emplace_back(this->corpus, wordBegin - corpusTrimmed, wordLength);
-
-					++currentWord;
-				}
-
-				if(freeMemoryEvery > 0 && pos - corpusTrimmed > freeMemoryEvery) {
-					// free memory, i.e. remove the already processed beginning of the corpus
-					this->corpus.erase(0, pos - corpusTrimmed);
-					this->corpus.shrink_to_fit();
-
-					corpusTrimmed = pos;
-				}
-
-				wordBegin = pos + 1;
-
-				if(sentenceEnd && !sentence.empty()) {
-					if(callbackSentence) {
-						// modify sentence
-						(*callbackSentence)(sentence);
-					}
-
-					// modify words of the sentence, do not keep emptied words
-					for(auto wordIt{sentence.begin()}; wordIt != sentence.end(); ) {
-						if(callbackWord) {
-							(*callbackWord)(*wordIt);
-						}
-
-						if(wordIt->empty()) {
-							wordIt = sentence.erase(wordIt);
-
-							--currentWord;
-						}
-						else {
-							this->tokenBytes += wordIt->size();
-
-							++wordIt;
-						}
-					}
-
-					if(!sentence.empty()) {
-						// add sentence to map
-						this->sentenceMap.emplace_back(
-								sentenceFirstWord,
-								sentence.size()
-						);
-
-						// move the words in the finished sentence into the tokens of the corpus
-						this->tokens.insert(
-								this->tokens.end(),
-								std::make_move_iterator(sentence.begin()),
-								std::make_move_iterator(sentence.end())
-						);
-
-						sentence.clear();
-					}
-
-					sentenceFirstWord = currentWord; /* (= already next word) */
-
-					// update status if necessary
-					++statusCounter;
-
-					if(statusCounter == tokenizeUpdateEvery) {
-						if(!statusSetter.update(
-								static_cast<float>(pos + 1)
-								/ static_cast<float>(this->corpus.size() + corpusTrimmed),
-								true
-						)) {
-							return false;
-						}
-
-						statusCounter = 0;
-					}
-				}
+			if(!(this->tokenizeContinuous(
+					callbackSentence,
+					callbackWord,
+					freeMemoryEvery,
+					statusSetter
+			))) {
+				return false;
 			}
-
-			// check for end of last article
-			if(
-					inArticle
-					&& this->corpus.size() + corpusTrimmed == articleEnd
-			) {
-				inArticle = false;
-
-				newArticleMap.emplace_back(
-						articleFirstWord,
-						currentWord - articleFirstWord,
-						this->articleMap[nextArticle - 1].value
-				);
-			}
-
-			// check for end of last date
-			if(
-					inDate
-					&& this->corpus.size() + corpusTrimmed == dateEnd
-			) {
-				inDate = false;
-
-				newDateMap.emplace_back(
-						dateFirstWord,
-						currentWord - dateFirstWord,
-						this->dateMap[nextDate - 1].value
-				);
-			}
-
-			// add last word if not added yet
-			if(wordBegin - corpusTrimmed < this->corpus.size()) {
-				sentence.emplace_back(
-						this->corpus,
-						wordBegin - corpusTrimmed,
-						this->corpus.size() + corpusTrimmed - wordBegin
-				);
-			}
-
-			// add last sentence if not added yet
-			if(!sentence.empty()) {
-				if(callbackSentence) {
-					// modify sentence
-					(*callbackSentence)(sentence);
-				}
-
-				if(callbackWord) {
-					// modify words of the sentence, do not keep emptied words
-					for(auto wordIt{sentence.begin()}; wordIt != sentence.end(); ) {
-						(*callbackWord)(*wordIt);
-
-						if(wordIt->empty()) {
-							wordIt = sentence.erase(wordIt);
-						}
-						else {
-							++wordIt;
-						}
-					}
-				}
-
-				if(!sentence.empty()) {
-					// add sentence to map
-					this->sentenceMap.emplace_back(
-							sentenceFirstWord,
-							sentence.size()
-					);
-
-					// move the words in the finished sentence into the tokens of the corpus
-					this->tokens.insert(
-							this->tokens.end(),
-							std::make_move_iterator(sentence.begin()),
-							std::make_move_iterator(sentence.end())
-					);
-				}
-			}
-
-			std::string{}.swap(this->corpus);
-
-			// check consistency
-			if(this->checkConsistency) {
-				if(inArticle) {
-					throw Exception(
-							"Corpus::tokenizeCustom():"
-							" Last article '"
-							+ this->articleMap[nextArticle - 1].value
-							+ "' has not been finished"
-					);
-				}
-
-				if(inDate) {
-					throw Exception(
-							"Corpus::tokenizeCustom():"
-							" Last date '"
-							+ this->dateMap[nextDate - 1].value
-							+ "' has not been finished"
-					);
-				}
-
-				if(nextArticle < this->articleMap.size()) {
-					throw Exception(
-							"Corpus::tokenizeCustom():"
-							" Unexpected article '"
-							+ this->articleMap[nextArticle].value
-							+ "' after end of corpus"
-					);
-				}
-
-				if(nextDate < this->dateMap.size()) {
-					throw Exception(
-							"Corpus::tokenizeCustom():"
-							" Unexpected date '"
-							+ this->dateMap[nextDate].value
-							+ "' after end of corpus"
-					);
-				}
-			}
-
-			newArticleMap.swap(this->articleMap);
-			newDateMap.swap(this->dateMap);
-
-			this->tokenized = true;
 		}
 
 		statusSetter.finish();
@@ -3454,6 +3056,623 @@ namespace crawlservpp::Data {
 	/*
 	 * INTERNAL STATIC HELPER FUNCTIONS (private)
 	 */
+
+	// tokenize already tokenized corpus
+	inline bool Corpus::tokenizeTokenized(
+			std::optional<SentenceFunc> callbackSentence,
+			std::optional<WordFunc> callbackWord,
+			StatusSetter& statusSetter
+	) {
+		// reset number of bytes
+		this->tokenBytes = 0;
+
+		// run manipulators on already tokenized corpus
+		if(callbackSentence || callbackWord) {
+			std::size_t numDeletedWords{0};
+			std::size_t dateIndex{0};
+			std::size_t articleIndex{0};
+			std::size_t sentenceCounter{0};
+			std::size_t statusCounter{0};
+			bool inDate{false};
+			bool inArticle{false};
+			bool emptyDates{false};
+			bool emptyArticles{false};
+			bool emptySentences{false};
+
+			for(auto& sentenceEntry : this->sentenceMap) {
+				// skip dates before current sentence
+				while(
+						dateIndex < this->dateMap.size()
+						&& (
+								this->dateMap[dateIndex].pos
+								+ this->dateMap[dateIndex].length
+								< sentenceEntry.first
+								|| this->dateMap[dateIndex].length == 0
+						)
+				) {
+					inDate = false;
+
+					++dateIndex;
+				}
+
+				// skip articles before current sentence
+				while(
+						articleIndex < this->articleMap.size()
+						&& (
+								this->articleMap[articleIndex].pos
+								+ this->articleMap[articleIndex].length
+								< sentenceEntry.first
+								|| this->articleMap[articleIndex].length == 0
+						)
+				) {
+					inArticle = false;
+
+					++articleIndex;
+				}
+
+				// check for beginning of date
+				if(
+						dateIndex < this->dateMap.size()
+						&& this->dateMap[dateIndex].pos
+						== sentenceEntry.first
+				) {
+					inDate = true;
+
+					// update beginning of date
+					this->dateMap[dateIndex].pos -= numDeletedWords;
+				}
+
+				// check for beginning of article
+				if(
+						articleIndex < this->articleMap.size()
+						&& this->articleMap[articleIndex].pos
+						== sentenceEntry.first
+				) {
+					inArticle = true;
+
+					// update beginning of article
+					this->articleMap[articleIndex].pos -= numDeletedWords;
+				}
+
+				sentenceEntry.first -= numDeletedWords;
+
+				const auto sentenceEnd{
+					sentenceEntry.first
+					+ sentenceEntry.second
+				};
+
+				std::vector<std::string> sentence(
+						this->tokens.begin() + sentenceEntry.first,
+						this->tokens.begin() + sentenceEnd
+				);
+
+				if(callbackSentence) {
+					(*callbackSentence)(sentence);
+				}
+
+				for(auto n{sentenceEntry.first + 1}; n <= sentenceEnd; ++n) {
+					auto& word{
+						this->tokens.at(n - 1)
+					};
+
+					if(callbackWord) {
+						(*callbackWord)(word);
+					}
+
+					if(word.empty()) {
+						// delete empty word
+						this->tokens.erase(
+								this->tokens.begin()
+								+ n
+								- 1
+						);
+
+						--n;
+
+						if(inDate && this->dateMap[dateIndex].length > 0) {
+							// update length of date
+							--(this->dateMap[dateIndex].length);
+
+							// delete empty dates
+							if(this->dateMap[dateIndex].length == 0) {
+								emptyDates = true;
+							}
+						}
+
+						if(inArticle && this->articleMap[articleIndex].length > 0) {
+							// update length of article
+							--(this->articleMap[articleIndex].length);
+
+							// delete empty articles
+							if(this->articleMap[articleIndex].length == 0) {
+								emptyArticles = true;
+							}
+						}
+
+						if(sentenceEntry.second > 0) {
+							// update length of sentence
+							--(sentenceEntry.second);
+
+							// delete empty sentences
+							if(sentenceEntry.second == 0) {
+								emptySentences = true;
+							}
+						}
+
+						++numDeletedWords;
+					}
+					else {
+						this->tokenBytes += word.size();
+					}
+				}
+
+				++sentenceCounter;
+				++statusCounter;
+
+				if(statusCounter == tokenizeUpdateEvery) {
+					if(!statusSetter.update(
+							static_cast<float>(sentenceCounter)
+							/ static_cast<float>(this->sentenceMap.size()),
+							true
+					)) {
+						return false;
+					}
+
+					statusCounter = 0;
+				}
+			}
+
+			if(emptyDates) {
+				std::remove_if(
+					this->dateMap.begin(),
+					this->dateMap.end(),
+					[](const auto& date) {
+						return date.length == 0;
+					}
+				);
+			}
+
+			if(emptyArticles) {
+				std::remove_if(
+						this->articleMap.begin(),
+						this->articleMap.end(),
+						[](const auto& article) {
+							return article.length == 0;
+						}
+				);
+			}
+
+			if(emptySentences) {
+				std::remove_if(
+						this->sentenceMap.begin(),
+						this->sentenceMap.end(),
+						[](const auto& pair) {
+							return pair.second == 0;
+						}
+				);
+			}
+		}
+
+		// check consistency
+		if(this->checkConsistency) {
+			Corpus::checkMap("date map", this->dateMap, this->tokens.size(), true, true);
+			Corpus::checkMap("article map", this->articleMap, this->tokens.size(), true, false);
+			Corpus::checkMap(this->sentenceMap, this->tokens.size(), true);
+		}
+
+		return statusSetter.isRunning();
+	}
+
+	// tokenize still continuous corpus
+	inline bool Corpus::tokenizeContinuous(
+			std::optional<SentenceFunc> callbackSentence,
+			std::optional<WordFunc> callbackWord,
+			std::uint64_t freeMemoryEvery,
+			StatusSetter& statusSetter
+	) {
+		// tokenize continuous text corpus
+		std::vector<std::string> sentence;
+
+		std::size_t wordBegin{0};
+		std::size_t sentenceFirstWord{0};
+		std::size_t currentWord{0};
+		std::size_t statusCounter{0};
+		std::size_t corpusTrimmed{0};
+
+		bool inArticle{false};
+		bool inDate{false};
+
+		std::size_t articleFirstWord{0};
+		std::size_t dateFirstWord{0};
+		std::size_t articleEnd{0};
+		std::size_t dateEnd{0};
+		std::size_t nextArticle{0};
+		std::size_t nextDate{0};
+
+		TextMap newArticleMap;
+		TextMap newDateMap;
+
+		newArticleMap.reserve(this->articleMap.size());
+		newDateMap.reserve(this->dateMap.size());
+
+		// go through all characters in the continous text corpus
+		for(std::size_t pos{0}; pos < this->corpus.size() + corpusTrimmed; ++pos) {
+			bool sentenceEnd{false};
+			bool noSeparator{false};
+			bool appendToArticle{false};
+			bool appendToDate{false};
+
+			if(!(this->articleMap.empty())) {
+				// check for beginning of article
+				if(
+						!inArticle
+						&& nextArticle < this->articleMap.size()
+						&& pos == this->articleMap[nextArticle].pos
+				) {
+					articleFirstWord = currentWord;
+					articleEnd = pos + this->articleMap[nextArticle].length;
+
+					inArticle = true;
+
+					++nextArticle;
+				}
+
+				// check for end of article
+				if(
+						inArticle
+						&& pos == articleEnd
+				) {
+					inArticle = false;
+
+					newArticleMap.emplace_back(
+							articleFirstWord,
+							currentWord - articleFirstWord,
+							this->articleMap[nextArticle - 1].value
+					);
+
+					sentenceEnd = true;
+					appendToArticle = true;
+				}
+			}
+
+			if(!(this->dateMap.empty())) {
+				// check for beginning of date
+				if(
+						!inDate
+						&& nextDate < this->dateMap.size()
+						&& pos == this->dateMap[nextDate].pos
+				) {
+					if(this->dateMap[nextDate].value == "2003-12-05") {
+						bool debug{true};
+					}
+
+					dateFirstWord = currentWord;
+					dateEnd = pos + this->dateMap[nextDate].length;
+
+					inDate = true;
+
+					++nextDate;
+				}
+
+				// check for end of date
+				if(
+						inDate
+						&& pos == dateEnd
+				) {
+					inDate = false;
+
+					newDateMap.emplace_back(
+							dateFirstWord,
+							currentWord - dateFirstWord,
+							this->dateMap[nextDate - 1].value
+					);
+
+					sentenceEnd = true;
+					appendToDate = true;
+				}
+			}
+
+			// check for end of sentence
+			switch(this->corpus[pos - corpusTrimmed]) {
+			case '.':
+			case ':':
+			case ';':
+			case '!':
+			case '?':
+				sentenceEnd = true;
+
+				break;
+
+			case ' ':
+			case ',':
+			case '/':
+			case '\\':
+			case '|':
+			case '\a':
+			case '\b':
+			case '\t':
+			case '\n':
+			case '\v':
+			case '\f':
+			case '\r':
+			case '\0':
+				break;
+
+			default:
+				if(sentenceEnd) {
+					// end of word and sentence without separating character
+					noSeparator = true;
+				}
+				else {
+					// go to next character
+					continue;
+				}
+			}
+
+			// end word
+			auto wordLength = pos - wordBegin;
+
+			if(noSeparator) {
+				++wordLength;
+			}
+
+			if(wordLength > 0) {
+				sentence.emplace_back(this->corpus, wordBegin - corpusTrimmed, wordLength);
+
+				++currentWord;
+
+				if(appendToArticle) {
+					++(newArticleMap.back().length);
+				}
+
+				if(appendToDate) {
+					++(newDateMap.back().length);
+				}
+			}
+
+			if(freeMemoryEvery > 0 && pos - corpusTrimmed > freeMemoryEvery) {
+				// free memory, i.e. remove the already processed beginning of the corpus
+				this->corpus.erase(0, pos - corpusTrimmed);
+				this->corpus.shrink_to_fit();
+
+				corpusTrimmed = pos;
+			}
+
+			wordBegin = pos + 1;
+
+			if(sentenceEnd && !sentence.empty()) {
+				if(callbackSentence) {
+					// modify sentence
+					(*callbackSentence)(sentence);
+				}
+
+				// modify words of the sentence, do not keep emptied words
+				for(auto wordIt{sentence.begin()}; wordIt != sentence.end(); ) {
+					if(callbackWord) {
+						(*callbackWord)(*wordIt);
+					}
+
+					if(wordIt->empty()) {
+						// remove empty word
+						wordIt = sentence.erase(wordIt);
+
+						--currentWord;
+
+						// shrink article and date, if necessary
+						if(appendToArticle) {
+							--(newArticleMap.back().length);
+
+							if(newArticleMap.back().length == 0) {
+								newArticleMap.pop_back();
+							}
+						}
+
+						if(appendToDate) {
+							--(newDateMap.back().length);
+
+							if(newDateMap.back().length == 0) {
+								newDateMap.pop_back();
+							}
+						}
+					}
+					else {
+						this->tokenBytes += wordIt->size();
+
+						++wordIt;
+					}
+				}
+
+				if(!sentence.empty()) {
+					// add sentence to map
+					this->sentenceMap.emplace_back(
+							sentenceFirstWord,
+							sentence.size()
+					);
+
+					// move the words in the finished sentence into the tokens of the corpus
+					this->tokens.insert(
+							this->tokens.end(),
+							std::make_move_iterator(sentence.begin()),
+							std::make_move_iterator(sentence.end())
+					);
+
+					sentence.clear();
+				}
+
+				sentenceFirstWord = currentWord; /* (= already next word) */
+
+				// update status if necessary
+				++statusCounter;
+
+				if(statusCounter == tokenizeUpdateEvery) {
+					if(!statusSetter.update(
+							static_cast<float>(pos + 1)
+							/ static_cast<float>(this->corpus.size() + corpusTrimmed),
+							true
+					)) {
+						return false;
+					}
+
+					statusCounter = 0;
+				}
+			}
+		}
+
+		// check for end of last article
+		bool endOfLastArticle{false};
+
+		if(
+				inArticle
+				&& this->corpus.size() + corpusTrimmed == articleEnd
+		) {
+			inArticle = false;
+
+			newArticleMap.emplace_back(
+					articleFirstWord,
+					currentWord - articleFirstWord,
+					this->articleMap[nextArticle - 1].value
+			);
+
+			endOfLastArticle = true;
+		}
+
+		// check for end of last date
+		bool endOfLastDate{false};
+
+		if(
+				inDate
+				&& this->corpus.size() + corpusTrimmed == dateEnd
+		) {
+			inDate = false;
+
+			newDateMap.emplace_back(
+					dateFirstWord,
+					currentWord - dateFirstWord,
+					this->dateMap[nextDate - 1].value
+			);
+
+			endOfLastDate = true;
+		}
+
+		// add last word if not added yet
+		if(wordBegin - corpusTrimmed < this->corpus.size()) {
+			sentence.emplace_back(
+					this->corpus,
+					wordBegin - corpusTrimmed,
+					this->corpus.size() + corpusTrimmed - wordBegin
+			);
+		}
+
+		// add last sentence if not added yet
+		if(!sentence.empty()) {
+			if(callbackSentence) {
+				// modify sentence
+				(*callbackSentence)(sentence);
+			}
+
+			if(callbackWord) {
+				// modify words of the sentence, do not keep emptied words
+				for(auto wordIt{sentence.begin()}; wordIt != sentence.end(); ) {
+					(*callbackWord)(*wordIt);
+
+					if(wordIt->empty()) {
+						// remove word
+						wordIt = sentence.erase(wordIt);
+
+						// shrink article and date, if necessary
+						if(endOfLastArticle) {
+							--(newArticleMap.back().length);
+
+							if(newArticleMap.back().length == 0) {
+								newArticleMap.pop_back();
+							}
+						}
+
+						if(endOfLastDate) {
+							--(newDateMap.back().length);
+
+							if(newDateMap.back().length == 0) {
+								newDateMap.pop_back();
+							}
+						}
+					}
+					else {
+						++wordIt;
+					}
+				}
+			}
+
+			if(!sentence.empty()) {
+				// add sentence to map
+				this->sentenceMap.emplace_back(
+						sentenceFirstWord,
+						sentence.size()
+				);
+
+				// move the words in the finished sentence into the tokens of the corpus
+				this->tokens.insert(
+						this->tokens.end(),
+						std::make_move_iterator(sentence.begin()),
+						std::make_move_iterator(sentence.end())
+				);
+			}
+		}
+
+		std::string{}.swap(this->corpus);
+
+		// check consistency
+		if(this->checkConsistency) {
+			if(inArticle) {
+				throw Exception(
+						"Corpus::tokenizeContinuous():"
+						" Last article '"
+						+ this->articleMap[nextArticle - 1].value
+						+ "' has not been finished"
+				);
+			}
+
+			if(inDate) {
+				throw Exception(
+						"Corpus::tokenizeContinuous():"
+						" Last date '"
+						+ this->dateMap[nextDate - 1].value
+						+ "' has not been finished"
+				);
+			}
+
+			if(nextArticle < this->articleMap.size()) {
+				throw Exception(
+						"Corpus::tokenizeContinuous():"
+						" Unexpected article '"
+						+ this->articleMap[nextArticle].value
+						+ "' after end of corpus"
+				);
+			}
+
+			if(nextDate < this->dateMap.size()) {
+				throw Exception(
+						"Corpus::tokenizeContinuous():"
+						" Unexpected date '"
+						+ this->dateMap[nextDate].value
+						+ "' after end of corpus"
+				);
+			}
+		}
+
+		newArticleMap.swap(this->articleMap);
+		newDateMap.swap(this->dateMap);
+
+		this->tokenized = true;
+
+		// check consistency
+		if(this->checkConsistency) {
+			Corpus::checkMap("date map", this->dateMap, this->tokens.size(), true, true);
+			Corpus::checkMap("article map", this->articleMap, this->tokens.size(), true, false);
+			Corpus::checkMap(this->sentenceMap, this->tokens.size(), true);
+		}
+
+		return statusSetter.isRunning();
+	}
 
 	// get a valid end of the current chunk (without cutting off UTF-8 characters), throws Corpus::Exception
 	//	NOTE: the result is between (maxLength - 3) and maxLength and at least zero
@@ -3533,6 +3752,7 @@ namespace crawlservpp::Data {
 			std::string_view name,
 			const TextMap& map,
 			std::size_t corpusSize,
+			bool isTokenized,
 			bool isDateMap
 	) {
 		// check the argument
@@ -3544,7 +3764,7 @@ namespace crawlservpp::Data {
 		std::size_t last{0};
 
 		for(const auto& entry : map) {
-			if(entry.pos != last) {
+			if(last > 0 && entry.pos != last) {
 				std::ostringstream exceptionStrStr;
 
 				exceptionStrStr.imbue(std::locale(""));
@@ -3560,7 +3780,11 @@ namespace crawlservpp::Data {
 				throw Exception(exceptionStrStr.str());
 			}
 
-			last = entry.pos + entry.length + 1;
+			last = entry.pos + entry.length;
+
+			if(!isTokenized) {
+				++last;
+			}
 
 			if(isDateMap && entry.value.length() != dateLength) {
 				std::string exceptionString{
@@ -3597,7 +3821,11 @@ namespace crawlservpp::Data {
 	}
 
 	// check sentence map for inconsistencies, throws Corpus::Exception
-	inline void Corpus::checkMap(const SentenceMap& map, std::size_t corpusSize) {
+	inline void Corpus::checkMap(
+			const SentenceMap& map,
+			std::size_t corpusSize,
+			bool isTokenized
+	) {
 		// check the argument
 		if(map.empty()) {
 			return;
@@ -3622,7 +3850,11 @@ namespace crawlservpp::Data {
 				throw Exception(exceptionStrStr.str());
 			}
 
-			last = entry.first + entry.second + 1;
+			last = entry.first + entry.second;
+
+			if(!isTokenized) {
+				++last;
+			}
 		}
 
 		// check the end position of the last entry in the map
