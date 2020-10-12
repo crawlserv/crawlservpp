@@ -115,7 +115,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(generalLoggingVerbose, "creates target table...");
 
-		this->database.initTargetTable(true);
+		this->database.initTargetTable(true, true);
 
 		// request text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");
@@ -161,7 +161,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					}
 			);
 
-			this->database.getCorpus(
+			if(!(this->database.getCorpus(
 					CorpusProperties(
 							this->config.generalInputSources.at(n),
 							this->config.generalInputTables.at(n),
@@ -178,9 +178,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					this->corpora.back(),
 					corpusSources,
 					statusSetter
-			);
-
-			if(!(this->isRunning())) {
+			))) {
 				return;
 			}
 
@@ -207,8 +205,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   on initialization.
 	 *
 	 * \sa onAlgoInit
-	 *
-	 * \todo Not implemented yet.
 	 */
 	void AssocOverTime::onAlgoTick() {
 		if(this->currentCorpus < this->corpora.size()) {
@@ -495,6 +491,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setProgress(0.F);
 
 		std::size_t dateCounter{0};
+		std::vector<std::pair<std::string, std::vector<std::uint64_t>>> results;
 
 		for(const auto& date : this->associations) {
 			std::uint64_t occurences{0};
@@ -521,13 +518,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				}
 			}
 
-			//TODO DEBUG
-			std::cout << "\n" << date.first << ':' << occurences;
+			// add row to results
+			results.emplace_back(
+					date.first,
+					std::vector<std::uint64_t>{}
+			);
+
+			results.back().second.push_back(occurences);
+
 			for(const auto counter : catsCounters) {
-				std::cout << '|' << counter;
+				results.back().second.push_back(counter);
 			}
-			std::cout << std::flush;
-			//TODO END DEBUG
 
 			// update progress
 			++dateCounter;
@@ -538,6 +539,32 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				return;
 			}
 		}
+
+		// sort results
+		std::sort(results.begin(), results.end(), [](const auto& a, const auto&b) {
+			return a.first < b.first;
+		});
+
+		//TODO DEBUG
+		std::cout << '\n' << "date\toccurences";
+
+		for(const auto& label : this->categoryLabels) {
+			std::cout << '\t' << label;
+		}
+
+		for(const auto& result : results) {
+			std::cout << '\n' << result.first;
+
+			for(const auto n : result.second) {
+				std::cout << '\t' << n;
+			}
+		}
+
+		std::cout << std::flush;
+		//TODO DEBUG END
+
+		// add results to table
+		//TODO
 
 		// clear memory
 		std::unordered_map<std::string, std::unordered_map<std::string, Associations>>().swap(
