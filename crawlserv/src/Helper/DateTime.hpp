@@ -51,7 +51,7 @@
 #include <locale>		// std::locale
 #include <sstream>		// std::istringstream
 #include <stdexcept>	// std::runtime_error
-#include <string>		// std::stol, fstd::string, std::to_string
+#include <string>		// std::stoi, std::stol, fstd::string, std::to_string
 #include <string_view>	// std::string_view, std::string_view_literals
 
 //! Namespace for global date/time helper functions.
@@ -176,11 +176,17 @@ namespace crawlservpp::Helper::DateTime {
 	//! The number of microseconds per millisecond used for date/time formatting.
 	inline constexpr auto microsecondsPerMillisecond{1000};
 
-	//! The length of a date in valid ISO Format (@c YYYY-MM-DD).
+	//! The length of a date in valid ISO format (@c YYYY-MM-DD).
 	inline constexpr auto isoDateLength{10};
 
 	//! The length of a year.
 	inline constexpr auto yearLength{4};
+
+	//! The position of the month in an ISO date (@c YYYY-MM-DD).
+	inline constexpr auto isoMonthPos{5};
+
+	//! The length of the month in an ISO date (@c YYYY-MM-DD).
+	inline constexpr auto isoMonthLen{2};
 
 	//! Consider two-digit years before this year as being in the 2000s.
 	inline constexpr auto minTwoDigitYear{1969};
@@ -716,7 +722,7 @@ namespace crawlservpp::Helper::DateTime {
 		}
 	}
 
-	//! Get the week number for a specific date.
+	//! Get the ISO week number for a specific date.
 	/*
 	 * \param date Constant reference to a string
 	 *   containing the date in the format
@@ -738,7 +744,7 @@ namespace crawlservpp::Helper::DateTime {
 			);
 		}
 
-		weekTo = date::format("%W", tp);
+		weekTo = date::format("%V", tp);
 	}
 
 	//! Get the year and the week number for a specific date.
@@ -756,6 +762,14 @@ namespace crawlservpp::Helper::DateTime {
 		getWeek(date, week);
 
 		std::string result(date, 0, yearLength);
+
+		if(week == "01" && date.substr(isoMonthPos, isoMonthLen) == "12") {
+			auto numericYear{std::stoi(result)};
+
+			++numericYear;
+
+			result = std::to_string(numericYear);
+		}
 
 		result += "-#";
 		result += week;
