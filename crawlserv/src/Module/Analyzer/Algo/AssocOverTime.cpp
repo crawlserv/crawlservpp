@@ -359,6 +359,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->log(generalLoggingDefault, "processes " + status);
 		this->setProgress(0.F);
 
+		auto dateIt{this->associations.begin()};
+		std::string lastDate;
+		bool dateSaved{false};
+
 		for(const auto& date : dateMap) {
 			// skip articles without date
 			while(
@@ -377,14 +381,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 
 			// add date if still necessary, and save its iterator
-			const auto dateIt{
-				this->associations.insert(
+			if(!dateSaved || lastDate != reducedDate) {
+				dateIt = this->associations.insert(
 						{
 								reducedDate,
 								{}
 						}
-				).first
-			};
+				).first;
+
+				lastDate = reducedDate;
+				dateSaved = true;
+			}
 
 			// go through all articles of the current date
 			while(
