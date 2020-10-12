@@ -371,6 +371,7 @@ namespace crawlservpp::Module::Analyzer {
 							" AND source_type = ?"
 							" AND source_table LIKE ?"
 							" AND source_field LIKE ?"
+							" AND savepoint IS NULL"
 							" AND created > ?"
 						" )"
 						" AS result"
