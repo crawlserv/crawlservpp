@@ -494,7 +494,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// calculate and save associations
 	void AssocOverTime::saveAssociations() {
 		// set status message and reset progress
-		this->setStatusMessage("Calculating and saving associations...");
+		this->setStatusMessage("Calculating associations...");
 		this->setProgress(0.F);
 
 		std::size_t dateCounter{0};
@@ -552,26 +552,66 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			return a.first < b.first;
 		});
 
-		//TODO DEBUG
-		std::cout << '\n' << "date\toccurences";
+		// save results to target table
+		this->setStatusMessage("Writing results to database...");
+		this->setProgress(0.F);
 
-		for(const auto& label : this->categoryLabels) {
-			std::cout << '\t' << label;
-		}
+		std::size_t statusCounter{0};
+		std::size_t resultCounter{0};
+
+		const auto resultNumColumns{
+			resultMinNumColumns
+			+ this->categoryLabels.size()
+		};
 
 		for(const auto& result : results) {
-			std::cout << '\n' << result.first;
+			Data::InsertFieldsMixed data;
 
-			for(const auto n : result.second) {
-				std::cout << '\t' << n;
+			data.columns_types_values.reserve(resultNumColumns);
+
+			data.table = this->getTargetTableName();
+
+			data.columns_types_values.emplace_back(
+					"analyzed__date",
+					Data::Type::_string,
+					Data::Value(result.first)
+			);
+
+			std::size_t n{0};
+
+			for(const auto& number : result.second) {
+				std::string column;
+
+				if(n == 0) {
+					column = "analyzed__occurences";
+				}
+				else {
+					column = "analyzed__" + this->categoryLabels.at(n - 1);
+				}
+
+				data.columns_types_values.emplace_back(
+					column,
+					Data::Type::_uint64,
+					Data::Value(number)
+				);
+
+				++n;
+			}
+
+			this->database.insertCustomData(data);
+
+			++statusCounter;
+			++resultCounter;
+
+			if(statusCounter == updateProgressEvery) {
+				this->setProgress(
+						static_cast<float>(resultCounter)
+						/ results.size()
+				);
+
+				statusCounter = 0;
 			}
 		}
-
-		std::cout << std::flush;
-		//TODO DEBUG END
-
-		// add results to table
-		//TODO
 
 		// clear memory
 		std::unordered_map<std::string, std::unordered_map<std::string, Associations>>().swap(
