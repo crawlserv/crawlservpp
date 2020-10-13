@@ -178,8 +178,9 @@ namespace crawlservpp::Module::Analyzer {
 	 *  finished.
 	 */
 	void Thread::finished() {
-		// set status
+		// set status and progress
 		this->setStatusMessage("IDLE Finished.");
+		this->setProgress(1.F);
 
 		// sleep
 		this->sleep(this->config.generalSleepWhenFinished);
