@@ -398,7 +398,7 @@ namespace crawlservpp::Module::Parser {
 					" SET locktime = GREATEST"
 					"("
 						"?,"
-						"?"
+						"? + INTERVAL 1 SECOND"
 					")"
 					" WHERE target = " + std::to_string(this->targetTableId) +
 					" AND url = ?"
