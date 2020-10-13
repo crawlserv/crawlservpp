@@ -49,6 +49,7 @@
 #include "../../Struct/QueryStruct.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
+#include "../../Timer/Simple.hpp"
 #include "../../Timer/StartStop.hpp"
 #include "../../Wrapper/DatabaseLock.hpp"
 #include "../../Wrapper/DatabaseTryLock.hpp"
@@ -130,6 +131,9 @@ namespace crawlservpp::Module::Crawler {
 
 	//! The length of a memento time stamp.
 	inline constexpr auto archiveRefTimeStampLength{14};
+
+	//! Number of milliseconds before renewing URL lock while crawling archives.
+	inline constexpr auto archiveRenewUrlLockEveryMs{1000};
 
 	///@}
 

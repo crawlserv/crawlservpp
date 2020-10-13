@@ -3472,6 +3472,10 @@ namespace crawlservpp::Module::Crawler {
 					+ "..."
 			);
 
+			// stop time for re-newing URL lock
+			Timer::Simple archiveTimer;
+			std::uint64_t archiveElapsed{0};
+
 			// loop over different archives
 			for(std::size_t n{0}; n < this->config.crawlerArchivesNames.size(); ++n) {
 				// skip empty archive and timemap URLs
@@ -3582,18 +3586,22 @@ namespace crawlservpp::Module::Crawler {
 
 								this->setStatusMessage(statusStrStr.str());
 
-								// lock URL if possible
-								this->lockTime = this->database.lockUrlIfOk(
-										url.first,
-										this->lockTime,
-										this->config.crawlerLock
-								);
+								// renew URL lock if necessary and possible
+								archiveElapsed += archiveTimer.tick();
 
-								if(this->lockTime.empty()) {
-									success = false;
-									skip = true;
+								if(archiveElapsed >= archiveRenewUrlLockEveryMs) {
+									this->lockTime = this->database.lockUrlIfOk(
+											url.first,
+											this->lockTime,
+											this->config.crawlerLock
+									);
 
-									break;
+									if(this->lockTime.empty()) {
+										success = false;
+										skip = true;
+
+										break;
+									}
 								}
 
 								// loop over references / memento retries
