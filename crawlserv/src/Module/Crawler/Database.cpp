@@ -375,7 +375,7 @@ namespace crawlservpp::Module::Crawler {
 					" SET locktime = GREATEST"
 					"("
 						"NOW() + INTERVAL ? SECOND,"
-						"? + INTERVAL 1 SECOND"
+						"?"
 					")"
 					" WHERE url = ?"
 					" AND"
@@ -1421,8 +1421,6 @@ namespace crawlservpp::Module::Crawler {
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while locking the URL, or
 	 *   renewing its URL lock.
-	 *
-	 * \sa getLockTime
 	 */
 	std::string Database::lockUrlIfOk(
 			std::uint64_t urlId,
