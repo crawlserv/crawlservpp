@@ -3602,6 +3602,8 @@ namespace crawlservpp::Module::Crawler {
 
 										break;
 									}
+
+									archiveElapsed = 0;
 								}
 
 								// loop over references / memento retries
