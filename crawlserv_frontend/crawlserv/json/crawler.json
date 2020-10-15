@@ -27,6 +27,13 @@
 			"description": "Memento URI template for archives to crawl. To be followed by YYYYMMDDHHMMSS/URI (date and URI) of the memento to crawl.",
 			"simple": false
 		},
+		"archives.urls.skip": {
+			"type": "array",
+			"item-type": "string",
+			"default": [],
+			"description": "Mementos matching these URLs will be skipped.",
+			"simple": false
+		},
 		"archives.urls.timemap": {
 			"type": "array",
 			"item-type": "string",

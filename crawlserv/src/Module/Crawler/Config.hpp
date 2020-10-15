@@ -141,6 +141,9 @@ namespace crawlservpp::Module::Crawler {
 			 */
 			std::vector<std::string> crawlerArchivesUrlsMemento{"http://web.archive.org/web/"};
 
+			//! Memento URIs that will always be skipped.
+			std::vector<std::string> crawlerArchivesUrlsSkip;
+
 			//! Timemap %URI template for archives to crawl.
 			/*!
 			 * To be followed by the %URI of the page to
@@ -542,6 +545,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("archives", this->config.crawlerArchives);
 		this->option("archives.names", this->config.crawlerArchivesNames);
 		this->option("archives.urls.memento", this->config.crawlerArchivesUrlsMemento);
+		this->option("archives.urls.skip", this->config.crawlerArchivesUrlsSkip);
 		this->option("archives.urls.timemap", this->config.crawlerArchivesUrlsTimemap);
 		this->option("lock", this->config.crawlerLock);
 		this->option("logging", this->config.crawlerLogging);
