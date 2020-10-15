@@ -312,6 +312,9 @@ namespace crawlservpp::Module::Crawler {
 
 				configWarnings.pop();
 			}
+
+			// fill memento cache with URIs that will always be skipped
+			this->mCache = this->config.crawlerArchivesUrlsSkip;
 		}
 
 		// save start time and initialize counter
@@ -3859,10 +3862,10 @@ namespace crawlservpp::Module::Crawler {
 													crawlerLoggingDefault,
 													logString
 											);
-
-											// add memento to cache
-											this->mCache.emplace_back(mementos.front().url);
 										}
+
+										// add memento to cache
+										this->mCache.emplace_back(mementos.front().url);
 									}
 									catch(const Utf8Exception& e) {
 										// write UTF-8 error to log if necessary (and skip)
@@ -4238,15 +4241,15 @@ namespace crawlservpp::Module::Crawler {
 
 	// clear cache of skipped mementos
 	void Thread::crawlingClearMementoCache() {
-		if(!(this->mCache.empty())) {
+		if(this->mCache.size() > this->config.crawlerArchivesUrlsSkip.size()) {
 			if(this->isLogLevel(crawlerLoggingVerbose)) {
-				if(this->mCache.size() > 1) {
+				if(this->mCache.size() > this->config.crawlerArchivesUrlsSkip.size() + 1) {
 					std::ostringstream logStrStr;
 
 					logStrStr.imbue(std::locale(""));
 
 					logStrStr 	<< "removes "
-								<< this->mCache.size()
+								<< this->mCache.size() - this->config.crawlerArchivesUrlsSkip.size()
 								<< " mementos from cache...";
 
 					this->log(crawlerLoggingVerbose, logStrStr.str());
@@ -4259,7 +4262,7 @@ namespace crawlservpp::Module::Crawler {
 				}
 			}
 
-			this->mCache.clear();
+			this->mCache = this->config.crawlerArchivesUrlsSkip;
 		}
 	}
 
