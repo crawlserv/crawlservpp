@@ -1734,7 +1734,11 @@ namespace crawlservpp::Module::Crawler {
 						// check value
 						if(value.empty()) {
 							queryWarnings.emplace(
-									"WARNING: Empty value for token \'" + *it + "\'."
+									"WARNING: Empty value for token \'"
+									+ *it
+									+ "\' from "
+									+ sourceUrl
+									+ "."
 							);
 						}
 						else if(cachedSeconds > 0) {
