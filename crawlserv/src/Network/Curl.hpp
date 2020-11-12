@@ -135,6 +135,12 @@ namespace crawlservpp::Network {
 	//! Errors when retrieving the IP of the server.
 	inline constexpr std::array getPublicIpErrors{429, 502, 503, 504, 521, 522, 524};
 
+	//! Name of the @c X-ts header.
+	inline constexpr auto xTsHeaderName{"X-ts: "};
+
+	//! Length of the @c X-ts header name, in bytes.
+	inline constexpr auto xTsHeaderNameLen{6};
+
 	///@}
 
 	/*
@@ -274,11 +280,18 @@ namespace crawlservpp::Network {
 		[[nodiscard]] static std::string curlStringToString(char * curlString);
 
 		///@}
+		///@name Header Handling
+		///@{
+
+		static int header(char * data, std::size_t size, std::size_t nitems, void * thisPtr);
+		int headerInClass(char * data, std::size_t size);
+
+		///@}
 		///@name Writers
 		///@{
 
-		static int writer(char * data, size_t size, size_t nmemb, void * thisPtr);
-		int writerInClass(char * data, size_t size, size_t nmemb);
+		static int writer(char * data, std::size_t size, std::size_t nmemb, void * thisPtr);
+		int writerInClass(char * data, std::size_t size);
 
 		///@}
 
@@ -288,6 +301,7 @@ namespace crawlservpp::Network {
 		std::string content;
 		std::string contentType;
 		std::uint32_t responseCode{0};
+		std::uint32_t xTsHeaderValue{0};
 		bool limitedSettings{false};
 		bool post{false};
 		std::string tmpCookies;
@@ -367,6 +381,15 @@ namespace crawlservpp::Network {
 		// configure libcurl
 		this->setOption(CURLOPT_NOSIGNAL, 1L);
 
+		// set header function
+		this->curlCode = curl_easy_setopt(
+				this->curl.get(),
+				CURLOPT_HEADERFUNCTION,
+				Curl::header
+		);
+
+		checkCode(this->curlCode);
+
 		// set write function
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		this->curlCode = curl_easy_setopt(
@@ -377,8 +400,9 @@ namespace crawlservpp::Network {
 
 		checkCode(this->curlCode);
 
-		// set pointer to instance
+		// set pointers to instance
 		this->setOption(CURLOPT_WRITEDATA, this);
+		this->setOption(CURLOPT_HEADERDATA, this);
 	}
 
 	//! Sets the network options for the connection according to the given configuration.
@@ -942,8 +966,9 @@ namespace crawlservpp::Network {
 	 * \note A string view cannot be used, because the
 	 *   underlying API requires a null-terminated string.
 	 *
-	 * \param cookies Const reference to a string containing the cookies to send
-	 *   in the same format as in the corresponding HTTP header, i.e.
+	 * \param cookies Const reference to a string containing
+	 *   the cookies to send in the same format as in the
+	 *   corresponding HTTP header, i.e.
 	 *   "name1=content1; name2=content2;" etc.
 	 *
 	 * \throws Curl::Exception if the cookies could not be set.
@@ -1079,16 +1104,18 @@ namespace crawlservpp::Network {
 	 *  will be removed.
 	 *
 	 * \param url Const reference to the string
-	 *  containing the URL to request.
+	 *   containing the URL to request.
 	 *
 	 * \param usePost States whether to use HTTP POST
-	 *  instead of HTTP GET on this request.
+	 *   instead of HTTP GET on this request.
 	 *
 	 * \param contentTo Reference to a string in which
-	 *  the received content will be stored.
+	 *   the received content will be stored.
 	 *
 	 * \param errors Vector of HTTP error codes which
-	 *  will be handled by throwing an exception.
+	 *   will be handled by throwing an exception,
+	 *   except if the error code is also present in
+	 *   the @c X-ts header returned by the host.
 	 *
 	 * \throws Curl::Exception if setting the necessary options failed,
 	 *   the HTTP request could not be sent, information about the reply
@@ -1234,6 +1261,10 @@ namespace crawlservpp::Network {
 						errors.cend(),
 						this->responseCode
 				) != errors.cend()
+				&& (
+						this->xTsHeaderValue == 0
+						|| this->responseCode != this->xTsHeaderValue
+				)
 		) {
 			std::string exceptionString{"HTTP error "};
 
@@ -1668,14 +1699,69 @@ namespace crawlservpp::Network {
 		return std::string();
 	}
 
+	//! Static header function to handle incoming header data.
+	/*!
+	 * If @c thisPtr is not @c nullptr, the function will forward the
+	 *  incoming header data without change to the headerInClass function.
+	 *
+	 * \param data Pointer to the incoming header data.
+	 * \param size Always 1.
+	 * \param nitems The size of the incoming header data.
+	 * \param thisPtr Pointer to the instance of the Curl class.
+	 *
+	 *  \returns The number of bytes processed by the in-class function.
+	 */
+	inline int Curl::header(char * data, std::size_t size, std::size_t nitems, void * thisPtr) {
+		if(thisPtr == nullptr) {
+			return 0;
+		}
+
+		return static_cast<Curl *>(thisPtr)->headerInClass(data, size * nitems);
+	}
+
+	//! In-class header function to handle incoming header data.
+	/*!
+	 * The function will append the data to the currently processed content.
+	 *
+	 * \param data Pointer to the incoming data.
+	 * \param size The size of the incoming header data.
+	 *
+	 * \returns The number of bytes processed, which will be identical to size.
+	 */
+	inline int Curl::headerInClass(char * data, std::size_t size) {
+		if(size > xTsHeaderNameLen) {
+			bool found{true};
+
+			for(std::size_t n{0}; n < xTsHeaderNameLen; ++n) {
+				if(data[n] != xTsHeaderName[n]) {
+					found = false;
+
+					break;
+				}
+			}
+
+			if(found) {
+				std::stringstream stringStream;
+
+				for(std::size_t n{xTsHeaderNameLen}; n < size; ++n) {
+					stringStream << data[n];
+				}
+
+				stringStream >> this->xTsHeaderValue;
+			}
+		}
+
+		return static_cast<int>(size);
+	}
+
 	//! Static writer function to handle incoming network data.
 	/*!
 	 * If @c thisPtr is not @c nullptr, the function will forward the
 	 *  incoming data without change to the writerInClass function.
 	 *
 	 * \param data Pointer to the incoming data.
-	 * \param size The size of the incoming data in memory blocks.
-	 * \param nmemb The size of one such memory block.
+	 * \param size Always 1.
+	 * \param nmemb The size of the incoming data.
 	 * \param thisPtr Pointer to the instance of the Curl class.
 	 *
 	 *  \returns The number of bytes processed by the in-class function.
@@ -1685,7 +1771,7 @@ namespace crawlservpp::Network {
 			return 0;
 		}
 
-		return static_cast<Curl *>(thisPtr)->writerInClass(data, size, nmemb);
+		return static_cast<Curl *>(thisPtr)->writerInClass(data, size * nmemb);
 	}
 
 	//! In-class writer function to handle incoming network data.
@@ -1693,15 +1779,14 @@ namespace crawlservpp::Network {
 	 * The function will append the data to the currently processed content.
 	 *
 	 * \param data Pointer to the incoming data.
-	 * \param size The size of the incoming data in memory blocks.
-	 * \param nmemb The size of one such memory block.
+	 * \param size The size of the incoming data.
 	 *
-	 * \returns The number of bytes processed, which will be identical to size * nmemb.
+	 * \returns The number of bytes processed, which will be identical to size.
 	 */
-	inline int Curl::writerInClass(char * data, std::size_t size, std::size_t nmemb) {
-		this->content.append(data, size * nmemb);
+	inline int Curl::writerInClass(char * data, std::size_t size) {
+		this->content.append(data, size);
 
-		return static_cast<int>(size * nmemb);
+		return static_cast<int>(size);
 	}
 
 	// private helper function for setting a libcurl option to a string value
