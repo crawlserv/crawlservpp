@@ -1607,7 +1607,7 @@ namespace crawlservpp::Module::Crawler {
 
 					// check token source
 					if(!(this->config.customTokensSource.at(index).empty())) {
-						// get content for extracting token
+						// get token source
 						while(this->isRunning()) {
 							try {
 								// set local network configuration
@@ -1626,7 +1626,7 @@ namespace crawlservpp::Module::Crawler {
 									);
 								}
 
-								// get content
+								// get content for extracting token
 								this->networking.getContent(
 										sourceUrl,
 										this->config.customTokensUsePost.at(index),
@@ -2248,7 +2248,7 @@ namespace crawlservpp::Module::Crawler {
 					this->networking.setHeaders(customHeaders);
 				}
 
-				// get content
+				// get new content after dynamic redirect
 				this->networking.getContent(
 						this->getProtocol() + this->domain + url,
 						this->config.redirectUsePost,
