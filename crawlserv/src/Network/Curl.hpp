@@ -1193,6 +1193,9 @@ namespace crawlservpp::Network {
 
 		this->setOption(CURLOPT_ERRORBUFFER, errorBuffer.data());
 
+		// reset 'X-ts' header value
+		this->xTsHeaderValue = 0;
+
 		// perform request
 		CURLcode result{CURLE_OK};
 
@@ -1721,7 +1724,7 @@ namespace crawlservpp::Network {
 
 	//! In-class header function to handle incoming header data.
 	/*!
-	 * The function will append the data to the currently processed content.
+	 * The function will check for a @c X-ts header and save its value.
 	 *
 	 * \param data Pointer to the incoming data.
 	 * \param size The size of the incoming header data.
