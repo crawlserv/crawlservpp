@@ -201,7 +201,6 @@ namespace crawlservpp::Module::Parser {
 		///@name Parsing
 		///@{
 
-		// parsing functions
 		std::uint32_t checkParsingTable();
 		[[nodiscard]] std::uint64_t getNumberOfContents(std::uint64_t urlId);
 		bool getLatestContent(std::uint64_t urlId, std::uint64_t index, IdString& contentTo);
