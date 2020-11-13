@@ -220,10 +220,11 @@ namespace crawlservpp::Module::Analyzer {
 		void setIsRunningCallback(const IsRunningCallback& isRunningCallback);
 
 		///@}
-		///@name Target Table Initialization
+		///@name Target Table Initialization and Update
 		///@{
 
 		void initTargetTable(bool compressed, bool clear);
+		void updateTargetTable();
 
 		///@}
 		///@name Prepared SQL Statements
@@ -256,11 +257,6 @@ namespace crawlservpp::Module::Analyzer {
 				std::vector<std::uint8_t>& types,
 				std::vector<std::string>& tables,
 				std::vector<std::string>& columns
-		);
-		bool checkSource(
-				std::uint16_t type,
-				const std::string& table,
-				const std::string& column
 		);
 
 		///@}
@@ -314,12 +310,20 @@ namespace crawlservpp::Module::Analyzer {
 			std::uint16_t addChunkTokenized;
 			std::uint16_t measureChunk;
 			std::uint16_t measureCorpus;
+			std::uint16_t updateTargetTable;
 
 			std::vector<std::uint16_t> algo;
 		} ps{};
 
 		// function for checking whether the parent thread is still running
 		IsRunningCallback isRunning;
+
+		// internal helper function
+		bool checkSource(
+				std::uint16_t type,
+				const std::string& table,
+				const std::string& column
+		);
 
 		// internal corpus functions
 		[[nodiscard]] bool corpusIsChanged(
