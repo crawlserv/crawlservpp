@@ -22,7 +22,10 @@
  *
  * CorpusGenerator.cpp
  *
- * This algorithm just uses the built-in functionality for building text corpora from its input data and quits.
+ * This algorithm uses the built-in functionality for building text corpora from its input data.
+ *
+ * Additionally, it writes some basic statistics (number and length of words and sentences)
+ *  to the target table.
  *
  *
  *  Created on: Mar 5, 2020
@@ -84,6 +87,38 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				this->config.generalInputFields
 		);
 
+		// set target fields
+		std::vector<std::string> fields;
+		std::vector<std::string> types;
+
+		fields.reserve(numFields);
+		types.reserve(numFields);
+
+		fields.emplace_back("source");
+		fields.emplace_back("wordcount");
+		fields.emplace_back("avgwordlen");
+		fields.emplace_back("medwordlen");
+		fields.emplace_back("sentencecount");
+		fields.emplace_back("avgsentencelen");
+		fields.emplace_back("medsentencelen");
+
+		types.emplace_back("TEXT");
+		types.emplace_back("BIGINT UNSIGNED");
+		types.emplace_back("FLOAT");
+		types.emplace_back("FLOAT");
+		types.emplace_back("BIGINT UNSIGNED");
+		types.emplace_back("FLOAT");
+		types.emplace_back("FLOAT");
+
+		this->database.setTargetFields(fields, types);
+
+		// initialize target table
+		this->setStatusMessage("Creating target table...");
+
+		this->log(generalLoggingVerbose, "creates target table...");
+
+		this->database.initTargetTable(true, true);
+
 		// request text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");
 
@@ -91,6 +126,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t bytes{0};
 		std::size_t tokens{0};
 		std::size_t sources{0};
+
+		const auto resultTable{
+			this->getTargetTableName()
+		};
 
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
 			std::string dateFrom;
@@ -168,6 +207,103 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				}
 
 				sources += corpusSources;
+			}
+
+			if(statusSetter.change("Creating corpus statistics...")) {
+				// calculate token (word) lengths
+				std::vector<std::size_t> tokenLengths;
+
+				tokenLengths.reserve(corpus.getNumTokens());
+
+				for(const auto& token : corpus.getcTokens()) {
+					tokenLengths.push_back(Helper::Utf8::length(token));
+				}
+
+				const auto avgTokenLength{
+					Helper::Math::avg<float>(tokenLengths)
+				};
+				const auto medTokenLength{
+					Helper::Math::median<float>(tokenLengths)
+				};
+
+				std::vector<std::size_t>{}.swap(tokenLengths);
+
+				// calculate sentence lengths
+				std::vector<std::size_t> sentenceLengths;
+
+				sentenceLengths.reserve(corpus.getcSentenceMap().size());
+
+				for(const auto& sentence : corpus.getcSentenceMap()) {
+					sentenceLengths.push_back(sentence.second);
+				}
+
+				const auto avgSentenceLength{
+					Helper::Math::avg<float>(sentenceLengths)
+				};
+				const auto medSentenceLength{
+					Helper::Math::median<float>(sentenceLengths)
+				};
+
+				std::vector<std::size_t>{}.swap(sentenceLengths);
+
+				// write data to target table
+				Data::InsertFieldsMixed data;
+
+				data.columns_types_values.reserve(numFields);
+
+				data.table = resultTable;
+
+				data.columns_types_values.emplace_back(
+						"analyzed__source",
+						Data::Type::_string,
+						Data::Value(
+								this->config.generalInputSources.at(n)
+								+ "."
+								+ this->config.generalInputTables.at(n)
+								+ "."
+								+ this->config.generalInputFields.at(n)
+						)
+				);
+
+				data.columns_types_values.emplace_back(
+						"analyzed__wordcount",
+						Data::Type::_uint64,
+						Data::Value(corpus.getNumTokens())
+				);
+
+				data.columns_types_values.emplace_back(
+						"analyzed__avgwordlen",
+						Data::Type::_double,
+						Data::Value(avgTokenLength)
+				);
+
+				data.columns_types_values.emplace_back(
+						"analyzed__medwordlen",
+						Data::Type::_double,
+						Data::Value(medTokenLength)
+				);
+
+				data.columns_types_values.emplace_back(
+						"analyzed__sentencecount",
+						Data::Type::_uint64,
+						Data::Value(corpus.getcSentenceMap().size())
+				);
+
+				data.columns_types_values.emplace_back(
+						"analyzed__avgsentencelen",
+						Data::Type::_double,
+						Data::Value(avgSentenceLength)
+				);
+
+				data.columns_types_values.emplace_back(
+						"analyzed__medsentencelen",
+						Data::Type::_double,
+						Data::Value(medSentenceLength)
+				);
+
+				this->database.insertCustomData(data);
+
+				this->database.updateTargetTable();
 			}
 		}
 
