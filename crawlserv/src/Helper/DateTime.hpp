@@ -43,6 +43,7 @@
 #include <chrono>		// std::chrono::seconds, std::chrono::system_clock
 #include <clocale>		// std::setlocale
 #include <cmath>		// std::lround
+#include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint8_t, std::int64_t, std::uint16_t, std::uint64_t
 #include <cstdlib>		// std::strtoul
 #include <ctime>		// std::tm, std::strftime, std::time_t

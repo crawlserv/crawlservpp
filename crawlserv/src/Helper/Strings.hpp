@@ -37,6 +37,7 @@
 						// std::replace, std::sort, std::transform, std::unique
 #include <array>		// std::array
 #include <cctype>		// std::isspace, std::tolower
+#include <cstddef>		// std::size_t
 #include <ios>			// std::boolalpha
 #include <queue>		// std::queue
 #include <random>		// std::default_random_engine, std::random_device, std::uniform_int_distribution
