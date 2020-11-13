@@ -263,6 +263,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			this->database.insertCustomData(data);
 
+			this->database.updateTargetTable();
+
 			// increase text count and progress (internally saved as "last") if necessary
 			if(this->markovTextMax > 0) {
 				this->incrementLast();

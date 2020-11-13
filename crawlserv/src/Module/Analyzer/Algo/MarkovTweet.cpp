@@ -260,6 +260,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->database.insertCustomData(data);
 
+		this->database.updateTargetTable();
+
 		// increase tweet count (internally saved as "last") and calculate progress if necessary
 		if(this->markovTweetMax > 0) {
 			this->incrementLast();

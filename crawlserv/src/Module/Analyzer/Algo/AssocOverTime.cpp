@@ -617,6 +617,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::unordered_map<std::string, std::unordered_map<std::string, Associations>>().swap(
 				this->associations
 		);
+
+		// target table updated
+		this->database.updateTargetTable();
 	}
 
 	/*

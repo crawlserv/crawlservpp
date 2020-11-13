@@ -251,6 +251,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		...
 
 		this->database.insertCustomData(data);
+
+		this->database.updateTargetTable();
 		*/
 
 		/*
