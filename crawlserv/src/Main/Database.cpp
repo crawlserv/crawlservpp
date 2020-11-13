@@ -6227,7 +6227,7 @@ namespace crawlservpp::Main {
 						" USE INDEX(urllist)"
 						" WHERE website = ?"
 						" AND urllist = ?"
-						" AND name LIKE ?"
+						" AND name LIKE CONVERT(? USING latin1)"
 						" LIMIT 1"
 				)
 			};
@@ -6420,7 +6420,7 @@ namespace crawlservpp::Main {
 						+ type
 						+ "tables`"
 						" WHERE urllist = ?"
-						" AND name LIKE ?"
+						" AND name LIKE CONVERT(? USING latin1)"
 						" LIMIT 1"
 				)
 			};
@@ -7328,8 +7328,8 @@ namespace crawlservpp::Main {
 						"SELECT COUNT(*)"
 						" AS result"
 						" FROM INFORMATION_SCHEMA.TABLES"
-						" WHERE TABLE_SCHEMA LIKE ?"
-						" AND TABLE_NAME LIKE ?"
+						" WHERE TABLE_SCHEMA LIKE CONVERT(? USING latin1)"
+						" AND TABLE_NAME LIKE CONVERT(? USING latin1)"
 						" LIMIT 1"
 				)
 			};
@@ -7404,9 +7404,9 @@ namespace crawlservpp::Main {
 						"SELECT COUNT(*)"
 						" AS result"
 						" FROM INFORMATION_SCHEMA.COLUMNS"
-						" WHERE TABLE_SCHEMA LIKE ?"
-						" AND TABLE_NAME LIKE ?"
-						" AND COLUMN_NAME LIKE ?"
+						" WHERE TABLE_SCHEMA LIKE CONVERT(? USING latin1)"
+						" AND TABLE_NAME LIKE CONVERT(? USING latin1)"
+						" AND COLUMN_NAME LIKE CONVERT(? USING latin1)"
 						" LIMIT 1"
 				)
 			};
@@ -7480,9 +7480,9 @@ namespace crawlservpp::Main {
 				this->connection->prepareStatement(
 						"SELECT COLUMN_TYPE"
 						" FROM INFORMATION_SCHEMA.COLUMNS"
-						" WHERE TABLE_SCHEMA LIKE ?"
-						" AND TABLE_NAME LIKE ?"
-						" AND COLUMN_NAME LIKE ?"
+						" WHERE TABLE_SCHEMA LIKE CONVERT(? USING latin1)"
+						" AND TABLE_NAME LIKE CONVERT(? USING latin1)"
+						" AND COLUMN_NAME LIKE CONVERT(? USING latin1)"
 						" LIMIT 1"
 				)
 			};
