@@ -138,6 +138,12 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<std::string> generalInputFields;
 
 			//! Types of tables to be used as input.
+			/*!
+			 * \sa generalInputSourcesParsing,
+			 *   generalInputSourcesExtracting,
+			 *   generalInputSourcesAnalyzing,
+			 *   generalInputSourcesCrawling
+			 */
 			std::vector<std::uint8_t> generalInputSources;
 
 			//! Names of tables to be used as input.
