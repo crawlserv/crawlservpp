@@ -22,7 +22,7 @@
  *
  * Lemmatizer.hpp
  *
- * Namespace for the multilingual lemmatizer.
+ * Multilingual lemmatizer.
  *
  *  Created on: Sep 1, 2020
  *      Author: ans
@@ -31,20 +31,19 @@
 #ifndef DATA_LEMMATIZER_HPP_
 #define DATA_LEMMATIZER_HPP_
 
+#include "Dictionary.hpp"
+
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Strings.hpp"
 
 #include <cstdint>			// std::uint64_t
 #include <fstream>			// std::ifstream
 #include <string>			// std::getline, std::stoul, std::string
-#include <string_view>		// std::string_view, std::string_view_literals
 #include <unordered_map>	// std::unordered_map
 #include <utility>			// std::move
 #include <vector>			// std::vector
 
 namespace crawlservpp::Data {
-
-	using std::string_view_literals::operator""sv;
 
 	/*
 	 * CONSTANTS
@@ -52,9 +51,6 @@ namespace crawlservpp::Data {
 
 	///@name Constants
 	///@{
-
-	//! Directory for dictionaries.
-	inline constexpr auto dictDir{"dict"sv};
 
 	//! Column containing the lemma in a dictionary file.
 	/*!
@@ -149,7 +145,7 @@ namespace crawlservpp::Data {
 			dict = build(dictionary);
 		}
 
-		// get length of word
+		// get length of word and look it up in dictionary
 		std::size_t wordLength{word.find(' ')};
 
 		if(wordLength > word.length()) {

@@ -44,7 +44,8 @@
 			"Single UTF-8 code point removal",
 			"English stemmer (porter2)",
 			"German stemmer (cistem)",
-			"Multilingual lemmatizer (from dictionary)"
+			"Multilingual lemmatizer (from dictionary)",
+			"Remove words (from dictionary)"
 		],
 		"default": [],
 		"label": "Word Manipulators:",
