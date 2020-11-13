@@ -39,6 +39,7 @@
 #include "Stemmer/English.hpp"
 #include "Stemmer/German.hpp"
 #include "Tagger.hpp"
+#include "WordRemover.hpp"
 
 #include "../Helper/DateTime.hpp"
 #include "../Helper/Utf8.hpp"
@@ -113,6 +114,9 @@ namespace crawlservpp::Data {
 
 	//! Multilingual lemmatizer.
 	inline constexpr std::uint16_t wordManipLemmatizer{4};
+
+	//! Remove single words found in a dictionary.
+	inline constexpr std::uint16_t wordManipRemove{5};
 
 	///@}
 
@@ -301,8 +305,9 @@ namespace crawlservpp::Data {
 		bool checkConsistency{false};
 		std::size_t tokenBytes{0};
 
-		// lemmatizer
+		// lemmatizer and word remover
 		Lemmatizer lemmatizer;
+		WordRemover wordRemover;
 
 		// internal helper functions
 		[[nodiscard]] bool tokenizeTokenized(
@@ -2924,6 +2929,11 @@ namespace crawlservpp::Data {
 
 					break;
 
+				case wordManipRemove:
+					this->wordRemover.remove(word, wordModels.at(index));
+
+					break;
+
 				default:
 					throw Exception(
 							"Corpus::tokenize():"
@@ -3027,6 +3037,10 @@ namespace crawlservpp::Data {
 		}
 
 		statusSetter.finish();
+
+		// free memory
+		this->lemmatizer.clear();
+		this->wordRemover.clear();
 
 		return true;
 	}
