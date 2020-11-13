@@ -564,12 +564,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			+ this->categoryLabels.size()
 		};
 
+		const auto resultTable{
+			this->getTargetTableName()
+		};
+
 		for(const auto& result : results) {
 			Data::InsertFieldsMixed data;
 
 			data.columns_types_values.reserve(resultNumColumns);
 
-			data.table = this->getTargetTableName();
+			data.table = resultTable;
 
 			data.columns_types_values.emplace_back(
 					"analyzed__date",
