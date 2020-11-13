@@ -118,7 +118,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	/*
-	 * INITIALIZATION
+	 * TARGET TABLE INITIALIZATION AND UPDATE
 	 */
 
 	//! Creates the target table, or adds the field columns, if they do not exist already.
@@ -227,6 +227,44 @@ namespace crawlservpp::Module::Analyzer {
 
 		if(clear) {
 			this->clearTable(this->targetTableFull);
+		}
+	}
+
+	//! Updates the target table.
+	/*!
+	 * Sets the time that specifies, when the target
+	 *  table has last been updated, to now – i.e.
+	 *  the current database time.
+	 *
+	 * \throws Module::Analyzer::Database::Exception
+	 *   if the prepared SQL statements for setting
+	 *   the update time of the target table to now
+	 *   is missing.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while setting the update time
+	 *   of the target table in the database.
+	 */
+	void Database::updateTargetTable() {
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(this->ps.updateTargetTable == 0) {
+			throw Exception(
+					"Analyzer::Database::updateTargetTable():"
+					" Missing prepared SQL statement"
+			);
+		}
+
+		// get prepared SQL statement
+		auto& sqlStatement{this->getPreparedStatement(this->ps.updateTargetTable)};
+
+		try {
+			// execute SQL query
+			Database::sqlExecute(sqlStatement);
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Analyzer::Database::updateTargetTable", e);
 		}
 	}
 
@@ -543,6 +581,17 @@ namespace crawlservpp::Module::Analyzer {
 						" AND dest.source_type = ?"
 						" AND dest.source_table LIKE ?"
 						" AND dest.source_field LIKE ?"
+				);
+			}
+
+			if(this->ps.updateTargetTable == 0) {
+				this->log(verbose, "prepares updateTargetTable()...");
+
+				this->ps.updateTargetTable = this->addPreparedStatement(
+						"UPDATE crawlserv_analyzedtables"
+						" SET updated = CURRENT_TIMESTAMP"
+						" WHERE id = " + std::to_string(this->targetTableId) +
+						" LIMIT 1"
 				);
 			}
 		}
@@ -891,26 +940,11 @@ namespace crawlservpp::Module::Analyzer {
 		}
 	}
 
-	//! Public helper function checking the given data source.
-	/*!
-	 * \param type Constant reference to
-	 *   the type of the source to be checked.
-	 * \param table Constant reference to a
-	 *   string containing the name of the
-	 *   source table to be checked.
-	 * \param column Constant reference to a
-	 *   string containing the name of the
-	 *   source column to be checked.
-	 *
-	 * \returns True, if the given source is
-	 *   valid. False otherwise.
-	 *
-	 * \sa generalInputSourcesParsing,
-	 *   generalInputSourcesExtracting,
-	 *   generalInputSourcesAnalyzing,
-	 *   generalInputSourcesCrawling,
-	 *   checkSources
+	/*
+	 * INTERNAL HELPER FUNCTION (private)
 	 */
+
+	// check the given data source
 	bool Database::checkSource(
 			std::uint16_t type,
 			const std::string& table,
