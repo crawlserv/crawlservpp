@@ -409,7 +409,10 @@ namespace crawlservpp::Module::Analyzer {
 							" AND source_type = ?"
 							" AND source_table LIKE ?"
 							" AND source_field LIKE ?"
-							" AND savepoint IS NULL"
+							" AND ("
+								" savepoint IS NULL"
+								" OR savepoint LIKE LEFT(?, LENGTH(savepoint))"
+							" )"
 							" AND created > ?"
 						" )"
 						" AS result"
@@ -1066,7 +1069,44 @@ namespace crawlservpp::Module::Analyzer {
 				corpusStatement.setUInt(sqlArg1, properties.sourceType);
 				corpusStatement.setString(sqlArg2, properties.sourceTable);
 				corpusStatement.setString(sqlArg3, properties.sourceColumn);
-				corpusStatement.setString(sqlArg4, updateTime);
+
+				if(
+						properties.wordManipulators.empty()
+						&& properties.sentenceManipulators.empty()
+				) {
+					corpusStatement.setNull(sqlArg4, 0);
+				}
+				else {
+					std::string lastSavePoint;
+
+					for(std::size_t n{0}; n < properties.wordManipulators.size(); ++n) {
+						lastSavePoint += 'w';
+						lastSavePoint += std::to_string(properties.wordManipulators[n]);
+						lastSavePoint += '[';
+
+						if(properties.wordModels.size() > n) {
+							lastSavePoint += properties.wordModels[n];
+						}
+
+						lastSavePoint += ']';
+					}
+
+					for(std::size_t n{0}; n < properties.sentenceManipulators.size(); ++n) {
+						lastSavePoint += 's';
+						lastSavePoint += std::to_string(properties.sentenceManipulators[n]);
+						lastSavePoint += '[';
+
+						if(properties.sentenceModels.size() > n) {
+							lastSavePoint += properties.sentenceModels[n];
+						}
+
+						lastSavePoint += ']';
+					}
+
+					corpusStatement.setString(sqlArg4, lastSavePoint);
+				}
+
+				corpusStatement.setString(sqlArg5, updateTime);
 
 				SqlResultSetPtr(Database::sqlExecuteQuery(corpusStatement)).swap(sqlResultSet);
 
