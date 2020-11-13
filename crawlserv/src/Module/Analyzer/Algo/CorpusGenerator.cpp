@@ -253,16 +253,42 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 				data.table = resultTable;
 
+				std::string source;
+
+				switch(this->config.generalInputSources.at(n)) {
+				case generalInputSourcesParsing:
+					source = "parsing";
+
+					break;
+
+				case generalInputSourcesExtracting:
+					source = "extracting";
+
+					break;
+
+				case generalInputSourcesAnalyzing:
+					source = "analyzing";
+
+					break;
+
+				case generalInputSourcesCrawling:
+					source = "crawling";
+
+					break;
+
+				default:
+					source = "[unknown]";
+				}
+
+				source += ".";
+				source += this->config.generalInputTables.at(n);
+				source += ".";
+				source += this->config.generalInputFields.at(n);
+
 				data.columns_types_values.emplace_back(
 						"analyzed__source",
 						Data::Type::_string,
-						Data::Value(
-								this->config.generalInputSources.at(n)
-								+ "."
-								+ this->config.generalInputTables.at(n)
-								+ "."
-								+ this->config.generalInputFields.at(n)
-						)
+						Data::Value(source)
 				);
 
 				data.columns_types_values.emplace_back(
