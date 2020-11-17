@@ -905,6 +905,11 @@ namespace crawlservpp::Module::Parser {
 								latestContent
 						)
 				) {
+					// check whether thread is still running
+					if(!(this->isRunning())) {
+						break;
+					}
+
 					if(this->parsingContent(latestContent, parsedId)) {
 						if(changedStatus) {
 							this->setStatusMessage(this->urls.front().second);
