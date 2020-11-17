@@ -372,6 +372,14 @@ namespace crawlservpp::Module::Parser {
 			// parse content(s)
 			parsed = this->parsingNext();
 
+			// check whether thread has been cancelled
+			if(!(this->isRunning())) {
+				// unlock URL if necesssary
+				this->database.unLockUrlIfOk(this->urls.front().first, this->lockTime);
+
+				return;
+			}
+
 			// stop timer
 			if(this->config.generalTiming) {
 				timerStr = timer.tickStr();
@@ -947,7 +955,7 @@ namespace crawlservpp::Module::Parser {
 				this->database.getAllContents(this->urls.front().first)
 			};
 
-			while(!contents.empty()) {
+			while(this->isRunning() && !contents.empty()) {
 				if(this->parsingContent(contents.front(), parsedId)) {
 					++counter;
 				}
