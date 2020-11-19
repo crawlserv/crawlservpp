@@ -2515,10 +2515,11 @@ namespace crawlservpp::Main {
 		std::string error;
 
 		if(
-				!(this->getArgument("crossdomain", isCrossDomain, true, error))
+				!(this->getArgument("id", id, error))
+				|| !(this->getArgument("crossdomain", isCrossDomain, true, error))
+				|| (!isCrossDomain && !(this->getArgument("domain", domain, true, false, error)))
 				|| !(this->getArgument("namespace", nameSpace, false, true, error))
 				|| !(this->getArgument("name", name, false, true, error))
-				|| (!isCrossDomain && !(this->getArgument("domain", domain, true, false, error)))
 				|| !(this->getArgument("dir", dir, true, false, error))
 		) {
 			return ServerCommandResponse::failed(error);
