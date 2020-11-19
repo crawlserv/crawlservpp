@@ -471,7 +471,7 @@ if($website) {
             echo "</div>\n";
             
             echo "<div class=\"entry-row\">\n";
-            echo "<div class=\"entry-label\">Contents:</div>\n";
+            echo "<div class=\"entry-label-small\">&nbsp;+&#8239;archive-only:</div>\n";
             echo "<div class=\"entry-value\">\n";
             
             if($urllistContent == 1) {
