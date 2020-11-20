@@ -336,7 +336,7 @@ namespace crawlservpp::Network {
 		void setOption(CURLoption option, CurlList& list);
 		void setOption(CURLoption option, void * pointer);
 		[[nodiscard]] bool hasFeature(int feature) const noexcept;
-		static void checkCode(CURLcode code);
+		void checkCode();
 	};
 
 	/*
@@ -388,7 +388,7 @@ namespace crawlservpp::Network {
 				Curl::header
 		);
 
-		checkCode(this->curlCode);
+		this->checkCode();
 
 		// set write function
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
@@ -398,7 +398,7 @@ namespace crawlservpp::Network {
 				Curl::writer
 		);
 
-		checkCode(this->curlCode);
+		this->checkCode();
 
 		// set pointers to instance
 		this->setOption(CURLOPT_WRITEDATA, this);
@@ -1244,9 +1244,7 @@ namespace crawlservpp::Network {
 				&responseCodeL
 		);
 
-		if(this->curlCode != CURLE_OK) {
-			throw Curl::Exception(curl_easy_strerror(this->curlCode));
-		}
+		this->checkCode();
 
 		if(
 				responseCodeL < 0
@@ -1288,9 +1286,7 @@ namespace crawlservpp::Network {
 				&cString
 		);
 
-		if(this->curlCode != CURLE_OK) {
-			throw Curl::Exception(curl_easy_strerror(this->curlCode));
-		}
+		this->checkCode();
 
 		if(cString != nullptr) {
 			this->contentType = cString;
@@ -1457,9 +1453,7 @@ namespace crawlservpp::Network {
 				Curl::writer
 		);
 
-		if(this->curlCode != CURLE_OK) {
-			throw Curl::Exception(curl_easy_strerror(this->curlCode));
-		}
+		this->checkCode();
 
 		// set pointer to instance
 		this->setOption(CURLOPT_WRITEDATA, this);
@@ -1801,7 +1795,7 @@ namespace crawlservpp::Network {
 				stringValue.c_str()
 		);
 
-		checkCode(this->curlCode);
+		this->checkCode();
 	}
 
 	// private helper function for setting a libcurl option to a numeric value
@@ -1814,7 +1808,7 @@ namespace crawlservpp::Network {
 				longValue
 		);
 
-		checkCode(this->curlCode);
+		this->checkCode();
 	}
 
 	// private helper function for setting a libcurl option to a libcurl list
@@ -1826,7 +1820,7 @@ namespace crawlservpp::Network {
 				list.get()
 		);
 
-		checkCode(this->curlCode);
+		this->checkCode();
 	}
 
 	// private helper function for setting a libcurl option to a pointer
@@ -1838,7 +1832,7 @@ namespace crawlservpp::Network {
 				pointer
 		);
 
-		checkCode(this->curlCode);
+		this->checkCode();
 	}
 
 	// private helper function for checking whether a libcurl feature is supported
@@ -1846,10 +1840,10 @@ namespace crawlservpp::Network {
 		return (this->features & feature) == feature; //NOLINT(hicpp-signed-bitwise)
 	}
 
-	// private static helper function to check return code of libcurl function calls
-	inline void Curl::checkCode(CURLcode code) {
-		if(code != CURLE_OK) {
-			throw Curl::Exception(curl_easy_strerror(code));
+	// private helper function to check return code of libcurl function calls
+	inline void Curl::checkCode() {
+		if(this->curlCode != CURLE_OK) {
+			throw Curl::Exception(curl_easy_strerror(this->curlCode));
 		}
 	}
 
