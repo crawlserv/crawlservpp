@@ -1445,6 +1445,15 @@ namespace crawlservpp::Network {
 		// configure libcurl (global defaults)
 		this->setOption(CURLOPT_NOSIGNAL, true);
 
+		// set header function
+		this->curlCode = curl_easy_setopt(
+				this->curl.get(),
+				CURLOPT_HEADERFUNCTION,
+				Curl::header
+		);
+
+		this->checkCode();
+
 		// set write function
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		this->curlCode = curl_easy_setopt(
@@ -1455,8 +1464,9 @@ namespace crawlservpp::Network {
 
 		this->checkCode();
 
-		// set pointer to instance
+		// set pointers to instance
 		this->setOption(CURLOPT_WRITEDATA, this);
+		this->setOption(CURLOPT_HEADERDATA, this);
 
 		// set configuration
 		if(this->config != nullptr) {
