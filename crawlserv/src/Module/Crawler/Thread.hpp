@@ -275,6 +275,7 @@ namespace crawlservpp::Module::Crawler {
 		std::vector<TimeString> customTokens;
 
 		// crawling state
+		std::uint64_t penultimateId{0};	// penultimate ID (last ID saved in parent class)
 		IdString nextUrl;				// next URL (currently crawled URL in automatic mode)
 		std::string lockTime;			// last locking time for currently crawled URL
 		IdString manualUrl;				// custom URL to be retried

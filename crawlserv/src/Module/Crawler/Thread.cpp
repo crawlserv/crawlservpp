@@ -323,6 +323,9 @@ namespace crawlservpp::Module::Crawler {
 
 		this->tickCounter = 0;
 
+		// save last ID
+		this->penultimateId = this->getLast();
+
 		// crawler is ready
 		this->log(crawlerLoggingExtended, "is ready.");
 	}
@@ -3975,7 +3978,16 @@ namespace crawlservpp::Module::Crawler {
 			}
 		}
 
-		return this->isRunning();
+		if(this->isRunning()) {
+			return true;
+		}
+
+		// thread cancelled while crawling archives: undo setting last URL to current URL, if necessary
+		if(url.first == this->getLast()) {
+			this->setLast(this->penultimateId);
+		}
+
+		return false;
 	}
 
 	// crawling successfull, throws Thread::Exception
@@ -4014,6 +4026,10 @@ namespace crawlservpp::Module::Crawler {
 		}
 		else if(this->manualOff) {
 			// automatic mode: update thread status
+			if(this->config.crawlerArchives) {
+				this->penultimateId = this->getLast();
+			}
+
 			this->setLast(url.first);
 
 			const auto total{this->database.getNumberOfUrls()};
@@ -4069,6 +4085,10 @@ namespace crawlservpp::Module::Crawler {
 		}
 		else if(this->manualOff) {
 			// automatic mode: update thread status
+			if(this->config.crawlerArchives) {
+				this->penultimateId = this->getLast();
+			}
+
 			this->setLast(url.first);
 
 			this->setProgress(
