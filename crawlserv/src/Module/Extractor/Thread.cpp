@@ -1030,7 +1030,10 @@ namespace crawlservpp::Module::Extractor {
 			if(!(this->idle)) {
 				this->log(generalLoggingExtended, "finished.");
 
-				this->setStatusMessage("IDLE Waiting for new URLs to extract data from.");
+				this->setStatusMessage(
+						"IDLE Waiting for new content to extract data from."
+				);
+
 				this->setProgress(1.F);
 			}
 

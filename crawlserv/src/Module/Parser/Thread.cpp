@@ -740,7 +740,10 @@ namespace crawlservpp::Module::Parser {
 						"finished."
 				);
 
-				this->setStatusMessage("IDLE Waiting for new URLs to parse.");
+				this->setStatusMessage(
+						"IDLE Waiting for new content to parse."
+				);
+
 				this->setProgress(1.F);
 			}
 
