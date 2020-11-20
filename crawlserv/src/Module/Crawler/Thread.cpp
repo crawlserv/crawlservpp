@@ -499,6 +499,7 @@ namespace crawlservpp::Module::Crawler {
 			if(
 					url.first > 0
 					&& !(this->lockTime.empty())
+					&& !(this->isRunning())
 			) {
 				// unlock URL if the thread is quitting
 				this->database.unLockUrlIfOk(url.first, this->lockTime);
