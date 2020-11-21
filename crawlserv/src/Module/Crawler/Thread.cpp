@@ -749,13 +749,15 @@ namespace crawlservpp::Module::Crawler {
 
 			std::queue<std::string> urlsToAdd;
 
-			for(auto& customPage : this->customPages) {
+			for(std::size_t n{1}; n <= this->customPages.size(); ++n) {
+				const auto& customUrl{this->customPages.at(n - 1).second};
+
 				try {
 					// check URI
-					this->uriParser->setCurrentOrigin(customPage.second);
+					this->uriParser->setCurrentOrigin(customUrl);
 
 					// prepare to add URL if necessary
-					urlsToAdd.push(customPage.second);
+					urlsToAdd.emplace(customUrl);
 				}
 				catch(const URIException& e) {
 					this->log(
@@ -766,8 +768,13 @@ namespace crawlservpp::Module::Crawler {
 					this->log(
 							crawlerLoggingDefault,
 							" skipped invalid custom URL "
-							+ customPage.second
+							+ customUrl
 					);
+
+					// remove invalid custom URL
+					--n;
+
+					this->customPages.erase(this->customPages.begin() + n);
 				}
 
 			}
