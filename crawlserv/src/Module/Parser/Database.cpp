@@ -117,6 +117,8 @@ namespace crawlservpp::Module::Parser {
 	 */
 	void Database::setTargetTable(const std::string& table) {
 		this->targetTableName = table;
+
+		this->log(this->getLoggingMin(), "set target table to '" + table + "'.");
 	}
 
 	//! Sets the columns of the target table.
@@ -173,8 +175,8 @@ namespace crawlservpp::Module::Parser {
 		this->targetTableFull += "_parsed_";
 		this->targetTableFull += this->targetTableName;
 
-		// create table properties
-		TargetTableProperties properties(
+		// create table properties for target table
+		TargetTableProperties propertiesTarget(
 				"parsed",
 				this->getOptions().websiteId,
 				this->getOptions().urlListId,
@@ -183,26 +185,26 @@ namespace crawlservpp::Module::Parser {
 				true
 		);
 
-		properties.columns.reserve(minTargetColumns + this->targetFieldNames.size());
+		propertiesTarget.columns.reserve(minTargetColumns + this->targetFieldNames.size());
 
-		properties.columns.emplace_back(
+		propertiesTarget.columns.emplace_back(
 				"content",
 				"BIGINT UNSIGNED NOT NULL UNIQUE",
 				this->urlListTable + "_crawled",
 				"id"
 		);
-		properties.columns.emplace_back("parsed_id", "TEXT NOT NULL");
-		properties.columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
-		properties.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
+		propertiesTarget.columns.emplace_back("parsed_id", "TEXT NOT NULL");
+		propertiesTarget.columns.emplace_back("hash", "INT UNSIGNED DEFAULT 0 NOT NULL", true);
+		propertiesTarget.columns.emplace_back("parsed_datetime", "DATETIME DEFAULT NULL");
 
 		for(const auto& targetFieldName : this->targetFieldNames) {
 			if(!targetFieldName.empty()) {
-				properties.columns.emplace_back("parsed__" + targetFieldName, "LONGTEXT");
+				propertiesTarget.columns.emplace_back("parsed__" + targetFieldName, "LONGTEXT");
 			}
 		}
 
-		// add target table if it does not exist already
-		this->targetTableId = this->addTargetTable(properties);
+		// add or update target table
+		this->targetTableId = this->addTargetTable(propertiesTarget);
 	}
 
 	/*
@@ -1820,7 +1822,9 @@ namespace crawlservpp::Module::Parser {
 
 		try {
 			// execute SQL query
-			Database::sqlExecute(sqlStatement);
+			if(Database::sqlExecuteUpdate(sqlStatement) > 0) {
+				this->log(this->getLoggingMin(), "updated target table.");
+			}
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Parser::Database::updateTargetTable", e);
