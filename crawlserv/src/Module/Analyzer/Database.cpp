@@ -57,7 +57,7 @@ namespace crawlservpp::Module::Analyzer {
 	void Database::setTargetTable(const std::string& table) {
 		this->targetTableName = table;
 
-		this->log(this->getLoggingMin(), "set target table to '" + table + "'.");
+		this->log(this->getLoggingMin(), "uses target table '" + table + "'.");
 	}
 
 	//! Sets the fields of the target table and their types.
