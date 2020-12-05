@@ -65,6 +65,27 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
+	//! Initializes the target table.
+	void MarkovTweet::onAlgoInitTarget() {
+		// set target fields
+		std::vector<std::string> fields;
+		std::vector<std::string> types;
+
+		fields.reserve(2);
+		types.reserve(2);
+
+		fields.emplace_back(this->markovTweetResultField);
+		fields.emplace_back(this->markovTweetSourcesField);
+
+		types.emplace_back("LONGTEXT NOT NULL");
+		types.emplace_back("BIGINT UNSIGNED NOT NULL");
+
+		this->database.setTargetFields(fields, types);
+
+		// initialize target table
+		this->database.initTargetTable(true, false);
+	}
+
 	//! Initializes the algorithm and processes its input.
 	/*!
 	 * \note In the case of this algorithm,
@@ -87,28 +108,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				this->config.generalInputTables,
 				this->config.generalInputFields
 		);
-
-		// set target fields
-		std::vector<std::string> fields;
-		std::vector<std::string> types;
-
-		fields.reserve(2);
-		types.reserve(2);
-
-		fields.emplace_back(this->markovTweetResultField);
-		fields.emplace_back(this->markovTweetSourcesField);
-
-		types.emplace_back("LONGTEXT NOT NULL");
-		types.emplace_back("BIGINT UNSIGNED NOT NULL");
-
-		this->database.setTargetFields(fields, types);
-
-		// initialize target table
-		this->setStatusMessage("Creating target table...");
-
-		this->log(generalLoggingVerbose, "creates target table...");
-
-		this->database.initTargetTable(true, false);
 
 		// get text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");

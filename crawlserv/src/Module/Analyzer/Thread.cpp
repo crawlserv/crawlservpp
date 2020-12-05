@@ -69,9 +69,9 @@ namespace crawlservpp::Module::Analyzer {
 	 * IMPLEMENTED THREAD FUNCTIONS (protected)
 	 */
 
-	//! Initializes the analyzer, and the algorithm
+	//! Initializes the analyzer, the target table, and the algorithm.
 	/*!
-	 * \sa onAlgoInit
+	 * \sa onAlgoInit, onAlgoInitTarget
 	 */
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
@@ -114,6 +114,13 @@ namespace crawlservpp::Module::Analyzer {
 		this->database.setIsRunningCallback([this]() {
 					return this->isRunning();
 		});
+
+		// initialize target table
+		this->setStatusMessage("Initializing target table...");
+
+		this->log(generalLoggingVerbose, "initializes target table...");
+
+		this->onAlgoInitTarget();
 
 		// prepare SQL statements for analyzer
 		this->setStatusMessage("Preparing SQL statements...");

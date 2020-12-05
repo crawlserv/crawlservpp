@@ -67,6 +67,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
+	//! Initializes the target table.
+	void TokensOverTime::onAlgoInitTarget() {
+		//TODO: initialize target table
+	}
+
 	//! Generates the corpus.
 	void TokensOverTime::onAlgoInit() {
 		// reset progress

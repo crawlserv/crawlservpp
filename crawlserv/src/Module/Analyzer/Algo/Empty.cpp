@@ -83,25 +83,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
-	//! Initializes the algorithm and processes its input.
-	void Empty::onAlgoInit() {
-		/*
-		 * TODO: [OPTIONAL] check sources
-		 */
-
-		// check your sources
-		/*
-		this->setStatusMessage("Checking sources...");
-
-		this->log(generalLoggingVerbose, "checks sources...");
-
-		this->database.checkSources(
-				this->config.generalInputSources,
-				this->config.generalInputTables,
-				this->config.generalInputFields
-		);
-		*/
-
+	//! Initializes the target table for the algorithm.
+	void Empty::onAlgoInitTarget() {
 		/*
 		 * TODO: [OPTIONAL] set target fields
 		 */
@@ -128,11 +111,27 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// initialize target table
 		/*
-		this->setStatusMessage("Creating target table...");
-
-		this->log(generalLoggingVerbose, "creates target table...");
-
 		this->database.initTargetTable(...);
+		*/
+	}
+
+	//! Initializes the algorithm and processes its input.
+	void Empty::onAlgoInit() {
+		/*
+		 * TODO: [OPTIONAL] check sources
+		 */
+
+		// check your sources
+		/*
+		this->setStatusMessage("Checking sources...");
+
+		this->log(generalLoggingVerbose, "checks sources...");
+
+		this->database.checkSources(
+				this->config.generalInputSources,
+				this->config.generalInputTables,
+				this->config.generalInputFields
+		);
 		*/
 
 		/*

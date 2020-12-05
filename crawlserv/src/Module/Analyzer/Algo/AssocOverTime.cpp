@@ -67,25 +67,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
-	//! Generates the corpus.
-	void AssocOverTime::onAlgoInit() {
-		// reset progress
-		this->setProgress(0.F);
-
-		// initialize queries
-		this->initQueries();
-
-		// check your sources
-		this->setStatusMessage("Checking sources...");
-
-		this->log(generalLoggingVerbose, "checks sources...");
-
-		this->database.checkSources(
-				this->config.generalInputSources,
-				this->config.generalInputTables,
-				this->config.generalInputFields
-		);
-
+	//! Initializes the target table.
+	void AssocOverTime::onAlgoInitTarget() {
 		// set target fields
 		std::vector<std::string> fields;
 		std::vector<std::string> types;
@@ -113,11 +96,27 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->database.setTargetFields(fields, types);
 
 		// initialize target table
-		this->setStatusMessage("Creating target table...");
-
-		this->log(generalLoggingVerbose, "creates target table...");
-
 		this->database.initTargetTable(true, true);
+	}
+
+	//! Generates the corpus.
+	void AssocOverTime::onAlgoInit() {
+		// reset progress
+		this->setProgress(0.F);
+
+		// check your sources
+		this->setStatusMessage("Checking sources...");
+
+		this->log(generalLoggingVerbose, "checks sources...");
+
+		this->database.checkSources(
+				this->config.generalInputSources,
+				this->config.generalInputTables,
+				this->config.generalInputFields
+		);
+
+		// initialize queries
+		this->initQueries();
 
 		// request text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");

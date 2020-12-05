@@ -98,6 +98,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		///@name Implemented Algorithm Functions
 		///@{
 
+		void onAlgoInitTarget() override;
 		void onAlgoInit() override;
 		void onAlgoTick() override;
 		void onAlgoPause() override;

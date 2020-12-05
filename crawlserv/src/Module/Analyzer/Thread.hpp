@@ -90,6 +90,17 @@ namespace crawlservpp::Module::Analyzer {
 		///@name Algorithm Events
 		///@{
 
+		//! Initializes the target table for the algorithm.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 *
+		 * \note The SQL statements for the analyzer will
+		 *   not be yet prepared when this function is
+		 *   called.
+		 */
+		virtual void onAlgoInitTarget() = 0;
+
 		//! Initializes the algorithm.
 		/*!
 		 * Needs to be implemented by the (child) class
