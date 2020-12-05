@@ -56,6 +56,8 @@ namespace crawlservpp::Module::Analyzer {
 	 */
 	void Database::setTargetTable(const std::string& table) {
 		this->targetTableName = table;
+
+		this->log(this->getLoggingMin(), "set target table to '" + table + "'.");
 	}
 
 	//! Sets the fields of the target table and their types.
@@ -192,8 +194,8 @@ namespace crawlservpp::Module::Analyzer {
 		this->targetTableFull += "_analyzed_";
 		this->targetTableFull += this->targetTableName;
 
-		// create table properties
-		CustomTableProperties properties(
+		// create table properties for target table
+		CustomTableProperties propertiesTarget(
 				"analyzed",
 				this->getOptions().websiteId,
 				this->getOptions().urlListId,
@@ -206,12 +208,12 @@ namespace crawlservpp::Module::Analyzer {
 			if(!(it->empty())) {
 				const auto index{it - this->targetFieldNames.cbegin()};
 
-				properties.columns.emplace_back(
+				propertiesTarget.columns.emplace_back(
 						"analyzed__" + *it,
 						this->targetFieldTypes.at(index)
 				);
 
-				if(properties.columns.back().type.empty()) {
+				if(propertiesTarget.columns.back().type.empty()) {
 					throw Exception(
 							"Analyzer::Database::initTargetTable():"
 							" No type for target field \'"
@@ -222,11 +224,13 @@ namespace crawlservpp::Module::Analyzer {
 			}
 		}
 
-		// add target table
-		this->addTargetTable(properties);
+		// add or update target table
+		this->targetTableId = this->addTargetTable(propertiesTarget);
 
 		if(clear) {
 			this->clearTable(this->targetTableFull);
+
+			this->log(this->getLoggingMin(), "cleared target table.");
 		}
 	}
 
@@ -261,7 +265,9 @@ namespace crawlservpp::Module::Analyzer {
 
 		try {
 			// execute SQL query
-			Database::sqlExecute(sqlStatement);
+			if(Database::sqlExecuteUpdate(sqlStatement) > 0) {
+				this->log(this->getLoggingMin(), "updated target table.");
+			}
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Analyzer::Database::updateTargetTable", e);
