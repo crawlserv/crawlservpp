@@ -99,8 +99,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		types.reserve(numFields);
 
 		fields.emplace_back("date");
+		fields.emplace_back("n");
 		fields.emplace_back("occurences");
 		types.emplace_back("VARCHAR(10)");
+		types.emplace_back("BIGINT UNSIGNED");
 		types.emplace_back("BIGINT UNSIGNED");
 
 		for(const auto& label : this->categoryLabels) {
@@ -244,6 +246,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->option("cat.labels", this->categoryLabels);
 		this->option("cat.queries", this->categoryQueries);
 		this->option("keyword", this->keyWordQuery);
+		this->option("ignore.empty.date", this->ignoreEmptyDate);
 		this->option("window.size", this->windowSize);
 	}
 
@@ -343,6 +346,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		const auto& articleMap = corpus.getcArticleMap();
 		const auto& tokens = corpus.getcTokens();
 
+		if(!dateMap.empty() && articleMap.empty()) {
+			throw Exception("Date map, but no article map found!");
+		}
+
 		std::size_t articleIndex{0};
 		std::size_t tokenIndex{0};
 		std::size_t dateCounter{0};
@@ -356,20 +363,95 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		status += "...";
 
 		this->setStatusMessage("Processing " + status);
-		this->log(generalLoggingDefault, "processes " + status);
 		this->setProgress(0.F);
 
+		this->log(generalLoggingDefault, "processes " + status);
+
 		auto dateIt{this->associations.begin()};
+		std::size_t firstDatePos{tokens.size()};
 		std::string lastDate;
 		bool dateSaved{false};
 
+		if(!dateMap.empty()) {
+			firstDatePos = dateMap.front().pos;
+		}
+
+		if(firstDatePos > 0 && !(this->ignoreEmptyDate)) {
+			if(articleMap.empty()) {
+				// no date and no article map: treat input as one article
+				dateIt = this->addDate("");
+
+				const auto articleIt{
+					this->addArticleToDate("", dateIt)
+				};
+
+				// go through all tokens
+				for(; tokenIndex < tokens.size(); ++tokenIndex) {
+					this->processToken(
+							tokenIndex,
+							tokens[tokenIndex],
+							articleIt->second,
+							warnings
+					);
+				}
+			}
+			else {
+				// handle articles without date
+				while(
+						articleIndex < articleMap.size()
+						&& articleMap[articleIndex].pos < firstDatePos
+				) {
+					// add empty date if still necessary
+					if(!dateSaved) {
+						dateIt = this->addDate("");
+
+						dateSaved = true;
+					}
+
+					// add article if still necessary, and save its iterator
+					const auto articleIt{
+						this->addArticleToDate(articleMap[articleIndex].value, dateIt)
+					};
+
+					// go through all tokens of the current article
+					while(
+							tokenIndex < tokens.size()
+							&& tokenIndex < articleMap[articleIndex].pos + articleMap[articleIndex].length
+					) {
+						this->processToken(
+								tokenIndex,
+								tokens[tokenIndex],
+								articleIt->second,
+								warnings
+						);
+
+						++tokenIndex;
+					}
+
+					// update offset of article
+					articleIt->second.offset += articleMap[articleIndex].length;
+
+					++articleIndex;
+				}
+			}
+
+			// log warnings if necessary
+			while(!warnings.empty()) {
+				this->log(generalLoggingExtended, warnings.front());
+
+				warnings.pop();
+			}
+		}
+
 		for(const auto& date : dateMap) {
 			// skip articles without date
-			while(
-					articleIndex < articleMap.size()
-					&& articleMap[articleIndex].pos < date.pos
-			) {
-				++articleIndex;
+			if(firstDatePos > 0 && this->ignoreEmptyDate) {
+				while(
+						articleIndex < articleMap.size()
+						&& articleMap[articleIndex].pos < date.pos
+				) {
+					++articleIndex;
+				}
 			}
 
 			// reduce date for grouping
@@ -382,12 +464,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			// add date if still necessary, and save its iterator
 			if(!dateSaved || lastDate != reducedDate) {
-				dateIt = this->associations.insert(
-						{
-								reducedDate,
-								{}
-						}
-				).first;
+				dateIt = this->addDate(reducedDate);
 
 				lastDate = reducedDate;
 				dateSaved = true;
@@ -400,24 +477,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			) {
 				// add article if still necessary, and save its iterator
 				const auto articleIt{
-					dateIt->second.insert({articleMap[articleIndex].value, {}}).first
+					this->addArticleToDate(articleMap[articleIndex].value, dateIt)
 				};
 
-				if(articleIt->second.categoriesPositions.empty()) {
-					std::vector<std::vector<std::uint64_t>>(
-							this->queriesCategories.size(),
-							std::vector<std::uint64_t>{}
-					).swap(
-							articleIt->second.categoriesPositions
-					);
-				}
-
 				// skip tokens without date
-				while(
-						tokenIndex < tokens.size()
-						&& tokenIndex < articleMap[articleIndex].pos
-				) {
-					++tokenIndex;
+				if(this->ignoreEmptyDate) {
+					while(
+							tokenIndex < tokens.size()
+							&& tokenIndex < articleMap[articleIndex].pos
+					) {
+						++tokenIndex;
+					}
 				}
 
 				// go through all tokens of the current article
@@ -425,44 +495,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						tokenIndex < tokens.size()
 						&& tokenIndex < articleMap[articleIndex].pos + articleMap[articleIndex].length
 				) {
-					bool result{false};
-
-					if(
-							this->getBoolFromRegEx(
-									this->queryKeyWord,
-									tokens[tokenIndex],
-									result,
-									warnings
-							)
-							&& result
-					) {
-						// found keyword
-						articleIt->second.keywordPositions.push_back(
-								articleIt->second.offset
-								+ tokenIndex
-						);
-					}
-					else {
-						for(std::size_t catIndex{0}; catIndex < this->queriesCategories.size(); ++catIndex) {
-							bool result{false};
-
-							if(
-									this->getBoolFromRegEx(
-											this->queriesCategories[catIndex],
-											tokens[tokenIndex],
-											result,
-											warnings
-									)
-									&& result
-							) {
-								// found category
-								articleIt->second.categoriesPositions[catIndex].push_back(
-										articleIt->second.offset
-										+ tokenIndex
-								);
-							}
-						}
-					}
+					this->processToken(
+							tokenIndex,
+							tokens[tokenIndex],
+							articleIt->second,
+							warnings
+					);
 
 					++tokenIndex;
 				}
@@ -531,6 +569,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					std::vector<std::uint64_t>{}
 			);
 
+			results.back().second.push_back(date.second.size());
 			results.back().second.push_back(occurences);
 
 			for(const auto counter : catsCounters) {
@@ -586,11 +625,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			for(const auto& number : result.second) {
 				std::string column;
 
-				if(n == 0) {
+				switch(n) {
+				case 0:
+					column = "analyzed__n";
+
+					break;
+
+				case 1:
 					column = "analyzed__occurences";
-				}
-				else {
-					column = "analyzed__" + this->categoryLabels.at(n - 1);
+
+					break;
+
+				default:
+					column = "analyzed__" + this->categoryLabels.at(n - 2);
 				}
 
 				data.columns_types_values.emplace_back(
@@ -662,6 +709,85 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				this->database.getQueryProperties(queryId, properties);
 
 				propertiesTo.emplace_back(this->addQuery(properties));
+			}
+		}
+	}
+
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
+	// add date
+	AssocOverTime::DateAssociationMap::iterator AssocOverTime::addDate(const std::string& date) {
+		return this->associations.insert({date, {}}).first;
+	}
+
+	// add article to date (and initialize its categories) if necessary
+	const AssocOverTime::ArticleAssociationMap::iterator AssocOverTime::addArticleToDate(
+			const std::string& article,
+			DateAssociationMap::iterator date
+	) {
+		const auto articleIt{date->second.insert({article, {}}).first};
+
+		if(articleIt->second.categoriesPositions.empty()) {
+			std::vector<std::vector<std::uint64_t>>(
+					this->queriesCategories.size(),
+					std::vector<std::uint64_t>{}
+			).swap(
+					articleIt->second.categoriesPositions
+			);
+		}
+
+		return articleIt;
+	}
+
+	// process token and add as keyword or category if necessary
+	void AssocOverTime::processToken(
+			std::size_t index,
+			const std::string& token,
+			Associations& associationsTo,
+			std::queue<std::string>& warningsTo
+	) {
+		bool result{false};
+
+		if(
+				this->getBoolFromRegEx(
+						this->queryKeyWord,
+						token,
+						result,
+						warningsTo
+				)
+				&& result
+		) {
+			// found keyword
+			associationsTo.keywordPositions.push_back(
+					associationsTo.offset
+					+ index
+			);
+		}
+		else {
+			for(
+					std::size_t catIndex{0};
+					catIndex < this->queriesCategories.size();
+					++catIndex
+			) {
+				bool result{false};
+
+				if(
+						this->getBoolFromRegEx(
+								this->queriesCategories[catIndex],
+								token,
+								result,
+								warningsTo
+						)
+						&& result
+				) {
+					// found category
+					associationsTo.categoriesPositions[catIndex].push_back(
+							associationsTo.offset
+							+ index
+					);
+				}
 			}
 		}
 	}
