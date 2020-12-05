@@ -357,6 +357,7 @@ endif()
 #			"-fuchsia-default-arguments-calls,"
 #			"-fuchsia-multiple-inheritance,"
 #			"-fuchsia-overloaded-operator,"
+#			"-google-readability-todo,"	
 #			"-google-runtime-references,"
 #			"-llvm-header-guard,"
 #			"-misc-non-private-member-variables-in-classes,"
