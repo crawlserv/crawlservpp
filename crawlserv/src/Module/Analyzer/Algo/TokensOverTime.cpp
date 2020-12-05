@@ -67,7 +67,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
-	//! Initializes the target table.
+	//! Initializes the target table for the algorithm.
 	void TokensOverTime::onAlgoInitTarget() {
 		//TODO: initialize target table
 	}

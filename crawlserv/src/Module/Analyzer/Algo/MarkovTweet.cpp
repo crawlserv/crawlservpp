@@ -65,7 +65,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
-	//! Initializes the target table.
+	//! Initializes the target table for the algorithm.
 	void MarkovTweet::onAlgoInitTarget() {
 		// set target fields
 		std::vector<std::string> fields;
