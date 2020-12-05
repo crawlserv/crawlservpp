@@ -723,7 +723,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	// add article to date (and initialize its categories) if necessary
-	const AssocOverTime::ArticleAssociationMap::iterator AssocOverTime::addArticleToDate(
+	AssocOverTime::ArticleAssociationMap::iterator AssocOverTime::addArticleToDate(
 			const std::string& article,
 			DateAssociationMap::iterator date
 	) {

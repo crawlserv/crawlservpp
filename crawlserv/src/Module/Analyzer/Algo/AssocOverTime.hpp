@@ -169,7 +169,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// internal helper functions
 		DateAssociationMap::iterator addDate(const std::string& date);
-		const ArticleAssociationMap::iterator addArticleToDate(
+		ArticleAssociationMap::iterator addArticleToDate(
 				const std::string& article,
 				DateAssociationMap::iterator date
 		);

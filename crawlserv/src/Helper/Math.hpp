@@ -55,7 +55,7 @@ namespace crawlservpp::Helper::Math {
 	template<typename R, typename T, template<typename, typename> class Container>
 	R avg(const Container<T, std::allocator<T>>& values) {
 		return static_cast<R>(
-				std::accumulate(values.begin(), values.end(), R{})
+				std::accumulate(values.begin(), values.end(), 0ULL) //NOLINT(bugprone-fold-init-type)
 		) / values.size();
 	}
 
@@ -90,7 +90,7 @@ namespace crawlservpp::Helper::Math {
 
 			const auto value2{*iterator2};
 
-			return static_cast<R>((value1 + value2) / 2);
+			return static_cast<R>((value1 + value2) / 2); //NOLINT(bugprone-integer-division)
 		}
 
 		const auto iterator{
