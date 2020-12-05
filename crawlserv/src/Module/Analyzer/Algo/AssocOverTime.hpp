@@ -136,15 +136,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			std::uint64_t offset{0};
 		};
 
+		using DateAssociationMap = std::unordered_map<std::string, std::unordered_map<std::string, Associations>>;
+		using ArticleAssociationMap = std::unordered_map<std::string, Associations>;
+
 		// corpora and associations
 		std::size_t currentCorpus{0};
 		std::vector<Data::Corpus> corpora;
-		std::unordered_map<std::string, std::unordered_map<std::string, Associations>> associations;
+		DateAssociationMap associations;
 
 		// algorithm options
 		std::uint64_t keyWordQuery{0};
 		std::vector<std::string> categoryLabels;
 		std::vector<std::uint64_t> categoryQueries;
+		bool ignoreEmptyDate{true};
 		std::uint16_t windowSize{1};
 
 		// algorithm queries
@@ -161,6 +165,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		void addQueries(
 				const std::vector<std::uint64_t>& queryIds,
 				std::vector<QueryStruct>& propertiesTo
+		);
+
+		// internal helper functions
+		DateAssociationMap::iterator addDate(const std::string& date);
+		const ArticleAssociationMap::iterator addArticleToDate(
+				const std::string& article,
+				DateAssociationMap::iterator date
+		);
+		void processToken(
+				std::size_t index,
+				const std::string& token,
+				Associations& associationsTo,
+				std::queue<std::string>& warningsTo
 		);
 	};
 
