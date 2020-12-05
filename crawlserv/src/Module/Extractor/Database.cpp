@@ -152,6 +152,8 @@ namespace crawlservpp::Module::Extractor {
 	 */
 	void Database::setTargetTable(const std::string& table) {
 		this->targetTableName = table;
+
+		this->log(this->getLoggingMin(), "set target table to '" + table + "'.");
 	}
 
 	//! Sets the columns of the target table.
@@ -2376,7 +2378,9 @@ namespace crawlservpp::Module::Extractor {
 
 		try {
 			// execute SQL query
-			Database::sqlExecute(sqlStatement);
+			if(Database::sqlExecuteUpdate(sqlStatement) > 0) {
+				this->log(this->getLoggingMin(), "updated target table.");
+			}
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Extractor:Database::updateTargetTable", e);
