@@ -382,6 +382,7 @@ namespace crawlservpp::Network {
 		this->setOption(CURLOPT_NOSIGNAL, 1L);
 
 		// set header function
+		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_HEADERFUNCTION,
@@ -1446,6 +1447,7 @@ namespace crawlservpp::Network {
 		this->setOption(CURLOPT_NOSIGNAL, true);
 
 		// set header function
+		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		this->curlCode = curl_easy_setopt(
 				this->curl.get(),
 				CURLOPT_HEADERFUNCTION,
@@ -1740,7 +1742,7 @@ namespace crawlservpp::Network {
 			bool found{true};
 
 			for(std::size_t n{0}; n < xTsHeaderNameLen; ++n) {
-				if(data[n] != xTsHeaderName[n]) {
+				if(data[n] != xTsHeaderName[n]) { //NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 					found = false;
 
 					break;
@@ -1751,7 +1753,7 @@ namespace crawlservpp::Network {
 				std::stringstream stringStream;
 
 				for(std::size_t n{xTsHeaderNameLen}; n < size; ++n) {
-					stringStream << data[n];
+					stringStream << data[n]; //NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 				}
 
 				stringStream >> this->xTsHeaderValue;

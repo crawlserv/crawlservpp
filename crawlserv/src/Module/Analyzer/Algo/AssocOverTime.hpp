@@ -160,7 +160,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		void saveAssociations();
 
 		// query functions
-		void initQueries();
+		void initQueries() override;
 		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
 		void addQueries(
 				const std::vector<std::uint64_t>& queryIds,

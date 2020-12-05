@@ -167,7 +167,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// query functions
 		/*
 		 * TODO: decide whether queries are needed
-		void initQueries();
+		void initQueries() override;
 		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
 		void addQueries(
 				const std::vector<std::uint64_t>& queryIds,

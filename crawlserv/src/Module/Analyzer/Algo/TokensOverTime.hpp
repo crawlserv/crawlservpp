@@ -46,9 +46,9 @@
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint16_t, std::uint64_t
 #include <functional>	// std::function
-#include <map>			// std::map
 #include <limits>		// std::numeric_limits
 #include <locale>		// std::locale
+#include <map>			// std::map
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string
 

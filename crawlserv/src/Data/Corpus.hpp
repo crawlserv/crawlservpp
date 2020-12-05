@@ -261,8 +261,8 @@ namespace crawlservpp::Data {
 				StatusSetter& statusSetter
 		);
 		[[nodiscard]] bool tokenizeCustom(
-				std::optional<SentenceFunc> callbackSentence,
-				std::optional<WordFunc> callbackWord,
+				const std::optional<SentenceFunc>& callbackSentence,
+				const std::optional<WordFunc>& callbackWord,
 				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
@@ -3011,8 +3011,8 @@ namespace crawlservpp::Data {
 	 *   content of the corpus.
 	 */
 	inline bool Corpus::tokenizeCustom(
-			std::optional<SentenceFunc> callbackSentence,
-			std::optional<WordFunc> callbackWord,
+			const std::optional<SentenceFunc>& callbackSentence,
+			const std::optional<WordFunc>& callbackWord,
 			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
@@ -3238,32 +3238,38 @@ namespace crawlservpp::Data {
 			}
 
 			if(emptyDates) {
-				std::remove_if(
-					this->dateMap.begin(),
-					this->dateMap.end(),
-					[](const auto& date) {
-						return date.length == 0;
-					}
+				static_cast<void>(
+						std::remove_if(
+								this->dateMap.begin(),
+								this->dateMap.end(),
+								[](const auto& date) {
+									return date.length == 0;
+								}
+						)
 				);
 			}
 
 			if(emptyArticles) {
-				std::remove_if(
-						this->articleMap.begin(),
-						this->articleMap.end(),
-						[](const auto& article) {
-							return article.length == 0;
-						}
+				static_cast<void>(
+						std::remove_if(
+								this->articleMap.begin(),
+								this->articleMap.end(),
+								[](const auto& article) {
+									return article.length == 0;
+								}
+						)
 				);
 			}
 
 			if(emptySentences) {
-				std::remove_if(
-						this->sentenceMap.begin(),
-						this->sentenceMap.end(),
-						[](const auto& pair) {
-							return pair.second == 0;
-						}
+				static_cast<void>(
+						std::remove_if(
+								this->sentenceMap.begin(),
+								this->sentenceMap.end(),
+								[](const auto& pair) {
+									return pair.second == 0;
+								}
+						)
 				);
 			}
 		}
