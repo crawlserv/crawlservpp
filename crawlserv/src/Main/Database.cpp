@@ -6095,7 +6095,7 @@ namespace crawlservpp::Main {
 	 *   target table in the database.
 	 */
 	std::uint64_t Database::addTargetTable(const TargetTableProperties& properties) {
-		std::uint64_t newId{0};
+		std::uint64_t result{0};
 
 		// check arguments
 		if(properties.type.empty()) {
@@ -6241,7 +6241,7 @@ namespace crawlservpp::Main {
 
 			if(sqlResultSet && sqlResultSet->next()) {
 				// entry exists: return ID
-				newId = sqlResultSet->getUInt64("id");
+				result = sqlResultSet->getUInt64("id");
 			}
 			else {
 				// entry does not exist already: prepare SQL statement for adding table
@@ -6262,14 +6262,14 @@ namespace crawlservpp::Main {
 				Database::sqlExecute(sqlStatement);
 
 				// return ID of newly inserted table
-				newId = this->getLastInsertedId();
+				result = this->getLastInsertedId();
 			}
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Main::Database::addTargetTable", e);
 		}
 
-		return newId;
+		return result;
 	}
 
 	//! Gets the target tables of the specified type for a URL list from the database.
