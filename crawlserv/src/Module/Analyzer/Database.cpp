@@ -225,7 +225,7 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		// add or update target table
-		this->targetTableId = this->addTargetTable(propertiesTarget);
+		this->targetTableId = this->addOrUpdateTargetTable(propertiesTarget);
 
 		if(clear) {
 			this->clearTable(this->targetTableFull);

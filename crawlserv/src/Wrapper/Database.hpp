@@ -132,7 +132,7 @@ namespace crawlservpp::Wrapper {
 		///@name Target Tables
 		///@{
 
-		std::uint64_t addTargetTable(const TargetTableProperties& properties);
+		std::uint64_t addOrUpdateTargetTable(const TargetTableProperties& properties);
 		[[nodiscard]] std::queue<IdString> getTargetTables(const std::string& type, std::uint64_t listId);
 		[[nodiscard]] std::uint64_t getTargetTableId(
 				const std::string& type,
@@ -323,8 +323,8 @@ namespace crawlservpp::Wrapper {
 	}
 
 	//! \copydoc Main::Database::addTargetTable
-	inline std::uint64_t Database::addTargetTable(const TargetTableProperties& properties) {
-		return this->database.addTargetTable(properties);
+	inline std::uint64_t Database::addOrUpdateTargetTable(const TargetTableProperties& properties) {
+		return this->database.addOrUpdateTargetTable(properties);
 	}
 
 	//! \copydoc Main::Database::getTargetTables

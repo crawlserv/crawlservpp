@@ -358,7 +358,7 @@ namespace crawlservpp::Module::Extractor {
 			}
 
 			// add or update linked target table
-			this->linkedTableId = this->addTargetTable(propertiesLinked);
+			this->linkedTableId = this->addOrUpdateTargetTable(propertiesLinked);
 		}
 
 		// create table properties for target table
@@ -409,7 +409,7 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// add or update target table
-		this->targetTableId = this->addTargetTable(propertiesTarget);
+		this->targetTableId = this->addOrUpdateTargetTable(propertiesTarget);
 	}
 
 	/*

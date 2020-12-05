@@ -204,7 +204,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// add or update target table
-		this->targetTableId = this->addTargetTable(propertiesTarget);
+		this->targetTableId = this->addOrUpdateTargetTable(propertiesTarget);
 	}
 
 	/*

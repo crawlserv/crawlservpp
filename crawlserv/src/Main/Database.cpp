@@ -6094,7 +6094,7 @@ namespace crawlservpp::Main {
 	 *   target table, or updating the existing
 	 *   target table in the database.
 	 */
-	std::uint64_t Database::addTargetTable(const TargetTableProperties& properties) {
+	std::uint64_t Database::addOrUpdateTargetTable(const TargetTableProperties& properties) {
 		std::uint64_t result{0};
 
 		// check arguments

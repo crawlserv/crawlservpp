@@ -527,7 +527,7 @@ namespace crawlservpp::Main {
 		///@name Target Tables
 		///@{
 
-		std::uint64_t addTargetTable(const TargetTableProperties& properties);
+		std::uint64_t addOrUpdateTargetTable(const TargetTableProperties& properties);
 		[[nodiscard]] std::queue<IdString> getTargetTables(const std::string& type, std::uint64_t listId);
 		[[nodiscard]] std::uint64_t getTargetTableId(
 				const std::string& type,
