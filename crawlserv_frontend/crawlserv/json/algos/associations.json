@@ -26,6 +26,14 @@
 		"simple": true,
 		"position": 3	
 	},
+	"ignore.empty.date": {
+		"type": "bool",
+		"default": true,
+		"label": "Ignore articles without date",
+		"description": "Exclude articles without date from the analysis.",
+		"simple": true,
+		"position": 5
+	},
 	"keyword": {
 		"type": "query",
 		"query-results": [
