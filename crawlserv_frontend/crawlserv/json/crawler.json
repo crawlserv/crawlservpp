@@ -556,9 +556,9 @@
 			"min": 0,
 			"max": 4000000,
 			"label": "Keep token for (s)",
-			"description": "Time (in s) until token with the same array index gets invalid.",
+			"description": "Time (in s) until the token with the same array index gets invalid.",
 			"simple": true,
-			"position": 17
+			"position": 18
 		},
 		"tokens.query": {
 			"type": "array",
@@ -572,6 +572,15 @@
 			"description": "Query to extract the token with the same array index.",
 			"simple": true,
 			"position": 16
+		},
+		"tokens.required": {
+			"type": "array",
+			"item-type": "bool",
+			"default": [],
+			"label": "Tokens required:",
+			"description": "Determines whether an error occurs if the token with the same array index is empty.",
+			"simple": true,
+			"position": 17
 		},
 		"tokens.source": {
 			"type": "array",
