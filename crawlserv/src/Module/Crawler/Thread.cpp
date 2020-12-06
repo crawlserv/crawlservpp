@@ -4210,14 +4210,13 @@ namespace crawlservpp::Module::Crawler {
 		this->initTokenCache();
 
 		// show error
-		std::string errorString{"ERROR: "};
+		std::string errorString{error};
 
-		errorString += error;
 		errorString += " [";
 		errorString += url;
 		errorString += "]";
 
-		this->log(crawlerLoggingDefault, errorString);
+		this->log(crawlerLoggingDefault, "ERROR: " + errorString);
 
 		this->setStatusMessage("ERROR " + errorString);
 
