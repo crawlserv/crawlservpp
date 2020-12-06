@@ -62,7 +62,7 @@ namespace crawlservpp::Helper::Json {
 	///@{
 
 	//! The length of an escaped Unicode character in JSON code (including the '\\u').
-	inline constexpr auto unicodeEscapeLength{7};
+	inline constexpr auto unicodeEscapeLength{6};
 
 	//! The offset of the first Unicode character digit in JSON code (from the '\\').
 	inline constexpr auto unicodeEscapeDigit1{2};
@@ -75,9 +75,6 @@ namespace crawlservpp::Helper::Json {
 
 	//! The offset of the fourth Unicode character digit in JSON code (from the '\\').
 	inline constexpr auto unicodeEscapeDigit4{5};
-
-	//! The offset of the fifth Unicode character digit in JSON code (from the '\\').
-	inline constexpr auto unicodeEscapeDigit5{6};
 
 	//! The number of characters to show before and behind a JSON error.
 	inline constexpr auto numDebugChars{25};
@@ -493,8 +490,7 @@ namespace crawlservpp::Helper::Json {
 									::isxdigit(json[n + unicodeEscapeDigit1]) != 0
 									&& ::isxdigit(json[n + unicodeEscapeDigit2]) != 0
 									&& ::isxdigit(json[n + unicodeEscapeDigit3]) != 0
-									&& ::isxdigit(json[n + unicodeEscapeDigit4]) != 0
-									&& ::isxdigit(json[n + unicodeEscapeDigit5]) != 0;
+									&& ::isxdigit(json[n + unicodeEscapeDigit4]) != 0;
 						}
 
 						break;
