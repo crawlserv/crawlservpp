@@ -83,7 +83,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		fields.emplace_back("date");
 		fields.emplace_back("n");
-		fields.emplace_back("occurences");
+		fields.emplace_back("occurrences");
 		types.emplace_back("VARCHAR(10)");
 		types.emplace_back("BIGINT UNSIGNED");
 		types.emplace_back("BIGINT UNSIGNED");
@@ -538,22 +538,22 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::vector<std::pair<std::string, std::vector<std::uint64_t>>> results;
 
 		for(const auto& date : this->associations) {
-			std::uint64_t occurences{0};
+			std::uint64_t occurrences{0};
 			std::vector<std::uint64_t> catsCounters(this->categoryLabels.size(), 0);
 
 			for(const auto& article : date.second) {
-				for(const auto occurence : article.second.keywordPositions) {
-					++occurences;
+				for(const auto occurrence : article.second.keywordPositions) {
+					++occurrences;
 
 					for(std::size_t cat{0}; cat < this->categoryLabels.size(); ++cat) {
-						for(const auto catOccurence : article.second.categoriesPositions[cat]) {
-							if(catOccurence > occurence + this->windowSize) {
+						for(const auto catOccurrence : article.second.categoriesPositions[cat]) {
+							if(catOccurrence > occurrence + this->windowSize) {
 								break;
 							}
 
 							if(
-									occurence < this->windowSize
-									|| catOccurence >= occurence - this->windowSize
+									occurrence < this->windowSize
+									|| catOccurrence >= occurrence - this->windowSize
 							) {
 								++(catsCounters[cat]);
 							}
@@ -569,7 +569,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 
 			results.back().second.push_back(date.second.size());
-			results.back().second.push_back(occurences);
+			results.back().second.push_back(occurrences);
 
 			for(const auto counter : catsCounters) {
 				results.back().second.push_back(counter);
@@ -631,7 +631,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					break;
 
 				case 1:
-					column = "analyzed__occurences";
+					column = "analyzed__occurrences";
 
 					break;
 
