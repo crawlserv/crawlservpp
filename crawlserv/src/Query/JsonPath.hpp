@@ -147,9 +147,9 @@ namespace crawlservpp::Query {
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(
 					std::string(e.what())
-					+ " (JSONPath: \'"
+					+ " (JSONPath: '"
 					+ this->jsonPath
-					+ "\')"
+					+ "')"
 			);
 		}
 	}
@@ -209,8 +209,8 @@ namespace crawlservpp::Query {
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(
 					std::string(e.what())
-					+ " (JSONPath: \'"
-					+ this->jsonPath + "\')"
+					+ " (JSONPath: '"
+					+ this->jsonPath + "')"
 			);
 		}
 	}
@@ -288,8 +288,8 @@ namespace crawlservpp::Query {
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(
 					std::string(e.what())
-					+ " (JSONPath: \'"
-					+ this->jsonPath + "\')"
+					+ " (JSONPath: '"
+					+ this->jsonPath + "')"
 			);
 		}
 	}
@@ -370,8 +370,8 @@ namespace crawlservpp::Query {
 		catch(const jsoncons::json_exception& e) {
 			throw Exception(
 					std::string(e.what())
-					+ " (JSONPath: \'"
-					+ this->jsonPath + "\')"
+					+ " (JSONPath: '"
+					+ this->jsonPath + "')"
 			);
 		}
 	}

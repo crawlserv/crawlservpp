@@ -400,9 +400,9 @@ protected:
 						}
 						else {
 							warningsTo.emplace(
-									"Unknown configuration entry member \'"
+									"Unknown configuration entry member '"
 									+ memberName
-									+ "\' ignored."
+									+ "' ignored."
 							);
 						}
 
@@ -456,7 +456,7 @@ protected:
 				};
 
 				if(it != this->list.cend()) {
-					throw Exception("Duplicate option \'" + *it + "\'");
+					throw Exception("Duplicate option '" + *it + "'");
 				}
 
 				this->list.clear();
@@ -469,16 +469,16 @@ protected:
 			if(!this->finished) {
 				if(this->foundCategory) {
 					this->logQueue(
-							"Unknown configuration entry \'"
+							"Unknown configuration entry '"
 							+ this->currentItem.str()
-							+ "\' ignored."
+							+ "' ignored."
 					);
 				}
 				else {
 					this->logQueue(
-							"Configuration entry with unknown category \'"
+							"Configuration entry with unknown category '"
 							+ this->currentItem.category
-							+ "\' ignored."
+							+ "' ignored."
 					);
 				}
 			}
@@ -582,9 +582,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not bool)."
+					+ "' ignored because of wrong type (not bool)."
 			);
 		}
 
@@ -654,9 +654,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not bool)."
+								+ "' ignored because of wrong type (not bool)."
 						);
 					}
 				}
@@ -664,9 +664,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -729,9 +729,9 @@ protected:
 
 				if(value > std::numeric_limits<char>::max()) {
 					this->logQueue(
-							"\'"
+							"'"
 							+ this->currentItem.str()
-							+ "\' ignored because the number is too large."
+							+ "' ignored because the number is too large."
 					);
 				}
 				else {
@@ -743,9 +743,9 @@ protected:
 			}
 			else {
 				this->logQueue(
-						"\'"
+						"'"
 						+ this->currentItem.str()
-						+ "\' ignored because of wrong type (not int)."
+						+ "' ignored because of wrong type (not int)."
 				);
 			}
 
@@ -763,9 +763,9 @@ protected:
 			}
 			else {
 				this->logQueue(
-						"\'"
+						"'"
 						+ this->currentItem.str()
-						+ "\' ignored because of wrong type (not string)."
+						+ "' ignored because of wrong type (not string)."
 				);
 			}
 
@@ -843,9 +843,9 @@ protected:
 
 						if(value > std::numeric_limits<char>::max()) {
 							this->logQueue(
-								"Value in \'"
+								"Value in '"
 									+ this->currentItem.str()
-									+ "\' ignored because the number is too large."
+									+ "' ignored because the number is too large."
 							);
 						}
 						else {
@@ -857,9 +857,9 @@ protected:
 
 						if(!item.IsNull()) {
 							this->logQueue(
-									"Value in \'"
+									"Value in '"
 									+ this->currentItem.str()
-									+ "\' ignored because of wrong type (not int)."
+									+ "' ignored because of wrong type (not int)."
 							);
 						}
 					}
@@ -881,9 +881,9 @@ protected:
 						// check for valid ASCII
 						if(::isascii(target.back()) == 0) {
 							this->logQueue(
-									"First character of string in \'"
+									"First character of string in '"
 									+ this->currentItem.str()
-									+ "\' is no ASCII character: "
+									+ "' is no ASCII character: "
 									+ std::string(
 											item.GetString(),
 											item.GetStringLength()
@@ -896,9 +896,9 @@ protected:
 
 						if(!item.IsNull()) {
 							this->logQueue(
-									"Value in \'"
+									"Value in '"
 									+ this->currentItem.str()
-									+ "\' ignored because of wrong type (not string)."
+									+ "' ignored because of wrong type (not string)."
 							);
 						}
 					}
@@ -912,9 +912,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -973,9 +973,9 @@ protected:
 
 			if(value > std::numeric_limits<std::int16_t>::max()) {
 				this->logQueue(
-						"\'"
+						"'"
 						+ this->currentItem.str()
-						+ "\' ignored because the number is too large."
+						+ "' ignored because the number is too large."
 				);
 			}
 			else {
@@ -987,9 +987,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not integer)."
+					+ "' ignored because of wrong type (not integer)."
 			);
 		}
 
@@ -1056,9 +1056,9 @@ protected:
 
 					if(value > std::numeric_limits<std::int16_t>::max()) {
 						this->logQueue(
-							"Value in \'"
+							"Value in '"
 							+ this->currentItem.str()
-							+ "\' ignored because the number is too large."
+							+ "' ignored because the number is too large."
 						);
 					}
 					else {
@@ -1070,9 +1070,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not integer)."
+								+ "' ignored because of wrong type (not integer)."
 						);
 					}
 				}
@@ -1080,9 +1080,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -1144,9 +1144,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not integer)."
+					+ "' ignored because of wrong type (not integer)."
 			);
 		}
 
@@ -1216,9 +1216,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not integer)."
+								+ "' ignored because of wrong type (not integer)."
 						);
 					}
 				}
@@ -1226,9 +1226,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -1290,9 +1290,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not 64-bit integer)."
+					+ "' ignored because of wrong type (not 64-bit integer)."
 			);
 		}
 
@@ -1356,9 +1356,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not 64-bit integer)."
+								+ "' ignored because of wrong type (not 64-bit integer)."
 						);
 					}
 				}
@@ -1366,9 +1366,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -1427,9 +1427,9 @@ protected:
 
 			if(value > std::numeric_limits<std::uint8_t>::max()) {
 				this->logQueue(
-						"\'"
+						"'"
 						+ this->currentItem.str()
-						+ "\' ignored because the number is too large."
+						+ "' ignored because the number is too large."
 				);
 			}
 			else {
@@ -1441,9 +1441,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not unsigned integer)."
+					+ "' ignored because of wrong type (not unsigned integer)."
 			);
 		}
 
@@ -1509,9 +1509,9 @@ protected:
 
 					if(value > std::numeric_limits<std::uint8_t>::max()) {
 						this->logQueue(
-							"Value in \'"
+							"Value in '"
 							+ this->currentItem.str()
-							+ "\' ignored because the number is too large."
+							+ "' ignored because the number is too large."
 						);
 					}
 					else {
@@ -1523,9 +1523,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not unsigned integer)."
+								+ "' ignored because of wrong type (not unsigned integer)."
 						);
 					}
 				}
@@ -1533,9 +1533,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -1594,9 +1594,9 @@ protected:
 
 			if(value > std::numeric_limits<std::uint16_t>::max()) {
 				this->logQueue(
-						"\'"
+						"'"
 						+ this->currentItem.str()
-						+ "\' ignored because the number is too large."
+						+ "' ignored because the number is too large."
 				);
 			}
 			else {
@@ -1608,9 +1608,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not unsigned integer)."
+					+ "' ignored because of wrong type (not unsigned integer)."
 			);
 		}
 
@@ -1677,9 +1677,9 @@ protected:
 
 					if(value > std::numeric_limits<std::uint16_t>::max()) {
 						this->logQueue(
-							"Value in \'"
+							"Value in '"
 							+ this->currentItem.str()
-							+ "\' ignored because the number is too large."
+							+ "' ignored because the number is too large."
 						);
 					}
 					else {
@@ -1691,9 +1691,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not unsigned integer)."
+								+ "' ignored because of wrong type (not unsigned integer)."
 						);
 					}
 				}
@@ -1701,9 +1701,9 @@ protected:
 		}
 		else  {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -1762,9 +1762,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not unsigned integer)."
+					+ "' ignored because of wrong type (not unsigned integer)."
 			);
 		}
 
@@ -1831,9 +1831,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not unsigned integer)."
+								+ "' ignored because of wrong type (not unsigned integer)."
 						);
 					}
 				}
@@ -1841,9 +1841,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -1902,9 +1902,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not unsigned 64-bit integer)."
+					+ "' ignored because of wrong type (not unsigned 64-bit integer)."
 			);
 		}
 
@@ -1971,9 +1971,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not unsigned 64-bit integer)."
+								+ "' ignored because of wrong type (not unsigned 64-bit integer)."
 						);
 					}
 				}
@@ -1981,9 +1981,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 
@@ -2059,11 +2059,11 @@ protected:
 				}
 				else {
 					this->logQueue(
-							"\'"
+							"'"
 							+ str
-							+ "\' in \'"
+							+ "' in '"
 							+ this->currentItem.str()
-							+ "\' ignored because it contains invalid characters."
+							+ "' ignored because it contains invalid characters."
 					);
 				}
 
@@ -2094,9 +2094,9 @@ protected:
 		}
 		else  {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not string)."
+					+ "' ignored because of wrong type (not string)."
 			);
 		}
 
@@ -2181,11 +2181,11 @@ protected:
 						}
 						else {
 							this->logQueue(
-									"\'"
+									"'"
 									+ str
-									+ "\' in \'"
+									+ "' in '"
 									+ this->currentItem.str()
-									+ "\' ignored because it contains invalid characters."
+									+ "' ignored because it contains invalid characters."
 							);
 						}
 
@@ -2216,9 +2216,9 @@ protected:
 
 					if(!item.IsNull()) {
 						this->logQueue(
-								"Value in \'"
+								"Value in '"
 								+ this->currentItem.str()
-								+ "\' ignored because of wrong type (not string)."
+								+ "' ignored because of wrong type (not string)."
 						);
 					}
 				}
@@ -2226,9 +2226,9 @@ protected:
 		}
 		else {
 			this->logQueue(
-					"\'"
+					"'"
 					+ this->currentItem.str()
-					+ "\' ignored because of wrong type (not array)."
+					+ "' ignored because of wrong type (not array)."
 			);
 		}
 

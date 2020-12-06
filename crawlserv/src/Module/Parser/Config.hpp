@@ -432,7 +432,7 @@ namespace crawlservpp::Module::Parser {
 		// warn about incomplete date/time queries
 		if(incompleteDateTimes) {
 			this->warning(
-					"\'datetime.queries\', \'.sources\'"
+					"'datetime.queries', '.sources'"
 					" should have the same number of elements."
 			);
 
@@ -507,7 +507,7 @@ namespace crawlservpp::Module::Parser {
 		// warn about incomplete parsing fields
 		if(incompleteFields) {
 			this->warning(
-					"\'field.names\', \'.queries\' and \'.sources\'"
+					"'field.names', '.queries' and '.sources'"
 					" should have the same number of elements."
 			);
 
@@ -605,7 +605,7 @@ namespace crawlservpp::Module::Parser {
 		// warn about incomplete ID queries
 		if(incompleteIds) {
 			this->warning(
-					"\'id.queries\' and \'.sources\'"
+					"'id.queries' and '.sources'"
 					" should have the same number of elements."
 			);
 

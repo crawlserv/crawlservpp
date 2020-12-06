@@ -439,7 +439,7 @@ namespace crawlservpp::Parsing {
 			errorString += " (";
 
 			if(result.offset > 0) {
-				errorString += "\'[...]";
+				errorString += "'[...]";
 
 				if(result.offset > numDebugCharacters) {
 					errorString += xml.substr(
@@ -454,16 +454,16 @@ namespace crawlservpp::Parsing {
 				errorString += "[!!!]";
 
 				if(xml.size() > static_cast<std::size_t>(result.offset + numDebugCharacters)) {
-					errorString += "\'[...]";
+					errorString += "'[...]";
 					errorString += xml.substr(result.offset, numDebugCharacters);
 					errorString += "[...]";
 				}
 				else {
-					errorString += "\'[...]";
+					errorString += "'[...]";
 					errorString += xml.substr(result.offset);
 				}
 
-				errorString += "\').";
+				errorString += "').";
 			}
 
 			throw XML::Exception(errorString);

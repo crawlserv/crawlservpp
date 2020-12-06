@@ -170,9 +170,9 @@ namespace crawlservpp::Module {
 
 			if(!(this->loggingFile.is_open())) {
 				throw Exception(
-						"Could not open \'"
+						"Could not open '"
 						+ loggingFileName
-						+ "\' for writing."
+						+ "' for writing."
 				);
 			}
 		}

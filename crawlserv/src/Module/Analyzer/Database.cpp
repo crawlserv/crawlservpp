@@ -216,9 +216,9 @@ namespace crawlservpp::Module::Analyzer {
 				if(propertiesTarget.columns.back().type.empty()) {
 					throw Exception(
 							"Analyzer::Database::initTargetTable():"
-							" No type for target field \'"
+							" No type for target field '"
 							+ *it
-							+ "\' has been specified"
+							+ "' has been specified"
 					);
 				}
 			}

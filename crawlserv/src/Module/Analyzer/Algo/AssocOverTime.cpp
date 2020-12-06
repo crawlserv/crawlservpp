@@ -296,7 +296,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		if(incompleteCategories) {
 			this->warning(
-					"\'cat.labels\', \'.queries\'"
+					"'cat.labels', '.queries'"
 					" should have the same number of elements."
 			);
 		}

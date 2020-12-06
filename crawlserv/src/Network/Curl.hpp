@@ -465,12 +465,12 @@ namespace crawlservpp::Network {
 
 				// check whether cookie file really is located in cookie directory
 				if(!Helper::FileSystem::contains(this->cookieDir, loadCookiesFrom)) {
-					std::string exceptionString{"Cookie file \'"};
+					std::string exceptionString{"Cookie file '"};
 
 					exceptionString += loadCookiesFrom;
-					exceptionString += "is not in directory \'";
+					exceptionString += "is not in directory '";
 					exceptionString += this->cookieDir;
-					exceptionString += "\'";
+					exceptionString += "'";
 
 					throw Curl::Exception(exceptionString);
 				}
@@ -490,12 +490,12 @@ namespace crawlservpp::Network {
 
 				// check whether cookie file really is located in cookie directory
 				if(!Helper::FileSystem::contains(this->cookieDir, saveCookiesTo)) {
-					std::string exceptionString{"Cookie file \'"};
+					std::string exceptionString{"Cookie file '"};
 
 					exceptionString += saveCookiesTo;
-					exceptionString += "is not in directory \'";
+					exceptionString += "is not in directory '";
 					exceptionString += this->cookieDir;
-					exceptionString += "\'";
+					exceptionString += "'";
 
 					throw Curl::Exception(exceptionString);
 				}
@@ -525,7 +525,7 @@ namespace crawlservpp::Network {
 			else {
 				warningsTo.emplace(
 						"DNS-over-HTTPS currently not supported,"
-						" \'network.dns.doh\' ignored."
+						" 'network.dns.doh' ignored."
 				);
 			}
 		}
@@ -684,7 +684,7 @@ namespace crawlservpp::Network {
 				else {
 					warningsTo.emplace(
 							"HTTP/2 currently not supported,"
-							" \'network.http.version\' ignored."
+							" 'network.http.version' ignored."
 					);
 				}
 
@@ -703,7 +703,7 @@ namespace crawlservpp::Network {
 				else {
 					warningsTo.emplace(
 							"HTTP/2 ONLY currently not supported,"
-							" \'network.http.version\' ignored."
+							" 'network.http.version' ignored."
 					);
 				}
 
@@ -719,7 +719,7 @@ namespace crawlservpp::Network {
 				else {
 					warningsTo.emplace(
 							"HTTP/2 OVER TLS ONLY currently not supported,"
-							" \'network.http.version\' ignored."
+							" 'network.http.version' ignored."
 					);
 				}
 
@@ -735,7 +735,7 @@ namespace crawlservpp::Network {
 				else {
 					warningsTo.emplace(
 							"HTTP/3 ONLY currently not supported,"
-							" \'network.http.version\' ignored."
+							" 'network.http.version' ignored."
 					);
 				}
 
@@ -744,7 +744,7 @@ namespace crawlservpp::Network {
 			default:
 				warningsTo.emplace(
 						"Enum value for HTTP version not recognized,"
-						" \'network.http.version\' ignored."
+						" 'network.http.version' ignored."
 				);
 			}
 		}
@@ -784,7 +784,7 @@ namespace crawlservpp::Network {
 			else {
 				warningsTo.emplace(
 						"Pre-Proxy currently not supported,"
-						" \' proxy.pre\' ignored."
+						" ' proxy.pre' ignored."
 				);
 			}
 		}
@@ -810,7 +810,7 @@ namespace crawlservpp::Network {
 			else {
 				warningsTo.emplace(
 						"Proxy TLS authentication currently not supported,"
-						" \'proxy.tls.srp.user\' and \'proxy.tls.srp.password\' ignored."
+						" 'proxy.tls.srp.user' and 'proxy.tls.srp.password' ignored."
 				);
 			}
 		}
@@ -869,7 +869,7 @@ namespace crawlservpp::Network {
 			if(globalConfig.sslVerifyProxyHost || globalConfig.sslVerifyProxyPeer) {
 				warningsTo.emplace(
 						"SSL verification of proxy host and peer currently not supported,"
-						" \'ssl.verify.proxy.host\' and  \'ssl.verify.proxy.peer\' ignored."
+						" 'ssl.verify.proxy.host' and  'ssl.verify.proxy.peer' ignored."
 				);
 			}
 		}

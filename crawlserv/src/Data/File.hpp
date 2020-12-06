@@ -93,9 +93,9 @@ namespace crawlservpp::Data::File {
 
 		if(!in.is_open()) {
 			throw Exception(
-					"Could not open \'"
+					"Could not open '"
 					+ fileName
-					+ "\' for "
+					+ "' for "
 					+ (binary ? "binary " : "")
 					+ "reading"
 			);
@@ -143,9 +143,9 @@ namespace crawlservpp::Data::File {
 
 		if(!out.is_open()) {
 			throw Exception(
-					"Could not open \'"
+					"Could not open '"
 					+ fileName
-					+ "\' for "
+					+ "' for "
 					+ (binary ? "binary " : "")
 					+ "writing"
 			);

@@ -392,7 +392,7 @@ namespace crawlservpp::Parsing {
 		if(parsedSubUri.at(0) != '/') {
 			throw URI::Exception(
 					"Parsing::URI::setCurrentOrigin():"
-					" Parsed sub-URI does not start with slash (\'/\')"
+					" Parsed sub-URI does not start with slash ('/')"
 			);
 		}
 
@@ -427,7 +427,7 @@ namespace crawlservpp::Parsing {
 			};
 
 			errorString += std::to_string(errorCode);
-			errorString += ": \'";
+			errorString += ": '";
 
 			if(end.size() < this->current.size()) {
 				errorString += this->current.substr(0, this->current.size() - end.size());
@@ -438,7 +438,7 @@ namespace crawlservpp::Parsing {
 				errorString += this->current + "[!!!]";
 			}
 
-			errorString += "\'";
+			errorString += "'";
 
 			throw URI::Exception(errorString);
 		}
@@ -546,7 +546,7 @@ namespace crawlservpp::Parsing {
 			};
 
 			errorString += std::to_string(errorCode);
-			errorString += ": \'";
+			errorString += ": '";
 
 			if(rest.size() < this->link.size()) {
 				errorString	+= this->link.substr(0, this->link.size() - rest.size());
@@ -558,7 +558,7 @@ namespace crawlservpp::Parsing {
 				errorString += "[!!!]";
 			}
 
-			errorString += "\'";
+			errorString += "'";
 
 			throw URI::Exception(errorString);
 		}
@@ -574,9 +574,9 @@ namespace crawlservpp::Parsing {
 		) {
 			throw URI::Exception(
 					"Parsing::URI::parseLink():"
-					" Reference resolving failed for \'"
+					" Reference resolving failed for '"
 					+ URI::toString(relativeSource)
-					+ "\'"
+					+ "'"
 			);
 		}
 
@@ -596,9 +596,9 @@ namespace crawlservpp::Parsing {
 		) {
 			throw URI::Exception(
 					"Parsing::URI::parseLink():"
-					" Normalizing failed for \'"
+					" Normalizing failed for '"
 					+ URI::toString(this->uri)
-					+ "\'"
+					+ "'"
 			);
 		}
 
@@ -755,7 +755,7 @@ namespace crawlservpp::Parsing {
 			};
 
 			errorString += std::to_string(errorCode);
-			errorString += ": \'";
+			errorString += ": '";
 
 			if(end.size() < uriBase.size()) {
 				errorString += uriBase.substr(0, uriBase.size() - end.size());
@@ -767,7 +767,7 @@ namespace crawlservpp::Parsing {
 				errorString += "[!!!]";
 			}
 
-			errorString += "\'";
+			errorString += "'";
 
 			throw URI::Exception(errorString);
 		}

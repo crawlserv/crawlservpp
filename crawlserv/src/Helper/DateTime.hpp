@@ -424,11 +424,11 @@ namespace crawlservpp::Helper::DateTime {
 			}
 			catch(const std::exception& e) {
 				throw Exception(
-						"Could not convert \'"
+						"Could not convert '"
 						+ dateTime
-						+ "\' [expected format: \'"
+						+ "' [expected format: '"
 						+ customFormat
-						+ "\'] to date/time"
+						+ "'] to date/time"
 				);
 			}
 
@@ -583,7 +583,7 @@ namespace crawlservpp::Helper::DateTime {
 			in.imbue(std::locale(locale));
 		}
 		catch(const std::runtime_error& e) {
-			throw LocaleException("Unknown locale \'" + locale + "\'");
+			throw LocaleException("Unknown locale '" + locale + "'");
 		}
 
 		in >> date::parse(formatString, tp);
@@ -692,9 +692,9 @@ namespace crawlservpp::Helper::DateTime {
 
 		if(!bool(in)) {
 			throw Exception(
-					"Could not convert SQL timestamp \'"
+					"Could not convert SQL timestamp '"
 					+ timeStamp
-					+ "\' to date/time"
+					+ "' to date/time"
 			);
 		}
 
@@ -739,9 +739,9 @@ namespace crawlservpp::Helper::DateTime {
 
 		if(!bool(in)) {
 			throw Exception(
-					"Could not convert date \'"
+					"Could not convert date '"
 					+ date
-					+ "\' to week number"
+					+ "' to week number"
 			);
 		}
 

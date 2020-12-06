@@ -549,7 +549,7 @@ namespace crawlservpp::Helper::Json {
 			};
 
 			exceptionStr += rapidjson::GetParseError_En(doc.GetParseError());
-			exceptionStr += " at \'";
+			exceptionStr += " at '";
 
 			if(doc.GetErrorOffset() > numDebugChars) {
 				exceptionStr += cleanJson.substr(doc.GetErrorOffset() - numDebugChars, numDebugChars);
@@ -567,7 +567,7 @@ namespace crawlservpp::Helper::Json {
 				exceptionStr += cleanJson.substr(doc.GetErrorOffset());
 			}
 
-			exceptionStr += "\'";
+			exceptionStr += "'";
 
 			throw Exception(exceptionStr);
 		}

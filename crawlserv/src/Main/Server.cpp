@@ -253,9 +253,9 @@ namespace crawlservpp::Main {
 			}
 			else {
 				throw Exception(
-						"Unknown thread module \'"
+						"Unknown thread module '"
 						+ thread.options.module
-						+ "\'"
+						+ "'"
 				);
 			}
 		}
@@ -267,9 +267,9 @@ namespace crawlservpp::Main {
 		this->database.log(
 				"successfully started and connected to database [MySQL v"
 				+ this->database.getMysqlVersion()
-				+ "; datadir=\'"
+				+ "; datadir='"
 				+ this->database.getDataDir()
-				+ "\'; maxAllowedPacketSize="
+				+ "'; maxAllowedPacketSize="
 				+ std::to_string(this->database.getMaxAllowedPacketSize())
 				+ "; connection_id="
 				+ std::to_string(this->database.getConnectionId())
@@ -832,9 +832,9 @@ namespace crawlservpp::Main {
 								else if(!command.empty()) {
 									// unknown command: debug the command and its arguments
 									response = ServerCommandResponse::failed(
-											"Unknown command \'"
+											"Unknown command '"
 											+ command
-											+ "\'."
+											+ "'."
 									);
 								}
 								else {
@@ -2488,7 +2488,7 @@ namespace crawlservpp::Main {
 					confirmation += "\n\n"
 									"WARNING: The external directory seems to be"
 									" unknown to the MySQL server.\n"
-									"Add it to \'innodb_directories\' to ensure"
+									"Add it to 'innodb_directories' to ensure"
 									" fail-safe operations.";
 				}
 
@@ -2745,7 +2745,7 @@ namespace crawlservpp::Main {
 					confirmationStrStr <<	"\n\n"
 											"WARNING: The external directory"
 											" seems to be unknown to the MySQL server\n"
-											" - add it to \'innodb_directories\'"
+											" - add it to 'innodb_directories'"
 											" to ensure fail-safe operations.";
 				}
 			}
@@ -2854,13 +2854,13 @@ namespace crawlservpp::Main {
 
 		if(!(this->cmdJson.HasMember("queries"))) {
 			return ServerCommandResponse::failed(
-					"Invalid arguments (\'queries\' is missing)."
+					"Invalid arguments ('queries' is missing)."
 			);
 		}
 
 		if(!(this->cmdJson["queries"].IsObject())) {
 			return ServerCommandResponse::failed(
-					"Invalid arguments (\'queries\' is not a valid JSON object)."
+					"Invalid arguments ('queries' is not a valid JSON object)."
 			);
 		}
 
@@ -3078,7 +3078,7 @@ namespace crawlservpp::Main {
 
 		if(nameSpace == "config") {
 			return ServerCommandResponse::failed(
-					"Namespace of URL list cannot be \'config\'."
+					"Namespace of URL list cannot be 'config'."
 			);
 		}
 
@@ -3843,26 +3843,26 @@ namespace crawlservpp::Main {
 							}
 							else {
 								response = ServerCommandResponse::failed(
-										"Unknown compression type: \'"
+										"Unknown compression type: '"
 										+ compression
-										+ "\'."
+										+ "'."
 								);
 							}
 						}
 					}
 					else {
 						response = ServerCommandResponse::failed(
-								"File does not exist: \'"
+								"File does not exist: '"
 								+ fileName
-								+ "\'."
+								+ "'."
 						);
 					}
 				}
 				else {
 					response = ServerCommandResponse::failed(
-							"Invalid file name: \'"
+							"Invalid file name: '"
 							+ fileName
-							+ "\'."
+							+ "'."
 					);
 				}
 
@@ -5200,11 +5200,11 @@ namespace crawlservpp::Main {
 							jsonQuery = query.substr(splitPos + 1);
 						}
 
-						result += "using XPath query \'"
+						result += "using XPath query '"
 								+ xPathQuery
-								+ "\'\nusing JSON query \'"
+								+ "'\nusing JSON query '"
 								+ jsonQuery
-								+ "\'\n\n";
+								+ "'\n\n";
 
 						// perform XPath expression with single result on text first
 						try {
@@ -5547,19 +5547,19 @@ namespace crawlservpp::Main {
 				return true;
 			}
 
-			outError = "Invalid arguments (\'";
+			outError = "Invalid arguments ('";
 
 			outError += name;
-			outError += "\' is missing).";
+			outError += "' is missing).";
 
 			return false;
 		}
 
 		if(!(json[name].IsString())) {
-			outError = "Invalid arguments (\'";
+			outError = "Invalid arguments ('";
 
 			outError += name;
-			outError += "\' is not a string).";
+			outError += "' is not a string).";
 
 			return false;
 		}
@@ -5567,10 +5567,10 @@ namespace crawlservpp::Main {
 		const auto length = json[name].GetStringLength();
 
 		if(notEmpty && length == 0) {
-			outError = "Invalid arguments (\'";
+			outError = "Invalid arguments ('";
 
 			outError += name;
-			outError += "\' is empty).";
+			outError += "' is empty).";
 
 			return false;
 		}
@@ -5588,19 +5588,19 @@ namespace crawlservpp::Main {
 			std::string& outError
 	) {
 		if(!json.HasMember(name)) {
-			outError = "Invalid arguments (\'";
+			outError = "Invalid arguments ('";
 
 			outError += name;
-			outError += "\' is missing).";
+			outError += "' is missing).";
 
 			return false;
 		}
 
 		if(!(json[name].IsUint64())) {
-			outError = "Invalid arguments (\'";
+			outError = "Invalid arguments ('";
 
 			outError += name;
-			outError += "\' is not a valid unsigned 64-bit integer number).";
+			outError += "' is not a valid unsigned 64-bit integer number).";
 
 			return false;
 		}
@@ -5625,19 +5625,19 @@ namespace crawlservpp::Main {
 				return true;
 			}
 
-			outError = "Invalid arguments (\'";
+			outError = "Invalid arguments ('";
 
 			outError += name;
-			outError += "\' is missing).";
+			outError += "' is missing).";
 
 			return false;
 		}
 
 		if(!(json[name].IsBool())) {
-			outError = "Invalid arguments (\'";
+			outError = "Invalid arguments ('";
 
 			outError += name;
-			outError += "\' is not a valid boolean value).";
+			outError += "' is not a valid boolean value).";
 
 			return false;
 		}

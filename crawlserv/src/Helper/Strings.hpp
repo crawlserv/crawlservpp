@@ -1005,7 +1005,7 @@ namespace crawlservpp::Helper::Strings {
 	 *   False otherwise.
 	 */
 	inline bool checkDomainName(std::string_view name) {
-		return name.find_first_of("/\'") == std::string_view::npos;
+		return name.find_first_of("/'") == std::string_view::npos;
 	}
 
 	//! Checks whether the given string is a valid name for MySQL tables and fields.

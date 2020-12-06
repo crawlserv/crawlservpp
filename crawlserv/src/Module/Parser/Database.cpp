@@ -1894,7 +1894,7 @@ namespace crawlservpp::Module::Parser {
 			if(adjustServerSettings) {
 				this->log(
 						this->getLoggingMin(),
-						"Adjust the server's \'max_allowed_packet\'"
+						"Adjust the server's 'max_allowed_packet'"
 						" setting accordingly."
 				);
 			}

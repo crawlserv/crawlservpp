@@ -143,7 +143,7 @@ namespace crawlservpp::Query {
 			this->pointerFirst = rapidjson::Pointer(string);
 
 			if(!(this->pointerFirst.IsValid())) {
-				throw JsonPointer::Exception("Invalid JSONPointer \'" + string + "\'");
+				throw JsonPointer::Exception("Invalid JSONPointer '" + string + "'");
 			}
 		}
 		else {
@@ -152,7 +152,7 @@ namespace crawlservpp::Query {
 			this->pointerFirst = rapidjson::Pointer(string);
 
 			if(!(this->pointerFirst.IsValid())) {
-				throw JsonPointer::Exception("Invalid JSONPointer \'" + string + "\'");
+				throw JsonPointer::Exception("Invalid JSONPointer '" + string + "'");
 			}
 		}
 	}
@@ -331,7 +331,7 @@ namespace crawlservpp::Query {
 				const rapidjson::Pointer pointer{pointerString};
 
 				if(!(pointer.IsValid())) {
-					throw JsonPointer::Exception("Invalid JSONPointer \'" + pointerString + "\'");
+					throw JsonPointer::Exception("Invalid JSONPointer '" + pointerString + "'");
 				}
 
 				const auto * match{pointer.Get(doc)};
@@ -439,8 +439,8 @@ namespace crawlservpp::Query {
 
 				if(!(pointer.IsValid())) {
 					throw JsonPointer::Exception(
-							"Invalid JSONPointer \'"
-							+ pointerString + "\'"
+							"Invalid JSONPointer '"
+							+ pointerString + "'"
 					);
 				}
 

@@ -672,9 +672,9 @@ namespace crawlservpp::Query {
 			}
 			else {
 				throw Exception(
-					"Query::Container::addQuery(): Unknown query type \'"
+					"Query::Container::addQuery(): Unknown query type '"
 					+ properties.type
-					+ "\'"
+					+ "'"
 				);
 			}
 		}

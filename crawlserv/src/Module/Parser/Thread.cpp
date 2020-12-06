@@ -1044,9 +1044,9 @@ namespace crawlservpp::Module::Parser {
 		) {
 			this->log(
 					generalLoggingExtended,
-					"ignored parsed ID \'"
+					"ignored parsed ID '"
 					+ parsedData.dataId
-					+ "\' ["
+					+ "' ["
 					+ this->urls.front().second
 					+ "]."
 			);
@@ -1102,9 +1102,9 @@ namespace crawlservpp::Module::Parser {
 		if((contentId > 0 && contentId != content.first) || duplicateInCache) {
 			this->log(
 					generalLoggingDefault,
-					"skipped content with already existing ID \'"
+					"skipped content with already existing ID '"
 					+ parsedData.dataId
-					+ "\' ["
+					+ "' ["
 					+ this->urls.front().second
 					+ "]."
 			);
@@ -1340,8 +1340,8 @@ namespace crawlservpp::Module::Parser {
 					) {
 						this->log(
 								generalLoggingDefault,
-								"WARNING: \'"
-								+ this->config.parsingFieldNames.at(index) + "\'"
+								"WARNING: '"
+								+ this->config.parsingFieldNames.at(index) + "'"
 								" is empty for "
 								+ this->urls.front().second
 						);
@@ -1540,7 +1540,7 @@ namespace crawlservpp::Module::Parser {
 					};
 
 					logString += this->config.parsingFieldNames.at(index);
-					logString += "\' to date/time\' [";
+					logString += "' to date/time' [";
 					logString += this->urls.front().second;
 					logString += "]";
 

@@ -2451,7 +2451,7 @@ namespace crawlservpp::Module::Extractor {
 			if(adjustServerSettings) {
 				this->log(
 						this->getLoggingMin(),
-						"Adjust the server's \'max_allowed_packet\' setting accordingly."
+						"Adjust the server's 'max_allowed_packet' setting accordingly."
 				);
 			}
 

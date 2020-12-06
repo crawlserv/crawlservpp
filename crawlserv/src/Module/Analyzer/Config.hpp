@@ -401,7 +401,7 @@ namespace crawlservpp::Module::Analyzer {
 		// warn about incomplete input fields
 		if(incompleteInputs) {
 			this->warning(
-					"\'input.fields\', \'.sources\' and \'.tables\'"
+					"'input.fields', '.sources' and '.tables'"
 					" should have the same number of elements."
 			);
 

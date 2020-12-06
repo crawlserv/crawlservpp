@@ -337,6 +337,7 @@ namespace crawlservpp::Module::Crawler {
 		// crawling functions
 		bool crawlingUrlSelection(IdString& urlTo, bool& usePostTo);
 		IdString crawlingReplaceTokens(const IdString& url);
+		std::string crawlingGetTokenValue(std::size_t index, const std::string& name);
 		void crawlingUrlParams(std::string& url);
 		bool crawlingContent(
 				IdString& url,

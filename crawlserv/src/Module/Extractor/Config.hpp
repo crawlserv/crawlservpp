@@ -1172,7 +1172,7 @@ namespace crawlservpp::Module::Extractor {
 		// warn about incomplete variables
 		if(incompleteVariables) {
 			this->warning(
-					"\'variables.name\' and \'.source\'"
+					"'variables.name' and '.source'"
 					" should have the same number of elements."
 			);
 
@@ -1271,7 +1271,7 @@ namespace crawlservpp::Module::Extractor {
 		// warn about incomplete tokens
 		if(incompleteTokens) {
 			this->warning(
-					"\'variables.tokens\', \'.tokens.source\' and \'.tokens.query\'"
+					"'variables.tokens', '.tokens.source' and '.tokens.query'"
 					" should have the same number of elements."
 			);
 
@@ -1370,7 +1370,7 @@ namespace crawlservpp::Module::Extractor {
 		// warn about incomplete fields
 		if(incompleteFields) {
 			this->warning(
-					"\'variables.field.names\' and \'.field.queries\'"
+					"'variables.field.names' and '.field.queries'"
 					" should have the same number of elements."
 			);
 
@@ -1470,7 +1470,7 @@ namespace crawlservpp::Module::Extractor {
 		// warn about incomplete fields
 		if(incompleteFields) {
 			this->warning(
-					"\'linked.field.names\' and \'.field.queries\'"
+					"'linked.field.names' and '.field.queries'"
 					" should have the same number of elements."
 			);
 
