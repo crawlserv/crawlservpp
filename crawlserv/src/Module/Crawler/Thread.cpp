@@ -387,6 +387,10 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL selection
 		if(this->crawlingUrlSelection(url, usePost)) {
+			if(!(this->isRunning())) {
+				return;
+			}
+
 			if(this->config.crawlerTiming) {
 				timerSelect.stop();
 			}
@@ -810,9 +814,9 @@ namespace crawlservpp::Module::Crawler {
 					// check ID of the custom URL
 					if(customPage.first == 0) {
 						throw Exception(
-								"Thread::initCustomUrls(): Could not find ID of \'"
+								"Thread::initCustomUrls(): Could not find ID of '"
 								+ customPage.second
-								+ "\'"
+								+ "'"
 						);
 					}
 				}
@@ -846,7 +850,7 @@ namespace crawlservpp::Module::Crawler {
 		if(this->domain.empty()) {
 			this->log(
 					crawlerLoggingDefault,
-					"WARNING: Cannot get \'robots.txt\' for cross-domain website."
+					"WARNING: Cannot get 'robots.txt' for cross-domain website."
 			);
 
 			return;
@@ -861,7 +865,7 @@ namespace crawlservpp::Module::Crawler {
 		};
 		bool success{false};
 
-		this->log(crawlerLoggingVerbose, "fetches \'robots.txt\'...");
+		this->log(crawlerLoggingVerbose, "fetches 'robots.txt'...");
 
 		// get robots.txt
 		while(this->isRunning()) {
@@ -1362,6 +1366,10 @@ namespace crawlservpp::Module::Crawler {
 					urlTo = this->crawlingReplaceTokens(this->manualUrl);
 
 					usePostTo = this->config.customUsePost;
+
+					if(!(this->isRunning())) {
+						return true;
+					}
 				}
 			}
 
@@ -1418,6 +1426,10 @@ namespace crawlservpp::Module::Crawler {
 								urlTo = this->crawlingReplaceTokens(this->manualUrl);
 
 								usePostTo = this->config.customUsePost;
+
+								if(!(this->isRunning())) {
+									return true;
+								}
 
 								break;
 							}
@@ -1589,201 +1601,230 @@ namespace crawlservpp::Module::Crawler {
 		) {
 			// check URL for token variable
 			if(result.second.find(*it) != std::string::npos) {
-				std::string value;
-
-				// check token cache
-				const auto index{it - this->config.customTokens.cbegin()};
-				const auto cachedSeconds{this->config.customTokensKeep.at(index)};
-				const auto& cachedToken{this->customTokens.at(index)};
-
-				if(
-						cachedSeconds > 0
-						&& !cachedToken.second.empty()
-						&& cachedToken.first > std::chrono::steady_clock::time_point::min()
-						&& std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
-							- cachedToken.first).count() <= cachedSeconds
-				) {
-					// use token value from cache
-					value = cachedToken.second;
-				}
-				else {
-					// get token value
-					const auto sourceUrl{
-						this->getProtocol()
-						+ this->config.customTokensSource.at(index)
-					};
-					std::string content;
-					bool success{false};
-
-					// check token source
-					if(!(this->config.customTokensSource.at(index).empty())) {
-						// get token source
-						while(this->isRunning()) {
-							try {
-								// set local network configuration
-								this->networking.setConfigCurrent(*this);
-
-								// set custom HTTP headers (including cookies) if necessary
-								if(!(this->config.customTokensCookies.at(index).empty())) {
-									this->networking.setCookies(
-											this->config.customTokensCookies.at(index)
-									);
-								}
-
-								if(!(this->config.customTokenHeaders.empty())) {
-									this->networking.setHeaders(
-											this->config.customTokenHeaders
-									);
-								}
-
-								// get content for extracting token
-								this->networking.getContent(
-										sourceUrl,
-										this->config.customTokensUsePost.at(index),
-										content,
-										this->config.crawlerRetryHttp
-								);
-
-								// unset custom HTTP headers (including cookies) if necessary
-								this->crawlingUnsetCustom(
-										!(this->config.customTokensCookies.at(index).empty()),
-										!(this->config.customTokenHeaders.empty())
-								);
-
-								success = true;
-
-								break;
-							}
-							catch(const CurlException& e) { // error while getting content
-								// unset custom HTTP headers (including cookies) if necessary
-								this->crawlingUnsetCustom(
-										!(this->config.customTokensCookies.at(index).empty()),
-										!(this->config.customTokenHeaders.empty())
-								);
-
-								// check type of error i.e. last libcurl code
-								if(this->crawlingCheckCurlCode(
-										this->networking.getCurlCode(),
-										sourceUrl
-								)) {
-									// reset and retry
-									this->crawlingReset(e.view(), sourceUrl);
-
-									return this->crawlingReplaceTokens(url);
-								}
-
-								std::string logString{"WARNING: Could not get token '"};
-
-								logString += *it;
-								logString += "' from";
-								logString += sourceUrl;
-								logString += " - ";
-								logString += e.view();
-
-								this->log(crawlerLoggingDefault, logString);
-
-								break;
-							}
-							catch(const Utf8Exception& e) {
-								// unset custom HTTP headers (including cookies) if necessary
-								this->crawlingUnsetCustom(
-										!(this->config.customTokensCookies.at(index).empty()),
-										!(this->config.customTokenHeaders.empty())
-								);
-
-								// write UTF-8 error to log if neccessary
-								std::string logString{"WARNING: "};
-
-								logString += e.view();
-								logString += " [";
-								logString += sourceUrl;
-								logString += "]";
-
-								this->log(crawlerLoggingDefault, logString);
-
-								break;
-							}
-						}
-					}
-
-					if(success) {
-						std::queue<std::string> queryWarnings;
-
-						// set token page content as target for subsequent query
-						this->setQueryTarget(content, sourceUrl);
-
-						// get token value from content
-						if(this->queriesTokens.at(index).resultSingle) {
-							this->getSingleFromQuery(
-									this->queriesTokens.at(index),
-									value,
-									queryWarnings
-							);
-						}
-						else if(this->queriesTokens.at(index).resultBool) {
-							bool booleanResult{false};
-
-							if(
-									this->getBoolFromQuery(
-											this->queriesTokens.at(index),
-											booleanResult,
-											queryWarnings
-									)
-							) {
-								value = booleanResult ? "true" : "false";
-							}
-						}
-						else {
-							queryWarnings.emplace(
-									"WARNING: Invalid result type of query for token \'"
-									+ *it
-									+ "\' - not single and not bool."
-							);
-						}
-
-						// check value
-						if(value.empty()) {
-							queryWarnings.emplace(
-									"WARNING: Empty value for token \'"
-									+ *it
-									+ "\' from "
-									+ sourceUrl
-									+ "."
-							);
-						}
-						else if(cachedSeconds > 0) {
-							// save token value in cache
-							this->customTokens.at(index).first = std::chrono::steady_clock::now();
-							this->customTokens.at(index).second = value;
-						}
-
-						// clear query target
-						this->clearQueryTarget();
-
-						// logging if necessary
-						this->log(crawlerLoggingDefault, queryWarnings);
-
-						std::string logStr;
-
-						logStr = "fetched token \'";
-
-						logStr += *it;
-						logStr += "\' from ";
-						logStr += sourceUrl;
-						logStr += " [= \'";
-						logStr += value;
-						logStr += "\'].";
-
-						this->log(crawlerLoggingExtended, logStr);
-					}
-				}
-
 				// replace variable(s) with token(s)
-				Helper::Strings::replaceAll(result.second, *it, value);
+				std::string tokenValue{
+					this->crawlingGetTokenValue(
+							it - this->config.customTokens.cbegin(),
+							*it
+					)
+				};
+
+				if(this->isRunning()) {
+					Helper::Strings::replaceAll(
+							result.second,
+							*it,
+							tokenValue
+					);
+				}
 			}
 		}
 
 		return result;
+	}
+
+	// get token value
+	std::string Thread::crawlingGetTokenValue(std::size_t index, const std::string& name) {
+		// check token cache
+		const auto cachedSeconds{this->config.customTokensKeep.at(index)};
+		const auto& cachedToken{this->customTokens.at(index)};
+
+		if(
+				cachedSeconds > 0
+				&& !cachedToken.second.empty()
+				&& cachedToken.first > std::chrono::steady_clock::time_point::min()
+				&& std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now()
+					- cachedToken.first).count() <= cachedSeconds
+		) {
+			// use token value from cache
+			return cachedToken.second;
+		}
+
+		// token not cached: get token value from token source
+		const auto sourceUrl{
+			this->getProtocol()
+			+ this->config.customTokensSource.at(index)
+		};
+
+		// check token source
+		if(this->config.customTokensSource.at(index).empty()) {
+			return std::string{};
+		}
+
+		std::string content;
+		std::string value;
+
+		// get token source
+		while(this->isRunning()) {
+			try {
+				// set local network configuration
+				this->networking.setConfigCurrent(*this);
+
+				// set custom HTTP headers (including cookies) if necessary
+				if(!(this->config.customTokensCookies.at(index).empty())) {
+					this->networking.setCookies(
+							this->config.customTokensCookies.at(index)
+					);
+				}
+
+				if(!(this->config.customTokenHeaders.empty())) {
+					this->networking.setHeaders(
+							this->config.customTokenHeaders
+					);
+				}
+
+				// get content for extracting token
+				this->networking.getContent(
+						sourceUrl,
+						this->config.customTokensUsePost.at(index),
+						content,
+						this->config.crawlerRetryHttp
+				);
+
+				// unset custom HTTP headers (including cookies) if necessary
+				this->crawlingUnsetCustom(
+						!(this->config.customTokensCookies.at(index).empty()),
+						!(this->config.customTokenHeaders.empty())
+				);
+
+				std::queue<std::string> queryWarnings;
+
+				// set token page content as target for subsequent query
+				this->setQueryTarget(content, sourceUrl);
+
+				// get token value from content
+				if(this->queriesTokens.at(index).resultSingle) {
+					this->getSingleFromQuery(
+							this->queriesTokens.at(index),
+							value,
+							queryWarnings
+					);
+				}
+				else if(this->queriesTokens.at(index).resultBool) {
+					bool booleanResult{false};
+
+					if(
+							this->getBoolFromQuery(
+									this->queriesTokens.at(index),
+									booleanResult,
+									queryWarnings
+							)
+					) {
+						value = booleanResult ? "true" : "false";
+					}
+				}
+				else {
+					queryWarnings.emplace(
+							"WARNING: Invalid result type of query for token '"
+							+ name
+							+ "' - not single and not bool."
+					);
+				}
+
+				// clear query target
+				this->clearQueryTarget();
+
+				// logging if necessary
+				this->log(crawlerLoggingDefault, queryWarnings);
+
+				// check value
+				if(value.empty()) {
+					std::string emptyTokenError{
+						"Empty value for token '"
+					};
+
+					emptyTokenError += name;
+					emptyTokenError += "'";
+
+					if(this->config.customTokensRequired.at(index)) {
+						// reset and retry
+						this->crawlingReset(emptyTokenError, sourceUrl);
+
+						continue;
+					}
+					else {
+						emptyTokenError += " from ";
+						emptyTokenError += sourceUrl;
+						emptyTokenError += ".";
+
+						this->log(crawlerLoggingDefault, "WARNING: " + emptyTokenError);
+					}
+				}
+				else if(cachedSeconds > 0) {
+					// save token value in cache
+					this->customTokens.at(index).first = std::chrono::steady_clock::now();
+					this->customTokens.at(index).second = value;
+				}
+
+				std::string logStr{"fetched token '"};
+
+				logStr += name;
+				logStr += "' from ";
+				logStr += sourceUrl;
+				logStr += " [= '";
+				logStr += value;
+				logStr += "'].";
+
+				this->log(crawlerLoggingExtended, logStr);
+			}
+			catch(const CurlException& e) { // error while getting content
+				// unset custom HTTP headers (including cookies) if necessary
+				this->crawlingUnsetCustom(
+						!(this->config.customTokensCookies.at(index).empty()),
+						!(this->config.customTokenHeaders.empty())
+				);
+
+				// check type of error i.e. last libcurl code
+				if(this->crawlingCheckCurlCode(
+						this->networking.getCurlCode(),
+						sourceUrl
+				)) {
+					// reset and retry
+					this->crawlingReset(e.view(), sourceUrl);
+
+					continue;
+				}
+
+				std::string tokenError{"Could not get token '"};
+
+				tokenError += name;
+				tokenError += "' from";
+				tokenError += sourceUrl;
+				tokenError += " - ";
+				tokenError += e.view();
+
+				if(this->config.customTokensRequired.at(index)) {
+					throw Exception(tokenError);
+				}
+				else {
+					this->log(crawlerLoggingDefault, "WARNING: " + tokenError);
+				}
+			}
+			catch(const Utf8Exception& e) {
+				// unset custom HTTP headers (including cookies) if necessary
+				this->crawlingUnsetCustom(
+						!(this->config.customTokensCookies.at(index).empty()),
+						!(this->config.customTokenHeaders.empty())
+				);
+
+				// write UTF-8 error to log if neccessary
+				std::string tokenError{e.view()};
+
+				tokenError += " [";
+				tokenError += sourceUrl;
+				tokenError += "]";
+
+				if(this->config.customTokensRequired.at(index)) {
+					throw Exception(tokenError);
+				}
+				else {
+					this->log(crawlerLoggingDefault, "WARNING: " + tokenError);
+				}
+			}
+
+			break;
+		}
+
+		return value;
 	}
 
 	// add custom parameters to URL
@@ -2041,7 +2082,9 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// extract URLs
-		std::vector<std::string> urls(this->crawlingExtractUrls(url.second, contentType));
+		std::vector<std::string> urls{
+			this->crawlingExtractUrls(url.second, contentType)
+		};
 
 		if(!urls.empty()) {
 			// update timer if necessary
@@ -2144,9 +2187,9 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.redirectVarSources.at(index) != redirectSourceUrl) {
 				this->log(
 						crawlerLoggingDefault,
-						"WARNING: Invalid source type for variable \'"
+						"WARNING: Invalid source type for variable '"
 						+ *it
-						+ "\' for dynamic redirect - set to empty."
+						+ "' for dynamic redirect - set to empty."
 				);
 			}
 
@@ -2176,9 +2219,9 @@ namespace crawlservpp::Module::Crawler {
 			else {
 				this->log(
 						crawlerLoggingDefault,
-						"WARNING: Could not get value of variable \'"
+						"WARNING: Could not get value of variable '"
 						+ *it
-						+ "\' for dynamic redirect - set to empty."
+						+ "' for dynamic redirect - set to empty."
 				);
 			}
 
@@ -2382,9 +2425,9 @@ namespace crawlservpp::Module::Crawler {
 					this->log(
 							crawlerLoggingDefault,
 							"WARNING:"
-							" Invalid result type of query for dynamic redirect variable \'"
+							" Invalid result type of query for dynamic redirect variable '"
 							+ *it
-							+ "\' - set to empty."
+							+ "' - set to empty."
 					);
 				}
 
@@ -2416,9 +2459,9 @@ namespace crawlservpp::Module::Crawler {
 					this->log(
 							crawlerLoggingDefault,
 							"WARNING:"
-							" Invalid result type of query for dynamic redirect variable \'"
+							" Invalid result type of query for dynamic redirect variable '"
 							+ *it
-							+ "\' - set to empty."
+							+ "' - set to empty."
 					);
 				}
 
@@ -2428,9 +2471,9 @@ namespace crawlservpp::Module::Crawler {
 				this->log(
 						crawlerLoggingDefault,
 						"WARNING:"
-						" Unknown source type for dynamic redirect variable \'"
+						" Unknown source type for dynamic redirect variable '"
 						+ *it
-						+ "\' - set to empty."
+						+ "' - set to empty."
 				);
 			}
 
@@ -2705,9 +2748,9 @@ namespace crawlservpp::Module::Crawler {
 					crawlerLoggingExtended,
 					"skipped "
 					+ url
-					+ " (content type \'"
+					+ " (content type '"
 					+ contentType
-					+ "\' not whitelisted)."
+					+ "' not whitelisted)."
 			);
 
 			return false;
@@ -2737,9 +2780,9 @@ namespace crawlservpp::Module::Crawler {
 					crawlerLoggingExtended,
 					"skipped "
 					+ url
-					+ " (content type \'"
+					+ " (content type '"
 					+ contentType
-					+ "\' blacklisted)."
+					+ "' blacklisted)."
 			);
 
 			return false;
@@ -2781,9 +2824,9 @@ namespace crawlservpp::Module::Crawler {
 					crawlerLoggingExtended,
 					"skipped link extraction for "
 					+ url
-					+ " (content type \'"
+					+ " (content type '"
 					+ contentType
-					+ "\' not whitelisted)."
+					+ "' not whitelisted)."
 			);
 
 			return false;
@@ -2813,9 +2856,9 @@ namespace crawlservpp::Module::Crawler {
 					crawlerLoggingExtended,
 					"skipped link extraction for "
 					+ url
-					+ " (content type \'"
+					+ " (content type '"
 					+ contentType
-					+ "\' blacklisted)."
+					+ "' blacklisted)."
 			);
 
 			return false;
@@ -3070,10 +3113,10 @@ namespace crawlservpp::Module::Crawler {
 			catch(const std::logic_error& e) {
 				this->log(
 						crawlerLoggingDefault,
-						"WARNING: \'"
+						"WARNING: '"
 						+ expectedStr
-						+ "\' cannot be converted to a numeric value"
-								" when extracting the expected number of URLs ["
+						+ "' cannot be converted to a numeric value"
+							" when extracting the expected number of URLs ["
 						+ url
 						+ "]."
 				);
@@ -3117,7 +3160,10 @@ namespace crawlservpp::Module::Crawler {
 								<< "]";
 
 				if(this->config.expectedErrorIfSmaller) {
-					throw Exception(expectedStrStr.str());
+					throw Exception(
+							"Crawler::Thread::crawlingExtractUrls(): "
+							+ expectedStrStr.str()
+					);
 				}
 
 				this->log(
@@ -3129,7 +3175,7 @@ namespace crawlservpp::Module::Crawler {
 			}
 			else if(urls.size() > expected) {
 				// number of URLs is larger than expected
-				expectedStrStr	<< "number of extracted URLs ["
+				expectedStrStr	<< "Number of extracted URLs ["
 								<< urls.size()
 								<< "] is larger than expected ["
 								<< expected
@@ -3139,7 +3185,10 @@ namespace crawlservpp::Module::Crawler {
 
 				// number of URLs is smaller than expected
 				if(this->config.expectedErrorIfLarger) {
-					throw Exception(expectedStrStr.str());
+					throw Exception(
+							"Crawler::Thread::crawlingExtractUrls(): "
+							+ expectedStrStr.str()
+					);
 				}
 
 				this->log(
@@ -3308,10 +3357,10 @@ namespace crawlservpp::Module::Crawler {
 								if(linked.length() > 1 && linked.at(1) == '#') {
 									std::string logStr;
 
-									logStr = "WARNING: Found anchor \'";
+									logStr = "WARNING: Found anchor '";
 
 									logStr += linked;
-									logStr += "\'. [";
+									logStr += "'. [";
 									logStr += url;
 									logStr += "]";
 
@@ -3388,7 +3437,7 @@ namespace crawlservpp::Module::Crawler {
 							this->log(
 									crawlerLoggingDefault,
 									"WARNING:"
-									" Found file \'" + url + "\'"
+									" Found file '" + url + "'"
 							);
 						}
 					}
@@ -3396,7 +3445,7 @@ namespace crawlservpp::Module::Crawler {
 						this->log(
 								crawlerLoggingDefault,
 								"WARNING:"
-								" Found file \'" + url + "\'"
+								" Found file '" + url + "'"
 						);
 					}
 				}
@@ -4161,8 +4210,9 @@ namespace crawlservpp::Module::Crawler {
 		this->initTokenCache();
 
 		// show error
-		std::string errorString{error};
+		std::string errorString{"ERROR: "};
 
+		errorString += error;
 		errorString += " [";
 		errorString += url;
 		errorString += "]";
@@ -4413,7 +4463,7 @@ namespace crawlservpp::Module::Crawler {
 					const auto fieldName{mementoContent.substr(pos, end - pos)};
 					const auto oldPos{pos};
 
-					pos = mementoContent.find_first_of("\"\'", pos + 1);
+					pos = mementoContent.find_first_of("\"'", pos + 1);
 
 					if(pos == std::string::npos) {
 						warningsTo.emplace(
@@ -4427,7 +4477,7 @@ namespace crawlservpp::Module::Crawler {
 						continue;
 					}
 
-					end = mementoContent.find_first_of("\"\'", pos + 1);
+					end = mementoContent.find_first_of("\"'", pos + 1);
 
 					if(end == std::string::npos) {
 						warningsTo.emplace(

@@ -415,11 +415,14 @@ namespace crawlservpp::Module::Crawler {
 			//! Custom HTTP @c Cookie header for the token with the same array index.
 			std::vector<std::string> customTokensCookies;
 
-			//! Time until token with the same array index gets invalid, in seconds.
+			//! Time until the token with the same array index gets invalid, in seconds.
 			std::vector<std::uint32_t> customTokensKeep;
 
 			//! Query to extract the token with the same array index.
 			std::vector<std::uint64_t> customTokensQuery;
+
+			//! Determines whether an error occurs if the token with the same array index is empty.
+			std::vector<bool> customTokensRequired;
 
 			//! Source URL for the token with the same array index (absolute link without protocol).
 			std::vector<std::string> customTokensSource;
@@ -613,6 +616,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("tokens.cookies", this->config.customTokensCookies);
 		this->option("tokens.keep", this->config.customTokensKeep);
 		this->option("tokens.query", this->config.customTokensQuery);
+		this->option("tokens.required", this->config.customTokensRequired);
 		this->option("tokens.source", this->config.customTokensSource);
 		this->option("tokens.use.post", this->config.customTokensUsePost);
 		this->option("token.headers", this->config.customTokenHeaders);	// NOTE: to be used for ALL tokens
@@ -663,7 +667,7 @@ namespace crawlservpp::Module::Crawler {
 			this->config.crawlerUrlChunks = defaultUrlChunks;
 
 			this->warning(
-					"Invalid value for \'ur.chunks\' ignored (was zero),"
+					"Invalid value for 'url.chunks' ignored (was zero),"
 					"default value used"
 			);
 		}
@@ -703,7 +707,7 @@ namespace crawlservpp::Module::Crawler {
 		// warn about incomplete archives
 		if(incompleteArchives) {
 			this->warning(
-					"\'archives.names\', \'.urls.memento\' and \'.urls.timemap\'"
+					"'archives.names', '.urls.memento' and '.urls.timemap'"
 					" should have the same number of elements."
 			);
 
@@ -746,7 +750,8 @@ namespace crawlservpp::Module::Crawler {
 		// warn about incomplete counters
 		if(incompleteCounters) {
 			this->warning(
-					"\'custom.counters\', \'.start\', \'.end\' and \'.step\'"
+					"'custom.counters', '.counters.start',"
+					" '.counters.end' and '.counters.step'"
 					" should have the same number of elements."
 			);
 
@@ -812,9 +817,9 @@ namespace crawlservpp::Module::Crawler {
 				--n;
 
 				this->warning(
-						"Loop of counter \'"
+						"Loop of counter '"
 						+ counterName
-						+ "\' would be infinite, counter removed."
+						+ "' would be infinite, counter removed."
 				);
 			}
 		}
@@ -854,7 +859,7 @@ namespace crawlservpp::Module::Crawler {
 		// warn about incomplete counters
 		if(incompleteTokens) {
 			this->warning(
-					"\'custom.tokens\', \'.tokens.source\' and \'.tokens.query\'"
+					"'custom.tokens', '.tokens.source' and '.tokens.query'"
 					" should have the same number of elements."
 			);
 
@@ -883,6 +888,13 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		this->config.customTokensUsePost.resize(completeTokens, false);
+
+		// remove token requirements that are not used, set to 'false' where none is specified
+		if(this->config.customTokensRequired.size() > completeTokens) {
+			incompleteTokens = true;
+		}
+
+		this->config.customTokensRequired.resize(completeTokens, false);
 
 		// warn about unused property
 		if(incompleteTokens) {
@@ -924,7 +936,7 @@ namespace crawlservpp::Module::Crawler {
 		// warn about incomplete counters
 		if(incompleteVars) {
 			this->warning(
-					"\'redirect.var.names\', \'.var.sources\' and \'.var.queries\'"
+					"'redirect.var.names', '.var.sources' and '.var.queries'"
 					" should have the same number of elements."
 			);
 
