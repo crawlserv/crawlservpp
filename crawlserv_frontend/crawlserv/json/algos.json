@@ -8,7 +8,7 @@
 		},
 		"Count Tokens over Time": {
 			"algo-id": 41,
-			"config-cats": [ "tokenizer", "group-date", "filter-date" ]
+			"config-cats": [ "tokenizer", "tokens", "group-date", "filter-date" ]
 		},
 		"Associations over Time": {
 			"algo-id": 42,
