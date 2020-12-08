@@ -244,10 +244,10 @@ namespace crawlservpp::Module::Crawler {
 		std::string urlListTable;
 		std::string crawlingTable;
 
-		// domain, URI parser and separate networking for archives
+		// domain, URI parser and (optional) separate networking for archives
 		std::string domain;
 		bool noSubDomain{false};
-		std::unique_ptr<Parsing::URI> uriParser;
+		Parsing::URI uriParser;
 		std::unique_ptr<Network::Curl> networkingArchives;
 
 		// queries

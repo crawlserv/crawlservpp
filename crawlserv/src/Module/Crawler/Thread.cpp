@@ -236,11 +236,7 @@ namespace crawlservpp::Module::Crawler {
 
 		this->log(crawlerLoggingVerbose, "initializes URI parser...");
 
-		if(!(this->uriParser)) {
-			this->uriParser = std::make_unique<Parsing::URI>();
-		}
-
-		this->uriParser->setCurrentDomain(this->domain);
+		this->uriParser.setCurrentDomain(this->domain);
 
 		// set network configuration
 		this->setStatusMessage("Setting network configuration...");
@@ -771,7 +767,7 @@ namespace crawlservpp::Module::Crawler {
 
 				try {
 					// check URI
-					this->uriParser->setCurrentOrigin(customUrl);
+					this->uriParser.setCurrentOrigin(customUrl);
 
 					// prepare to add URL if necessary
 					urlsToAdd.emplace(customUrl);
@@ -819,7 +815,7 @@ namespace crawlservpp::Module::Crawler {
 
 				try {
 					// check URI
-					this->uriParser->setCurrentOrigin(customPage.second);
+					this->uriParser.setCurrentOrigin(customPage.second);
 
 					// get the ID of the custom URL
 					customPage.first = this->database.getUrlId(customPage.second);
@@ -973,14 +969,11 @@ namespace crawlservpp::Module::Crawler {
 
 				// parse sitemap URL to sub-URL of domain
 				try {
-					Parsing::URI uriParser;
+					this->uriParser.setCurrentOrigin(robotsRelativeUrl);
 
-					uriParser.setCurrentDomain(this->domain);
-					uriParser.setCurrentOrigin(robotsRelativeUrl);
+					this->uriParser.parseLink(sitemap);
 
-					uriParser.parseLink(sitemap);
-
-					if(!uriParser.isSameDomain()) {
+					if(!(this->uriParser.isSameDomain())) {
 						this->log(
 								crawlerLoggingDefault,
 								"WARNING: Cross-domain sitemaps not supported ["
@@ -991,7 +984,7 @@ namespace crawlservpp::Module::Crawler {
 						continue;
 					}
 
-					sitemap = uriParser.getSubUri();
+					sitemap = this->uriParser.getSubUri();
 				}
 				catch(const URIException& e) {
 					std::string logString{"WARNING:  URI parser error - "};
@@ -3251,7 +3244,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// set current URL
 		try {
-			this->uriParser->setCurrentOrigin(url);
+			this->uriParser.setCurrentOrigin(url);
 		}
 		catch(const URIException& e) {
 			std::string exceptionString{
@@ -3330,16 +3323,16 @@ namespace crawlservpp::Module::Crawler {
 
 				// parse link
 				try {
-					if(this->uriParser->parseLink(linked)) {
-						if(this->uriParser->isSameDomain()) {
+					if(this->uriParser.parseLink(linked)) {
+						if(this->uriParser.isSameDomain()) {
 							if(!(this->config.crawlerParamsBlackList.empty())) {
-								linked = this->uriParser->getSubUri(
+								linked = this->uriParser.getSubUri(
 										this->config.crawlerParamsBlackList,
 										false
 								);
 							}
 							else {
-								linked = this->uriParser->getSubUri(
+								linked = this->uriParser.getSubUri(
 										this->config.crawlerParamsWhiteList,
 										true
 								);
