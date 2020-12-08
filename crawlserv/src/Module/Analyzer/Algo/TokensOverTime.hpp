@@ -118,7 +118,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	private:
 		// algorithm options
 		struct Entries {
-			// TODO
+			// TODO DEBUG
+			std::string dbg;
 		} algoConfig;
 
 		// corpora and counts

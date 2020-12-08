@@ -185,9 +185,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		else {
 			//TODO save tokens (-> private member function)
 
+			/*
 			// sleep forever (i.e. until the thread is terminated)
 			this->finished();
 			this->sleep(std::numeric_limits<std::uint64_t>::max());
+			*/
+
+			//TODO debug changes to the configuration
+			this->setStatusMessage(this->algoConfig.dbg);
 		}
 	}
 
@@ -204,8 +209,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS
 	 */
 
-	//! Does nothing.
-	void TokensOverTime::parseAlgoOption() {}
+	//! Parses a configuration option for the algorithm.
+	void TokensOverTime::parseAlgoOption() {
+		// algorithm options
+		this->category("tokens");
+
+		// TODO DEBUG
+		this->option("dbg", this->algoConfig.dbg);
+	}
 
 	//! Does nothing.
 	void TokensOverTime::checkAlgoOptions() {

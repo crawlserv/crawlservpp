@@ -1136,7 +1136,7 @@ namespace crawlservpp::Module {
 				bool changeIfValueIs{true};
 
 				if(this->toReset.compare_exchange_weak(changeIfValueIs, false)) {
-					this->reset();
+					this->onReset();
 				}
 
 				// check the pause state of the thread

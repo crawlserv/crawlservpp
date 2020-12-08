@@ -3603,7 +3603,69 @@ namespace crawlservpp::Main {
 		// update configuration in database
 		this->database.updateConfiguration(id, {{}, name, config});
 
-		return ServerCommandResponse("Configuration updated.");
+		// if necessary, reset threads currently using this configuration
+		std::ostringstream responseStream;
+		bool addNewLine{true};
+
+		responseStream << "Configuration updated.";
+
+		for(auto& crawler : this->crawlers) {
+			if(crawler->getConfig() == id) {
+				crawler->Module::Thread::reset();
+
+				if(addNewLine) {
+					responseStream << '\n';
+
+					addNewLine = false;
+				}
+
+				responseStream << "\nCrawler #" << crawler->getId() << " will be reset.";
+			}
+		}
+
+		for(auto& parser : this->parsers) {
+			if(parser->getConfig() == id) {
+				parser->Module::Thread::reset();
+
+				if(addNewLine) {
+					responseStream << '\n';
+
+					addNewLine = false;
+				}
+
+				responseStream << "\nParser #" << parser->getId() << " will be reset.";
+			}
+		}
+
+		for(auto& extractor : this->extractors) {
+			if(extractor->getConfig() == id) {
+				extractor->Module::Thread::reset();
+
+				if(addNewLine) {
+					responseStream << '\n';
+
+					addNewLine = false;
+				}
+
+				responseStream << "\nExtractor #" << extractor->getId() << " will be reset.";
+			}
+		}
+
+		for(auto& analyzer : this->analyzers) {
+			if(analyzer->getConfig() == id) {
+				analyzer->Module::Thread::reset();
+
+				if(addNewLine) {
+					responseStream << '\n';
+
+					addNewLine = false;
+				}
+
+				responseStream << "\nAnalyzer #" << analyzer->getId() << " will be reset.";
+			}
+		}
+
+		return ServerCommandResponse(responseStream.str());
 	}
 
 	// server command deleteconfig(id): delete a configuration from the database by its ID
