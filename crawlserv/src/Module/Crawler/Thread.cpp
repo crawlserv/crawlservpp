@@ -236,7 +236,9 @@ namespace crawlservpp::Module::Crawler {
 
 		this->log(crawlerLoggingVerbose, "initializes URI parser...");
 
-		this->uriParser = std::make_unique<Parsing::URI>();
+		if(!(this->uriParser)) {
+			this->uriParser = std::make_unique<Parsing::URI>();
+		}
 
 		this->uriParser->setCurrentDomain(this->domain);
 
@@ -290,15 +292,17 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// initialize networking for archives if necessary
-		if(this->config.crawlerArchives && !(this->networkingArchives)) {
+		if(this->config.crawlerArchives) {
 			this->setStatusMessage("Initializing networking for archives...");
 
 			this->log(crawlerLoggingVerbose, "initializes networking for archives...");
 
-			this->networkingArchives = std::make_unique<Network::Curl>(
-					this->cookieDir,
-					this->networkOptions
-			);
+			if(!(this->networkingArchives)) {
+				this->networkingArchives = std::make_unique<Network::Curl>(
+						this->cookieDir,
+						this->networkOptions
+				);
+			}
 
 			this->networkingArchives->setConfigGlobal(*this, true, configWarnings);
 
