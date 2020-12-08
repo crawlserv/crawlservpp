@@ -85,6 +85,7 @@ namespace crawlservpp::Module::Analyzer {
 		void onPause() override;
 		void onUnpause() override;
 		void onClear() override;
+		void onReset() override;
 
 		///@}
 		///@name Algorithm Events

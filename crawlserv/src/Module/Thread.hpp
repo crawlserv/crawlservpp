@@ -141,6 +141,7 @@ namespace crawlservpp::Module {
 		void stop();
 		void interrupt();
 		void end();
+		void reset();
 
 		///@}
 		///@name Time Travel
@@ -270,6 +271,13 @@ namespace crawlservpp::Module {
 		 */
 		virtual void onClear() = 0;
 
+		//! Resets the module.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific module.
+		 */
+		virtual void onReset() = 0;
+
 		///@}
 
 	private:
@@ -278,6 +286,7 @@ namespace crawlservpp::Module {
 		std::atomic<bool> pausable{true};			// thread is pausable
  		std::atomic<bool> running{true};			// thread is running (or paused)
 		std::atomic<bool> paused{false};			// thread is paused
+		std::atomic<bool> toReset{false};			// thread needs to be reset
 		std::atomic<bool> interrupted{false};		// thread has been interrupted by shutdown
 		std::atomic<bool> terminated{false};		// thread has been terminated due to an exception
 		std::atomic<bool> shutdown{false};			// shutdown in progress

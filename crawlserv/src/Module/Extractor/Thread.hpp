@@ -203,6 +203,7 @@ namespace crawlservpp::Module::Extractor {
 		void onPause() override;
 		void onUnpause() override;
 		void onClear() override;
+		void onReset() override;
 
 		///@}
 

@@ -634,6 +634,15 @@ namespace crawlservpp::Module::Extractor {
 		this->setStatusMessage(oldStatus);
 	}
 
+	//! Resets the extractor.
+	void Thread::onReset() {
+		this->onClear();
+
+		this->resetBase();
+
+		this->onInit();
+	}
+
 	/*
 	 * shadowing functions not to be used by thread (private)
 	 */

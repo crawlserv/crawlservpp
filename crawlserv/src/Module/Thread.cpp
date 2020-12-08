@@ -390,6 +390,15 @@ namespace crawlservpp::Module {
 		}
 	}
 
+	//! Will reset the thread before the next tick.
+	/*
+	 * \b Thread-safe: Can be used by both the
+	 *   module and the main thread.
+	 */
+	void Thread::reset() {
+		this->toReset.store(true);
+	}
+
 	/*
 	 * TIME TRAVEL
 	 */
@@ -926,7 +935,7 @@ namespace crawlservpp::Module {
 		// check for "time travel" to another ID
 		auto newId{this->overwriteLast.load()};
 
-		if(newId > 0 && this->overwriteLast.compare_exchange_strong(newId, 0)) {
+		if(newId > 0 && this->overwriteLast.compare_exchange_weak(newId, 0)) {
 			// save the old values for the time calculation
 			const auto oldId{this->last};
 			const auto oldTime{static_cast<double>(this->getRunTime())};
@@ -1123,6 +1132,13 @@ namespace crawlservpp::Module {
 
 			// run the thread
 			while(this->running.load() && !(this->interrupted.load())) {
+				// check the reset state of the thread
+				bool changeIfValueIs{true};
+
+				if(this->toReset.compare_exchange_weak(changeIfValueIs, false)) {
+					this->reset();
+				}
+
 				// check the pause state of the thread
 				if(this->paused.load()) {
 					// the thread is paused: wait for the pause to be released

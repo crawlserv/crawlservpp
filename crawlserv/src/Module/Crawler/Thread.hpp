@@ -219,6 +219,7 @@ namespace crawlservpp::Module::Crawler {
 		void onPause() override;
 		void onUnpause() override;
 		void onClear() override;
+		void onReset() override;
 
 		///@}
 

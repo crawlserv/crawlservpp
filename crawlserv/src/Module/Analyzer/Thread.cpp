@@ -175,6 +175,16 @@ namespace crawlservpp::Module::Analyzer {
 		this->onAlgoClear();
 	}
 
+	//! Resets the algorithm.
+	void Thread::onReset() {
+		this->onClear();
+
+		this->resetAlgo();
+		this->resetBase();
+
+		this->onInit();
+	}
+
 	/*
 	 * THREAD CONTROL FOR ALGORITHMS (protected)
 	 */

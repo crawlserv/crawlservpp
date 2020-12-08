@@ -157,6 +157,7 @@ namespace crawlservpp::Module::Parser {
 		void onPause() override;
 		void onUnpause() override;
 		void onClear() override;
+		void onReset() override;
 
 		///@}
 

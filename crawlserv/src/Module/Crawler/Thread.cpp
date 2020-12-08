@@ -602,6 +602,15 @@ namespace crawlservpp::Module::Crawler {
 		this->clearQueries();
 	}
 
+	//! Resets the crawler.
+	void Thread::onReset() {
+		this->onClear();
+
+		this->resetBase();
+
+		this->onInit();
+	}
+
 	/*
 	 *  shadowing functions not to be used by thread (private)
 	 */
