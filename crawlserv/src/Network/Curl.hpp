@@ -56,6 +56,7 @@
 #include <array>		// std::array
 #include <cctype>		// ::isspace, ::tolower
 #include <chrono>		// std::chrono
+#include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
 #include <functional>	// std::function

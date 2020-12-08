@@ -39,6 +39,7 @@
 
 #include <pugixml.hpp>
 
+#include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint32_t
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <queue>		// std::queue

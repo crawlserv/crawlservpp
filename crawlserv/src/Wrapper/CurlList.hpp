@@ -42,6 +42,7 @@
 
 #endif
 
+#include <cstddef>		// std::size_t
 #include <stdexcept>	// std::runtime_error
 #include <string>		// std::string
 #include <vector>		// std::vector

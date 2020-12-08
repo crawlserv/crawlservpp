@@ -31,8 +31,9 @@
 #ifndef STRUCT_TEXTMAP_HPP_
 #define STRUCT_TEXTMAP_HPP_
 
-#include <string>
-#include <vector>
+#include <cstddef>	// std::size_t
+#include <string>	// std::string
+#include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
 

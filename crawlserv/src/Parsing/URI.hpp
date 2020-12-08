@@ -39,6 +39,7 @@
 #include <uriparser/Uri.h>
 
 #include <algorithm>	// std::find
+#include <cstddef>		// std::size_t
 #include <memory>		// std::make_unique
 #include <string>		// std::string, std::to_string
 #include <string_view>	// std::string_view
@@ -655,7 +656,7 @@ namespace crawlservpp::Parsing {
 			)
 		};
 
-		for(size_t n{0}; n < string.size(); ++n) {
+		for(std::size_t n{0}; n < string.size(); ++n) {
 			cString[n] = string.at(n);
 		}
 
@@ -683,7 +684,7 @@ namespace crawlservpp::Parsing {
 	 */
 	inline std::string URI::escapeUri(std::string_view uriToEscape) {
 		std::string result;
-		size_t pos{0};
+		std::size_t pos{0};
 
 		while(pos < uriToEscape.size()) {
 			auto end{uriToEscape.find_first_of(";/?:@=&#%", pos)};

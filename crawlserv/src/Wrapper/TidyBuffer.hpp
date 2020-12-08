@@ -33,6 +33,7 @@
 
 #include <tidybuffio.h>
 
+#include <cstddef>	// std::size_t
 #include <string>	// std::string
 #include <utility>	// std::move
 

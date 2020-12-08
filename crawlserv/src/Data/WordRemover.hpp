@@ -35,6 +35,7 @@
 
 #include "../Helper/FileSystem.hpp"
 
+#include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint64_t
 #include <fstream>			// std::ifstream
 #include <string>			// std::getline, std::stoul, std::string
