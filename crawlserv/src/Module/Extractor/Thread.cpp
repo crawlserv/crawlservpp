@@ -266,8 +266,8 @@ namespace crawlservpp::Module::Extractor {
 			configWarnings.pop();
 		}
 
-		if(this->resetTorAfter > 0) {
-			this->torControl.setNewIdentityMax(resetTorAfter);
+		if(this->networkConfig.resetTorAfter > 0) {
+			this->torControl.setNewIdentityMax(this->networkConfig.resetTorAfter);
 		}
 
 		// initialize queries
@@ -3251,7 +3251,7 @@ namespace crawlservpp::Module::Extractor {
 		try {
 			if(
 					this->torControl.active()
-					&& this->resetTor
+					&& this->networkConfig.resetTor
 					&& this->torControl.newIdentity()
 			) {
 				this->log(

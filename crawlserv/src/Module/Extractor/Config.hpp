@@ -987,6 +987,7 @@ namespace crawlservpp::Module::Extractor {
 
 		void parseOption() override;
 		void checkOptions() override;
+		void reset() override;
 
 		///@}
 
@@ -1544,6 +1545,11 @@ namespace crawlservpp::Module::Extractor {
 					"Unused field properties for linked data removed from configuration."
 			);
 		}
+	}
+
+	//! Resets the extractor-specific configuration options.
+	inline void Config::reset() {
+		this->config = {};
 	}
 
 	/*

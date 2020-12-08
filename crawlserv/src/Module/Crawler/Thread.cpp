@@ -257,12 +257,12 @@ namespace crawlservpp::Module::Crawler {
 			configWarnings.pop();
 		}
 
-		if(this->resetTorAfter > 0) {
-			this->torControl.setNewIdentityMax(this->resetTorAfter);
+		if(this->networkConfig.resetTorAfter > 0) {
+			this->torControl.setNewIdentityMax(this->networkConfig.resetTorAfter);
 		}
 
-		if(this->resetTorOnlyAfter > 0) {
-			this->torControl.setNewIdentityMin(this->resetTorOnlyAfter);
+		if(this->networkConfig.resetTorOnlyAfter > 0) {
+			this->torControl.setNewIdentityMin(this->networkConfig.resetTorOnlyAfter);
 		}
 
 		// initialize custom URLs
@@ -4290,7 +4290,7 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			if(
 					this->torControl.active()
-					&& this->resetTor
+					&& this->networkConfig.resetTor
 					&& this->torControl.newIdentity()
 			) {
 				this->log(

@@ -215,4 +215,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
+	//! Resets the configuration options for the algorithm.
+	void TokensOverTime::resetAlgo() {
+		this->algoConfig = {};
+	}
+
 } /* namespace crawlservpp::Module::Analyzer::Algo */

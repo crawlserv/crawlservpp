@@ -343,6 +343,10 @@ namespace crawlservpp::Network {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor setting the cookie directory and the network options.
 	/*!
 	 * Initializes @c libcurl and sets some basic global default options like the write function,
@@ -406,6 +410,10 @@ namespace crawlservpp::Network {
 		this->setOption(CURLOPT_HEADERDATA, this);
 	}
 
+	/*
+	 * SETTERS
+	 */
+
 	//! Sets the network options for the connection according to the given configuration.
 	/*!
 	 * Warnings might include options set, but not
@@ -440,28 +448,28 @@ namespace crawlservpp::Network {
 		}
 
 		// set libcurl options
-		this->setOption(CURLOPT_MAXCONNECTS, globalConfig.connectionsMax);
+		this->setOption(CURLOPT_MAXCONNECTS, globalConfig.networkConfig.connectionsMax);
 		this->setOption(
 				CURLOPT_IGNORE_CONTENT_LENGTH,
-				globalConfig.contentLengthIgnore
+				globalConfig.networkConfig.contentLengthIgnore
 		);
 
-		if(globalConfig.cookies && !limited) {
+		if(globalConfig.networkConfig.cookies && !limited) {
 			// add cookie directory to cookie files
 			std::string loadCookiesFrom;
 			std::string saveCookiesTo;
 
-			if(!globalConfig.cookiesLoad.empty()) {
+			if(!globalConfig.networkConfig.cookiesLoad.empty()) {
 				loadCookiesFrom.reserve(
 						this->cookieDir.length()
-						+ globalConfig.cookiesLoad.length()
+						+ globalConfig.networkConfig.cookiesLoad.length()
 						+ 1 // path separator
 				);
 
 				loadCookiesFrom = this->cookieDir;
 
 				loadCookiesFrom += Helper::FileSystem::getPathSeparator();
-				loadCookiesFrom += globalConfig.cookiesLoad;
+				loadCookiesFrom += globalConfig.networkConfig.cookiesLoad;
 
 				// check whether cookie file really is located in cookie directory
 				if(!Helper::FileSystem::contains(this->cookieDir, loadCookiesFrom)) {
@@ -476,17 +484,17 @@ namespace crawlservpp::Network {
 				}
 			}
 
-			if(!globalConfig.cookiesSave.empty()) {
+			if(!globalConfig.networkConfig.cookiesSave.empty()) {
 				saveCookiesTo.reserve(
 						this->cookieDir.length()
-						+ globalConfig.cookiesSave.length()
+						+ globalConfig.networkConfig.cookiesSave.length()
 						+ 1 // path separator
 				);
 
 				saveCookiesTo = this->cookieDir;
 
 				saveCookiesTo += Helper::FileSystem::getPathSeparator();
-				saveCookiesTo += globalConfig.cookiesSave;
+				saveCookiesTo += globalConfig.networkConfig.cookiesSave;
 
 				// check whether cookie file really is located in cookie directory
 				if(!Helper::FileSystem::contains(this->cookieDir, saveCookiesTo)) {
@@ -508,19 +516,19 @@ namespace crawlservpp::Network {
 			}
 		}
 
-		if(!globalConfig.cookiesSession && !limited) {
+		if(!globalConfig.networkConfig.cookiesSession && !limited) {
 			this->setOption(CURLOPT_COOKIESESSION, true);
 		}
 
-		if(!globalConfig.cookiesSet.empty() && !limited) {
-			this->setCookies(globalConfig.cookiesSet);
+		if(!globalConfig.networkConfig.cookiesSet.empty() && !limited) {
+			this->setCookies(globalConfig.networkConfig.cookiesSet);
 		}
 
-		this->setOption(CURLOPT_DNS_CACHE_TIMEOUT, globalConfig.dnsCacheTimeOut);
+		this->setOption(CURLOPT_DNS_CACHE_TIMEOUT, globalConfig.networkConfig.dnsCacheTimeOut);
 
-		if(!globalConfig.dnsDoH.empty()) {
+		if(!globalConfig.networkConfig.dnsDoH.empty()) {
 			if(this->version >= versionDoH) {
-				this->setOption(CURLOPT_DOH_URL, globalConfig.dnsDoH);
+				this->setOption(CURLOPT_DOH_URL, globalConfig.networkConfig.dnsDoH);
 			}
 			else {
 				warningsTo.emplace(
@@ -530,20 +538,20 @@ namespace crawlservpp::Network {
 			}
 		}
 
-		if(!globalConfig.dnsInterface.empty()) {
-			this->setOption(CURLOPT_DNS_INTERFACE, globalConfig.dnsInterface);
+		if(!globalConfig.networkConfig.dnsInterface.empty()) {
+			this->setOption(CURLOPT_DNS_INTERFACE, globalConfig.networkConfig.dnsInterface);
 		}
 
-		if(!globalConfig.dnsResolves.empty()) {
-			this->dnsResolves.append(globalConfig.dnsResolves);
+		if(!globalConfig.networkConfig.dnsResolves.empty()) {
+			this->dnsResolves.append(globalConfig.networkConfig.dnsResolves);
 
 			this->setOption(CURLOPT_RESOLVE, this->dnsResolves);
 		}
 
-		if(!globalConfig.dnsServers.empty()) {
+		if(!globalConfig.networkConfig.dnsServers.empty()) {
 			std::string serverList;
 
-			for(const auto& dnsServer : globalConfig.dnsServers) {
+			for(const auto& dnsServer : globalConfig.networkConfig.dnsServers) {
 				serverList += dnsServer + ",";
 			}
 
@@ -553,10 +561,10 @@ namespace crawlservpp::Network {
 		}
 
 		if(this->version >= versionDnsShuffle) {
-			this->setOption(CURLOPT_DNS_SHUFFLE_ADDRESSES, globalConfig.dnsShuffle);
+			this->setOption(CURLOPT_DNS_SHUFFLE_ADDRESSES, globalConfig.networkConfig.dnsShuffle);
 		}
 		else {
-			if(globalConfig.dnsShuffle) {
+			if(globalConfig.networkConfig.dnsShuffle) {
 				warningsTo.emplace(
 						"DNS shuffling currently not supported,"
 						" 'network.dns.shuffle' ignored."
@@ -565,15 +573,15 @@ namespace crawlservpp::Network {
 		}
 
 		if(
-				globalConfig.encodingBr
-				|| globalConfig.encodingDeflate
-				|| globalConfig.encodingGZip
-				|| globalConfig.encodingIdentity
-				|| globalConfig.encodingZstd
+				globalConfig.networkConfig.encodingBr
+				|| globalConfig.networkConfig.encodingDeflate
+				|| globalConfig.networkConfig.encodingGZip
+				|| globalConfig.networkConfig.encodingIdentity
+				|| globalConfig.networkConfig.encodingZstd
 		) {
 			std::string encodingList;
 
-			if(globalConfig.encodingBr) {
+			if(globalConfig.networkConfig.encodingBr) {
 				if(
 						this->version >= versionBrotli
 						&& this->hasFeature(CURL_VERSION_BROTLI) //NOLINT(hicpp-signed-bitwise)
@@ -588,7 +596,7 @@ namespace crawlservpp::Network {
 				}
 			}
 
-			if(globalConfig.encodingDeflate) {
+			if(globalConfig.networkConfig.encodingDeflate) {
 				if(this->hasFeature(CURL_VERSION_LIBZ)) { //NOLINT(hicpp-signed-bitwise)
 					encodingList += "deflate,";
 				}
@@ -601,7 +609,7 @@ namespace crawlservpp::Network {
 				}
 			}
 
-			if(globalConfig.encodingGZip) {
+			if(globalConfig.networkConfig.encodingGZip) {
 				if(this->hasFeature(CURL_VERSION_LIBZ)) { //NOLINT(hicpp-signed-bitwise)
 					encodingList += "gzip,";
 				}
@@ -614,11 +622,11 @@ namespace crawlservpp::Network {
 				}
 			}
 
-			if(globalConfig.encodingIdentity) {
+			if(globalConfig.networkConfig.encodingIdentity) {
 				encodingList += "identity,";
 			}
 
-			if(globalConfig.encodingZstd) {
+			if(globalConfig.networkConfig.encodingZstd) {
 				if(
 						this->version >= versionZstd
 						&& this->hasFeature(CURL_VERSION_ZSTD) //NOLINT(hicpp-signed-bitwise)
@@ -641,24 +649,24 @@ namespace crawlservpp::Network {
 			this->setOption(CURLOPT_ACCEPT_ENCODING, nullptr);
 		}
 
-		if(globalConfig.encodingTransfer) {
-			this->setOption(CURLOPT_TRANSFER_ENCODING, globalConfig.encodingTransfer);
+		if(globalConfig.networkConfig.encodingTransfer) {
+			this->setOption(CURLOPT_TRANSFER_ENCODING, globalConfig.networkConfig.encodingTransfer);
 		}
 
-		if(!globalConfig.headers.empty() && !limited) {
-			this->headers.append(globalConfig.headers);
+		if(!globalConfig.networkConfig.headers.empty() && !limited) {
+			this->headers.append(globalConfig.networkConfig.headers);
 
 			this->setOption(CURLOPT_HTTPHEADER, this->headers);
 		}
 
-		if(!globalConfig.http200Aliases.empty() && !limited) {
-			this->http200Aliases.append(globalConfig.http200Aliases);
+		if(!globalConfig.networkConfig.http200Aliases.empty() && !limited) {
+			this->http200Aliases.append(globalConfig.networkConfig.http200Aliases);
 
 			this->setOption(CURLOPT_HTTP200ALIASES, this->http200Aliases);
 		}
 
 		if(!limited) {
-			switch(globalConfig.httpVersion) {
+			switch(globalConfig.networkConfig.httpVersion) {
 			case httpVersionAny:
 				this->setOption(CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_NONE);
 
@@ -749,37 +757,37 @@ namespace crawlservpp::Network {
 			}
 		}
 
-		if(!globalConfig.localInterface.empty()) {
-			this->setOption(CURLOPT_INTERFACE, globalConfig.localInterface);
+		if(!globalConfig.networkConfig.localInterface.empty()) {
+			this->setOption(CURLOPT_INTERFACE, globalConfig.networkConfig.localInterface);
 		}
 
-		this->setOption(CURLOPT_LOCALPORT, globalConfig.localPort);
-		this->setOption(CURLOPT_LOCALPORTRANGE, globalConfig.localPortRange);
-		this->setOption(CURLOPT_FORBID_REUSE, globalConfig.noReUse);
+		this->setOption(CURLOPT_LOCALPORT, globalConfig.networkConfig.localPort);
+		this->setOption(CURLOPT_LOCALPORTRANGE, globalConfig.networkConfig.localPortRange);
+		this->setOption(CURLOPT_FORBID_REUSE, globalConfig.networkConfig.noReUse);
 
-		if(globalConfig.proxy.empty()) {
+		if(globalConfig.networkConfig.proxy.empty()) {
 			if(!(this->networkOptions.defaultProxy.empty())) {
 				// no proxy is given, but default proxy is set: use default proxy
 				this->setOption(CURLOPT_PROXY, this->networkOptions.defaultProxy);
 			}
 		}
 		else {
-			this->setOption(CURLOPT_PROXY, globalConfig.proxy);
+			this->setOption(CURLOPT_PROXY, globalConfig.networkConfig.proxy);
 		}
 
-		if(!globalConfig.proxyAuth.empty()) {
-			this->setOption(CURLOPT_PROXYUSERPWD, globalConfig.proxyAuth);
+		if(!globalConfig.networkConfig.proxyAuth.empty()) {
+			this->setOption(CURLOPT_PROXYUSERPWD, globalConfig.networkConfig.proxyAuth);
 		}
 
-		if(!globalConfig.proxyHeaders.empty()) {
-			this->proxyHeaders.append(globalConfig.proxyHeaders);
+		if(!globalConfig.networkConfig.proxyHeaders.empty()) {
+			this->proxyHeaders.append(globalConfig.networkConfig.proxyHeaders);
 
 			this->setOption(CURLOPT_PROXYHEADER, this->proxyHeaders);
 		}
 
-		if(!globalConfig.proxyPre.empty()) {
+		if(!globalConfig.networkConfig.proxyPre.empty()) {
 			if(this->version >= versionPreProxy) {
-				this->setOption(CURLOPT_PRE_PROXY, globalConfig.proxyPre);
+				this->setOption(CURLOPT_PRE_PROXY, globalConfig.networkConfig.proxyPre);
 			}
 			else {
 				warningsTo.emplace(
@@ -790,8 +798,8 @@ namespace crawlservpp::Network {
 		}
 
 		if(
-				!globalConfig.proxyTlsSrpPassword.empty()
-				|| !globalConfig.proxyTlsSrpUser.empty()
+				!globalConfig.networkConfig.proxyTlsSrpPassword.empty()
+				|| !globalConfig.networkConfig.proxyTlsSrpUser.empty()
 		) {
 			if(
 					this->version >= versionProxyTlsAuth
@@ -800,11 +808,11 @@ namespace crawlservpp::Network {
 				this->setOption(CURLOPT_PROXY_TLSAUTH_TYPE, authTypeTlsSrp);
 				this->setOption(
 						CURLOPT_PROXY_TLSAUTH_USERNAME,
-						globalConfig.proxyTlsSrpUser
+						globalConfig.networkConfig.proxyTlsSrpUser
 				);
 				this->setOption(
 						CURLOPT_PROXY_TLSAUTH_PASSWORD,
-						globalConfig.proxyTlsSrpPassword
+						globalConfig.networkConfig.proxyTlsSrpPassword
 				);
 			}
 			else {
@@ -815,14 +823,14 @@ namespace crawlservpp::Network {
 			}
 		}
 
-		this->setOption(CURLOPT_HTTPPROXYTUNNEL, globalConfig.proxyTunnelling);
-		this->setOption(CURLOPT_FOLLOWLOCATION, globalConfig.redirect);
-		this->setOption(CURLOPT_MAXREDIRS, globalConfig.redirectMax);
+		this->setOption(CURLOPT_HTTPPROXYTUNNEL, globalConfig.networkConfig.proxyTunnelling);
+		this->setOption(CURLOPT_FOLLOWLOCATION, globalConfig.networkConfig.redirect);
+		this->setOption(CURLOPT_MAXREDIRS, globalConfig.networkConfig.redirectMax);
 
 		if(
-				globalConfig.redirectPost301
-				&& globalConfig.redirectPost302
-				&& globalConfig.redirectPost303
+				globalConfig.networkConfig.redirectPost301
+				&& globalConfig.networkConfig.redirectPost302
+				&& globalConfig.networkConfig.redirectPost303
 		) {
 			//NOLINTNEXTLINE(hicpp-signed-bitwise)
 			this->setOption(CURLOPT_POSTREDIR, CURL_REDIR_POST_ALL);
@@ -831,17 +839,17 @@ namespace crawlservpp::Network {
 			//NOLINTNEXTLINE(google-runtime-int)
 			long redirectPost{0};
 
-			if(globalConfig.redirectPost301) {
+			if(globalConfig.networkConfig.redirectPost301) {
 				//NOLINTNEXTLINE(hicpp-signed-bitwise)
 				redirectPost |= CURL_REDIR_POST_301;
 			}
 
-			if(globalConfig.redirectPost302) {
+			if(globalConfig.networkConfig.redirectPost302) {
 				//NOLINTNEXTLINE(hicpp-signed-bitwise)
 				redirectPost |= CURL_REDIR_POST_302;
 			}
 
-			if(globalConfig.redirectPost303) {
+			if(globalConfig.networkConfig.redirectPost303) {
 				//NOLINTNEXTLINE(hicpp-signed-bitwise)
 				redirectPost |= CURL_REDIR_POST_303;
 			}
@@ -849,24 +857,27 @@ namespace crawlservpp::Network {
 			this->setOption(CURLOPT_POSTREDIR, redirectPost);
 		}
 
-		if(!globalConfig.referer.empty() && !limited) {
-			this->setOption(CURLOPT_REFERER, globalConfig.referer);
+		if(!globalConfig.networkConfig.referer.empty() && !limited) {
+			this->setOption(CURLOPT_REFERER, globalConfig.networkConfig.referer);
 		}
 
-		this->setOption(CURLOPT_AUTOREFERER, globalConfig.refererAutomatic);
-		this->setOption(CURLOPT_MAX_RECV_SPEED_LARGE, globalConfig.speedDownLimit);
-		this->setOption(CURLOPT_LOW_SPEED_LIMIT, globalConfig.speedLowLimit);
-		this->setOption(CURLOPT_LOW_SPEED_TIME, globalConfig.speedLowTime);
-		this->setOption(CURLOPT_MAX_SEND_SPEED_LARGE, globalConfig.speedUpLimit);
-		this->setOption(CURLOPT_SSL_VERIFYHOST, globalConfig.sslVerifyHost);
-		this->setOption(CURLOPT_SSL_VERIFYPEER, globalConfig.sslVerifyPeer);
+		this->setOption(CURLOPT_AUTOREFERER, globalConfig.networkConfig.refererAutomatic);
+		this->setOption(CURLOPT_MAX_RECV_SPEED_LARGE, globalConfig.networkConfig.speedDownLimit);
+		this->setOption(CURLOPT_LOW_SPEED_LIMIT, globalConfig.networkConfig.speedLowLimit);
+		this->setOption(CURLOPT_LOW_SPEED_TIME, globalConfig.networkConfig.speedLowTime);
+		this->setOption(CURLOPT_MAX_SEND_SPEED_LARGE, globalConfig.networkConfig.speedUpLimit);
+		this->setOption(CURLOPT_SSL_VERIFYHOST, globalConfig.networkConfig.sslVerifyHost);
+		this->setOption(CURLOPT_SSL_VERIFYPEER, globalConfig.networkConfig.sslVerifyPeer);
 
 		if(this->version >= versionProxySslVerify) {
-			this->setOption(CURLOPT_PROXY_SSL_VERIFYHOST, globalConfig.sslVerifyProxyHost);
-			this->setOption(CURLOPT_PROXY_SSL_VERIFYPEER, globalConfig.sslVerifyProxyPeer);
+			this->setOption(CURLOPT_PROXY_SSL_VERIFYHOST, globalConfig.networkConfig.sslVerifyProxyHost);
+			this->setOption(CURLOPT_PROXY_SSL_VERIFYPEER, globalConfig.networkConfig.sslVerifyProxyPeer);
 		}
 		else {
-			if(globalConfig.sslVerifyProxyHost || globalConfig.sslVerifyProxyPeer) {
+			if(
+					globalConfig.networkConfig.sslVerifyProxyHost
+					|| globalConfig.networkConfig.sslVerifyProxyPeer
+			) {
 				warningsTo.emplace(
 						"SSL verification of proxy host and peer currently not supported,"
 						" 'ssl.verify.proxy.host' and  'ssl.verify.proxy.peer' ignored."
@@ -874,13 +885,13 @@ namespace crawlservpp::Network {
 			}
 		}
 
-		this->setOption(CURLOPT_SSL_VERIFYSTATUS, globalConfig.sslVerifyStatus);
+		this->setOption(CURLOPT_SSL_VERIFYSTATUS, globalConfig.networkConfig.sslVerifyStatus);
 
 		if(this->version >= versionTcpFastOpen) {
-			this->setOption(CURLOPT_TCP_FASTOPEN, globalConfig.tcpFastOpen);
+			this->setOption(CURLOPT_TCP_FASTOPEN, globalConfig.networkConfig.tcpFastOpen);
 		}
 		else {
-			if(globalConfig.tcpFastOpen) {
+			if(globalConfig.networkConfig.tcpFastOpen) {
 				warningsTo.emplace(
 						"TCP Fast Open currently not supported,"
 						" 'tcp.fast.open' ignored."
@@ -888,43 +899,46 @@ namespace crawlservpp::Network {
 			}
 		}
 
-		this->setOption(CURLOPT_TCP_KEEPALIVE, globalConfig.tcpKeepAlive);
-		this->setOption(CURLOPT_TCP_KEEPIDLE, globalConfig.tcpKeepAliveIdle);
-		this->setOption(CURLOPT_TCP_KEEPINTVL, globalConfig.tcpKeepAliveInterval);
-		this->setOption(CURLOPT_TCP_NODELAY, globalConfig.tcpNagle);
-		this->setOption(CURLOPT_CONNECTTIMEOUT, globalConfig.timeOut);
+		this->setOption(CURLOPT_TCP_KEEPALIVE, globalConfig.networkConfig.tcpKeepAlive);
+		this->setOption(CURLOPT_TCP_KEEPIDLE, globalConfig.networkConfig.tcpKeepAliveIdle);
+		this->setOption(CURLOPT_TCP_KEEPINTVL, globalConfig.networkConfig.tcpKeepAliveInterval);
+		this->setOption(CURLOPT_TCP_NODELAY, globalConfig.networkConfig.tcpNagle);
+		this->setOption(CURLOPT_CONNECTTIMEOUT, globalConfig.networkConfig.timeOut);
 
 		if(this->version >= versionHappyEyeballs) {
-			if(globalConfig.timeOutHappyEyeballs > 0) {
+			if(globalConfig.networkConfig.timeOutHappyEyeballs > 0) {
 				this->setOption(
 						CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS,
-						globalConfig.timeOutHappyEyeballs
+						globalConfig.networkConfig.timeOutHappyEyeballs
 				);
 			}
 			else {
 				this->setOption(CURLOPT_HAPPY_EYEBALLS_TIMEOUT_MS, CURL_HET_DEFAULT);
 			}
 		}
-		else if(globalConfig.timeOutHappyEyeballs > 0) {
+		else if(globalConfig.networkConfig.timeOutHappyEyeballs > 0) {
 			warningsTo.emplace(
 					"Happy Eyeballs Configuration currently not supported,"
 					" 'network.timeout.happyeyeballs' ignored."
 			);
 		}
 
-		this->setOption(CURLOPT_TIMEOUT, globalConfig.timeOutRequest);
+		this->setOption(CURLOPT_TIMEOUT, globalConfig.networkConfig.timeOutRequest);
 
-		if(!globalConfig.tlsSrpPassword.empty() || !globalConfig.tlsSrpUser.empty()) {
+		if(
+				!globalConfig.networkConfig.tlsSrpPassword.empty()
+				|| !globalConfig.networkConfig.tlsSrpUser.empty()
+		) {
 			this->setOption(CURLOPT_TLSAUTH_TYPE, "SRP");
-			this->setOption(CURLOPT_TLSAUTH_USERNAME, globalConfig.tlsSrpUser);
-			this->setOption(CURLOPT_TLSAUTH_PASSWORD, globalConfig.tlsSrpPassword);
+			this->setOption(CURLOPT_TLSAUTH_USERNAME, globalConfig.networkConfig.tlsSrpUser);
+			this->setOption(CURLOPT_TLSAUTH_PASSWORD, globalConfig.networkConfig.tlsSrpPassword);
 		}
 
-		if(!globalConfig.userAgent.empty()) {
-			this->setOption(CURLOPT_USERAGENT, globalConfig.userAgent);
+		if(!globalConfig.networkConfig.userAgent.empty()) {
+			this->setOption(CURLOPT_USERAGENT, globalConfig.networkConfig.userAgent);
 		}
 
-		this->setOption(CURLOPT_VERBOSE, globalConfig.verbose);
+		this->setOption(CURLOPT_VERBOSE, globalConfig.networkConfig.verbose);
 
 		// save configuration
 		this->config = &globalConfig;
@@ -944,7 +958,7 @@ namespace crawlservpp::Network {
 	 */
 	inline void Curl::setConfigCurrent(const Config& currentConfig) {
 		// overwrite cookies
-		for(const auto& cookie : currentConfig.cookiesOverwrite) {
+		for(const auto& cookie : currentConfig.networkConfig.cookiesOverwrite) {
 			this->setOption(CURLOPT_COOKIELIST, "Set-Cookie:" + cookie);
 		}
 	}
@@ -1083,6 +1097,10 @@ namespace crawlservpp::Network {
 		// reset headers
 		this->setOption(CURLOPT_HTTPHEADER, this->headers);
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Uses the connection to get content by sending a HTTP request to the specified URL.
 	/*!
@@ -1390,6 +1408,10 @@ namespace crawlservpp::Network {
 		return ip;
 	}
 
+	/*
+	 * RESET
+	 */
+
 	//! Resets the connection.
 	/*!
 	 * After cleaning up the connection, the function will wait for
@@ -1481,6 +1503,10 @@ namespace crawlservpp::Network {
 			);
 		}
 	}
+
+	/*
+	 * URL ENCODING
+	 */
 
 	//! URL encodes the given string.
 	/*!
@@ -1677,6 +1703,10 @@ namespace crawlservpp::Network {
 		return result;
 	}
 
+	/*
+	 * HELPER (protected)
+	 */
+
 	//! Copies the given @c libcurl string into a std::string and releases its memory.
 	/*!
 	 * Afterwards curlString will be invalid and its memory freed.
@@ -1707,6 +1737,10 @@ namespace crawlservpp::Network {
 
 		return std::string();
 	}
+
+	/*
+	 * HEADER HANDLING (protected)
+	 */
 
 	//! Static header function to handle incoming header data.
 	/*!
@@ -1763,6 +1797,10 @@ namespace crawlservpp::Network {
 		return static_cast<int>(size);
 	}
 
+	/*
+	 * WRITERS (protected)
+	 */
+
 	//! Static writer function to handle incoming network data.
 	/*!
 	 * If @c thisPtr is not @c nullptr, the function will forward the
@@ -1798,7 +1836,11 @@ namespace crawlservpp::Network {
 		return static_cast<int>(size);
 	}
 
-	// private helper function for setting a libcurl option to a string value
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
+	// set a libcurl option to a string value
 	inline void Curl::setOption(CURLoption option, const std::string& stringValue) {
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		this->curlCode = curl_easy_setopt(
@@ -1810,7 +1852,7 @@ namespace crawlservpp::Network {
 		this->checkCode();
 	}
 
-	// private helper function for setting a libcurl option to a numeric value
+	// set a libcurl option to a numeric value
 	//NOLINTNEXTLINE(google-runtime-int)
 	inline void Curl::setOption(CURLoption option, long longValue) {
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
@@ -1823,7 +1865,7 @@ namespace crawlservpp::Network {
 		this->checkCode();
 	}
 
-	// private helper function for setting a libcurl option to a libcurl list
+	// set a libcurl option to a libcurl list
 	inline void Curl::setOption(CURLoption option, CurlList& list) {
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		this->curlCode = curl_easy_setopt(
@@ -1835,7 +1877,7 @@ namespace crawlservpp::Network {
 		this->checkCode();
 	}
 
-	// private helper function for setting a libcurl option to a pointer
+	// set a libcurl option to a pointer
 	inline void Curl::setOption(CURLoption option, void * pointer) {
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		this->curlCode = curl_easy_setopt(
@@ -1847,12 +1889,12 @@ namespace crawlservpp::Network {
 		this->checkCode();
 	}
 
-	// private helper function for checking whether a libcurl feature is supported
+	// check whether a libcurl feature is supported
 	inline bool Curl::hasFeature(int feature) const noexcept {
 		return (this->features & feature) == feature; //NOLINT(hicpp-signed-bitwise)
 	}
 
-	// private helper function to check return code of libcurl function calls
+	// check return code of libcurl function calls
 	inline void Curl::checkCode() {
 		if(this->curlCode != CURLE_OK) {
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));

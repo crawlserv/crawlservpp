@@ -328,6 +328,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
+	//! Resets the configuration options for the algorithm.
+	void Empty::resetAlgo() {
+		this->algoConfig = {};
+	}
+
 	/*
 	 * ALGORITHM FUNCTIONS (private)
 	 */

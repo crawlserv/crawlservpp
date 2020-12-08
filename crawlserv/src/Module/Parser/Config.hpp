@@ -329,13 +329,22 @@ namespace crawlservpp::Module::Parser {
 		MAIN_EXCEPTION_CLASS();
 
 	protected:
-		// parsing of parsing-specific configuration
+		///@name Parser-Specific Configuration Parsing
+		///@{
+
 		void parseOption() override;
 		void checkOptions() override;
+		void reset() override;
+
+		///@}
 	};
 
 	/*
 	 * IMPLEMENTATION
+	 */
+
+	/*
+	 * PARSER-SPECIFIC CONFIGURATION PARSING
 	 */
 
 	//! Parses an parser-specific configuration option.
@@ -611,6 +620,11 @@ namespace crawlservpp::Module::Parser {
 
 			this->warning("Incomplete ID queries removed from configuration.");
 		}
+	}
+
+	//! Resets the parser-specific configuration options.
+	inline void Config::reset() {
+		this->config = {};
 	}
 
 } /* namespace crawlservpp::Module::Parser */

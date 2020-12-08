@@ -115,6 +115,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		void parseAlgoOption() override;
 		void checkAlgoOptions() override;
+		void resetAlgo() override;
 
 		///@}
 

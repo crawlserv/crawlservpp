@@ -120,517 +120,535 @@ namespace crawlservpp::Network {
 	 */
 	class Config : protected Module::Config {
 	public:
-		///@name Network Configuration
+		///@}
+		///@name Configuration
 		///@{
 
-		//! The maximum number of parallel connections.
-		std::uint16_t connectionsMax{defaultConnectionsMax};
-
-		//! Specifies whether the @c Content-Length header in HTTP responses will be ignored.
-		bool contentLengthIgnore{false};
-
-		//! Specifies whether the internal cookie engine will be enabled.
+		//! Configuration entries for analyzer threads.
 		/*!
-		 * The internal cookie engine temporarily
-		 *  stores and re-sends received cookies.
-		 *  They will be reset as soon as the
-		 *  connection is reset.
-		 *
-		 * Use Network::Config::cookiesLoad and
-		 *  Network::Config::cookiesSave for
-		 *  a more permanent solution.
-		 *
-		 * \sa cookiesOverwrite, cookiesSession
+		 * \warning Changing the configuration requires
+		 *   updating @c json/analyzer.json in @c
+		 *   crawlserv_frontend!
 		 */
-		bool cookies{false};
+		struct Entries {
+			///@name Network Configuration
+			///@{
 
-		//! The file from which cookies will be read.
-		/*!
-		 * Will be ignored when empty.
-		 *
-		 * \sa cookies, cookiesOverwrite,
-		 *   cookiesSave, cookiesSession
-		 */
-		std::string cookiesLoad;
+			//! The maximum number of parallel connections.
+			std::uint16_t connectionsMax{defaultConnectionsMax};
 
-		//! Cookies to be overwritten.
-		/*!
-		 * \sa cookies, cookiesLoad,
-		 *   cookiesSave, cookiesSession
-		 */
-		std::vector<std::string> cookiesOverwrite;
+			//! Specifies whether the @c Content-Length header in HTTP responses will be ignored.
+			bool contentLengthIgnore{false};
 
-		//! The file to which cookies will be saved.
-		/*!
-		 * Will be ignored when empty.
-		 *
-		 * \sa cookies, cookiesLoad,
-		 *   cookiesOverwrite, cookiesSession
-		 */
-		std::string cookiesSave;
+			//! Specifies whether the internal cookie engine will be enabled.
+			/*!
+			 * The internal cookie engine temporarily
+			 *  stores and re-sends received cookies.
+			 *  They will be reset as soon as the
+			 *  connection is reset.
+			 *
+			 * Use Network::Config::cookiesLoad and
+			 *  Network::Config::cookiesSave for
+			 *  a more permanent solution.
+			 *
+			 * \sa cookiesOverwrite, cookiesSession
+			 */
+			bool cookies{false};
 
-		//! Specifies whether to ignore obsolete session cookies.
-		/*!
-		 * \sa cookies, cookiesLoad,
-		 *   cookiesOverwrite, cookiesSave
-		 */
-		bool cookiesSession{true};
+			//! The file from which cookies will be read.
+			/*!
+			 * Will be ignored when empty.
+			 *
+			 * \sa cookies, cookiesOverwrite,
+			 *   cookiesSave, cookiesSession
+			 */
+			std::string cookiesLoad;
 
-		//! Custom HTTP @c Cookie header independent from the internal cookie engine.
-		/*!
-		 * Will be ignored when empty.
-		 *
-		 * Will be overwritten, if a cookie is set during dynamic redirect.
-		 *
-		 * Used by the crawler only.
-		 */
-		std::string cookiesSet;
+			//! Cookies to be overwritten.
+			/*!
+			 * \sa cookies, cookiesLoad,
+			 *   cookiesSave, cookiesSession
+			 */
+			std::vector<std::string> cookiesOverwrite;
 
-		//! The lifetime of DNS cache entries.
-		/*!
-		 * Set to -1 for a infinite lifetime.
-		 */
-		std::int64_t dnsCacheTimeOut{defaultDnsCacheTimeOut};
+			//! The file to which cookies will be saved.
+			/*!
+			 * Will be ignored when empty.
+			 *
+			 * \sa cookies, cookiesLoad,
+			 *   cookiesOverwrite, cookiesSession
+			 */
+			std::string cookiesSave;
 
-		//! The URL of a custom DNS-over-HTTPS (DoH) server.
-		/*!
-		 * Will be ignored when empty.
-		 */
-		std::string dnsDoH;
+			//! Specifies whether to ignore obsolete session cookies.
+			/*!
+			 * \sa cookies, cookiesLoad,
+			 *   cookiesOverwrite, cookiesSave
+			 */
+			bool cookiesSession{true};
 
-		//! The interface that DNS name resolves should be bound to.
-		/*!
-		 * Will be ignored when empty.
-		 */
-		std::string dnsInterface;
+			//! Custom HTTP @c Cookie header independent from the internal cookie engine.
+			/*!
+			 * Will be ignored when empty.
+			 *
+			 * Will be overwritten, if a cookie is set during dynamic redirect.
+			 *
+			 * Used by the crawler only.
+			 */
+			std::string cookiesSet;
 
-		//! DNS name resolves to be overwritten.
-		/*!
-		 * Each resolve should be in the format
-		 *  @c HOST:PORT:ADDRESS[,ADDRESS]..., where
-		 *  @c HOST is the name @c libcurl will try
-		 *  to resolve, @c PORT is the port number
-		 *  of the service where @ libcurl wants
-		 *  to connect to the @c HOST and @c ADDRESS
-		 *  is one or more numerical IP addresses.
-		 *  Multiple IP addresses need to be separated
-		 *  by comma.
-		 */
-		std::vector<std::string> dnsResolves;
+			//! The lifetime of DNS cache entries.
+			/*!
+			 * Set to -1 for a infinite lifetime.
+			 */
+			std::int64_t dnsCacheTimeOut{defaultDnsCacheTimeOut};
 
-		//! DNS servers to be preffered.
-		std::vector<std::string> dnsServers;
+			//! The URL of a custom DNS-over-HTTPS (DoH) server.
+			/*!
+			 * Will be ignored when empty.
+			 */
+			std::string dnsDoH;
 
-		//! Specifies whether to shuffle addresses when a host name returns more than one.
-		bool dnsShuffle{false};
+			//! The interface that DNS name resolves should be bound to.
+			/*!
+			 * Will be ignored when empty.
+			 */
+			std::string dnsInterface;
 
-		//! Specifies whether to request @c brotli encoding for requested content.
-		/*!
-		 * If no encoding for the requested content
-		 *  will be specified, no @c Accept-Encoding
-		 *  header will be sent and no decompression
-		 *  of received content will be performed.
-		 *
-		 * \sa encodingDeflate, encodingGZip,
-		 *   encodingIdentity, encodingZstd
-		 */
-		bool encodingBr{true};
+			//! DNS name resolves to be overwritten.
+			/*!
+			 * Each resolve should be in the format
+			 *  @c HOST:PORT:ADDRESS[,ADDRESS]..., where
+			 *  @c HOST is the name @c libcurl will try
+			 *  to resolve, @c PORT is the port number
+			 *  of the service where @ libcurl wants
+			 *  to connect to the @c HOST and @c ADDRESS
+			 *  is one or more numerical IP addresses.
+			 *  Multiple IP addresses need to be separated
+			 *  by comma.
+			 */
+			std::vector<std::string> dnsResolves;
 
-		//! Specifies whether to request @c DEFLATE encoding for requested content.
-		/*!
-		 * If no encoding for the requested content
-		 *  will be specified, no @c Accept-Encoding
-		 *  header will be sent and no decompression
-		 *  of received content will be performed.
-		 *
-		 * \sa encodingBr, encodingGZip,
-		 *   encodingIdentity, encodingZstd
-		 */
-		bool encodingDeflate{true};
+			//! DNS servers to be preffered.
+			std::vector<std::string> dnsServers;
 
-		//! Specifies whether to request @c gzip encoding for requested content.
-		/*!
-		 * If no encoding for the requested content
-		 *  will be specified, no @c Accept-Encoding
-		 *  header will be sent and no decompression
-		 *  of received content will be performed.
-		 *
-		 * \sa encodingBr, encodingDeflate,
-		 *   encodingIdentity, encodingZstd
-		 */
-		bool encodingGZip{true};
+			//! Specifies whether to shuffle addresses when a host name returns more than one.
+			bool dnsShuffle{false};
 
-		//! Specifies whether to (also) request non-compressed encoding for requested content.
-		/*!
-		 * If no encoding for the requested content
-		 *  will be specified, no @c Accept-Encoding
-		 *  header will be sent and no decompression
-		 *  of received content will be performed.
-		 *
-		 * \sa encodingBr, encodingDeflate,
-		 *   encodingGZip, encodingZstd
-		 */
-		bool encodingIdentity{true};
+			//! Specifies whether to request @c brotli encoding for requested content.
+			/*!
+			 * If no encoding for the requested content
+			 *  will be specified, no @c Accept-Encoding
+			 *  header will be sent and no decompression
+			 *  of received content will be performed.
+			 *
+			 * \sa encodingDeflate, encodingGZip,
+			 *   encodingIdentity, encodingZstd
+			 */
+			bool encodingBr{true};
 
-		//! Specifies whether to request HTTP Transfer Encoding.
-		bool encodingTransfer{false};
+			//! Specifies whether to request @c DEFLATE encoding for requested content.
+			/*!
+			 * If no encoding for the requested content
+			 *  will be specified, no @c Accept-Encoding
+			 *  header will be sent and no decompression
+			 *  of received content will be performed.
+			 *
+			 * \sa encodingBr, encodingGZip,
+			 *   encodingIdentity, encodingZstd
+			 */
+			bool encodingDeflate{true};
 
-		//! Specifies whether to request @c Zstandard encoding for requested content.
-		/*!
-		 * If no encoding for the requested content
-		 *  will be specified, no @c Accept-Encoding
-		 *  header will be sent and no decompression
-		 *  of received content will be performed.
-		 *
-		 * \sa encodingBr, encodingDeflate,
-		 *   encodingGZip, encodingIdentity
-		 */
-		bool encodingZstd{false};
+			//! Specifies whether to request @c gzip encoding for requested content.
+			/*!
+			 * If no encoding for the requested content
+			 *  will be specified, no @c Accept-Encoding
+			 *  header will be sent and no decompression
+			 *  of received content will be performed.
+			 *
+			 * \sa encodingBr, encodingDeflate,
+			 *   encodingIdentity, encodingZstd
+			 */
+			bool encodingGZip{true};
 
-		//! Custom HTTP headers to be sent with every request.
-		std::vector<std::string> headers;
+			//! Specifies whether to (also) request non-compressed encoding for requested content.
+			/*!
+			 * If no encoding for the requested content
+			 *  will be specified, no @c Accept-Encoding
+			 *  header will be sent and no decompression
+			 *  of received content will be performed.
+			 *
+			 * \sa encodingBr, encodingDeflate,
+			 *   encodingGZip, encodingZstd
+			 */
+			bool encodingIdentity{true};
 
-		//! Aliases that will be treated like @c HTTP/1.0 @c 200 @c OK.
-		std::vector<std::string> http200Aliases;
+			//! Specifies whether to request HTTP Transfer Encoding.
+			bool encodingTransfer{false};
 
-		//! HTTP version(s) to be used.
-		/*!
-		 * \sa httpVersionAny, httpVersion1,
-		 *  httpVersion11, httpVersion2,
-		 *  httpVersion2Only, httpVersion2Tls,
-		 *  httpVersion3Only
-		 */
-		std::uint16_t httpVersion{httpVersion2Tls};
+			//! Specifies whether to request @c Zstandard encoding for requested content.
+			/*!
+			 * If no encoding for the requested content
+			 *  will be specified, no @c Accept-Encoding
+			 *  header will be sent and no decompression
+			 *  of received content will be performed.
+			 *
+			 * \sa encodingBr, encodingDeflate,
+			 *   encodingGZip, encodingIdentity
+			 */
+			bool encodingZstd{false};
 
-		//! Interface to be used for outgoing traffic.
-		/*!
-		 * Will be ignored when empty.
-		 */
-		std::string localInterface;
+			//! Custom HTTP headers to be sent with every request.
+			std::vector<std::string> headers;
 
-		//! Port to be used for outgoing traffic.
-		/*!
-		 * Set to zero if any port is fine.
-		 *
-		 * \sa localPortRange
-		 */
-		std::uint16_t localPort{0};
+			//! Aliases that will be treated like @c HTTP/1.0 @c 200 @c OK.
+			std::vector<std::string> http200Aliases;
 
-		//! Number of ports to be tried for outgoing traffic.
-		/*!
-		 * If greater than one, a range of ports
-		 *  starting with localPort will be tried
-		 *  for outgoing traffic.
-		 *
-		 * Set to one or below to not try any
-		 *  additional ports.
-		 *
-		 * \sa localPort
-		 */
-		std::uint16_t localPortRange{1};
+			//! HTTP version(s) to be used.
+			/*!
+			 * \sa httpVersionAny, httpVersion1,
+			 *  httpVersion11, httpVersion2,
+			 *  httpVersion2Only, httpVersion2Tls,
+			 *  httpVersion3Only
+			 */
+			std::uint16_t httpVersion{httpVersion2Tls};
 
-		//! Specifies whether to prevent connections from re-using previous ones.
-		/*!
-		 * This might lead to a large number
-		 *  of re-connects, which might in turn
-		 *  negatively affect performance.
-		 */
-		bool noReUse{false};
+			//! Interface to be used for outgoing traffic.
+			/*!
+			 * Will be ignored when empty.
+			 */
+			std::string localInterface;
 
-		//! Proxy server used.
-		/*!
-		 * Will be ignored when empty.
-		 *
-		 * \sa proxyAuth, proxyHeaders
-		 */
-		std::string proxy;
+			//! Port to be used for outgoing traffic.
+			/*!
+			 * Set to zero if any port is fine.
+			 *
+			 * \sa localPortRange
+			 */
+			std::uint16_t localPort{0};
 
-		//! Authentification for the proxy server used.
-		/*!
-		 * The authentification needs to be
-		 *  in the format @c user:password.
-		 *
-		 * Will be ignored when empty.
-		 *
-		 * \sa proxy, proxyHeaders
-		 */
-		std::string proxyAuth;
+			//! Number of ports to be tried for outgoing traffic.
+			/*!
+			 * If greater than one, a range of ports
+			 *  starting with localPort will be tried
+			 *  for outgoing traffic.
+			 *
+			 * Set to one or below to not try any
+			 *  additional ports.
+			 *
+			 * \sa localPort
+			 */
+			std::uint16_t localPortRange{1};
 
-		//! Custom HTTP headers to be sent to the proxy server.
-		/*!
-		 * \sa proxy, proxyAuth
-		 */
-		std::vector<std::string> proxyHeaders;
+			//! Specifies whether to prevent connections from re-using previous ones.
+			/*!
+			 * This might lead to a large number
+			 *  of re-connects, which might in turn
+			 *  negatively affect performance.
+			 */
+			bool noReUse{false};
 
-		//! Pre-proxy server to be used.
-		/*!
-		 * Will be ignored when empty.
-		 */
-		std::string proxyPre;
+			//! Proxy server used.
+			/*!
+			 * Will be ignored when empty.
+			 *
+			 * \sa proxyAuth, proxyHeaders
+			 */
+			std::string proxy;
 
-		//! TSL-SRP password for the proxy server used.
-		/*!
-		 * Will be ignored when empty.
-		 *
-		 * \sa proxyTlsSrpUser
-		 */
-		std::string proxyTlsSrpPassword;
+			//! Authentification for the proxy server used.
+			/*!
+			 * The authentification needs to be
+			 *  in the format @c user:password.
+			 *
+			 * Will be ignored when empty.
+			 *
+			 * \sa proxy, proxyHeaders
+			 */
+			std::string proxyAuth;
 
-		//! TSL-SRP user for the proxy server used.
-		/*!
-		 * Will be ignored when empty.
-		 *
-		 *
-		 * \sa proxyTlsSrpPassword
-		 */
-		std::string proxyTlsSrpUser;
+			//! Custom HTTP headers to be sent to the proxy server.
+			/*!
+			 * \sa proxy, proxyAuth
+			 */
+			std::vector<std::string> proxyHeaders;
 
-		//! Specifies whether to enable proxy tunnelling.
-		bool proxyTunnelling{false};
+			//! Pre-proxy server to be used.
+			/*!
+			 * Will be ignored when empty.
+			 */
+			std::string proxyPre;
 
-		//! Specifies whether to follow HTTP @c Location headers for automatic redirects.
-		/*!
-		 * \sa redirectMax
-		 */
-		bool redirect{true};
+			//! TSL-SRP password for the proxy server used.
+			/*!
+			 * Will be ignored when empty.
+			 *
+			 * \sa proxyTlsSrpUser
+			 */
+			std::string proxyTlsSrpPassword;
 
-		//! The maximum number of automatic redirects.
-		/*!
-		 * Set to @c -1 to disable the limit.
-		 *
-		 * \sa redirect
-		 */
-		std::uint64_t redirectMax{defaultRedirectMax};
+			//! TSL-SRP user for the proxy server used.
+			/*!
+			 * Will be ignored when empty.
+			 *
+			 *
+			 * \sa proxyTlsSrpPassword
+			 */
+			std::string proxyTlsSrpUser;
 
-		//! Specifies whether to NOT convert POST to GET requests when following 301 redirects.
-		/*!
-		 * \sa redirectPost302, redirectPost303
-		 */
-		bool redirectPost301{false};
+			//! Specifies whether to enable proxy tunnelling.
+			bool proxyTunnelling{false};
 
-		//! Specifies whether to NOT convert POST to GET requests when following 302 redirects.
-		/*!
-		 * \sa redirectPost301, redirectPost303
-		 */
-		bool redirectPost302{false};
+			//! Specifies whether to follow HTTP @c Location headers for automatic redirects.
+			/*!
+			 * \sa redirectMax
+			 */
+			bool redirect{true};
 
-		//! Specifies whether to NOT convert POST to GET requests when following 303 redirects.
-		/*!
-		 * \sa redirectPost301, redirectPost302
-		 */
-		bool redirectPost303{false};
+			//! The maximum number of automatic redirects.
+			/*!
+			 * Set to @c -1 to disable the limit.
+			 *
+			 * \sa redirect
+			 */
+			std::uint64_t redirectMax{defaultRedirectMax};
 
-		//! The HTTP @c Referer header to be set.
-		/*!
-		 * No custom HTTP @c Referer header will be sent
-		 *  if the string is empty.
-		 *
-		 * \sa refererAutomatic
-		 */
-		std::string referer;
+			//! Specifies whether to NOT convert POST to GET requests when following 301 redirects.
+			/*!
+			 * \sa redirectPost302, redirectPost303
+			 */
+			bool redirectPost301{false};
 
-		//! Specifies whether to send an updated HTTP @c Referer header when automatically redirected.
-		/*!
-		 * \sa referer
-		 */
-		bool refererAutomatic{false};
+			//! Specifies whether to NOT convert POST to GET requests when following 302 redirects.
+			/*!
+			 * \sa redirectPost301, redirectPost303
+			 */
+			bool redirectPost302{false};
 
-		//! Specifies whether to use the TOR control server to request a new identity on connection resets.
-		/*!
-		 * \sa resetTorAfter, resetTorOnlyAfter
-		 */
-		bool resetTor{true};
+			//! Specifies whether to NOT convert POST to GET requests when following 303 redirects.
+			/*!
+			 * \sa redirectPost301, redirectPost302
+			 */
+			bool redirectPost303{false};
 
-		//! Number of seconds until automatically using the TOR control server to request a new identity.
-		/*!
-		 * Set to zero to deactivate the
-		 *  automatic request for a new
-		 *  TOR identity after a specific
-		 *  amount of time has passed.
-		 */
-		/*!
-		 * \sa resetTor, resetTorOnlyAfter
-		 */
-		std::uint64_t resetTorAfter{0};
+			//! The HTTP @c Referer header to be set.
+			/*!
+			 * No custom HTTP @c Referer header will be sent
+			 *  if the string is empty.
+			 *
+			 * \sa refererAutomatic
+			 */
+			std::string referer;
 
-		//! Number of seconds that need to be parsed before new identity will be requested from the TOR control server.
-		/*!
-		 * \sa resetTor, resetTorAfter
-		 */
-		std::uint64_t resetTorOnlyAfter{defaultResetTorOnlyAfter};
+			//! Specifies whether to send an updated HTTP @c Referer header when automatically redirected.
+			/*!
+			 * \sa referer
+			 */
+			bool refererAutomatic{false};
 
-		//! Maximum download speed in bytes per second.
-		/*!
-		 * Set to zero for unlimited download speed.
-		 */
-		std::uint64_t speedDownLimit{0};
+			//! Specifies whether to use the TOR control server to request a new identity on connection resets.
+			/*!
+			 * \sa resetTorAfter, resetTorOnlyAfter
+			 */
+			bool resetTor{true};
 
-		//! Low speed limit in bytes per second.
-		/*!
-		 * Set to zero for not using any low speed limit.
-		 *
-		 * \sa speedLowTime
-		 */
-		std::uint64_t speedLowLimit{0};
+			//! Number of seconds until automatically using the TOR control server to request a new identity.
+			/*!
+			 * Set to zero to deactivate the
+			 *  automatic request for a new
+			 *  TOR identity after a specific
+			 *  amount of time has passed.
+			 */
+			/*!
+			 * \sa resetTor, resetTorOnlyAfter
+			 */
+			std::uint64_t resetTorAfter{0};
 
-		//! Number of seconds before a timeout occurs while the transfer speed is below the low speed limit.
-		/*!
-		 * Set to zero to disable timeouts because
-		 *  of the low speed limit.
-		 *
-		 * \sa speedLowLimit
-		 */
-		std::uint64_t speedLowTime{0};
+			//! Number of seconds that need to be parsed before new identity will be requested from the TOR control server.
+			/*!
+			 * \sa resetTor, resetTorAfter
+			 */
+			std::uint64_t resetTorOnlyAfter{defaultResetTorOnlyAfter};
 
-		//! Maximum upload speed in bytes per second.
-		/*!
-		 * Set to zero for unlimited upload speed.
-		 */
-		std::uint64_t speedUpLimit{0};
+			//! Maximum download speed in bytes per second.
+			/*!
+			 * Set to zero for unlimited download speed.
+			 */
+			std::uint64_t speedDownLimit{0};
 
-		//! Specifies whether to verify that the SSL certificate is for the server it is known as.
-		/*!
-		 * \sa sslVerifyPeer, sslVerifyProxyHost,
-		 *   sslVerifyProxyPeer, sslVerifyStatus
-		 */
-		bool sslVerifyHost{true};
+			//! Low speed limit in bytes per second.
+			/*!
+			 * Set to zero for not using any low speed limit.
+			 *
+			 * \sa speedLowTime
+			 */
+			std::uint64_t speedLowLimit{0};
 
-		//! Specifies whether to verify the authenticity of the server's SSL certificate.
-		/*!
-		 * \sa sslVerifyHost, sslVerifyProxyHost,
-		 *   sslVerifyProxyPeer, sslVerifyStatus
-		 */
-		bool sslVerifyPeer{true};
+			//! Number of seconds before a timeout occurs while the transfer speed is below the low speed limit.
+			/*!
+			 * Set to zero to disable timeouts because
+			 *  of the low speed limit.
+			 *
+			 * \sa speedLowLimit
+			 */
+			std::uint64_t speedLowTime{0};
 
-		//! Specifies whether to verify that the SSL certificate is for the proxy server it is known as.
-		/*!
-		 * \sa sslVerifyHost, sslVerifyPeer,
-		 *   sslVerifyProxyPeer, sslVerifyStatus
-		 */
-		bool sslVerifyProxyHost{true};
+			//! Maximum upload speed in bytes per second.
+			/*!
+			 * Set to zero for unlimited upload speed.
+			 */
+			std::uint64_t speedUpLimit{0};
 
-		//! Specifies whether to verify the authenticity of the proxy's SSL certificate.
-		/*!
-		 * \sa sslVerifyHost, sslVerifyPeer,
-		 *   sslVerifyProxyHost, sslVerifyStatus
-		 */
-		bool sslVerifyProxyPeer{true};
+			//! Specifies whether to verify that the SSL certificate is for the server it is known as.
+			/*!
+			 * \sa sslVerifyPeer, sslVerifyProxyHost,
+			 *   sslVerifyProxyPeer, sslVerifyStatus
+			 */
+			bool sslVerifyHost{true};
 
-		//! Specifies whether to verify the status of the server's SSL certificate.
-		/*!
-		 * For this verification, the "Certificate
-		 *  Status Request" TLS extension (i.e.
-		 *  "OCSCP stapling") will be used.
-		 *
-		 * \note If activated and a server does
-		 *   not support the TLS extension,
-		 *   the verification will fail.
-		 *
-		 * \sa sslVerifyHost, sslVerifyPeer,
-		 *   sslVerifyProxyHost, sslVerifyProxyPeer
-		 */
-		bool sslVerifyStatus{false};
+			//! Specifies whether to verify the authenticity of the server's SSL certificate.
+			/*!
+			 * \sa sslVerifyHost, sslVerifyProxyHost,
+			 *   sslVerifyProxyPeer, sslVerifyStatus
+			 */
+			bool sslVerifyPeer{true};
 
-		//! Specifies whether TCP Fast Open will be enabled.
-		bool tcpFastOpen{false};
+			//! Specifies whether to verify that the SSL certificate is for the proxy server it is known as.
+			/*!
+			 * \sa sslVerifyHost, sslVerifyPeer,
+			 *   sslVerifyProxyPeer, sslVerifyStatus
+			 */
+			bool sslVerifyProxyHost{true};
 
-		//! Specifies whether TCP keep-alive probing will be enabled.
-		bool tcpKeepAlive{false};
+			//! Specifies whether to verify the authenticity of the proxy's SSL certificate.
+			/*!
+			 * \sa sslVerifyHost, sslVerifyPeer,
+			 *   sslVerifyProxyHost, sslVerifyStatus
+			 */
+			bool sslVerifyProxyPeer{true};
 
-		//! The delay that will be waited before sending keep-alive probes, in seconds.
-		/*!
-		 * \sa tcpKeepAlive, tcpKeepAliveInterval
-		 */
-		std::uint64_t tcpKeepAliveIdle{defaultTcpKeepAliveIdle};
+			//! Specifies whether to verify the status of the server's SSL certificate.
+			/*!
+			 * For this verification, the "Certificate
+			 *  Status Request" TLS extension (i.e.
+			 *  "OCSCP stapling") will be used.
+			 *
+			 * \note If activated and a server does
+			 *   not support the TLS extension,
+			 *   the verification will fail.
+			 *
+			 * \sa sslVerifyHost, sslVerifyPeer,
+			 *   sslVerifyProxyHost, sslVerifyProxyPeer
+			 */
+			bool sslVerifyStatus{false};
 
-		//! The interval time between keep-alive probes to sent, in seconds.
-		/*!
-		 * \sa tcpKeepAlive, tcpKeepAliveIdle
-		 */
-		std::uint64_t tcpKeepAliveInterval{defaultTcpKeepAliveInterval};
+			//! Specifies whether TCP Fast Open will be enabled.
+			bool tcpFastOpen{false};
 
-		//! Specifies whether the TCP's Nagle algorithm is enabled on this connection.
-		/*!
-		 * The purpose of this algorithm is
-		 *  to try to minimize the number of
-		 *  small packets on the network.
-		 */
-		bool tcpNagle{false};
+			//! Specifies whether TCP keep-alive probing will be enabled.
+			bool tcpKeepAlive{false};
 
-		//! The maximum amount of time a connection is allowed to take, in seconds.
-		/*!
-		 * Set to zero to disable timeouts
-		 *  (not recommended).
-		 *
-		 * \sa timeOutRequest
-		 */
-		std::uint64_t timeOut{defaultTimeOut};
+			//! The delay that will be waited before sending keep-alive probes, in seconds.
+			/*!
+			 * \sa tcpKeepAlive, tcpKeepAliveInterval
+			 */
+			std::uint64_t tcpKeepAliveIdle{defaultTcpKeepAliveIdle};
 
-		//! Number of milliseconds to try to connect only via IPv6 using the Happy Eyeballs algorithm.
-		/*!
-		 * After this amount of milliseconds,
-		 *  a connection attempt is made to
-		 *  the IPv4 address in parallel.
-		 *
-		 * Set to zero for using the default
-		 *  value provided by @c libcurl.
-		 */
-		std::uint16_t timeOutHappyEyeballs{0};
+			//! The interval time between keep-alive probes to sent, in seconds.
+			/*!
+			 * \sa tcpKeepAlive, tcpKeepAliveIdle
+			 */
+			std::uint64_t tcpKeepAliveInterval{defaultTcpKeepAliveInterval};
 
-		//! The maximum amount of time a request is allowed to take, in seconds.
-		/*!
-		 * Set to zero to disable timeouts
-		 *  (not recommended).
-		 *
-		 * \sa timeOut
-		 */
-		std::uint64_t timeOutRequest{defaultTimeOutRequest};
+			//! Specifies whether the TCP's Nagle algorithm is enabled on this connection.
+			/*!
+			 * The purpose of this algorithm is
+			 *  to try to minimize the number of
+			 *  small packets on the network.
+			 */
+			bool tcpNagle{false};
 
-		//! Password used for TLS-SRP authentification.
-		/*!
-		 * Will be ignored when both tlsSrpUser
-		 *  and tlsSrpPassword are empty.
-		 *
-		 * \sa tlsSrpPassword
-		 */
-		std::string tlsSrpUser;
+			//! The maximum amount of time a connection is allowed to take, in seconds.
+			/*!
+			 * Set to zero to disable timeouts
+			 *  (not recommended).
+			 *
+			 * \sa timeOutRequest
+			 */
+			std::uint64_t timeOut{defaultTimeOut};
 
-		//! User name used for TLS-SRP authentification.
-		/*!
-		 * Will be ignored when both tlsSrpUser
-		 *  and tlsSrpPassword are empty.
-		 *
-		 * \sa tlsSrpUser
-		 */
-		std::string tlsSrpPassword;
+			//! Number of milliseconds to try to connect only via IPv6 using the Happy Eyeballs algorithm.
+			/*!
+			 * After this amount of milliseconds,
+			 *  a connection attempt is made to
+			 *  the IPv4 address in parallel.
+			 *
+			 * Set to zero for using the default
+			 *  value provided by @c libcurl.
+			 */
+			std::uint16_t timeOutHappyEyeballs{0};
 
-		//! Custom HTTP @c User-Agent header to be sent with all HTTP requests.
-		/*!
-		 * No HTTP @c User-Agent header will be sent when empty.
-		 */
-		std::string userAgent;
+			//! The maximum amount of time a request is allowed to take, in seconds.
+			/*!
+			 * Set to zero to disable timeouts
+			 *  (not recommended).
+			 *
+			 * \sa timeOut
+			 */
+			std::uint64_t timeOutRequest{defaultTimeOutRequest};
 
-		//! Specifies whether @c libtidy should produce verbose output.
-		/*!
-		 * \warning Should be used for debugging
-		 *   purposes only!
-		 *
-		 * The output will be written to @c stdout.
-		 */
-		bool verbose{false};
+			//! Password used for TLS-SRP authentification.
+			/*!
+			 * Will be ignored when both tlsSrpUser
+			 *  and tlsSrpPassword are empty.
+			 *
+			 * \sa tlsSrpPassword
+			 */
+			std::string tlsSrpUser;
 
-		//! The protocol to be used for HTTP requests.
-		/*!
-		 * Including @c :// at the end of the protocol,
-		 *  e.g. @c https:// or @c http://.
-		 */
-		std::string protocol{defaultProtocol};
+			//! User name used for TLS-SRP authentification.
+			/*!
+			 * Will be ignored when both tlsSrpUser
+			 *  and tlsSrpPassword are empty.
+			 *
+			 * \sa tlsSrpUser
+			 */
+			std::string tlsSrpPassword;
+
+			//! Custom HTTP @c User-Agent header to be sent with all HTTP requests.
+			/*!
+			 * No HTTP @c User-Agent header will be sent when empty.
+			 */
+			std::string userAgent;
+
+			//! Specifies whether @c libtidy should produce verbose output.
+			/*!
+			 * \warning Should be used for debugging
+			 *   purposes only!
+			 *
+			 * The output will be written to @c stdout.
+			 */
+			bool verbose{false};
+
+			//! The protocol to be used for HTTP requests.
+			/*!
+			 * Including @c :// at the end of the protocol,
+			 *  e.g. @c https:// or @c http://.
+			 */
+			std::string protocol{defaultProtocol};
+		}
+
+		//! Configuration for networking.
+		networkConfig;
+
+		///@}
 
 		///@}
 		///@name Parsing (Network Configuration)
 		///@{
 
 		void parseBasicOption() override;
+		void resetBase() override;
 
 		//! Parses additional configuration options.
 		/*!
@@ -641,6 +659,16 @@ namespace crawlservpp::Network {
 		 *   Module::Extractor::Config::parseOption
 		 */
 		void parseOption() override = 0;
+
+		//! Resets additional configuration options.
+		/*!
+		 * Needs to be implemented by inherited
+		 *  classes.
+		 *
+		 * \sa Module::Crawler::Config::reset,
+		 *   Module::Extractor::Config::reset
+		 */
+		void reset() override = 0;
 
 		///@}
 		///@name Helper (Network Configuration)
@@ -655,75 +683,79 @@ namespace crawlservpp::Network {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * PARSING (NETWORK CONFIGURATION)
+	 */
+
 	//! Parses basic network configuration options.
 	inline void Config::parseBasicOption() {
 		this->category("network");
 
-		this->option("connections.max", this->connectionsMax);
-		this->option("contentlength.ignore", this->contentLengthIgnore);
-		this->option("cookies", this->cookies);
-		this->option("cookies.load", this->cookiesLoad);
-		this->option("cookies.overwrite", this->cookiesOverwrite);
-		this->option("cookies.save", this->cookiesSave);
-		this->option("cookies.session", this->cookiesSession);
-		this->option("cookies.set", this->cookiesSet);
-		this->option("dns.cachetimeout", this->dnsCacheTimeOut);
-		this->option("dns.doh", this->dnsDoH);
-		this->option("dns.interface", this->dnsInterface);
-		this->option("dns.resolves", this->dnsResolves);
-		this->option("dns.servers", this->dnsServers);
-		this->option("dns.shuffle", this->dnsShuffle);
-		this->option("encoding.br", this->encodingBr);
-		this->option("encoding.deflate", this->encodingDeflate);
-		this->option("encoding.gzip", this->encodingGZip);
-		this->option("encoding.identity", this->encodingIdentity);
-		this->option("encoding.transfer", this->encodingTransfer);
-		this->option("encoding.zstd", this->encodingZstd);
-		this->option("headers", this->headers);
-		this->option("http.200aliases", this->http200Aliases);
-		this->option("http.version", this->httpVersion);
-		this->option("local.interface", this->localInterface);
-		this->option("local.port", this->localPort);
-		this->option("local.portrange", this->localPortRange);
-		this->option("no.reuse", this->noReUse);
-		this->option("proxy", this->proxy);
-		this->option("proxy.auth", this->proxyAuth);
-		this->option("proxy.headers", this->proxyHeaders);
-		this->option("proxy.pre", this->proxyPre);
-		this->option("proxy.tlssrp.password", this->proxyTlsSrpPassword);
-		this->option("proxy.tlssrp.user", this->proxyTlsSrpUser);
-		this->option("proxy.tunnelling", this->proxyTunnelling);
-		this->option("redirect", this->redirect);
-		this->option("redirect.max", this->redirectMax);
-		this->option("redirect.post301", this->redirectPost301);
-		this->option("redirect.post302", this->redirectPost302);
-		this->option("redirect.post303", this->redirectPost303);
-		this->option("referer", this->referer);
-		this->option("referer.automatic", this->refererAutomatic);
-		this->option("reset.tor", this->resetTor);
-		this->option("reset.tor.after", this->resetTorAfter);
-		this->option("reset.tor.only.after", this->resetTorOnlyAfter);
-		this->option("speed.downlimit", this->speedDownLimit);
-		this->option("speed.lowlimit", this->speedLowLimit);
-		this->option("speed.lowtime", this->speedLowTime);
-		this->option("speed.uplimit", this->speedUpLimit);
-		this->option("ssl.verify.host", this->sslVerifyHost);
-		this->option("ssl.verify.peer", this->sslVerifyPeer);
-		this->option("ssl.verify.proxy.host", this->sslVerifyProxyHost);
-		this->option("ssl.verify.proxy.peer", this->sslVerifyProxyPeer);
-		this->option("ssl.verify.status", this->sslVerifyStatus);
-		this->option("tcp.fastopen", this->tcpFastOpen);
-		this->option("tcp.keepalive", this->tcpKeepAlive);
-		this->option("tcp.keepalive.idle", this->tcpKeepAliveIdle);
-		this->option("tcp.keepalive.interval", this->tcpKeepAliveInterval);
-		this->option("tcp.nagle", this->tcpNagle);
-		this->option("timeout", this->timeOut);
-		this->option("timeout.happyeyeballs", this->timeOutHappyEyeballs);
-		this->option("timeout.request", this->timeOutRequest);
-		this->option("tlssrp.password", this->tlsSrpPassword);
-		this->option("tlssrp.user", this->tlsSrpUser);
-		this->option("useragent", this->userAgent);
-		this->option("verbose", this->verbose);
+		this->option("connections.max", this->networkConfig.connectionsMax);
+		this->option("contentlength.ignore", this->networkConfig.contentLengthIgnore);
+		this->option("cookies", this->networkConfig.cookies);
+		this->option("cookies.load", this->networkConfig.cookiesLoad);
+		this->option("cookies.overwrite", this->networkConfig.cookiesOverwrite);
+		this->option("cookies.save", this->networkConfig.cookiesSave);
+		this->option("cookies.session", this->networkConfig.cookiesSession);
+		this->option("cookies.set", this->networkConfig.cookiesSet);
+		this->option("dns.cachetimeout", this->networkConfig.dnsCacheTimeOut);
+		this->option("dns.doh", this->networkConfig.dnsDoH);
+		this->option("dns.interface", this->networkConfig.dnsInterface);
+		this->option("dns.resolves", this->networkConfig.dnsResolves);
+		this->option("dns.servers", this->networkConfig.dnsServers);
+		this->option("dns.shuffle", this->networkConfig.dnsShuffle);
+		this->option("encoding.br", this->networkConfig.encodingBr);
+		this->option("encoding.deflate", this->networkConfig.encodingDeflate);
+		this->option("encoding.gzip", this->networkConfig.encodingGZip);
+		this->option("encoding.identity", this->networkConfig.encodingIdentity);
+		this->option("encoding.transfer", this->networkConfig.encodingTransfer);
+		this->option("encoding.zstd", this->networkConfig.encodingZstd);
+		this->option("headers", this->networkConfig.headers);
+		this->option("http.200aliases", this->networkConfig.http200Aliases);
+		this->option("http.version", this->networkConfig.httpVersion);
+		this->option("local.interface", this->networkConfig.localInterface);
+		this->option("local.port", this->networkConfig.localPort);
+		this->option("local.portrange", this->networkConfig.localPortRange);
+		this->option("no.reuse", this->networkConfig.noReUse);
+		this->option("proxy", this->networkConfig.proxy);
+		this->option("proxy.auth", this->networkConfig.proxyAuth);
+		this->option("proxy.headers", this->networkConfig.proxyHeaders);
+		this->option("proxy.pre", this->networkConfig.proxyPre);
+		this->option("proxy.tlssrp.password", this->networkConfig.proxyTlsSrpPassword);
+		this->option("proxy.tlssrp.user", this->networkConfig.proxyTlsSrpUser);
+		this->option("proxy.tunnelling", this->networkConfig.proxyTunnelling);
+		this->option("redirect", this->networkConfig.redirect);
+		this->option("redirect.max", this->networkConfig.redirectMax);
+		this->option("redirect.post301", this->networkConfig.redirectPost301);
+		this->option("redirect.post302", this->networkConfig.redirectPost302);
+		this->option("redirect.post303", this->networkConfig.redirectPost303);
+		this->option("referer", this->networkConfig.referer);
+		this->option("referer.automatic", this->networkConfig.refererAutomatic);
+		this->option("reset.tor", this->networkConfig.resetTor);
+		this->option("reset.tor.after", this->networkConfig.resetTorAfter);
+		this->option("reset.tor.only.after", this->networkConfig.resetTorOnlyAfter);
+		this->option("speed.downlimit", this->networkConfig.speedDownLimit);
+		this->option("speed.lowlimit", this->networkConfig.speedLowLimit);
+		this->option("speed.lowtime", this->networkConfig.speedLowTime);
+		this->option("speed.uplimit", this->networkConfig.speedUpLimit);
+		this->option("ssl.verify.host", this->networkConfig.sslVerifyHost);
+		this->option("ssl.verify.peer", this->networkConfig.sslVerifyPeer);
+		this->option("ssl.verify.proxy.host", this->networkConfig.sslVerifyProxyHost);
+		this->option("ssl.verify.proxy.peer", this->networkConfig.sslVerifyProxyPeer);
+		this->option("ssl.verify.status", this->networkConfig.sslVerifyStatus);
+		this->option("tcp.fastopen", this->networkConfig.tcpFastOpen);
+		this->option("tcp.keepalive", this->networkConfig.tcpKeepAlive);
+		this->option("tcp.keepalive.idle", this->networkConfig.tcpKeepAliveIdle);
+		this->option("tcp.keepalive.interval", this->networkConfig.tcpKeepAliveInterval);
+		this->option("tcp.nagle", this->networkConfig.tcpNagle);
+		this->option("timeout", this->networkConfig.timeOut);
+		this->option("timeout.happyeyeballs", this->networkConfig.timeOutHappyEyeballs);
+		this->option("timeout.request", this->networkConfig.timeOutRequest);
+		this->option("tlssrp.password", this->networkConfig.tlsSrpPassword);
+		this->option("tlssrp.user", this->networkConfig.tlsSrpUser);
+		this->option("useragent", this->networkConfig.userAgent);
+		this->option("verbose", this->networkConfig.verbose);
 
 		bool insecure{false};
 
@@ -732,11 +764,22 @@ namespace crawlservpp::Network {
 		if(insecure) {
 			this->warning("Using INSECURE connections.");
 
-			this->protocol = "http://";
+			this->networkConfig.protocol = "http://";
 		}
 
 		this->parseOption();
 	}
+
+	//! Resets basic network configuration options.
+	inline void Config::resetBase() {
+		this->networkConfig = {};
+
+		this->reset();
+	}
+
+	/*
+	 * HELPER (NETWORK CONFIGURATION)
+	 */
 
 	//! Gets the protocol to be used for networking.
 	/*!
@@ -745,7 +788,7 @@ namespace crawlservpp::Network {
 	 *   either "https://" or "http://".
 	 */
 	inline const std::string& Config::getProtocol() const {
-		return this->protocol;
+		return this->networkConfig.protocol;
 	}
 
 } /* namespace crawlservpp::Network */

@@ -270,6 +270,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		void parseOption() override;
 		void checkOptions() override;
+		void reset() override;
 
 		///@}
 		///@name Algorithm-Specific Configuration Parsing
@@ -288,6 +289,13 @@ namespace crawlservpp::Module::Analyzer {
 		 *  for the specific algorithm.
 		 */
 		virtual void checkAlgoOptions() = 0;
+
+		//! Resets the algorithm-specific configuration.
+		/*!
+		 * Needs to be implemented by the (child) class
+		 *  for the specific algorithm.
+		 */
+		virtual void resetAlgo() = 0;
 
 		///@}
 	};
@@ -444,6 +452,14 @@ namespace crawlservpp::Module::Analyzer {
 
 		// check algo options
 		this->checkAlgoOptions();
+	}
+
+	//! Resets the analyzer-specific configuration options.
+	inline void Config::reset() {
+		this->config = {};
+
+		// reset algo options
+		this->resetAlgo();
 	}
 
 } /* namespace crawlservpp::Module::Analyzer */

@@ -73,8 +73,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		fields.reserve(2);
 		types.reserve(2);
 
-		fields.emplace_back(this->markovTextResultField);
-		fields.emplace_back(this->markovTextSourcesField);
+		fields.emplace_back(this->algoConfig.markovTextResultField);
+		fields.emplace_back(this->algoConfig.markovTextSourcesField);
 		types.emplace_back("LONGTEXT NOT NULL");
 		types.emplace_back("BIGINT UNSIGNED NOT NULL");
 
@@ -184,7 +184,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::unique_ptr<Timer::Simple> timer;
 
-		if(this->markovTextTiming) {
+		if(this->algoConfig.markovTextTiming) {
 			timer = std::make_unique<Timer::Simple>();
 		}
 
@@ -212,8 +212,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovText::onAlgoTick() {
 		// check number of texts (internally saved as "last") if necessary
 		if(
-				this->markovTextMax > 0
-				&& this->getLast() >= this->markovTextMax
+				this->algoConfig.markovTextMax > 0
+				&& this->getLast() >= this->algoConfig.markovTextMax
 		) {
 			this->finished();
 
@@ -225,7 +225,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::unique_ptr<Timer::Simple> timer;
 
-		if(this->markovTextTiming) {
+		if(this->algoConfig.markovTextTiming) {
 			timer = std::make_unique<Timer::Simple>();
 		}
 
@@ -249,13 +249,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			data.table = this->getTargetTableName();
 
 			data.columns_types_values.emplace_back(
-					"analyzed__" + this->markovTextResultField,
+					"analyzed__" + this->algoConfig.markovTextResultField,
 					Data::Type::_string,
 					Data::Value(text)
 			);
 
 			data.columns_types_values.emplace_back(
-					"analyzed__" + this->markovTextSourcesField,
+					"analyzed__" + this->algoConfig.markovTextSourcesField,
 					Data::getTypeOfSizeT(),
 					Data::Value(this->sources)
 			);
@@ -265,10 +265,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			this->database.updateTargetTable();
 
 			// increase text count and progress (internally saved as "last") if necessary
-			if(this->markovTextMax > 0) {
+			if(this->algoConfig.markovTextMax > 0) {
 				this->incrementLast();
 
-				this->setProgress(static_cast<float>(this->getLast()) / this->markovTextMax);
+				this->setProgress(static_cast<float>(this->getLast()) / this->algoConfig.markovTextMax);
 			}
 		}
 		else if(this->isRunning()) {
@@ -276,10 +276,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// sleep if necessary
-		if(this->markovTextSleep > 0) {
+		if(this->algoConfig.markovTextSleep > 0) {
 			this->setStatusMessage("Sleeping...");
 
-			this->sleep(this->markovTextSleep);
+			this->sleep(this->algoConfig.markovTextSleep);
 		}
 	}
 
@@ -300,13 +300,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovText::parseAlgoOption() {
 		// algorithm options
 		this->category("markov-text");
-		this->option("dimension", this->markovTextDimension);
-		this->option("length", this->markovTextLength);
-		this->option("max", this->markovTextMax);
-		this->option("result.field", this->markovTextResultField, StringParsingOption::SQL);
-		this->option("sleep", this->markovTextSleep);
-		this->option("sources.field", this->markovTextSourcesField, StringParsingOption::SQL);
-		this->option("timing", this->markovTextTiming);
+		this->option("dimension", this->algoConfig.markovTextDimension);
+		this->option("length", this->algoConfig.markovTextLength);
+		this->option("max", this->algoConfig.markovTextMax);
+		this->option("result.field", this->algoConfig.markovTextResultField, StringParsingOption::SQL);
+		this->option("sleep", this->algoConfig.markovTextSleep);
+		this->option("sources.field", this->algoConfig.markovTextSourcesField, StringParsingOption::SQL);
+		this->option("timing", this->algoConfig.markovTextTiming);
 	}
 
 	//! Checks the configuration options for the algorithm.
@@ -333,14 +333,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 		}
 
-		if(this->markovTextDimension == 0) {
+		if(this->algoConfig.markovTextDimension == 0) {
 			throw Exception(
 					"Algo::MarkovText::checkOptions():"
 					" Markov chain dimension is zero"
 			);
 		}
 
-		if(this->markovTextLength == 0) {
+		if(this->algoConfig.markovTextLength == 0) {
 			throw Exception(
 					"Algo::MarkovText::checkOptions():"
 					" Result text length is zero"
@@ -353,6 +353,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
+	//! Resets the configuration options for the algorithm.
+	void MarkovText::resetAlgo() {
+		this->algoConfig = {};
+	}
+
 	/*
 	 * ALGORITHM FUNCTIONS (private)
 	 */
@@ -360,7 +365,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// create dictionary (code mostly from https://rosettacode.org/wiki/Markov_chain_text_generator)
 	void MarkovText::createDictionary() {
 		// *** added: get dimension from configuration + counter
-		const auto kl{this->markovTextDimension};
+		const auto kl{this->algoConfig.markovTextDimension};
 		std::uint32_t counter{0};
 		// ***
 
@@ -462,9 +467,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t next{0};
 		auto it{dictionary.cbegin()};
 
-		result.reserve(this->markovTextLength * markovTextGuessedWordLength); // guess average word length
+		result.reserve(
+				this->algoConfig.markovTextLength
+				* markovTextGuessedWordLength // guess average word length
+		);
 
-		int w{static_cast<int>(this->markovTextLength - this->markovTextDimension)};
+		int w{
+			static_cast<int>(
+					this->algoConfig.markovTextLength
+					- this->algoConfig.markovTextDimension
+			)
+		};
 
 		std::advance(it, this->randGenerator() % dictionary.size());
 

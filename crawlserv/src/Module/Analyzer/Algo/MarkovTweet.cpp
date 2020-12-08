@@ -74,8 +74,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		fields.reserve(2);
 		types.reserve(2);
 
-		fields.emplace_back(this->markovTweetResultField);
-		fields.emplace_back(this->markovTweetSourcesField);
+		fields.emplace_back(this->algoConfig.markovTweetResultField);
+		fields.emplace_back(this->algoConfig.markovTweetSourcesField);
 
 		types.emplace_back("LONGTEXT NOT NULL");
 		types.emplace_back("BIGINT UNSIGNED NOT NULL");
@@ -183,9 +183,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(generalLoggingVerbose, "sets options...");
 
-		this->generator.setSpellChecking(this->markovTweetSpellcheck, this->markovTweetLanguage);
+		this->generator.setSpellChecking(this->algoConfig.markovTweetSpellcheck, this->algoConfig.markovTweetLanguage);
 		this->generator.setVerbose(Module::Analyzer::generalLoggingVerbose);
-		this->generator.setTiming(this->markovTweetTiming);
+		this->generator.setTiming(this->algoConfig.markovTweetTiming);
 
 		// set callbacks (suppressing wrong error messages by Eclipse IDE)
 		this->generator.setIsRunningCallback([this]() {
@@ -209,7 +209,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(generalLoggingVerbose, "compiles text corpus...");
 
-		if(!(this->generator.compile(this->markovTweetDimension))) {
+		if(!(this->generator.compile(this->algoConfig.markovTweetDimension))) {
 			throw Exception("Error while compiling corpus for tweet generation");
 		}
 
@@ -223,7 +223,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Generates the requested texts.
 	void MarkovTweet::onAlgoTick() {
 		// check number of tweets (internally saved as "last") if necessary
-		if(this->markovTweetMax > 0 && this->getLast() >= this->markovTweetMax) {
+		if(this->algoConfig.markovTweetMax > 0 && this->getLast() >= this->algoConfig.markovTweetMax) {
 			this->finished();
 
 			return;
@@ -234,7 +234,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		const std::string tweet(
 				this->generator.randomSentence(
-						this->markovTweetLength
+						this->algoConfig.markovTweetLength
 				)
 		);
 
@@ -246,13 +246,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		data.table = this->getTargetTableName();
 
 		data.columns_types_values.emplace_back(
-				"analyzed__" + this->markovTweetResultField,
+				"analyzed__" + this->algoConfig.markovTweetResultField,
 				Data::Type::_string,
 				Data::Value(tweet)
 		);
 
 		data.columns_types_values.emplace_back(
-				"analyzed__" + this->markovTweetSourcesField,
+				"analyzed__" + this->algoConfig.markovTweetSourcesField,
 				Data::getTypeOfSizeT(),
 				Data::Value(this->sources)
 		);
@@ -262,17 +262,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->database.updateTargetTable();
 
 		// increase tweet count (internally saved as "last") and calculate progress if necessary
-		if(this->markovTweetMax > 0) {
+		if(this->algoConfig.markovTweetMax > 0) {
 			this->incrementLast();
 
-			this->setProgress(static_cast<float>(this->getLast()) / this->markovTweetMax);
+			this->setProgress(static_cast<float>(this->getLast()) / this->algoConfig.markovTweetMax);
 		}
 
 		// sleep if necessary
-		if(this->markovTweetSleep > 0) {
+		if(this->algoConfig.markovTweetSleep > 0) {
 			this->setStatusMessage("Sleeping...");
 
-			this->sleep(this->markovTweetSleep);
+			this->sleep(this->algoConfig.markovTweetSleep);
 		}
 	}
 
@@ -293,15 +293,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void MarkovTweet::parseAlgoOption() {
 		// algorithm options
 		this->category("markov-tweet");
-		this->option("dimension", this->markovTweetDimension);
-		this->option("language", this->markovTweetLanguage);
-		this->option("length", this->markovTweetLength);
-		this->option("max", this->markovTweetMax);
-		this->option("result.field", this->markovTweetResultField, StringParsingOption::SQL);
-		this->option("sleep", this->markovTweetSleep);
-		this->option("sources.field", this->markovTweetSourcesField, StringParsingOption::SQL);
-		this->option("spellcheck", this->markovTweetSpellcheck);
-		this->option("timing", this->markovTweetTiming);
+		this->option("dimension", this->algoConfig.markovTweetDimension);
+		this->option("language", this->algoConfig.markovTweetLanguage);
+		this->option("length", this->algoConfig.markovTweetLength);
+		this->option("max", this->algoConfig.markovTweetMax);
+		this->option("result.field", this->algoConfig.markovTweetResultField, StringParsingOption::SQL);
+		this->option("sleep", this->algoConfig.markovTweetSleep);
+		this->option("sources.field", this->algoConfig.markovTweetSourcesField, StringParsingOption::SQL);
+		this->option("spellcheck", this->algoConfig.markovTweetSpellcheck);
+		this->option("timing", this->algoConfig.markovTweetTiming);
 	}
 
 	//! Checks the configuration options for the algorithm.
@@ -328,14 +328,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 		}
 
-		if(this->markovTweetDimension == 0) {
+		if(this->algoConfig.markovTweetDimension == 0) {
 			throw Exception(
 					"Algo::MarkovTweet::checkOptions():"
 					" Markov chain dimension is zero"
 			);
 		}
 
-		if(this->markovTweetLength == 0) {
+		if(this->algoConfig.markovTweetLength == 0) {
 			throw Exception(
 					"Algo::MarkovTweet::checkOptions():"
 					" Result tweet length is zero"
@@ -346,6 +346,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 * WARNING: The existence of sources cannot be checked here, because
 		 * 	the database has not been prepared yet. Check them in onAlgoInit() instead.
 		 */
+	}
+
+	//! Resets the configuration options for the algorithm.
+	void MarkovTweet::resetAlgo() {
+		this->algoConfig = {};
 	}
 
 }  /* namespace crawlservpp::Module::Analyzer::Algo */

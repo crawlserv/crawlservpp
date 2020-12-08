@@ -111,10 +111,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		void parseAlgoOption() override;
 		void checkAlgoOptions() override;
+		void resetAlgo() override;
 
 		///@}
 
 	private:
+		// algorithm options
+		struct Entries {
+			// TODO
+		} algoConfig;
+
 		// corpora and counts
 		std::size_t currentCorpus{0};
 		std::vector<Data::Corpus> corpora;

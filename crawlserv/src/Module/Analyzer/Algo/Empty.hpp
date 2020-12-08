@@ -145,6 +145,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		void parseAlgoOption() override;
 		void checkAlgoOptions() override;
+		void resetAlgo() override;
 
 		///@}
 
@@ -156,9 +157,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		//std::vector<Data::Corpus> corpora;
 
 		// algorithm options
+		struct Entries {
 		/*
 		 * TODO: add members for algorithm options here
 		 */
+		} algoConfig;
 
 		// algorithm functions
 		/*

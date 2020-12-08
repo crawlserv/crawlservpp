@@ -144,6 +144,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		void parseAlgoOption() override;
 		void checkAlgoOptions() override;
+		void resetAlgo() override;
 
 		///@}
 
@@ -156,13 +157,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t sources{0};
 
 		// algorithm options
-		std::uint8_t markovTextDimension{markovTextDefaultDimension};
-		std::uint64_t markovTextLength{markovTextDefaultLength};
-		std::uint64_t markovTextMax{0};
-		std::string markovTextResultField{markovTextDefaultResultField};
-		std::uint64_t markovTextSleep{0};
-		std::string markovTextSourcesField{markovTextDefaultSourcesField};
-		bool markovTextTiming{true};
+		struct Entries {
+			std::uint8_t markovTextDimension{markovTextDefaultDimension};
+			std::uint64_t markovTextLength{markovTextDefaultLength};
+			std::uint64_t markovTextMax{0};
+			std::string markovTextResultField{markovTextDefaultResultField};
+			std::uint64_t markovTextSleep{0};
+			std::string markovTextSourcesField{markovTextDefaultSourcesField};
+			bool markovTextTiming{true};
+		} algoConfig;
 
 		// algorithm functions
 		void createDictionary();

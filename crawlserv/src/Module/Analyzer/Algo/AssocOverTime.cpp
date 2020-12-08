@@ -74,7 +74,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::vector<std::string> types;
 
 		const auto numFields{
-			this->categoryLabels.size()
+			this->algoConfig.categoryLabels.size()
 			+ 2
 		};
 
@@ -88,7 +88,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		types.emplace_back("BIGINT UNSIGNED");
 		types.emplace_back("BIGINT UNSIGNED");
 
-		for(const auto& label : this->categoryLabels) {
+		for(const auto& label : this->algoConfig.categoryLabels) {
 			fields.emplace_back(label);
 			types.emplace_back("BIGINT UNSIGNED");
 		}
@@ -242,11 +242,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void AssocOverTime::parseAlgoOption() {
 		// algorithm options
 		this->category("associations");
-		this->option("cat.labels", this->categoryLabels);
-		this->option("cat.queries", this->categoryQueries);
-		this->option("keyword", this->keyWordQuery);
-		this->option("ignore.empty.date", this->ignoreEmptyDate);
-		this->option("window.size", this->windowSize);
+		this->option("cat.labels", this->algoConfig.categoryLabels);
+		this->option("cat.queries", this->algoConfig.categoryQueries);
+		this->option("keyword", this->algoConfig.keyWordQuery);
+		this->option("ignore.empty.date", this->algoConfig.ignoreEmptyDate);
+		this->option("window.size", this->algoConfig.windowSize);
 	}
 
 	//! Checks the configuration options for the algorithm.
@@ -256,40 +256,40 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 	void AssocOverTime::checkAlgoOptions() {
 		// check keyword query
-		if(this->keyWordQuery == 0) {
+		if(this->algoConfig.keyWordQuery == 0) {
 			throw Exception("No keyword defined");
 		}
 
 		// check categories
 		if(
-				this->categoryQueries.empty()
+				this->algoConfig.categoryQueries.empty()
 				|| std::find_if(
-						this->categoryQueries.begin(),
-						this->categoryQueries.end(),
+						this->algoConfig.categoryQueries.begin(),
+						this->algoConfig.categoryQueries.end(),
 						[](const auto query) {
 							return query > 0;
 						}
-				) == this->categoryQueries.end()) {
+				) == this->algoConfig.categoryQueries.end()) {
 			throw Exception("No category defined");
 		}
 
 		const auto completeCategories{
 			std::min( // number of complete categories (= min. size of all arrays)
-					this->categoryLabels.size(),
-					this->categoryQueries.size()
+					this->algoConfig.categoryLabels.size(),
+					this->algoConfig.categoryQueries.size()
 			)
 		};
 
 		bool incompleteCategories{false};
 
 		// remove category labels or queries that are not used
-		if(this->categoryLabels.size() > completeCategories) {
-			this->categoryLabels.resize(completeCategories);
+		if(this->algoConfig.categoryLabels.size() > completeCategories) {
+			this->algoConfig.categoryLabels.resize(completeCategories);
 
 			incompleteCategories = true;
 		}
-		else if(this->categoryQueries.size() > completeCategories) {
-			this->categoryQueries.resize(completeCategories);
+		else if(this->algoConfig.categoryQueries.size() > completeCategories) {
+			this->algoConfig.categoryQueries.resize(completeCategories);
 
 			incompleteCategories = true;
 		}
@@ -302,13 +302,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// remove empty labels, invalid queries
-		for(std::size_t index{0}; index < this->categoryLabels.size(); ++index) {
+		for(std::size_t index{0}; index < this->algoConfig.categoryLabels.size(); ++index) {
 			if(
-					this->categoryLabels[index].empty()
-					|| this->categoryQueries[index] == 0
+					this->algoConfig.categoryLabels[index].empty()
+					|| this->algoConfig.categoryQueries[index] == 0
 			) {
-				this->categoryLabels.erase(this->categoryLabels.begin() + index);
-				this->categoryQueries.erase(this->categoryQueries.begin() + index);
+				this->algoConfig.categoryLabels.erase(this->algoConfig.categoryLabels.begin() + index);
+				this->algoConfig.categoryQueries.erase(this->algoConfig.categoryQueries.begin() + index);
 
 				incompleteCategories = true;
 			}
@@ -322,7 +322,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// check window size
-		if(this->windowSize == 0) {
+		if(this->algoConfig.windowSize == 0) {
 			throw Exception("Invalid window size");
 		}
 
@@ -330,6 +330,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 * WARNING: The existence of sources cannot be checked here, because
 		 * 	the database has not been prepared yet. Check them in onAlgoInit() instead.
 		 */
+	}
+
+	//! Resets the configuration options for the algorithm.
+	void AssocOverTime::resetAlgo() {
+		this->algoConfig = {};
 	}
 
 	/*
@@ -375,7 +380,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			firstDatePos = dateMap.front().pos;
 		}
 
-		if(firstDatePos > 0 && !(this->ignoreEmptyDate)) {
+		if(firstDatePos > 0 && !(this->algoConfig.ignoreEmptyDate)) {
 			if(articleMap.empty()) {
 				// no date and no article map: treat input as one article
 				dateIt = this->addDate("");
@@ -444,7 +449,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		for(const auto& date : dateMap) {
 			// skip articles without date
-			if(firstDatePos > 0 && this->ignoreEmptyDate) {
+			if(firstDatePos > 0 && this->algoConfig.ignoreEmptyDate) {
 				while(
 						articleIndex < articleMap.size()
 						&& articleMap[articleIndex].pos < date.pos
@@ -480,7 +485,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				};
 
 				// skip tokens without date
-				if(this->ignoreEmptyDate) {
+				if(this->algoConfig.ignoreEmptyDate) {
 					while(
 							tokenIndex < tokens.size()
 							&& tokenIndex < articleMap[articleIndex].pos
@@ -539,21 +544,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		for(const auto& date : this->associations) {
 			std::uint64_t occurrences{0};
-			std::vector<std::uint64_t> catsCounters(this->categoryLabels.size(), 0);
+			std::vector<std::uint64_t> catsCounters(this->algoConfig.categoryLabels.size(), 0);
 
 			for(const auto& article : date.second) {
 				for(const auto occurrence : article.second.keywordPositions) {
 					++occurrences;
 
-					for(std::size_t cat{0}; cat < this->categoryLabels.size(); ++cat) {
+					for(std::size_t cat{0}; cat < this->algoConfig.categoryLabels.size(); ++cat) {
 						for(const auto catOccurrence : article.second.categoriesPositions[cat]) {
-							if(catOccurrence > occurrence + this->windowSize) {
+							if(catOccurrence > occurrence + this->algoConfig.windowSize) {
 								break;
 							}
 
 							if(
-									occurrence < this->windowSize
-									|| catOccurrence >= occurrence - this->windowSize
+									occurrence < this->algoConfig.windowSize
+									|| catOccurrence >= occurrence - this->algoConfig.windowSize
 							) {
 								++(catsCounters[cat]);
 							}
@@ -599,7 +604,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		const auto resultNumColumns{
 			resultMinNumColumns
-			+ this->categoryLabels.size()
+			+ this->algoConfig.categoryLabels.size()
 		};
 
 		const auto resultTable{
@@ -636,7 +641,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					break;
 
 				default:
-					column = "analyzed__" + this->categoryLabels.at(n - 2);
+					column = "analyzed__" + this->algoConfig.categoryLabels.at(n - 2);
 				}
 
 				data.columns_types_values.emplace_back(
@@ -678,8 +683,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// initialize algorithm-specific queries
 	void AssocOverTime::initQueries() {
-		this->addQueries(this->categoryQueries, this->queriesCategories);
-		this->addOptionalQuery(this->keyWordQuery, this->queryKeyWord);
+		this->addQueries(this->algoConfig.categoryQueries, this->queriesCategories);
+		this->addOptionalQuery(this->algoConfig.keyWordQuery, this->queryKeyWord);
 	}
 
 	// add optional query

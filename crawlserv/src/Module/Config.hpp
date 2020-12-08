@@ -142,7 +142,6 @@ namespace crawlservpp::Module {
 		///@name Configuration Loader
 		///@{
 
-		// configuration loader
 		void loadConfig(const std::string& configJson, LogQueue& warningsTo);
 
 		///@}
@@ -240,6 +239,7 @@ protected:
 		///@{
 
 		virtual void parseBasicOption();
+		virtual void resetBase();
 
 		//! Parses a module-specific configuration option.
 		/*!
@@ -254,6 +254,13 @@ protected:
 		 *  configuration child classes.
 		 */
 		virtual void checkOptions() = 0;
+
+		//! Resets the module-specific configuration.
+		/*!
+		 * Needs to be overridden by module-specific
+		 *  configuration child classes.
+		 */
+		virtual void reset() = 0;
 
 		///@}
 
@@ -272,15 +279,20 @@ protected:
 		std::vector<std::string> list;	// container to check for duplicates
 #endif
 
+		// internal helper function
 		void logQueue(const std::string& entry);
 
-		// private static helper functions
+		// internal static helper functions
 		static void makeSubUrl(std::string& s);
 		static void makeUrl(std::string& s);
 	};
 
 	/*
 	 * IMPLEMENTATION
+	 */
+
+	/*
+	 * CONFIGURATION LOADER
 	 */
 
 	//! Loads a configuration.
@@ -496,6 +508,10 @@ protected:
 		// unset logging queue
 		this->logPtr = nullptr;
 	}
+
+	/*
+	 * CONFIGURATION PARSING (protected)
+	 */
 
 	//! Sets the category of the subsequent configuration items to be checked for.
 	/*!
@@ -2258,6 +2274,10 @@ protected:
 		this->logPtr->emplace(warning);
 	}
 
+	/*
+	 * MODULE-SPECIFIC CONFIGURASTION PARSING (protected)
+	 */
+
 	//! Parses a basic option.
 	/*!
 	 * Might be overridden by child classes.
@@ -2277,12 +2297,39 @@ protected:
 		this->parseOption();
 	}
 
+	//! Resets basic options.
+	/*!
+	 * Might be overridden by child classes.
+	 *
+	 * Can be used by abstract classes to
+	 *  reset additional configuration entries
+	 *  without being the final implementation,
+	 *  as in Network::Config.
+	 *
+	 * \warning Any reimplementation needs
+	 *   to call reset() for the reset to
+	 *   work properly.
+	 *
+	 * \sa Network::Config::resetBase
+	 */
+	inline void Config::resetBase() {
+		this->reset();
+	}
+
+	/*
+	 * INTERNAL HELPER FUNCTION (private)
+	 */
+
 	// add an entry to the logging queue, if available.
 	inline void Config::logQueue(const std::string& entry) {
 		if(this->logPtr != nullptr) {
 			this->logPtr->emplace(entry);
 		}
 	}
+
+	/*
+	 * INTERNAL STATIC HELPER FUNCTIONS (private)
+	 */
 
 	// check for sub-URL (starting with /) or libcurl-supported URL protocol
 	//  adds a slash in the beginning if no protocol was found

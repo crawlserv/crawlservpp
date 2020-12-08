@@ -126,6 +126,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		void parseAlgoOption() override;
 		void checkAlgoOptions() override;
+		void resetAlgo() override;
 
 		///@}
 
@@ -146,11 +147,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		DateAssociationMap associations;
 
 		// algorithm options
-		std::uint64_t keyWordQuery{0};
-		std::vector<std::string> categoryLabels;
-		std::vector<std::uint64_t> categoryQueries;
-		bool ignoreEmptyDate{true};
-		std::uint16_t windowSize{1};
+		struct Entries {
+			std::uint64_t keyWordQuery{0};
+			std::vector<std::string> categoryLabels;
+			std::vector<std::uint64_t> categoryQueries;
+			bool ignoreEmptyDate{true};
+			std::uint16_t windowSize{1};
+		} algoConfig;
 
 		// algorithm queries
 		QueryStruct queryKeyWord;

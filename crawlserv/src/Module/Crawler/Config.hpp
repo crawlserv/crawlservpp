@@ -513,6 +513,7 @@ namespace crawlservpp::Module::Crawler {
 
 		void parseOption() override;
 		void checkOptions() override;
+		void reset() override;
 
 		///@}
 
@@ -942,6 +943,11 @@ namespace crawlservpp::Module::Crawler {
 
 			this->warning("Incomplete variable(s) removed form configuration.");
 		}
+	}
+
+	//! Resets the crawler-specific configuration options.
+	inline void Config::reset() {
+		this->config = {};
 	}
 
 } /* namespace crawlservpp::Module::Crawler */

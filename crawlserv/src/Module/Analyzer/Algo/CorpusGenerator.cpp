@@ -425,4 +425,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
+	//! Does nothing
+	void CorpusGenerator::resetAlgo() {}
+
 } /* namespace crawlservpp::Module::Analyzer::Algo */

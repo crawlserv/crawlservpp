@@ -141,6 +141,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		void parseAlgoOption() override;
 		void checkAlgoOptions() override;
+		void resetAlgo() override;
 
 		///@}
 
@@ -149,15 +150,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t sources{0};
 
 		// algorithm options
-		std::uint8_t markovTweetDimension{markovTweetDefaultDimension};
-		std::string markovTweetLanguage{markovTweetDefaultLanguage};
-		std::uint64_t markovTweetLength{markovTweetDefaultLength};
-		std::uint64_t markovTweetMax{0};
-		std::string markovTweetResultField{markovTweetDefaultResultField};
-		std::uint64_t markovTweetSleep{0};
-		std::string markovTweetSourcesField{markovTweetDefaultSourcesField};
-		bool markovTweetSpellcheck{true};
-		bool markovTweetTiming{true};
+		struct Entries {
+			std::uint8_t markovTweetDimension{markovTweetDefaultDimension};
+			std::string markovTweetLanguage{markovTweetDefaultLanguage};
+			std::uint64_t markovTweetLength{markovTweetDefaultLength};
+			std::uint64_t markovTweetMax{0};
+			std::string markovTweetResultField{markovTweetDefaultResultField};
+			std::uint64_t markovTweetSleep{0};
+			std::string markovTweetSourcesField{markovTweetDefaultSourcesField};
+			bool markovTweetSpellcheck{true};
+			bool markovTweetTiming{true};
+		} algoConfig;
 	};
 
 }  /* namespace crawlservpp::Module::Analyzer::Algo */
