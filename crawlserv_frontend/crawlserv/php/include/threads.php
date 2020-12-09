@@ -263,7 +263,7 @@ if($num > 0) {
         if($row["module"] != "analyzer") {
             // calculate remaining time
             if($row["processed"] == 0) {
-                $tooltip = "Unable to estimate remaining time.";
+                $tooltip = "Number of IDs to process until completion.";
             }
             else {
                 $tooltip = "Estimated time until completion.";
@@ -275,11 +275,17 @@ if($num > 0) {
                 ."data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" " 
                 ."data-last=\"".$row["last"]."\">";
             
-            if($row["processed"] == 0) {
+            $remainingSecs = 0;
+            
+            if($row["processed"] > 0) {
+                $remainingSecs = $row["runtime"] / $row["processed"] * $remaining;
+            }
+            
+            if($row["processed"] == 0 || $remainingSecs > 31536000 /* a year */) {
                 echo "+&hairsp;".number_format($remaining);
             }
             else {
-                echo "&asymp;&hairsp;".formatTime($row["runtime"] / $row["processed"] * $remaining);
+                echo "&asymp;&hairsp;".formatTime($remainingSecs);
             }
                 
             echo "</span>";
