@@ -584,14 +584,18 @@ namespace crawlservpp::Module {
 
 	//! Sets the last ID processed by the thread.
 	/*!
+	 * Also sets the number of processed IDs, make
+	 *  sure to increment it before if the ID has
+	 *  been processed.
+	 *
 	 * \warning May only be used by the thread itself,
 	 *   not by the main thread!
 	 *
 	 * \param lastId The last ID processed by the
 	 *   thread.
 	 *
-	 * \sa incrementLast,
-	 *     Main::Database::setThreadLast
+	 * \sa incrementProcessed, incrementLast,
+	 *   Main::Database::setThreadLast
 	 */
 	void Thread::setLast(std::uint64_t lastId) {
 		if(this->last != lastId) {
@@ -599,24 +603,39 @@ namespace crawlservpp::Module {
 			this->last = lastId;
 
 			// set the last ID in the database
-			this->database.setThreadLast(this->id, lastId);
+			this->database.setThreadLast(this->id, lastId, this->processed);
 		}
 	}
 
 	//! Increments the last ID processed by the thread.
 	/*!
+	 * Also sets the number of processed IDs, make
+	 *  sure to increment it before if the ID has
+	 *  been processed.
+	 *
 	 * \warning May only be used by the thread itself,
 	 *   not by the main thread!
 	 *
-	 * \sa setLast,
-	 *     Main::Database::setThreadLast
+	 * \sa incrementProcessed, setLast,
+	 *   Main::Database::setThreadLast
 	 */
 	void Thread::incrementLast() {
 		// increment the last ID internally
 		++(this->last);
 
 		// increment the last ID in the database
-		this->database.setThreadLast(this->id, this->last);
+		this->database.setThreadLast(this->id, this->last, this->processed);
+	}
+
+	//! Increments the number of IDs processed by the thread.
+	/*!
+	 * \warning May only be used by the thread itself,
+	 *   not by the main thread!
+	 *
+	 * \sa setLast, incrementLast
+	 */
+	void Thread::incrementProcessed() {
+		++(this->processed);
 	}
 
 	/*

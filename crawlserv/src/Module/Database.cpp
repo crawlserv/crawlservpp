@@ -192,7 +192,7 @@ namespace crawlservpp::Module {
 		// prepare general SQL statements for thread
 		if(this->ps.setThreadStatusMessage == 0) {
 			this->ps.setThreadStatusMessage = this->addPreparedStatement(
-					"UPDATE crawlserv_threads"
+					"UPDATE `crawlserv_threads`"
 					" SET status = ?,"
 					" paused = ?"
 					" WHERE id = ?"
@@ -202,7 +202,7 @@ namespace crawlservpp::Module {
 
 		if(this->ps.setThreadProgress == 0) {
 			this->ps.setThreadProgress = this->addPreparedStatement(
-					"UPDATE crawlserv_threads"
+					"UPDATE `crawlserv_threads`"
 					" SET progress = ?,"
 					" runtime = ?"
 					" WHERE id = ?"
@@ -212,8 +212,10 @@ namespace crawlservpp::Module {
 
 		if(this->ps.setThreadLast == 0) {
 			this->ps.setThreadLast = this->addPreparedStatement(
-					"UPDATE crawlserv_threads"
-					" SET last = ?"
+					"UPDATE `crawlserv_threads`"
+					" SET"
+					"  last = ?,"
+					"  processed = ?"
 					" WHERE id = ?"
 					" LIMIT 1"
 			);
@@ -406,7 +408,11 @@ namespace crawlservpp::Module {
 	 *   the status of the thread to the
 	 *   database.
 	 */
-	void Database::setThreadStatusMessage(std::uint64_t threadId, bool threadPaused, const std::string& threadStatusMessage) {
+	void Database::setThreadStatusMessage(
+			std::uint64_t threadId,
+			bool threadPaused,
+			const std::string& threadStatusMessage
+	) {
 		// check connection
 		this->checkConnection();
 
@@ -470,7 +476,11 @@ namespace crawlservpp::Module {
 	 *   the progress of the thread to the
 	 *   database.
 	 */
-	void Database::setThreadProgress(std::uint64_t threadId, float threadProgress, std::uint64_t threadRunTime) {
+	void Database::setThreadProgress(
+			std::uint64_t threadId,
+			float threadProgress,
+			std::uint64_t threadRunTime
+	) {
 		// check connection
 		this->checkConnection();
 
@@ -507,6 +517,8 @@ namespace crawlservpp::Module {
 	 *   will be written to the database.
 	 * \param threadLast The last ID
 	 *   processed by the thread.
+	 * \param threadProcessed The number of
+	 *   IDs that have been processed.
 	 *
 	 * \throws Module::Database::Exception if
 	 *   the prepared SQL statement for
@@ -516,7 +528,11 @@ namespace crawlservpp::Module {
 	 *   the last ID processed by the thread
 	 *   to the database.
 	 */
-	void Database::setThreadLast(std::uint64_t threadId, std::uint64_t threadLast) {
+	void Database::setThreadLast(
+			std::uint64_t threadId,
+			std::uint64_t threadLast,
+			std::uint64_t threadProcessed
+	) {
 		// check connection
 		this->checkConnection();
 
@@ -535,8 +551,9 @@ namespace crawlservpp::Module {
 
 		try {
 			// execute SQL statement
-			sqlStatement.setUInt64(1, threadLast);
-			sqlStatement.setUInt64(2, threadId);
+			sqlStatement.setUInt64(sqlArg1, threadLast);
+			sqlStatement.setUInt64(sqlArg2, threadProcessed);
+			sqlStatement.setUInt64(sqlArg3, threadId);
 
 			Database::sqlExecute(sqlStatement);
 		}

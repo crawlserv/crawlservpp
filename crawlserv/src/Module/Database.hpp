@@ -129,9 +129,21 @@ namespace crawlservpp::Module {
 		///@name Threads (Module)
 		///@{
 
-		void setThreadStatusMessage(std::uint64_t threadId, bool threadPaused, const std::string& threadStatusMessage);
-		void setThreadProgress(std::uint64_t threadId, float threadProgress, std::uint64_t threadRunTime);
-		void setThreadLast(std::uint64_t threadId, std::uint64_t threadLast);
+		void setThreadStatusMessage(
+				std::uint64_t threadId,
+				bool threadPaused,
+				const std::string& threadStatusMessage
+		);
+		void setThreadProgress(
+				std::uint64_t threadId,
+				float threadProgress,
+				std::uint64_t threadRunTime
+		);
+		void setThreadLast(
+				std::uint64_t threadId,
+				std::uint64_t threadLast,
+				std::uint64_t threadProcessed
+		);
 
 		///@}
 

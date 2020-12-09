@@ -866,7 +866,11 @@ namespace crawlservpp::Main {
 		this->checkConnection();
 
 		// create SQL query string
-		std::string sqlQuery{"SELECT COUNT(*) FROM `crawlserv_log`"};
+		std::string sqlQuery{
+			"SELECT"
+			" COUNT(*)"
+			" FROM `crawlserv_log`"
+		};
 
 		if(!logModule.empty()) {
 			sqlQuery += " WHERE module = ?";
@@ -926,7 +930,9 @@ namespace crawlservpp::Main {
 				// prepare SQL statement
 				SqlPreparedStatementPtr sqlStatement{
 					this->connection->prepareStatement(
-							"DELETE FROM `crawlserv_log` WHERE module = ?"
+							"DELETE"
+							" FROM `crawlserv_log`"
+							" WHERE module = ?"
 					)
 				};
 
@@ -974,7 +980,16 @@ namespace crawlservpp::Main {
 			SqlResultSetPtr sqlResultSet{
 				Database::sqlExecuteQuery(
 						sqlStatement,
-						"SELECT id, module, status, paused, website, urllist, config, last"
+						"SELECT "
+						" id,"
+						" module,"
+						" status,"
+						" paused,"
+						" website,"
+						" urllist,"
+						" config,"
+						" last,"
+						" processed"
 						" FROM `crawlserv_threads`"
 				)
 			};
@@ -995,7 +1010,8 @@ namespace crawlservpp::Main {
 									sqlResultSet->getUInt64("id"),
 									sqlResultSet->getString("status"),
 									sqlResultSet->getBoolean("paused"),
-									sqlResultSet->getUInt64("last")
+									sqlResultSet->getUInt64("last"),
+									sqlResultSet->getUInt64("processed")
 							)
 					);
 				}

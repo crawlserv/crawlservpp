@@ -36,8 +36,12 @@
 
 namespace crawlservpp::Struct {
 
-	//! Thread status containing its ID, status message, pause state, and progress (i.e. the last ID processed by the thread).
+	//! Thread status containing its ID, status message, pause state, and progress.
 	/*!
+	 * The progress consists of the last ID
+	 *  and the number of IDs processed by the
+	 *  thread.
+	 *
 	 * \note The thread ID is part of the status,
 	 *   because it will not be assigned until
 	 *   after the threas has been added to
@@ -60,8 +64,11 @@ namespace crawlservpp::Struct {
 		//! Indicates whether the thread is paused at the moment.
 		bool paused{false};
 
-		//! The progress of, i.e. the last ID processed by the thread.
+		//! The last ID processed by the thread.
 		std::uint64_t last{0};
+
+		//! The number of IDs processed by the thread.
+		std::uint64_t processed{0};
 
 		///@}
 		///@name Construction
@@ -86,8 +93,9 @@ namespace crawlservpp::Struct {
 				std::uint64_t setId,
 				const std::string& setStatus,
 				bool setPaused,
-				std::uint64_t setLast
-		) : id(setId), status(setStatus), paused(setPaused), last(setLast) {}
+				std::uint64_t setLast,
+				std::uint64_t setProcessed
+		) : id(setId), status(setStatus), paused(setPaused), last(setLast), processed(setProcessed) {}
 
 		///@}
 	};

@@ -224,7 +224,7 @@ namespace crawlservpp::Module::Parser {
 		void parsingCheckUrls();
 		std::size_t parsingNext();
 		bool parsingContent(const IdString& content, std::string_view parsedId);
-		void parsingUrlFinished();
+		void parsingUrlFinished(bool success);
 		void parsingSaveResults(bool warped);
 		void parsingFieldWarning(
 				std::string_view error,

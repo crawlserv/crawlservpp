@@ -214,6 +214,7 @@ namespace crawlservpp::Module {
 		void setProgress(float newProgress);
 		void setLast(std::uint64_t lastId);
 		void incrementLast();
+		void incrementProcessed();
 
 		///@}
 		///@name Protected Thread Control
@@ -298,7 +299,8 @@ namespace crawlservpp::Module {
 
 		std::uint64_t last{0};						// last ID for the thread
 		std::atomic<std::uint64_t> overwriteLast{0};// ID to overwrite last ID with ("time travel")
-		std::int64_t warpedOver{0};					// no. of IDs that have been skipped (might be negative, ONLY for threads!)
+		std::int64_t warpedOver{0};					// no. of IDs that have been warped over (might be negative, ONLY for threads!)
+		std::uint64_t processed{0};					// no. of IDs that have been processed
 
 		std::condition_variable pauseCondition;		// condition variable to wait for unpause
 		mutable std::mutex pauseLock;				// lock for accessing the condition variable

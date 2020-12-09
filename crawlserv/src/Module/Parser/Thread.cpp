@@ -430,7 +430,7 @@ namespace crawlservpp::Module::Parser {
 		}
 
 		// URL finished
-		this->parsingUrlFinished();
+		this->parsingUrlFinished(!skip);
 	}
 
 	//! Pauses the parser.
@@ -805,7 +805,7 @@ namespace crawlservpp::Module::Parser {
 				this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
 
 				// finish skipped URL
-				this->parsingUrlFinished();
+				this->parsingUrlFinished(false);
 
 				continue;
 			}
@@ -844,7 +844,7 @@ namespace crawlservpp::Module::Parser {
 					this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
 
 					// finish skipped URL
-					this->parsingUrlFinished();
+					this->parsingUrlFinished(false);
 
 					continue;
 				}
@@ -1594,7 +1594,7 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	// URL has been processed (skipped or parsed)
-	void Thread::parsingUrlFinished() {
+	void Thread::parsingUrlFinished(bool success) {
 		// check whether the finished URL is the last URL in the cache
 		if(this->urls.size() == 1) {
 			// if yes, save results to database
@@ -1605,6 +1605,10 @@ namespace crawlservpp::Module::Parser {
 			this->idDist = 0;
 			this->posFirstF = 0;
 			this->posDist = 0;
+		}
+
+		if(success) {
+			this->incrementProcessed();
 		}
 
 		// save URL ID as last processed URL

@@ -538,7 +538,7 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// URL finished
-		this->extractingUrlFinished();
+		this->extractingUrlFinished(!skip);
 	}
 
 	//! Pauses the extractor.
@@ -1098,7 +1098,7 @@ namespace crawlservpp::Module::Extractor {
 				this->database.unLockUrlIfOk(this->urls.front().first, this->cacheLockTime);
 
 				// finish skipped URL
-				this->extractingUrlFinished();
+				this->extractingUrlFinished(false);
 
 				continue;
 			}
@@ -3059,7 +3059,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// URL has been processed (skipped or used for extraction)
-	void Thread::extractingUrlFinished() {
+	void Thread::extractingUrlFinished(bool success) {
 		// check whether the finished URL is the last URL in the cache
 		if(this->urls.size() == 1) {
 			// if yes, save results to database
@@ -3070,6 +3070,10 @@ namespace crawlservpp::Module::Extractor {
 			this->idDist = 0;
 			this->posFirstF = 0;
 			this->posDist = 0;
+		}
+
+		if(success) {
+			this->incrementProcessed();
 		}
 
 		// save URL ID as last processed URL

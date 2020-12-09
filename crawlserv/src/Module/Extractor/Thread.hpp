@@ -309,7 +309,7 @@ namespace crawlservpp::Module::Extractor {
 		std::size_t extractingLinked(std::uint64_t contentId, const std::string& url);
 		bool extractingCheckCurlCode(CURLcode curlCode, const std::string& url);
 		bool extractingCheckResponseCode(const std::string& url, std::uint32_t responseCode);
-		void extractingUrlFinished();
+		void extractingUrlFinished(bool success);
 		void extractingSaveLinked();
 		void extractingSaveResults(bool warped);
 		void extractingReset(std::string_view error, std::string_view url);

@@ -723,7 +723,10 @@ namespace crawlservpp::Module::Crawler {
 		{
 			DatabaseLock urlListLock(
 					this->database,
-					"urlList." + this->websiteNamespace + "_" + this->urlListNamespace,
+					"urlList."
+					+ this->websiteNamespace
+					+ "_"
+					+ this->urlListNamespace,
 					[this](){
 							return this->Thread::isRunning();
 					}
@@ -1361,8 +1364,9 @@ namespace crawlservpp::Module::Crawler {
 					// skip locked URL
 					this->log(
 							crawlerLoggingExtended,
-							"URL lock active - " +
-							this->manualUrl.second + " skipped."
+							"URL lock active - "
+							+ this->manualUrl.second
+							+ " skipped."
 					);
 
 					this->manualUrl = IdString();
@@ -1419,8 +1423,9 @@ namespace crawlservpp::Module::Crawler {
 								// skip locked custom URL
 								this->log(
 										crawlerLoggingExtended,
-										"URL lock active - " +
-										this->manualUrl.second + " skipped."
+										"URL lock active - "
+										+ this->manualUrl.second
+										+ " skipped."
 								);
 
 								++(this->manualCounter);
@@ -1461,11 +1466,12 @@ namespace crawlservpp::Module::Crawler {
 							);
 
 							if(this->lockTime.empty()) {
-								// start page is locked: write skipping of entry to log if enabled
+								// skip start page, because it is locked
 								this->log(
 										crawlerLoggingExtended,
-										"URL lock active - " +
-										this->startPage.second + " skipped."
+										"URL lock active - "
+										+ this->startPage.second
+										+ " skipped."
 								);
 
 								// start page is done
@@ -1537,8 +1543,9 @@ namespace crawlservpp::Module::Crawler {
 				if(this->nextUrl.first > 0) {
 					this->log(
 							crawlerLoggingExtended,
-							"could not retry " + this->nextUrl.second + ","
-							" because it is locked."
+							"could not retry "
+							+ this->nextUrl.second
+							+ ", because it is locked."
 					);
 				}
 
@@ -1558,7 +1565,9 @@ namespace crawlservpp::Module::Crawler {
 							// skip locked URL
 							this->log(
 									crawlerLoggingExtended,
-									"skipped " + this->nextUrl.second + ", because it is locked."
+									"skipped "
+									+ this->nextUrl.second
+									+ ", because it is locked."
 							);
 						}
 						else {
@@ -1916,7 +1925,9 @@ namespace crawlservpp::Module::Crawler {
 				if(this->config.crawlerTiming) {
 					sleepTimer.stop();
 
-					timerStrTo = "sleep: " + sleepTimer.totalStr();
+					timerStrTo = "sleep: ";
+
+					timerStrTo += sleepTimer.totalStr();
 				}
 
 				this->startTime += std::chrono::steady_clock::now() - this->idleTime;
@@ -2038,7 +2049,8 @@ namespace crawlservpp::Module::Crawler {
 				timerStrTo += ", ";
 			}
 
-			timerStrTo += "http: " + httpTimer.totalStr();
+			timerStrTo += "http: ";
+			timerStrTo += httpTimer.totalStr();
 
 			parseTimer.start();
 		}
@@ -2109,9 +2121,10 @@ namespace crawlservpp::Module::Crawler {
 			if(this->config.crawlerTiming) {
 				updateTimer.stop();
 
-				timerStrTo +=
-						", parse: " + parseTimer.totalStr() +
-						", update: " + updateTimer.totalStr();
+				timerStrTo += ", parse: ";
+				timerStrTo += parseTimer.totalStr();
+				timerStrTo +=  ", update: ";
+				timerStrTo += updateTimer.totalStr();
 			}
 		}
 
@@ -3353,9 +3366,11 @@ namespace crawlservpp::Module::Crawler {
 									// check sub-URL (needs to start with slash)
 									if(linked.at(0) != '/') {
 										throw Exception(
-												"Crawler::Thread::crawlingParseAndAddUrls():"
-												" " + urls.at(n - 1) + " is no sub-URL!"
-												" [" + url + "]"
+												"Crawler::Thread::crawlingParseAndAddUrls(): "
+												+ urls.at(n - 1)
+												+ " is no sub-URL! ["
+												+ url
+												+ "]"
 										);
 									}
 								}
@@ -3442,16 +3457,18 @@ namespace crawlservpp::Module::Crawler {
 						if(url.find('.') != std::string::npos) {
 							this->log(
 									crawlerLoggingDefault,
-									"WARNING:"
-									" Found file '" + url + "'"
+									"WARNING: Found file '"
+									+ url
+									+ "'"
 							);
 						}
 					}
 					else if(url.find('.', lastSlash + 1) != std::string::npos) {
 						this->log(
 								crawlerLoggingDefault,
-								"WARNING:"
-								" Found file '" + url + "'"
+								"WARNING: Found file '"
+								+ url
+								+ "'"
 						);
 					}
 				}
@@ -3653,8 +3670,14 @@ namespace crawlservpp::Module::Crawler {
 
 								statusStrStr.imbue(std::locale(""));
 
-								statusStrStr << "[" + this->config.crawlerArchivesNames.at(n) + ": "
-											 << counter << "/" << total << "] " << statusMessage;
+								statusStrStr << "[";
+								statusStrStr << this->config.crawlerArchivesNames.at(n);
+								statusStrStr << ": ";
+								statusStrStr << counter;
+								statusStrStr << "/";
+								statusStrStr << total;
+								statusStrStr << "] ";
+								statusStrStr << statusMessage;
 
 								this->setStatusMessage(statusStrStr.str());
 
@@ -3705,7 +3728,9 @@ namespace crawlservpp::Module::Crawler {
 
 									this->log(
 											crawlerLoggingVerbose,
-											"gets " + mementos.front().url + "..."
+											"gets "
+											+ mementos.front().url
+											+ "..."
 									);
 
 									try {
@@ -4069,6 +4094,8 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
+		this->incrementProcessed();
+
 		// set URL to finished if URL lock is okay
 		this->database.setUrlFinishedIfOk(url.first, this->lockTime);
 
@@ -4241,7 +4268,8 @@ namespace crawlservpp::Module::Crawler {
 
 			this->log(
 					crawlerLoggingDefault,
-					"public IP: " + this->networking.getPublicIp()
+					"public IP: "
+					+ this->networking.getPublicIp()
 			);
 		}
 	}
@@ -4286,7 +4314,8 @@ namespace crawlservpp::Module::Crawler {
 
 			this->log(
 					crawlerLoggingDefault,
-					"public IP: " + this->networking.getPublicIp()
+					"public IP: "
+					+ this->networking.getPublicIp()
 			);
 		}
 	}

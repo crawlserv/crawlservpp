@@ -126,20 +126,14 @@ $result = $dbConnection->query(
     " module,".
     " status,".
     " progress,".
-    " last,".
     " paused,".
     " website,".
     " urllist,".
     " config,".
-    " (".
-        "SELECT (AVG(tmp.runtime) * (1 - a.progress)) / AVG(tmp.progress)".
-        " FROM crawlserv_threads AS tmp".
-        " WHERE tmp.module LIKE a.module".
-        " AND tmp.website = a.website".
-        " AND tmp.urllist = a.urllist".
-        " AND tmp.config = a.config".
-    " ) AS remaining".
-    " FROM crawlserv_threads AS a"
+    " last,".
+    " processed,".
+    " runtime".
+    " FROM crawlserv_threads"
 );
 
 if($result == NULL) {
@@ -242,6 +236,23 @@ if($num > 0) {
         
         $result2->close();
         
+        // get number of remaining URLs
+        $result2 = $dbConnection->query(
+                "SELECT COUNT(*) AS remaining".
+                " FROM `crawlserv_".$website."_".$urllist."`".
+                " WHERE id > ".$row["last"]
+        );
+        
+        $row2 = $result2->fetch_assoc();
+        
+        if($row2 == NULL) {
+            http_response_code(503);
+        }
+        
+        $remaining = $row2["remaining"];
+        
+        $result2->close();
+        
         echo "<div class=\"thread\">\n";
         echo "<div class=\"content-block\">\n";
         echo "<div class=\"entry-row small-text\">\n";
@@ -257,11 +268,11 @@ if($num > 0) {
                 ."data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" " 
                 ."data-last=\"".$row["last"]."\">";
             
-            if($row["remaining"] === NULL) {
+            if($row["processed"] == 0) {
                 echo "+&infin;";
             }
             else {
-                echo "+".formatTime($row["remaining"]);
+                echo "+".formatTime($row["runtime"] / $row["processed"] * $remaining);
             }
                 
             echo "</span>";
