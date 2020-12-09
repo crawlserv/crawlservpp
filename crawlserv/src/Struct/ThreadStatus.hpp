@@ -88,6 +88,8 @@ namespace crawlservpp::Struct {
 		 * \param setLast The progress of,
 		 *   i.e. the last processed ID by
 		 *   the thread.
+		 * \param setProcessed The number of
+		 *   IDs processed by the thread.
 		 */
 		ThreadStatus(
 				std::uint64_t setId,

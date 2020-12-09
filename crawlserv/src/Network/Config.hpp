@@ -120,7 +120,6 @@ namespace crawlservpp::Network {
 	 */
 	class Config : protected Module::Config {
 	public:
-		///@}
 		///@name Configuration
 		///@{
 
@@ -640,8 +639,6 @@ namespace crawlservpp::Network {
 
 		//! Configuration for networking.
 		networkConfig;
-
-		///@}
 
 		///@}
 		///@name Parsing (Network Configuration)

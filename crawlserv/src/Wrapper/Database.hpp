@@ -322,7 +322,7 @@ namespace crawlservpp::Wrapper {
 		return this->database.getConfiguration(configId);
 	}
 
-	//! \copydoc Main::Database::addTargetTable
+	//! \copydoc Main::Database::addOrUpdateTargetTable
 	inline std::uint64_t Database::addOrUpdateTargetTable(const TargetTableProperties& properties) {
 		return this->database.addOrUpdateTargetTable(properties);
 	}
