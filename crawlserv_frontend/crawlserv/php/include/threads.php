@@ -262,17 +262,24 @@ if($num > 0) {
         
         if($row["module"] != "analyzer") {
             // calculate remaining time
-            $tooltip = "Estimated time until completion.\n&gt; Click to jump to specific ID.";
+            if($row["processed"] == 0) {
+                $tooltip = "Unable to estimate remaining time.";
+            }
+            else {
+                $tooltip = "Estimated time until completion.";
+            }
+            
+            $tooltip .= "\n&gt; Click to jump to specific ID.";
             
             echo "<span class=\"remaining\" title=\"$tooltip\" label=\"$tooltip\" "
                 ."data-id=\"".$row["id"]."\" data-module=\"".$row["module"]."\" " 
                 ."data-last=\"".$row["last"]."\">";
             
             if($row["processed"] == 0) {
-                echo "+&infin;";
+                echo "+&hairsp;".number_format($remaining);
             }
             else {
-                echo "+".formatTime($row["runtime"] / $row["processed"] * $remaining);
+                echo "&asymp;&hairsp;".formatTime($row["runtime"] / $row["processed"] * $remaining);
             }
                 
             echo "</span>";
