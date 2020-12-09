@@ -59,7 +59,8 @@ namespace crawlservpp::Module {
 			  id(threadStatus.id),
 			  module(threadOptions.module),
 			  options(threadOptions),
-			  last(threadStatus.last) {
+			  last(threadStatus.last),
+			  processed(threadStatus.processed) {
 		// remove paused or interrupted thread status from status message
 		if(
 				threadStatus.status.length() >= statusPrefixInterrupted.length()
