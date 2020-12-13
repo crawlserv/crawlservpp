@@ -362,7 +362,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			this->database.getQueryProperties(queryId, properties);
 
-			propertiesTo = this->addQuery(properties);
+			propertiesTo = this->addQuery(queryId, properties);
 		}
 	}
 
@@ -380,7 +380,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 				this->database.getQueryProperties(queryId, properties);
 
-				propertiesTo.emplace_back(this->addQuery(properties));
+				propertiesTo.emplace_back(this->addQuery(queryId, properties));
 			}
 		}
 	}

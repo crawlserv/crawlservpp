@@ -39,6 +39,7 @@
 #include "../Thread.hpp"
 
 #include "../../Main/Exception.hpp"
+#include "../../Query/Container.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 
@@ -51,7 +52,7 @@
 namespace crawlservpp::Module::Analyzer {
 
 	//! Abstract class providing thread functionality to algorithm (child) classes.
-	class Thread : public Module::Thread, protected Config {
+	class Thread : public Module::Thread, public Query::Container, protected Config {
 		// for convenience
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
@@ -86,6 +87,12 @@ namespace crawlservpp::Module::Analyzer {
 		void onUnpause() override;
 		void onClear() override;
 		void onReset() override;
+
+		///@}
+		///@name Query Initialization
+		///@{
+
+		virtual void initQueries() override;
 
 		///@}
 		///@name Algorithm Events

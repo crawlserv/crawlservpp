@@ -98,7 +98,7 @@ namespace crawlservpp::Module::Extractor {
 	 */
 
 	//! %Extractor thread.
-	class Thread final : public Module::Thread, private Query::Container, private Config {
+	class Thread final : public Module::Thread, public Query::Container, private Config {
 
 		// for convenience
 		using DateTimeException = Helper::DateTime::Exception;

@@ -3371,7 +3371,69 @@ namespace crawlservpp::Main {
 				textOnly
 		});
 
-		return ServerCommandResponse("Query updated.");
+		// if necessary, reset threads currently using this query
+		std::ostringstream responseStream;
+		bool addNewLine{true};
+
+		responseStream << "Query updated.";
+
+		for(auto& crawler : this->crawlers) {
+			if(crawler->isQueryUsed(id)) {
+				crawler->Module::Thread::reset();
+
+				if(addNewLine) {
+					responseStream << '\n';
+
+					addNewLine = false;
+				}
+
+				responseStream << "\nCrawler #" << crawler->getId() << " will be reset.";
+			}
+		}
+
+		for(auto& parser : this->parsers) {
+			if(parser->isQueryUsed(id)) {
+				parser->Module::Thread::reset();
+
+				if(addNewLine) {
+					responseStream << '\n';
+
+					addNewLine = false;
+				}
+
+				responseStream << "\nParser #" << parser->getId() << " will be reset.";
+			}
+		}
+
+		for(auto& extractor : this->extractors) {
+			if(extractor->isQueryUsed(id)) {
+				extractor->Module::Thread::reset();
+
+				if(addNewLine) {
+					responseStream << '\n';
+
+					addNewLine = false;
+				}
+
+				responseStream << "\nExtractor #" << extractor->getId() << " will be reset.";
+			}
+		}
+
+		for(auto& analyzer : this->analyzers) {
+			if(analyzer->isQueryUsed(id)) {
+				analyzer->Module::Thread::reset();
+
+				if(addNewLine) {
+					responseStream << '\n';
+
+					addNewLine = false;
+				}
+
+				responseStream << "\nAnalyzer #" << analyzer->getId() << " will be reset.";
+			}
+		}
+
+		return ServerCommandResponse(responseStream.str());
 	}
 
 	// server command movequery(id, to): move a query to another website by their IDs

@@ -38,7 +38,6 @@
 #include "../../../Data/Data.hpp"
 #include "../../../Helper/DateTime.hpp"
 #include "../../../Main/Database.hpp"
-#include "../../../Query/Container.hpp"
 #include "../../../Struct/CorpusProperties.hpp"
 #include "../../../Struct/QueryProperties.hpp"
 #include "../../../Struct/QueryStruct.hpp"
@@ -83,7 +82,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * This is an empty template class for adding
 	 *  new algorithms to the application.
 	 */
-	class AssocOverTime final : public Module::Analyzer::Thread, private Query::Container {
+	class AssocOverTime final : public Module::Analyzer::Thread {
 		// for convenience
 		using QueryProperties = Struct::QueryProperties;
 		using QueryStruct = Struct::QueryStruct;

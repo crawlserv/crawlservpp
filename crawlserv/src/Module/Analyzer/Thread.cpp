@@ -186,6 +186,16 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	/*
+	 * QUERY INITIALIZATION (protected)
+	 */
+
+	//! Does nothing.
+	/*!
+	 * To be overwritten by algorithms that use queries.
+	 */
+	void Thread::initQueries() {}
+
+	/*
 	 * THREAD CONTROL FOR ALGORITHMS (protected)
 	 */
 

@@ -46,7 +46,6 @@
 //#include "../../../Data/Corpus.hpp"
 //#include "../../../Data/Data.hpp"
 #include "../../../Main/Database.hpp"
-//#include "../../../Query/Container.hpp"
 //#include "../../../Struct/CorpusProperties.hpp"
 //#include "../../../Struct/QueryProperties.hpp"
 //#include "../../../Struct/QueryStruct.hpp"
@@ -94,7 +93,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * This is an empty template class for adding
 	 *  new algorithms to the application.
 	 */
-	class Empty final : public Module::Analyzer::Thread/*, private Query::Container*/ { //TODO: decide whether queries are needed
+	class Empty final : public Module::Analyzer::Thread {
 		// for convenience
 
 		/*

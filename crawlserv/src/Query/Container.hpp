@@ -46,13 +46,15 @@
 #include "../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 #include "../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <cstddef>	// std::size_t
-#include <cstdint>	// std::uint8_t, std::uint32_t
-#include <iterator>	// std::make_move_iterator
-#include <queue>	// std::queue
-#include <string>	// std::string
-#include <utility>	// std::pair
-#include <vector>	// std::vector
+#include <algorithm>	// std::find
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint8_t, std::uint32_t, std::uint64_t
+#include <iterator>		// std::make_move_iterator
+#include <mutex>		// std::lock_guard, std::mutex
+#include <queue>		// std::queue
+#include <string>		// std::string
+#include <utility>		// std::pair
+#include <vector>		// std::vector
 
 //! Namespace for classes handling queries.
 namespace crawlservpp::Query {
@@ -118,6 +120,13 @@ namespace crawlservpp::Query {
 
 		///@}
 
+		///@name Public Getter
+		///@{
+
+		bool isQueryUsed(std::uint64_t queryId) const;
+
+		///@}
+
 	protected:
 		//! Class for query container exceptions.
 		/*!
@@ -170,7 +179,10 @@ namespace crawlservpp::Query {
 		///@name Queries
 		///@{
 
-		QueryStruct addQuery(const QueryProperties& properties);
+		QueryStruct addQuery(
+				std::uint64_t id,
+				const QueryProperties& properties
+		);
 		void clearQueries();
 		void clearQueryTarget();
 
@@ -258,6 +270,10 @@ namespace crawlservpp::Query {
 		std::vector<XPathJsonPointer> queriesXPathJsonPointer;
 		std::vector<XPathJsonPath> queriesXPathJsonPath;
 
+		// query IDs and their lock
+		std::vector<std::uint64_t> queriesId;
+		mutable std::mutex queriesIdLock;
+
 		// options
 		bool repairCData{true};						// try to repair CData when parsing HTML/XML
 		bool repairComments{true};					// try to repair broken HTML/XML comments
@@ -296,7 +312,7 @@ namespace crawlservpp::Query {
 
 		std::vector<std::string> stringifiedSubSets;
 
-		// private helper functions
+		// internal helper functions
 		bool parseXml(std::queue<std::string>& warningsTo);
 		bool parseJsonRapid(std::queue<std::string>& warningsTo);
 		bool parseJsonCons(std::queue<std::string>& warningsTo);
@@ -315,6 +331,30 @@ namespace crawlservpp::Query {
 
 	/*
 	 * IMPLEMENTATION
+	 */
+
+	/*
+	 * PUBLIC GETTER
+	 */
+
+	//! Gets whether a certain query is used by the container.
+	/*!
+	 * \b Thread-safe. This function can be used by any thread.
+	 *
+	 * \param queryId ID of the query to be checked.
+	 */
+	inline bool Container::isQueryUsed(std::uint64_t queryId) const {
+		std::lock_guard<std::mutex> idLock(this->queriesIdLock);
+
+		return std::find(
+				this->queriesId.cbegin(),
+				this->queriesId.cend(),
+				queryId
+		) != this->queriesId.cend();
+	}
+
+	/*
+	 * SETTERS (proctected)
 	 */
 
 	//! Sets whether to try to repair CData when parsing XML.
@@ -411,6 +451,10 @@ namespace crawlservpp::Query {
 		this->queryTargetSourcePtr = &source;
 	}
 
+	/*
+	 * GETTERS (protected)
+	 */
+
 	//! Gets the number of subsets currently acquired.
 	/*!
 	 * \returns The number of subsets generated
@@ -483,6 +527,10 @@ namespace crawlservpp::Query {
 		return false;
 	}
 
+	/*
+	 * QUERIES (protected)
+	 */
+
 	//! Adds a query with the given query properties to the container.
 	/*!
 	 * \param properties Constant reference to
@@ -499,7 +547,10 @@ namespace crawlservpp::Query {
 	 *   type of the query is unknown.
 	 *
 	 */
-	inline Struct::QueryStruct Container::addQuery(const QueryProperties& properties) {
+	inline Struct::QueryStruct Container::addQuery(
+			std::uint64_t id,
+			const QueryProperties& properties
+	) {
 		QueryStruct newQuery;
 
 		newQuery.resultBool = properties.resultBool;
@@ -679,6 +730,13 @@ namespace crawlservpp::Query {
 			}
 		}
 
+		// thread-safely add ID
+		if(id > 0) {
+			std::lock_guard<std::mutex> lockIds(this->queriesIdLock);
+
+			this->queriesId.emplace_back(id);
+		}
+
 		return newQuery;
 	}
 
@@ -719,6 +777,10 @@ namespace crawlservpp::Query {
 		this->queryTargetPtr = nullptr;
 		this->queryTargetSourcePtr = nullptr;
 	}
+
+	/*
+	 * SUBSETS (protected)
+	 */
 
 	//! Requests the next subset for all subsequent queries.
 	/*!
@@ -790,6 +852,10 @@ namespace crawlservpp::Query {
 
 		return true;
 	}
+
+	/*
+	 * RESULTS (protected)
+	 */
 
 	//! Gets a boolean result from a %RegEx query on a separate string.
 	/*!
@@ -3554,6 +3620,10 @@ namespace crawlservpp::Query {
 		return false;
 	}
 
+	/*
+	 * MEMORY (protected)
+	 */
+
 	//! Reserves memory for a specific number of subsets.
 	/*!
 	 * \param query A constant reference to
@@ -3589,7 +3659,11 @@ namespace crawlservpp::Query {
 		}
 	}
 
-	// private helper function to parse content as HTML/XML if still necessary,
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
+	// parse content as HTML/XML if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	inline bool Container::parseXml(std::queue<std::string>& warningsTo) {
 		// check pointers
@@ -3638,7 +3712,7 @@ namespace crawlservpp::Query {
 		return this->xmlParsed;
 	}
 
-	// private helper function to parse content as JSON using RapidJSON if still necessary,
+	// parse content as JSON using RapidJSON if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	inline bool Container::parseJsonRapid(std::queue<std::string>& warningsTo) {
 		// check pointers
@@ -3683,7 +3757,7 @@ namespace crawlservpp::Query {
 		return this->jsonParsedRapid;
 	}
 
-	// private helper function to parse content as JSON using jsoncons if still necessary,
+	// parse content as JSON using jsoncons if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	inline bool Container::parseJsonCons(std::queue<std::string>& warningsTo) {
 		// check pointers
@@ -3722,7 +3796,7 @@ namespace crawlservpp::Query {
 		return this->jsonParsedCons;
 	}
 
-	// private helper function to parse subset as HTML/XML if still necessary,
+	// parse subset as HTML/XML if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	inline bool Container::parseSubSetXml(std::queue<std::string>& warningsTo) {
 		// check current subset
@@ -3773,7 +3847,7 @@ namespace crawlservpp::Query {
 		return this->subSetXmlParsed;
 	}
 
-	// private helper function to parse subset as JSON using RapidJSON if still necessary,
+	// parse subset as JSON using RapidJSON if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	inline bool Container::parseSubSetJsonRapid(std::queue<std::string>& warningsTo) {
 		// check current subset
@@ -3820,7 +3894,7 @@ namespace crawlservpp::Query {
 		return this->subSetJsonParsedRapid;
 	}
 
-	// private helper function to parse subset as JSON using jsoncons if still necessary,
+	// parse subset as JSON using jsoncons if still necessary,
 	//  return false if parsing failed, throws Container::Exception
 	inline bool Container::parseSubSetJsonCons(std::queue<std::string>& warningsTo) {
 		// check current subset

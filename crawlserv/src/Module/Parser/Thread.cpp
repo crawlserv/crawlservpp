@@ -642,7 +642,7 @@ namespace crawlservpp::Module::Parser {
 
 				this->database.getQueryProperties(queryId, properties);
 
-				propertiesTo.emplace_back(this->addQuery(properties));
+				propertiesTo.emplace_back(this->addQuery(queryId, properties));
 			}
 		}
 	}
@@ -662,7 +662,7 @@ namespace crawlservpp::Module::Parser {
 				this->database.getQueryProperties(queryId, properties);
 			}
 
-			propertiesTo.emplace_back(this->addQuery(properties));
+			propertiesTo.emplace_back(this->addQuery(queryId, properties));
 		}
 	}
 
@@ -705,7 +705,7 @@ namespace crawlservpp::Module::Parser {
 			}
 
 			// add even empty queries
-			propertiesTo.emplace_back(this->addQuery(properties));
+			propertiesTo.emplace_back(this->addQuery(*it, properties));
 		}
 	}
 
