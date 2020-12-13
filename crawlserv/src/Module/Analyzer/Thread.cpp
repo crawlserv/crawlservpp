@@ -129,6 +129,13 @@ namespace crawlservpp::Module::Analyzer {
 
 		this->database.prepare();
 
+		// initialize queries
+		this->setStatusMessage("Initializing queries...");
+
+		this->log(generalLoggingVerbose, "initializes queries...");
+
+		this->initQueries();
+
 		// initialize algorithm
 		this->setStatusMessage("Initializing algorithm...");
 
@@ -173,6 +180,9 @@ namespace crawlservpp::Module::Analyzer {
 	void Thread::onClear() {
 		// clear algorithm
 		this->onAlgoClear();
+
+		// clear queries
+		this->clearQueries();
 	}
 
 	//! Resets the algorithm.

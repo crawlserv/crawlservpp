@@ -68,6 +68,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 
 	//! Initializes the target table for the algorithm.
+	/*!
+	 * \note When this function is called, neither the
+	 *   prepared SQL statements, nor the queries have
+	 *   been initialized yet.
+	 */
 	void AssocOverTime::onAlgoInitTarget() {
 		// set target fields
 		std::vector<std::string> fields;
@@ -100,6 +105,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	//! Generates the corpus.
+	/*!
+	 * \note When this function is called, both the
+	 *   prepared SQL statements, and the queries have
+	 *   already been initialized.
+	 *
+	 * \sa initQueries
+	 */
 	void AssocOverTime::onAlgoInit() {
 		// reset progress
 		this->setProgress(0.F);
@@ -114,9 +126,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				this->config.generalInputTables,
 				this->config.generalInputFields
 		);
-
-		// initialize queries
-		this->initQueries();
 
 		// request text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");
