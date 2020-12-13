@@ -141,7 +141,9 @@ namespace crawlservpp::Module {
 	 *   module and the main thread.
 	 *
 	 * \returns The unique ID identifying the
-	 *   thread in the database.
+	 *   thread in the database, because the
+	 *   ID is not changed after starting the
+	 *   thread.
 	 */
 	std::uint64_t Thread::getId() const {
 		return this->id;
@@ -150,7 +152,9 @@ namespace crawlservpp::Module {
 	//! Gets the ID of the website used by the thread.
 	/*!
 	 * \b Thread-safe: Can be used by both the
-	 *   module and the main thread.
+	 *   module and the main thread, because the
+	 *   website is not changed after starting
+	 *   the thread.
 	 *
 	 * \returns The unique ID identifying the
 	 *   used website in the database.
@@ -162,7 +166,9 @@ namespace crawlservpp::Module {
 	//! Gets the ID of the URL list used by the thread.
 	/*!
 	 * \b Thread-safe: Can be used by both the
-	 *   module and the main thread.
+	 *   module and the main thread, because
+	 *   the URL list is not changed after
+	 *   starting the thread.
 	 *
 	 * \returns The unique ID identifying the
 	 *   used URL list in the database.
@@ -174,7 +180,10 @@ namespace crawlservpp::Module {
 	//! Gets the ID of the configuration used by the thread.
 	/*!
 	 * \b Thread-safe: Can be used by both the
-	 *   module and the main thread.
+	 *   module and the main thread, because
+	 *   the configuration is not changed
+	 *   after starting the thread.
+	 *
 	 *
 	 * \returns The unique ID identifying the
 	 *   used configuration in the database.
