@@ -1290,8 +1290,6 @@ namespace crawlservpp::Network {
 			std::string exceptionString{"HTTP error "};
 
 			exceptionString += std::to_string(this->responseCode);
-			exceptionString += " from ";
-			exceptionString += url;
 
 			throw Curl::Exception(exceptionString);
 		}
