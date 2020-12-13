@@ -92,7 +92,7 @@ namespace crawlservpp::Module::Analyzer {
 		///@name Query Initialization
 		///@{
 
-		virtual void initQueries() override;
+		void initQueries() override;
 
 		///@}
 		///@name Algorithm Events
