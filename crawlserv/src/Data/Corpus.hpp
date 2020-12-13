@@ -1323,6 +1323,11 @@ namespace crawlservpp::Data {
 						exceptionStrStr.imbue(std::locale(""));
 
 						exceptionStrStr <<	"Corpus::combineTokenized():"
+											" In chunk ";
+						exceptionStrStr <<	chunkIndex + 1;
+						exceptionStrStr <<	"/";
+						exceptionStrStr <<	chunks.size();
+						exceptionStrStr <<	":"
 											" Sentence map in corpus chunk starts"
 											" at #";
 						exceptionStrStr <<	first.first;
@@ -1354,6 +1359,11 @@ namespace crawlservpp::Data {
 								exceptionStrStr.imbue(std::locale(""));
 
 								exceptionStrStr <<	"Corpus::combineTokenized():"
+													" In chunk ";
+								exceptionStrStr <<	chunkIndex + 1;
+								exceptionStrStr <<	"/";
+								exceptionStrStr <<	chunks.size();
+								exceptionStrStr <<	":"
 													" Length of first sentence conflicts"
 													" with length given in previous chunk"
 													" (";
@@ -1400,6 +1410,11 @@ namespace crawlservpp::Data {
 						exceptionStrStr.imbue(std::locale(""));
 
 						exceptionStrStr <<	"Corpus::combineTokenized():"
+											" In chunk ";
+						exceptionStrStr <<	chunkIndex + 1;
+						exceptionStrStr <<	"/";
+						exceptionStrStr <<	chunks.size();
+						exceptionStrStr <<	":"
 											" Article map in corpus chunk starts at #";
 						exceptionStrStr <<	first.pos;
 						exceptionStrStr <<	" instead of #0";
