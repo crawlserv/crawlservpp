@@ -260,7 +260,7 @@ if($num > 0) {
         echo "<b>".$row["module"]." #".$row["id"]."</b>"
             ." - <i>".$config." on ".$website."_".$urllist."</i>\n";
         
-        if($row["module"] != "analyzer") {
+        if($remaining > 0 && $row["module"] != "analyzer") {
             // calculate remaining time
             if($row["processed"] == 0) {
                 $tooltip = "Number of IDs to process until completion.";
