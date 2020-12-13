@@ -2262,7 +2262,7 @@ namespace crawlservpp::Data {
 				std::size_t restNumTokens{0};
 				TextMapEntry articleRest;
 				TextMapEntry dateRest;
-				bool splitToken{true};
+				bool splitToken{false};
 
 				if(currentChunk.size() > chunkSize) {
 					// split sentence (but do not shrink sentence map)
@@ -2280,6 +2280,7 @@ namespace crawlservpp::Data {
 					currentChunk.erase(chunkLength);
 
 					reserveMemory = true;
+					splitToken = true;
 
 					// check which tokens to (also) add to the next chunk
 					restNumTokens = sentence.second;
