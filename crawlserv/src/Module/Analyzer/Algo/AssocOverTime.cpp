@@ -375,10 +375,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		status += std::to_string(this->corpora.size());
 		status += "...";
 
-		this->setStatusMessage("Processing " + status);
+		this->setStatusMessage("Counting co-occurrences " + status);
 		this->setProgress(0.F);
 
-		this->log(generalLoggingDefault, "processes " + status);
+		this->log(generalLoggingDefault, "counts co-occurrences " + status);
 
 		auto dateIt{this->associations.begin()};
 		std::size_t firstDatePos{tokens.size()};
