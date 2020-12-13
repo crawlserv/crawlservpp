@@ -548,7 +548,11 @@ namespace crawlservpp::Module::Crawler {
 		this->category("crawler");
 		this->option("archives", this->config.crawlerArchives);
 		this->option("archives.names", this->config.crawlerArchivesNames);
-		this->option("archives.urls.memento", this->config.crawlerArchivesUrlsMemento);
+		this->option(
+				"archives.urls.memento",
+				this->config.crawlerArchivesUrlsMemento,
+				StringParsingOption::Trim
+		);
 		this->option("archives.urls.skip", this->config.crawlerArchivesUrlsSkip);
 		this->option("archives.urls.timemap", this->config.crawlerArchivesUrlsTimemap);
 		this->option("lock", this->config.crawlerLock);

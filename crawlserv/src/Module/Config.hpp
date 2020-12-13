@@ -184,7 +184,10 @@ protected:
 			SubURL,
 
 			//! Converts a string to a URL (without the protocol).
-			URL
+			URL,
+
+			//! Trims a string.
+			Trim
 		};
 		
 		//! Options for parsing @c char's.
@@ -2101,6 +2104,14 @@ protected:
 
 				break;
 
+			case Trim:
+				// trim string
+				Helper::Strings::trim(str);
+
+				target.swap(str);
+
+				break;
+
 			default:
 				throw Exception("Config::option(): Invalid string parsing option");
 			}
@@ -2218,6 +2229,14 @@ protected:
 					case URL:
 						// convert to URL
 						Config::makeUrl(str);
+
+						target.emplace_back(str);
+
+						break;
+
+					case Trim:
+						// trim string
+						Helper::Strings::trim(str);
 
 						target.emplace_back(str);
 
