@@ -321,6 +321,7 @@ namespace crawlservpp::Data {
 				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
+		void checkTokenized() const;
 
 		// internal static helper functions
 		[[nodiscard]] static std::size_t getValidLengthOfChunk(
@@ -1243,6 +1244,7 @@ namespace crawlservpp::Data {
 
 		// add words from chunks
 		std::string lastWord;
+		bool skipNextSeparator{false};
 
 		for(auto chunkIt = chunks.begin(); chunkIt != chunks.end(); ++chunkIt) {
 			const auto chunkIndex{
@@ -1253,8 +1255,10 @@ namespace crawlservpp::Data {
 			};
 
 			auto chunkOffset{this->tokens.size()};
-			bool skipSeparator{false};
+			bool skipSeparator{skipNextSeparator};
 			std::size_t begin{0};
+
+			skipNextSeparator = false;
 
 			while(begin < chunkIt->size()) {
 				std::size_t end{begin};
@@ -1291,6 +1295,7 @@ namespace crawlservpp::Data {
 					const auto len{
 						end - begin
 					};
+
 					this->tokens.emplace_back(
 							lastWord
 							+ chunkIt->substr(begin, len)
@@ -1393,6 +1398,22 @@ namespace crawlservpp::Data {
 						// free memory early
 						SentenceMap{}.swap(map);
 					}
+				}
+
+				// check whether last sentence (and therefore last word) is complete
+				if(
+						this->sentenceMap.back().first
+						+ this->sentenceMap.back().second
+						== this->tokens.size()
+						+ 1
+				) {
+					this->tokens.emplace_back(lastWord);
+
+					this->tokenBytes += lastWord.size();
+
+					lastWord.clear();
+
+					skipNextSeparator = true;
 				}
 			}
 
@@ -1544,6 +1565,9 @@ namespace crawlservpp::Data {
 		}
 
 		this->tokenized = true;
+
+		// if necessary, check the consistency of the newly combined corpus
+		this->checkTokenized();
 	}
 
 	/*
@@ -3085,7 +3109,7 @@ namespace crawlservpp::Data {
 	}
 
 	/*
-	 * INTERNAL STATIC HELPER FUNCTIONS (private)
+	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
 
 	// tokenize already tokenized corpus
@@ -3714,6 +3738,212 @@ namespace crawlservpp::Data {
 
 		return statusSetter.isRunning();
 	}
+
+	// check consistency of tokenized corpus, if necessary, throws Corpus::Exception
+	inline void Corpus::checkTokenized() const {
+		if(
+				this->checkConsistency
+				&& !(this->articleMap.empty())
+				&& !(this->dateMap.empty())
+				&& !(this->sentenceMap.empty())
+		) {
+			auto article = this->articleMap.cbegin();
+			auto sentence = this->sentenceMap.cbegin();
+
+			// go through all dates
+			for(auto date{this->dateMap.cbegin()}; date != this->dateMap.cend(); ++date) {
+				// jump to first article of date
+				while(article != this->articleMap.cend() && article->pos < date->pos) {
+					++article;
+				}
+
+				// jump to first sentence of date
+				while(sentence != this->sentenceMap.cend() && sentence->first < date->pos) {
+					++sentence;
+				}
+
+				// go through all articles in current date
+				const auto dateEnd{date->pos + date->length};
+
+				while(article != this->articleMap.cend() && article->pos < dateEnd) {
+					// jump to first sentence of article
+					while(sentence != this->sentenceMap.cend() && sentence->first < date->pos) {
+						++sentence;
+					}
+
+					if(sentence == this->sentenceMap.cend()) {
+						break;
+					}
+
+					// go through all sentences in current article
+					const auto articleEnd{article->pos + article->length};
+
+					while(sentence != this->sentenceMap.cend() && sentence->first < articleEnd) {
+						// check whether sentence is out of bounds
+						const auto sentenceEnd{sentence->first + sentence->second};
+
+						if(sentenceEnd > dateEnd) {
+							std::ostringstream exceptionStrStr;
+
+							exceptionStrStr.imbue(std::locale(""));
+
+							exceptionStrStr <<	"Corpus::checkTokenized():"
+												" End of sentence (l=";
+							exceptionStrStr <<	sentence->second;
+							exceptionStrStr <<	") is behind end of date '";
+							exceptionStrStr <<	date->value;
+							exceptionStrStr <<	"' (l=";
+							exceptionStrStr << date->length;
+							exceptionStrStr <<	"): ";
+							exceptionStrStr <<	sentenceEnd;
+
+							if(sentenceEnd > 0 && sentenceEnd <= this->tokens.size()) {
+								exceptionStrStr <<	" ['";
+								exceptionStrStr <<	this->tokens.at(sentenceEnd - 1);
+								exceptionStrStr <<	"']";
+							}
+							else if(sentenceEnd == 0) {
+								exceptionStrStr << " [BEGIN]";
+							}
+							else {
+								exceptionStrStr << " [BEHIND]";
+							}
+
+							exceptionStrStr <<	" > ";
+							exceptionStrStr <<	dateEnd;
+
+							if(dateEnd > 0 && dateEnd <= this->tokens.size()) {
+								exceptionStrStr <<	" ['";
+								exceptionStrStr <<	this->tokens.at(dateEnd - 1);
+								exceptionStrStr <<	"']";
+							}
+							else if(dateEnd == 0) {
+								exceptionStrStr << " [BEGIN]";
+							}
+							else {
+								exceptionStrStr << " [BEHIND]";
+							}
+
+							exceptionStrStr <<	" (";
+							exceptionStrStr <<	"sentence: '";
+
+							bool addSpace{false};
+
+							for(std::size_t word{sentence->first}; word < sentenceEnd; ++word) {
+								if(word < this->tokens.size()) {
+									if(addSpace) {
+										exceptionStrStr << ' ';
+									}
+									else {
+										addSpace = true;
+									}
+
+									exceptionStrStr << this->tokens[word];
+								}
+							}
+
+							exceptionStrStr <<	"'";
+
+							++date;
+
+							if(date != this->dateMap.cend()) {
+								exceptionStrStr << " (next date: '";
+								exceptionStrStr << date->value;
+								exceptionStrStr << "')";
+							}
+
+							throw Exception(exceptionStrStr.str());
+						}
+
+						if(sentence->first + sentence->second > articleEnd) {
+							std::ostringstream exceptionStrStr;
+
+							exceptionStrStr.imbue(std::locale(""));
+
+							exceptionStrStr <<	"Corpus::checkTokenized():"
+												" End of sentence (l=";
+							exceptionStrStr <<	sentence->second;
+							exceptionStrStr <<	") is behind end of article '";
+							exceptionStrStr <<	article->value;
+							exceptionStrStr <<	"' (l=";
+							exceptionStrStr << article->length;
+							exceptionStrStr <<	"): ";
+							exceptionStrStr <<	sentenceEnd;
+
+							if(sentenceEnd > 0 && sentenceEnd <= this->tokens.size()) {
+								exceptionStrStr <<	" ['";
+								exceptionStrStr <<	this->tokens.at(sentenceEnd - 1);
+								exceptionStrStr <<	"']";
+							}
+							else if(sentenceEnd == 0) {
+								exceptionStrStr << " [BEGIN]";
+							}
+							else {
+								exceptionStrStr << " [BEHIND]";
+							}
+
+							exceptionStrStr <<	" > ";
+							exceptionStrStr <<	articleEnd;
+
+							if(articleEnd > 0 && articleEnd <= this->tokens.size()) {
+								exceptionStrStr <<	" ['";
+								exceptionStrStr <<	this->tokens.at(articleEnd - 1);
+								exceptionStrStr <<	"']";
+							}
+							else if(articleEnd == 0) {
+								exceptionStrStr << " [BEGIN]";
+							}
+							else {
+								exceptionStrStr << " [BEHIND]";
+							}
+
+							exceptionStrStr <<	" (";
+							exceptionStrStr <<	"sentence: '";
+
+							bool addSpace{false};
+
+							for(std::size_t word{sentence->first}; word < sentenceEnd; ++word) {
+								if(word < this->tokens.size()) {
+									if(addSpace) {
+										exceptionStrStr << ' ';
+									}
+									else {
+										addSpace = true;
+									}
+
+									exceptionStrStr << this->tokens[word];
+								}
+							}
+
+							exceptionStrStr <<	"'";
+
+							++article;
+
+							if(article != this->articleMap.cend()) {
+								exceptionStrStr << ", next article: '";
+								exceptionStrStr << article->value;
+								exceptionStrStr << "'";
+							}
+
+							exceptionStrStr << ")";
+
+							throw Exception(exceptionStrStr.str());
+						}
+
+						// go to next sentence
+						++sentence;
+					}
+
+					// go to next article
+					++article;
+				}
+			}
+		}
+	}
+
+	/*
+	 * INTERNAL STATIC HELPER FUNCTIONS (private)
+	 */
 
 	// get a valid end of the current chunk (without cutting off UTF-8 characters), throws Corpus::Exception
 	//	NOTE: the result is between (maxLength - 3) and maxLength and at least zero
