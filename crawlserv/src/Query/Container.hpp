@@ -101,7 +101,7 @@ namespace crawlservpp::Query {
 		///@}
 
 		/*!
-		 * The class is not copyable, only (default) moveable.
+		 * The class is neither copyable, nor moveable.
 		 */
 		///@name Copy and move
 		///@{
@@ -112,11 +112,11 @@ namespace crawlservpp::Query {
 		//! Deleted copy assignment operator.
 		Container& operator=(const Container&) = delete;
 
-		//! Default move constructor.
-		Container(Container&&) = default;
+		//! Deleted move constructor.
+		Container(Container&&) = delete;
 
-		//! Default move assignment operator.
-		Container& operator=(Container&&) = default;
+		//! Deleted move assignment operator.
+		Container& operator=(Container&&) = delete;
 
 		///@}
 
@@ -337,7 +337,7 @@ namespace crawlservpp::Query {
 	 * PUBLIC GETTER
 	 */
 
-	//! Gets whether a certain query is used by the container.
+	//! Checks whether the specified query is used by the container.
 	/*!
 	 * \b Thread-safe. This function can be used by any thread.
 	 *
@@ -533,6 +533,10 @@ namespace crawlservpp::Query {
 
 	//! Adds a query with the given query properties to the container.
 	/*!
+	 * \param id The ID of the query. It will be
+	 *   saved in a thread-safe way and only be
+	 *   used by Container::isQueryUsed.
+	 *
 	 * \param properties Constant reference to
 	 *   the properties of the query to add to
 	 *   the container.
