@@ -143,7 +143,12 @@ namespace crawlservpp::Module::Analyzer {
 
 		this->onAlgoInit();
 
-		this->setStatusMessage("Starting algorithm...");
+		if(this->isRunning()) {
+			this->setStatusMessage("Starting algorithm...");
+		}
+		else {
+			this->setStatusMessage("Cancelled on startup.");
+		}
 	}
 
 	//! Performs an algorithm tick.
