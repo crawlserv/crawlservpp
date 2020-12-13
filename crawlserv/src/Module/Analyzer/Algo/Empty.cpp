@@ -84,6 +84,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 
 	//! Initializes the target table for the algorithm.
+	/*!
+	 * \note When this function is called, neither the
+	 *   prepared SQL statements, nor the queries have
+	 *   been initialized yet.
+	 */
 	void Empty::onAlgoInitTarget() {
 		/*
 		 * TODO: [OPTIONAL] set target fields
@@ -116,6 +121,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	//! Initializes the algorithm and processes its input.
+	/*!
+	 * \note When this function is called, both the
+	 *   prepared SQL statements, and the queries have
+	 *   already been initialized.
+	 *
+	 * \sa initQueries
+	 */
 	void Empty::onAlgoInit() {
 		/*
 		 * TODO: [OPTIONAL] check sources

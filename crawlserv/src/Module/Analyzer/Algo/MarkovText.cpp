@@ -65,6 +65,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 
 	//! Initializes the target table for the algorithm.
+	/*!
+	 * \note When this function is called, the prepared
+	 *   SQL statements have not yet been initialized.
+	 */
 	void MarkovText::onAlgoInitTarget() {
 		// set target fields
 		std::vector<std::string> fields;
@@ -86,6 +90,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	//! Initializes the algorithm and processes its input.
 	/*!
+	 * \note When this function is called, the prepared
+	 *   SQL statements have already been initialized.
+	 *
 	 * \note In the case of this algorithm,
 	 *   most of the work will be done during
 	 *   initialization which therefore may take

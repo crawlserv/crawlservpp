@@ -68,11 +68,23 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 
 	//! Initializes the target table for the algorithm.
+	/*!
+	 * \note When this function is called, neither the
+	 *   prepared SQL statements, nor the queries have
+	 *   been initialized yet.
+	 */
 	void TokensOverTime::onAlgoInitTarget() {
 		//TODO: initialize target table
 	}
 
 	//! Generates the corpus.
+	/*!
+	 * \note When this function is called, both the
+	 *   prepared SQL statements, and the queries have
+	 *   already been initialized.
+	 *
+	 * \sa initQueries
+	 */
 	void TokensOverTime::onAlgoInit() {
 		// reset progress
 		this->setProgress(0.F);

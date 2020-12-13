@@ -72,6 +72,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 
 	//! Initializes the target table for the algorithm.
+	/*!
+	 * \note When this function is called, the prepared
+	 *   SQL statements have not yet been initialized.
+	 */
 	void CorpusGenerator::onAlgoInitTarget() {
 		// set target fields
 		std::vector<std::string> fields;
@@ -103,6 +107,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	//! Generates the corpus.
+	/*!
+	 * \note When this function is called, the prepared
+	 *   SQL statements have already been initialized.
+	 */
 	void CorpusGenerator::onAlgoInit() {
 		// reset progress
 		this->setProgress(0.F);
