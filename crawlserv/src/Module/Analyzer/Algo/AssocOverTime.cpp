@@ -368,17 +368,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t dateCounter{0};
 
 		// set status message and reset progress
-		std::string status{"corpus #"};
+		std::string status{"co-occurrences in corpus #"};
 
 		status += std::to_string(this->currentCorpus + 1);
 		status += "/";
 		status += std::to_string(this->corpora.size());
 		status += "...";
 
-		this->setStatusMessage("Counting co-occurrences " + status);
+		this->setStatusMessage("Counting " + status);
 		this->setProgress(0.F);
 
-		this->log(generalLoggingDefault, "counts co-occurrences " + status);
+		this->log(generalLoggingDefault, "counts " + status);
 
 		auto dateIt{this->associations.begin()};
 		std::size_t firstDatePos{tokens.size()};
