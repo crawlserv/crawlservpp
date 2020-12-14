@@ -115,6 +115,12 @@ echo isset($_POST["scrolldown"]) ? "true" : "false";
 
 ?>;
 
+var global_website = <?php
+
+echo isset($_POST["website"]) ? $_POST["website"] : "0";
+
+?>;
+
 window.history.pushState("object or string", "Title", location.protocol + '//' + location.host + location.pathname);
 
 </script>

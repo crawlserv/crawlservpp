@@ -346,14 +346,21 @@ jQuery(function($) {
 	});
 	
 	// CLICK EVENT: navigation
-	$(document).on("click", "a.post-redirect", function() {
+	$(document).on("click", "a.post-redirect", function() {		
 		var args = {
 				"m" : $(this).data("m")
 		};
 		
-		if(typeof $(this).data("website") !== "undefined") {
+		if(global_website > 0) {
+			args.website = global_website;
+		}
+		else if($("#website-select").length && $("#website-select").value > 0) {
+			args.website = $("#website-select").value;
+		}
+		else if(typeof $(this).data("website") !== "undefined" && $(this).data("website") > 0) {
 			args.website = $(this).data("website");
 		}
+		
 		if(typeof $(this).data("mode") !== "undefined") {
 			args.mode = $(this).data("mode");
 		}
