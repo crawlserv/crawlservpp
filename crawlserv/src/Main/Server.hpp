@@ -133,12 +133,14 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
-#include <string_view>	// std::string_view
+#include <string_view>	// std::string_view, std::string_view_literals
 #include <thread>		// std::thread
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Main {
+
+	using std::string_view_literals::operator""sv;
 
 	/*
 	 * CONSTANTS
@@ -148,13 +150,19 @@ namespace crawlservpp::Main {
 	///@{
 
 	//! The name of the (sub-)directory for the file cache.
-	inline constexpr std::string_view cacheDir{"cache"};
+	inline constexpr auto cacheDir{"cache"sv};
 
 	//! The name of the (sub-)directory for cookies.
-	inline constexpr std::string_view cookieDir{"cookies"};
+	inline constexpr auto cookieDir{"cookies"sv};
 
 	//! The name of the (sub-)directory for debugging.
-	inline constexpr std::string_view debugDir{"debug"};
+	inline constexpr auto debugDir{"debug"sv};
+
+	//! The name of the (sub-)directory for dictionaries.
+	inline constexpr auto dictDir{"dict"sv};
+
+	//! The name of the (sub-)directory for language models.
+	inline constexpr auto mdlDir{"mdl"sv};
 
 	//! The number of seconds for the server to sleep when a MySQL error occured.
 	inline constexpr auto sleepOnSqlErrorS{5};
@@ -181,13 +189,13 @@ namespace crawlservpp::Main {
 	inline constexpr auto minNameSpaceLength{3};
 
 	//! The minimum length of namespaces, as string.
-	inline constexpr std::string_view minNameSpaceLengthString{"three"};
+	inline constexpr auto minNameSpaceLengthString{"three"sv};
 
 	//! The beginning of URLs using the HTTP protocol.
-	inline constexpr std::string_view httpString{"http://"};
+	inline constexpr auto httpString{"http://"sv};
 
 	//! The beginning of URLs using the HTTPS protocol.
-	inline constexpr std::string_view httpsString{"https://"};
+	inline constexpr auto httpsString{"https://"sv};
 
 	//! The number of XML warnings by default.
 	inline constexpr auto xmlWarningsDefault{25};
@@ -408,6 +416,9 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdUpdateConfig();
 		ServerCommandResponse cmdDeleteConfig();
 		ServerCommandResponse cmdDuplicateConfig();
+
+		ServerCommandResponse cmdListDicts();
+		ServerCommandResponse cmdListMdls();
 
 		ServerCommandResponse cmdWarp();
 

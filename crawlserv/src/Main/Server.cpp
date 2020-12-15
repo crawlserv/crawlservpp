@@ -937,6 +937,9 @@ namespace crawlservpp::Main {
 		MAIN_SERVER_CMD("deleteconfig", this->cmdDeleteConfig);
 		MAIN_SERVER_CMD("duplicateconfig", this->cmdDuplicateConfig);
 
+		MAIN_SERVER_CMD("listdicts", this->cmdListDicts);
+		MAIN_SERVER_CMD("listmdls", this->cmdListMdls);
+
 		MAIN_SERVER_CMD("warp", this->cmdWarp);
 
 		return false;
@@ -3796,6 +3799,30 @@ namespace crawlservpp::Main {
 		}
 
 		return ServerCommandResponse("Configuration duplicated.", newId);
+	}
+
+	// server command listdicts: Retrieve list of dictionaries available to the server
+	Server::ServerCommandResponse Server::cmdListDicts() {
+		return ServerCommandResponse{
+			Helper::Json::stringify(
+					Helper::FileSystem::listFilesInPath(
+							dictDir,
+							""
+					)
+			)
+		};
+	}
+
+	// server command listmdls: Retrieve list of language models available to the server
+	Server::ServerCommandResponse Server::cmdListMdls() {
+		return ServerCommandResponse{
+			Helper::Json::stringify(
+					Helper::FileSystem::listFilesInPath(
+							mdlDir,
+							""
+					)
+			)
+		};
 	}
 
 	// server command warp(thread, target): Let thread jump to specified ID

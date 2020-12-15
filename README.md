@@ -141,6 +141,8 @@ The server performs commands and sends back their results. Some commands need to
 * **`export`** (arguments: `datatype`, `filetype`, `compression`, [...]): Export data from the database into a file.
 * **`import`** (arguments: `datatype`, `filetype`, `compression`, `filename`, [...]): Import data from file into the database.
 * **`kill`**: Kill the server.
+* **`listdicts`**: Retrieve a list of dictionaries available on the server.
+* **`listmdls`**: Retrieve a list of language models available on the server.
 * **`log`** (argument: `entry`): Write a log entry by the frontend into the database.
 * **`merge`** (arguments: `datatype`, [...]): Merge two tables in the database.
 * **`movequery`** (arguments: `id`, `to`): Moves a query to another website.
