@@ -287,143 +287,142 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 				
 				xhttp.send(data);
 			}
-			else
+			else {
 				// send other server commands via AJAX
-				$.ajax(
-						{
-							type: "POST",
-							url: cc_host,
-							data: data,
-							contentType: "application/json; charset=utf-8",
-							dataType: "json",
-							success: function(data) {						
-								var timerEnd = +new Date();
+				$.ajax({
+					type: "POST",
+					url: cc_host,
+					data: data,
+					contentType: "application/json; charset=utf-8",
+					dataType: "json",
+					success: function(data) {						
+						var timerEnd = +new Date();
+						
+						if(data["confirm"]) {
+							if(
+									confirm(
+											"crawlserv++ asks ("
+											+ msToStr(timerEnd - timerStart)
+											+ ")\n\n"
+											+ data["text"]
+									)
+							) {
+								cmdArgs["confirmed"] = true;
 								
-								if(data["confirm"]) {
-									if(
-											confirm(
-													"crawlserv++ asks ("
-													+ msToStr(timerEnd - timerStart)
-													+ ")\n\n"
-													+ data["text"]
-											)
-									) {
-										cmdArgs["confirmed"] = true;
-										
-										timerStart = +new Date();
-										
-										$.ajax(
-												{
-													type: "POST",
-													url: cc_host,
-													data: JSON.stringify(cmdArgs, null, 1),
-													contentType: "application/json; charset=utf-8",
-													dataType: "json",
-													success: function(data) {
-														timerEnd = +new Date();
-														
-														if(data["fail"]) {
-															var errorStr = "crawlserv++ responded with error ("
-																+ msToStr(timerEnd - timerStart)
-																+ ")";
-															
-															if(data["text"].length) {
-																errorStr += "\n\n" + data["text"];
-															}
-															else {
-																errorStr += ".";
-															}
-															
-															if(data["debug"]) {
-																errorStr += "\n\ndebug: " + data["debug"];
-															}
-															
-															alert(errorStr);
-														}
-														else {
-															if(getReloadArgFrom && saveReloadArgTo) {
-																reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
-															}
-															else if(data["text"].length) {
-																alert("crawlserv++ responded ("
-																		+ msToStr(timerEnd - timerStart)
-																		+ ")\n\n"
-																		+ data["text"]
-																);
-															}
-															
-															if(doReload) {
-																reload(reloadArgs);
-															}
-														}
-														
-														if(whenDone) {
-															whenDone();
-														}
-													},
-													failure: function(errMsg) {
-														alert(errMsg);
-														
-														if(whenDone) {
-															whenDone();
-														}
+								timerStart = +new Date();
+								
+								$.ajax(
+										{
+											type: "POST",
+											url: cc_host,
+											data: JSON.stringify(cmdArgs, null, 1),
+											contentType: "application/json; charset=utf-8",
+											dataType: "json",
+											success: function(data) {
+												timerEnd = +new Date();
+												
+												if(data["fail"]) {
+													var errorStr = "crawlserv++ responded with error ("
+														+ msToStr(timerEnd - timerStart)
+														+ ")";
+													
+													if(data["text"].length) {
+														errorStr += "\n\n" + data["text"];
 													}
-										});
-									}
-								}
-								else if(data["fail"]) {
-									var errorStr = "crawlserv++ responded with error ("
-										+ msToStr(timerEnd - timerStart)
-										+ ")";
-									
-									if(data["text"].length) {
-										errorStr += "\n\n" + data["text"];
-									}
-									else {
-										errorStr += ".";
-									}
-									
-									if(data["debug"]) {
-										errorStr += "\n\ndebug: " + data["debug"];
-									}
-									
-									alert(errorStr);
-									
-									if(whenDone) {
-										whenDone();
-									}
-								}
-								else {
-									if(getReloadArgFrom && saveReloadArgTo) {
-										reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
-									}
-									else if(data["text"].length) {
-										alert(
-												"crawlserv++ responded ("
-												+ msToStr(timerEnd - timerStart)
-												+ ")\n\n"
-												+ data["text"]
-										);
-									}
-									
-									if(doReload) {
-										reload(reloadArgs);
-									}
-									
-									if(whenDone) {
-										whenDone();
-									}
-								}
-							},
-							failure: function(errMsg) {
-								alert(errMsg);
-								
-								if(whenDone) {
-									whenDone();
-								}
+													else {
+														errorStr += ".";
+													}
+													
+													if(data["debug"]) {
+														errorStr += "\n\ndebug: " + data["debug"];
+													}
+													
+													alert(errorStr);
+												}
+												else {
+													if(getReloadArgFrom && saveReloadArgTo) {
+														reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
+													}
+													else if(data["text"].length) {
+														alert("crawlserv++ responded ("
+																+ msToStr(timerEnd - timerStart)
+																+ ")\n\n"
+																+ data["text"]
+														);
+													}
+													
+													if(doReload) {
+														reload(reloadArgs);
+													}
+												}
+												
+												if(whenDone) {
+													whenDone();
+												}
+											},
+											failure: function(errMsg) {
+												alert(errMsg);
+												
+												if(whenDone) {
+													whenDone();
+												}
+											}
+								});
 							}
 						}
-				);
+						else if(data["fail"]) {
+							var errorStr = "crawlserv++ responded with error ("
+								+ msToStr(timerEnd - timerStart)
+								+ ")";
+							
+							if(data["text"].length) {
+								errorStr += "\n\n" + data["text"];
+							}
+							else {
+								errorStr += ".";
+							}
+							
+							if(data["debug"]) {
+								errorStr += "\n\ndebug: " + data["debug"];
+							}
+							
+							alert(errorStr);
+							
+							if(whenDone) {
+								whenDone();
+							}
+						}
+						else {
+							if(getReloadArgFrom && saveReloadArgTo) {
+								reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
+							}
+							else if(data["text"].length) {
+								alert(
+										"crawlserv++ responded ("
+										+ msToStr(timerEnd - timerStart)
+										+ ")\n\n"
+										+ data["text"]
+								);
+							}
+							
+							if(doReload) {
+								reload(reloadArgs);
+							}
+							
+							if(whenDone) {
+								whenDone();
+							}
+						}
+					},
+					failure: function(errMsg) {
+						alert(errMsg);
+						
+						if(whenDone) {
+							whenDone();
+						}
+					}
+				});
+			}
 		}
 	});
 }

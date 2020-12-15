@@ -762,7 +762,7 @@ jQuery(function($) {
 	$("#website-delete").on("click", function() {
 		var id = parseInt($("#website-select").val(), 10);
 		
-		if(id)
+		if(id) {
 			runCmd(
 					"deletewebsite",
 					{
@@ -772,7 +772,8 @@ jQuery(function($) {
 					{
 						"m" : "websites"
 					}
-		);
+			);
+		}
 		
 		return false;
 	});
@@ -831,7 +832,7 @@ jQuery(function($) {
 		var id = parseInt($("#urllist-select").val(), 10);
 		var query = parseInt($("#urls-delete-query").val(), 10);
 		
-		if(id)
+		if(id) {
 			runCmd(
 					"deleteurllist",
 					{
@@ -844,6 +845,7 @@ jQuery(function($) {
 						"query" : query
 					}
 			);
+		}
 		
 		return false;
 	});
