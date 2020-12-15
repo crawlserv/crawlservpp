@@ -32,6 +32,12 @@
 class Config {
 	
 	/*
+	 * PROPERTY
+	 */
+	
+	rendered = false;
+	
+	/*
 	 * GENERAL FUNCTIONS
 	 */
 	
@@ -343,6 +349,18 @@ class Config {
 		});
 	}
 	
+	// get whether rendering has been completed
+	isRendered() {
+		return this.rendered;
+	}
+	
+	// error while preparing the configuration editor
+	error(str) {
+		$("#config-view").html("<div class=\"no-server-status\">" + str + "</div>")
+		
+		throw new Error(str);
+	}
+	
 	// sort values according to position
 	sortByPos(a, b) {
 		return ((a[0] < b[0])
@@ -410,6 +428,20 @@ class Config {
 		}
 		else if(obj.type == "locale") {
 			result += this.locale(
+					cat,
+					obj.id,
+					value,
+			);
+		}
+		else if(obj.type == "dict") {
+			result += this.dict(
+					cat,
+					obj.id,
+					value,
+			);
+		}
+		else if(obj.type == "mdl") {
+			result += this.mdl(
 					cat,
 					obj.id,
 					value,
@@ -540,6 +572,20 @@ class Config {
 		}
 		else if(obj.type == "locale") {
 			result += this.locale(
+					cat,
+					obj.id,
+					value
+			);
+		}
+		else if(obj.type == "dict") {
+			result += this.dict(
+					cat,
+					obj.id,
+					value
+			);			
+		}
+		else if(obj.type == "mdl") {
+			result += this.mdl(
 					cat,
 					obj.id,
 					value
@@ -898,7 +944,7 @@ class Config {
 		
 		result += ">\n";
 		
-		// no locale option
+		// 'no locale' option
 		result += "<option value=\"\"";
 		
 		if(!value) {
@@ -910,7 +956,7 @@ class Config {
 		// get locales from database
 		for(const locale of db_locales) {
 			// show locale as option
-			result += "<option value=\"" + locale + "\"";
+			result += "<option value=\"" + locale.replace(/"/g, "&quot;") + "\"";
 			
 			if(value && value.toLowerCase() == locale.toLowerCase()) {
 				result += " selected";
@@ -918,6 +964,138 @@ class Config {
 			
 			result += ">" + htmlentities(locale) + "</option>\n";
 		}
+		
+		return result;
+	}
+	
+	// show dictionary selection
+	dict(cat, id, value, array = false) {
+		var result = "";
+		
+		result += "<select class=\"opt";
+		
+		if(array) {
+			result += " opt-array";
+		}
+		
+		result += " opt-dict\"";
+		
+		if(!array) {
+			result += " id=\"opt-" + cat + "-" + id + "\"";
+		}
+		
+		result += " data-value=\"";
+		result += htmlentities(value);
+		result += "\"";
+		
+		result += ">\n";
+		
+		// 'no dictionary' option
+		result += "<option value=\"\"";
+		
+		if(!value) {
+			result += " selected";
+		}
+		
+		result += ">[none]</option>\n";
+		
+		// get dictionaries from server
+		var body = JSON.stringify({ cmd: "listdicts" });
+		let t = this;
+		
+		$.post(cc_host, body, function(response) {
+			// wait until configuration has been rendered
+			while(!t.isRendered()) {}
+			
+			// add dictionaries if they have not been added yet
+			var dicts = JSON.parse(response.text);
+			
+			var opts = $("select.opt-dict");
+			
+			if(opts.length) {
+				opts.each(function() {					
+					if($(this).children().length == 1) {
+						// add dictionaries
+						for(const dict of dicts) {
+							$(this).append($("<option>", {
+								value: dict,
+								text: dict
+							}));
+						}
+					
+						// select current dictionary
+						$(this).val($(this).data("value"));
+					}
+				});
+			}
+		}, "json")
+		.fail(function() {
+			this.error("Retrieving dictionaries failed: Connection to server required.");
+		});	
+		
+		return result;
+	}
+	
+	// show model selection
+	mdl(cat, id, value, array = false) {		
+		var result = "";
+		
+		result += "<select class=\"opt";
+		
+		if(array) {
+			result += " opt-array";
+		}
+		
+		result += " opt-mdl\"";
+		
+		if(!array) {
+			result += " id=\"opt-" + cat + "-" + id + "\"";
+		}
+		
+		result += ">\n";
+		
+		// 'no dictionary' option
+		result += "<option value=\"\"";
+		
+		if(!value) {
+			result += " selected";
+		}
+		
+		result += ">[none]</option>\n";
+		
+		// get language models from server
+		var body = JSON.stringify({ cmd: "listmdls" });
+		let t = this;
+		
+		$.post(cc_host, body, function(response) {
+			// wait until configuration has been rendered
+			while(!t.isRendered()) {}
+			
+			// add language models if they have not been added yet
+			var mdls = JSON.parse(response.text);
+			
+			var opts = $("select.opt-mdl");
+			
+			if(opts.length) {
+				opts.each(function() {					
+					if($(this).children().length == 1) {
+						// add language models
+						for(const mdl of mdls) {
+							$(this).append($("<option>", {
+								value: mdl,
+								text: mdl
+							}));
+						}
+					
+						// select current language model
+						$(this).val($(this).data("value"));
+					}
+				});
+			}
+		}, "json")
+		.fail(function() {
+			this.error("Retrieving dictionaries failed: Connection to server required.");
+		});
 		
 		return result;
 	}
@@ -940,7 +1118,7 @@ class Config {
 		
 		result += ">\n";
 		
-		// no query option
+		// 'no query' option
 		result += "<option value=\"0\"";
 		
 		if(!value) {
@@ -1130,6 +1308,12 @@ class Config {
 		else if(type == "locale") {
 			result += this.locale(cat, id, value, true);
 		}
+		else if(type == "dict") {
+			result += this.dict(cat, id, value, true);
+		}
+		else if(type == "mdl") {
+			result += this.mdl(cat, id, value, true);
+		}
 		else if(type == "query") {
 			result += this.query(cat, id, value, filter, true);
 		}
@@ -1181,6 +1365,8 @@ class Config {
 				+ msToStr(+new Date() - startTime) 
 				+ "."
 		);
+		
+		this.rendered = true;
 	}
 	
 	/*
@@ -1371,6 +1557,12 @@ class Config {
 					else if(obj.type == "locale") {
 						nobj.value = $(element).val();
 					}
+					else if(obj.type == "dict") {
+						nobj.value = $(element).val();
+					}
+					else if(obj.type == "mdl") {
+						nobj.value = $(element).val();
+					}
 					else if(obj.type == "query") {
 						nobj.value = parseInt($(element).val(), 10);
 					}
@@ -1423,6 +1615,12 @@ class Config {
 									nobj.value[index] = $(this).val();
 								}
 								else if(obj["item-type"] == "locale") {
+									nobj.value[index] = $(this).val();
+								}
+								else if(obj["item-type"] == "dict") {
+									nobj.value[index] = $(this).val();
+								}
+								else if(obj["item-type"] == "mdl") {
 									nobj.value[index] = $(this).val();
 								}
 								else if(obj["item-type"] == "query") {
