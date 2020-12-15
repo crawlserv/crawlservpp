@@ -860,6 +860,11 @@ input.updated {
 	color:red;
 }
 
+/* IMPORT/EXPORT */
+#perform-action {
+	margin-bottom:10px;
+}
+
 /* ABOUT */
 div.version-info {
 	font-size:14px;
