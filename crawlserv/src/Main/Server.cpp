@@ -3803,26 +3803,36 @@ namespace crawlservpp::Main {
 
 	// server command listdicts: Retrieve list of dictionaries available to the server
 	Server::ServerCommandResponse Server::cmdListDicts() {
-		return ServerCommandResponse{
-			Helper::Json::stringify(
-					Helper::FileSystem::listFilesInPath(
-							dictDir,
-							""
-					)
+		auto dictionaries{
+			Helper::FileSystem::listFilesInPath(
+					dictDir,
+					""
 			)
 		};
+
+		// remove directory from file names
+		for(auto& dictionary : dictionaries) {
+			dictionary = dictionary.substr(dictDir.length() + 1);
+		}
+
+		return ServerCommandResponse(Helper::Json::stringify(dictionaries));
 	}
 
 	// server command listmdls: Retrieve list of language models available to the server
 	Server::ServerCommandResponse Server::cmdListMdls() {
-		return ServerCommandResponse{
-			Helper::Json::stringify(
-					Helper::FileSystem::listFilesInPath(
-							mdlDir,
-							""
-					)
+		auto models{
+			Helper::FileSystem::listFilesInPath(
+					mdlDir,
+					""
 			)
 		};
+
+		// remove directory from file names
+		for(auto& model : models) {
+			model = model.substr(mdlDir.length() + 1);
+		}
+
+		return ServerCommandResponse(Helper::Json::stringify(models));
 	}
 
 	// server command warp(thread, target): Let thread jump to specified ID
