@@ -35,23 +35,29 @@
 function handleJsonError(txt, jqxhr, status, thrown) {
 	var error = txt + "\n";
 	
-	if(typeof status !== "undefined")
+	if(typeof status !== "undefined") {
 		error += status + ": ";
+	}
 			
-	if(typeof thrown !== "undefined")
+	if(typeof thrown !== "undefined") {
 		error += thrown + " ";
+	}
 	
 	if(typeof jqxhr !== "undefined") {			
 		if(typeof jqxhr.responseJSON !== "undefined") {
-			if(typeof jqxhr.responeJSON.message !== "undefined")
+			if(typeof jqxhr.responeJSON.message !== "undefined") {
 				error += "[" + jqxhr.responseJSON.message + "]";
-			else
+			}
+			else {
 				error += "[" + jqxhr.responseJSON + "]";
+			}
 		}
-		else if(typeof jqxhr.status !== "undefined")
+		else if(typeof jqxhr.status !== "undefined") {
 			error += "[" + jqxhr.status + "]";
-		else
+		}
+		else {
 			error += jqxhr;
+		}
 	}
 	
 	throw new Error(error);
@@ -61,8 +67,9 @@ function handleJsonError(txt, jqxhr, status, thrown) {
 function msToStr(ms) {
 	var result = "";
 	
-	if(!ms)
+	if(!ms) {
 		return "<1ms";
+	}
 	
 	if(ms > 3600000) {
 		result = Math.floor(ms / 3600000).toString() + "h ";
@@ -82,8 +89,9 @@ function msToStr(ms) {
 		ms = ms % 1000;
 	}
 	
-	if(ms > 0)
+	if(ms > 0) {
 		result += ms + "ms ";
+	}
 	
 	return result.substr(0, result.length - 1);
 }
@@ -129,18 +137,21 @@ function htmlentities(string) {
 
 // check whether a date is valid
 function isValidDate(dateString) {
-	if(!dateString.length)
+	if(!dateString.length) {
 		return true; // empty string allowed (no date specified)
+	}
 	
 	var regEx = /^\d{4}-\d{2}-\d{2}$/;
 	
-	if(!dateString.match(regEx))
+	if(!dateString.match(regEx)) {
 		return false;  // invalid format
+	}
 	
 	var d = new Date(dateString);
 	
-	if(Number.isNaN(d.getTime()))
+	if(Number.isNaN(d.getTime())) {
 		return false; // invalid date
+	}
 	
 	return d.toISOString().slice(0,10) === dateString;
 }
@@ -154,8 +165,9 @@ function isNormalInteger(str) {
 
 // refresh data
 function refreshData() {
-	if(crawlserv_frontend_unloading)
+	if(crawlserv_frontend_unloading) {
 		return;
+	}
 	
 	if($("#server-status").length > 0) {
 		var timerStart = +new Date();
@@ -225,8 +237,9 @@ function reload(args) {
 
 // send command to server
 function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReloadArgTo, whenDone) {
-	if(cmd === "")
+	if(cmd === "") {
 		return;
+	}
 	
 	// check connection to server
 	$("#hidden-div").load(cc_host, function(response, status, xhr) {		
@@ -260,8 +273,9 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 						
 						a.click();
 						
-						if(whenDone)
+						if(whenDone) {
 							whenDone();
+						}
 					}
 				};
 				
@@ -313,38 +327,46 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 																+ msToStr(timerEnd - timerStart)
 																+ ")";
 															
-															if(data["text"].length)
+															if(data["text"].length) {
 																errorStr += "\n\n" + data["text"];
-															else
+															}
+															else {
 																errorStr += ".";
+															}
 															
-															if(data["debug"]) 
+															if(data["debug"]) {
 																errorStr += "\n\ndebug: " + data["debug"];
+															}
 															
 															alert(errorStr);
 														}
 														else {
-															if(getReloadArgFrom && saveReloadArgTo)
+															if(getReloadArgFrom && saveReloadArgTo) {
 																reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
-															else if(data["text"].length)
+															}
+															else if(data["text"].length) {
 																alert("crawlserv++ responded ("
 																		+ msToStr(timerEnd - timerStart)
 																		+ ")\n\n"
 																		+ data["text"]
 																);
+															}
 															
-															if(doReload)
+															if(doReload) {
 																reload(reloadArgs);
+															}
 														}
 														
-														if(whenDone)
+														if(whenDone) {
 															whenDone();
+														}
 													},
 													failure: function(errMsg) {
 														alert(errMsg);
 														
-														if(whenDone)
+														if(whenDone) {
 															whenDone();
+														}
 													}
 										});
 									}
@@ -354,22 +376,27 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 										+ msToStr(timerEnd - timerStart)
 										+ ")";
 									
-									if(data["text"].length)
+									if(data["text"].length) {
 										errorStr += "\n\n" + data["text"];
-									else
+									}
+									else {
 										errorStr += ".";
+									}
 									
-									if(data["debug"])
+									if(data["debug"]) {
 										errorStr += "\n\ndebug: " + data["debug"];
+									}
 									
 									alert(errorStr);
 									
-									if(whenDone)
+									if(whenDone) {
 										whenDone();
+									}
 								}
 								else {
-									if(getReloadArgFrom && saveReloadArgTo)
+									if(getReloadArgFrom && saveReloadArgTo) {
 										reloadArgs[saveReloadArgTo] = data[getReloadArgFrom];
+									}
 									else if(data["text"].length) {
 										alert(
 												"crawlserv++ responded ("
@@ -379,18 +406,21 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 										);
 									}
 									
-									if(doReload)
+									if(doReload) {
 										reload(reloadArgs);
+									}
 									
-									if(whenDone)
+									if(whenDone) {
 										whenDone();
+									}
 								}
 							},
 							failure: function(errMsg) {
 								alert(errMsg);
 								
-								if(whenDone)
+								if(whenDone) {
 									whenDone();
+								}
 							}
 						}
 				);
@@ -432,14 +462,17 @@ function reenableInputs() {
 // are two JSON values are unequal (while value2 can be null)?
 function areValuesUnequal(value1, value2) {
 	if(value2 === null) {
-		if(!isNaN(value1))
+		if(!isNaN(value1)) {
 			return value1 != 0;
+		}
 		
-		if(typeof value1 === "string" || value1 instanceof String)
+		if(typeof value1 === "string" || value1 instanceof String) {
 			return value1 != "";
+		}
 		
-		if(typeof value1 === "boolean")
+		if(typeof value1 === "boolean") {
 			return value1 != false;
+		}
 		
 		return value1 != null;
 	}
@@ -458,17 +491,20 @@ function areConfigsEqual(config1, config2, logging = true) {
 			if(config1[key1].cat == config2[key2].cat) {
 				if(config1[key1].name == config2[key2].name) {
 					// configuration entry found: check for array
-					if($.isArray(config1[key1].value)
-							&& $.isArray(config2[key2].value)) {
+					if(
+							$.isArray(config1[key1].value)
+							&& $.isArray(config2[key2].value)
+					) {
 						// compare array size
 						var arrayLength = config1[key1].value.length;
 						
 						if(arrayLength != config2[key2].value.length) {
-							if(logging)
+							if(logging) {
 								console.log(
 										"areConfigsEqual(): Unequal number of elements in "
 										+ config1[key1].cat + "." + config1[key1].name
 								);
+							}
 							
 							return false;
 						}
@@ -489,13 +525,16 @@ function areConfigsEqual(config1, config2, logging = true) {
 						}
 					}
 					// compare value (ignore change of algorithm)
-					else if(config1[key1].name != "_algo"
-						&& areValuesUnequal(config1[key1].value, config2[key2].value)) {
-						if(logging)
+					else if(
+							config1[key1].name != "_algo"
+							&& areValuesUnequal(config1[key1].value, config2[key2].value)
+					) {
+						if(logging) {
 							console.log(
 									"areConfigsEqual(): " + config1[key1].cat + "." + config1[key1].name +
 									": " + config1[key1].value + " != " + config2[key2].value
-						);
+							);
+						}
 						
 						return false;
 					}
@@ -508,11 +547,12 @@ function areConfigsEqual(config1, config2, logging = true) {
 		}
 		
 		if(!found && config1[key1].name != "_algo") {
-			if(logging)
+			if(logging) {
 				console.log(
 						"areConfigsEqual(): " + config1[key1].cat + "."	+ config1[key1].name +
 						" [=\'" + config1[key1].value + "\'] not found"
 				);
+			}
 			
 			return false;
 		}
@@ -598,7 +638,8 @@ function enumQueries(result) {
 											&& properties.hasOwnProperty("item-type")
 											&& properties["item-type"] == "query"
 									)
-									|| properties["type"] == "query") {
+									|| properties["type"] == "query"
+							) {
 								moduleResult.push({
 									"cat": cat,
 									"name": name
