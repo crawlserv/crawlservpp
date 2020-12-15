@@ -61,7 +61,10 @@ namespace crawlservpp::Helper::FileSystem {
 	///@{
 
 	char getPathSeparator();
-	std::vector<std::string> listFilesInPath(std::string_view pathToDir, std::string_view fileExtension);
+	std::vector<std::string> listFilesInPath(
+			std::string_view pathToDir,
+			std::string_view fileExtension
+	);
 	bool contains(std::string_view pathToDir, std::string_view pathToCheck);
 	void createDirectory(std::string_view pathToDir);
 	void createDirectoryIfNotExists(std::string_view pathToDir);
@@ -192,7 +195,8 @@ namespace crawlservpp::Helper::FileSystem {
 	 * \param pathToDir A string view containing the directory to
 	 *   search for files.
 	 * \param fileExtension A string view containing the extension
-	 *   of the files to search for.
+	 *   of the files to search for. If empty, all files will be
+	 *   returned.
 	 *
 	 * \returns A vector of strings containing the paths of the
 	 *   files with the given extension in the given directory
@@ -232,7 +236,7 @@ namespace crawlservpp::Helper::FileSystem {
 		// iterate through items
 		try {
 			for(const auto& it: stdfs::recursive_directory_iterator(path)) {
-				if(it.path().extension().string() == fileExtension) {
+				if(fileExtension.empty() || it.path().extension().string() == fileExtension) {
 					result.emplace_back(it.path().string());
 				}
 			}
