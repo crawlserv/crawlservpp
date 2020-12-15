@@ -3583,7 +3583,7 @@ namespace crawlservpp::Module::Crawler {
 
 				// loop over memento pages
 				// [while also checking whether getting mementos was successfull and thread is still running]
-				while(success && this->isRunning()) {
+				while(this->isRunning() && success) {
 					this->log(
 							crawlerLoggingVerbose,
 							"processes "
