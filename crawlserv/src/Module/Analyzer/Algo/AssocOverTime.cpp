@@ -93,10 +93,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		types.emplace_back("BIGINT UNSIGNED");
 		types.emplace_back("BIGINT UNSIGNED");
 
-		for(const auto& label : this->algoConfig.categoryLabels) {
+		std::for_each(
+				this->algoConfig.categoryLabels.cbegin(),
+				this->algoConfig.categoryLabels.cend(),
+				[&fields, &types](const auto& label) {
 			fields.emplace_back(label);
 			types.emplace_back("BIGINT UNSIGNED");
-		}
+		});
 
 		this->database.setTargetFields(fields, types);
 
@@ -113,11 +116,22 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * \sa initQueries
 	 */
 	void AssocOverTime::onAlgoInit() {
-		// reset progress
-		this->setProgress(0.F);
+		StatusSetter statusSetter(
+				"Initializing algorithm...",
+				1.F,
+				[this](const auto& status) {
+					this->setStatusMessage(status);
+				},
+				[this](const auto progress) {
+					this->setProgress(progress);
+				},
+				[this]() {
+					return this->isRunning();
+				}
+		);
 
 		// check your sources
-		this->setStatusMessage("Checking sources...");
+		statusSetter.change("Checking sources...");
 
 		this->log(generalLoggingVerbose, "checks sources...");
 
@@ -130,81 +144,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingVerbose, "gets text corpus...");
 
-		std::size_t bytes{0};
-		std::size_t sources{0};
-
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
-			std::size_t corpusSources{0};
-
-			this->corpora.emplace_back(this->config.generalCorpusChecks);
-
-			std::string statusStr;
-
-			if(this->config.generalInputSources.size() > 1) {
-				std::ostringstream corpusStatusStrStr;
-
-				corpusStatusStrStr.imbue(std::locale(""));
-
-				corpusStatusStrStr << "Getting text corpus #";
-				corpusStatusStrStr << n + 1;
-				corpusStatusStrStr << "/";
-				corpusStatusStrStr << this->config.generalInputSources.size();
-				corpusStatusStrStr << "...";
-
-				statusStr = corpusStatusStrStr.str();
-			}
-			else {
-				statusStr = "Getting text corpus...";
-			}
-
-			StatusSetter statusSetter(
-					statusStr,
-					1.F,
-					[this](const auto& status) {
-						this->setStatusMessage(status);
-					},
-					[this](const auto progress) {
-						this->setProgress(progress);
-					},
-					[this]() {
-						return this->isRunning();
-					}
-			);
-
-			if(!(this->database.getCorpus(
-					CorpusProperties(
-							this->config.generalInputSources.at(n),
-							this->config.generalInputTables.at(n),
-							this->config.generalInputFields.at(n),
-							this->config.tokenizerSentenceManipulators,
-							this->config.tokenizerSentenceModels,
-							this->config.tokenizerWordManipulators,
-							this->config.tokenizerWordModels,
-							this->config.tokenizerSavePoints,
-							this->config.tokenizerFreeMemoryEvery
-					),
-					this->config.filterDateEnable ? this->config.filterDateFrom : std::string(),
-					this->config.filterDateEnable ? this->config.filterDateTo : std::string(),
-					this->corpora.back(),
-					corpusSources,
-					statusSetter
-			))) {
-				return;
-			}
-
-			if(this->corpora.back().empty()) {
-				this->corpora.pop_back();
-			}
-
-			bytes += this->corpora.back().size();
-
-			sources += corpusSources;
+			this->addCorpus(n, statusSetter);
 		}
 
 		// algorithm is ready
 		this->log(generalLoggingExtended, "is ready.");
 
-		this->setStatusMessage("Calculating associations...");
+		statusSetter.change("Calculating associations...");
 	}
 
 	//! Calculates the associations in the text corpus.
@@ -382,7 +329,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		auto dateIt{this->associations.begin()};
 		std::size_t firstDatePos{tokens.size()};
-		std::string lastDate;
 		bool dateSaved{false};
 
 		if(!dateMap.empty()) {
@@ -456,90 +402,37 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 		}
 
-		for(const auto& date : dateMap) {
-			// skip articles without date
-			if(firstDatePos > 0 && this->algoConfig.ignoreEmptyDate) {
-				while(
-						articleIndex < articleMap.size()
-						&& articleMap[articleIndex].pos < date.pos
-				) {
-					++articleIndex;
-				}
-			}
-
-			// reduce date for grouping
-			std::string reducedDate{date.value};
-
-			Helper::DateTime::reduceDate(
-					reducedDate,
-					this->config.groupDateResolution
-			);
-
-			// add date if still necessary, and save its iterator
-			if(!dateSaved || lastDate != reducedDate) {
-				dateIt = this->addDate(reducedDate);
-
-				lastDate = reducedDate;
-				dateSaved = true;
-			}
-
-			// go through all articles of the current date
-			while(
-					articleIndex < articleMap.size()
-					&& articleMap[articleIndex].pos < date.pos + date.length
-			) {
-				// add article if still necessary, and save its iterator
-				const auto articleIt{
-					this->addArticleToDate(articleMap[articleIndex].value, dateIt)
-				};
-
-				// skip tokens without date
-				if(this->algoConfig.ignoreEmptyDate) {
-					while(
-							tokenIndex < tokens.size()
-							&& tokenIndex < articleMap[articleIndex].pos
-					) {
-						++tokenIndex;
-					}
-				}
-
-				// go through all tokens of the current article
-				while(
-						tokenIndex < tokens.size()
-						&& tokenIndex < articleMap[articleIndex].pos + articleMap[articleIndex].length
-				) {
-					this->processToken(
+		std::for_each(
+				dateMap.cbegin(),
+				dateMap.cend(),
+				[
+				 this,
+				 &dateIt,
+				 &dateCounter,
+				 &firstDatePos,
+				 &dateSaved,
+				 &dateMap,
+				 &articleIndex,
+				 &articleMap,
+				 &tokenIndex,
+				 &tokens,
+				 &warnings
+				](const auto& date) {
+					this->addArticlesForDate(
+							date,
+							dateIt,
+							dateCounter,
+							firstDatePos,
+							dateSaved,
+							dateMap.size(),
+							articleIndex,
+							articleMap,
 							tokenIndex,
-							tokens[tokenIndex],
-							articleIt->second,
+							tokens,
 							warnings
 					);
-
-					++tokenIndex;
 				}
-
-				// update offset of article
-				articleIt->second.offset += articleMap[articleIndex].length;
-
-				++articleIndex;
-			}
-
-			// log warnings if necessary
-			while(!warnings.empty()) {
-				this->log(generalLoggingExtended, warnings.front());
-
-				warnings.pop();
-			}
-
-			// update progress
-			++dateCounter;
-
-			this->setProgress(static_cast<float>(dateCounter) / dateMap.size());
-
-			if(!(this->isRunning())) {
-				return;
-			}
-		}
+		);
 	}
 
 	// calculate and save associations
@@ -729,6 +622,159 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	/*
 	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
+
+	// add corpus
+	void AssocOverTime::addCorpus(std::size_t index, StatusSetter& statusSetter) {
+		std::size_t corpusSources{0};
+
+		this->corpora.emplace_back(this->config.generalCorpusChecks);
+
+		std::string statusStr;
+
+		if(this->config.generalInputSources.size() > 1) {
+			std::ostringstream corpusStatusStrStr;
+
+			corpusStatusStrStr.imbue(std::locale(""));
+
+			corpusStatusStrStr << "Getting text corpus #";
+			corpusStatusStrStr << index + 1;
+			corpusStatusStrStr << "/";
+			corpusStatusStrStr << this->config.generalInputSources.size();
+			corpusStatusStrStr << "...";
+
+			statusStr = corpusStatusStrStr.str();
+		}
+		else {
+			statusStr = "Getting text corpus...";
+		}
+
+		statusSetter.change(statusStr);
+
+		if(!(this->database.getCorpus(
+				CorpusProperties(
+						this->config.generalInputSources.at(index),
+						this->config.generalInputTables.at(index),
+						this->config.generalInputFields.at(index),
+						this->config.tokenizerSentenceManipulators,
+						this->config.tokenizerSentenceModels,
+						this->config.tokenizerWordManipulators,
+						this->config.tokenizerWordModels,
+						this->config.tokenizerSavePoints,
+						this->config.tokenizerFreeMemoryEvery
+				),
+				this->config.filterDateEnable ? this->config.filterDateFrom : std::string{},
+				this->config.filterDateEnable ? this->config.filterDateTo : std::string{},
+				this->corpora.back(),
+				corpusSources,
+				statusSetter
+		))) {
+			return;
+		}
+
+		if(this->corpora.back().empty()) {
+			this->corpora.pop_back();
+		}
+	}
+
+	// add the articles of a specific date
+	void AssocOverTime::addArticlesForDate(
+			const TextMapEntry& date,
+			DateAssociationMap::iterator& dateIt,
+			std::size_t& dateCounter,
+			std::size_t firstDatePos,
+			bool& dateSaved,
+			const std::size_t dateMapSize,
+			std::size_t& articleIndex,
+			const TextMap& articleMap,
+			std::size_t& tokenIndex,
+			const std::vector<std::string>& tokens,
+			std::queue<std::string>& warningsTo
+	) {
+		std::string lastDate;
+
+		// skip articles without date
+		if(firstDatePos > 0 && this->algoConfig.ignoreEmptyDate) {
+			while(
+					articleIndex < articleMap.size()
+					&& articleMap[articleIndex].pos < date.pos
+			) {
+				++articleIndex;
+			}
+		}
+
+		// reduce date for grouping
+		std::string reducedDate{date.value};
+
+		Helper::DateTime::reduceDate(
+				reducedDate,
+				this->config.groupDateResolution
+		);
+
+		// add date if still necessary, and save its iterator
+		if(!dateSaved || lastDate != reducedDate) {
+			dateIt = this->addDate(reducedDate);
+
+			lastDate = reducedDate;
+			dateSaved = true;
+		}
+
+		// go through all articles of the current date
+		while(
+				articleIndex < articleMap.size()
+				&& articleMap[articleIndex].pos < date.pos + date.length
+		) {
+			// add article if still necessary, and save its iterator
+			const auto articleIt{
+				this->addArticleToDate(articleMap[articleIndex].value, dateIt)
+			};
+
+			// skip tokens without date
+			if(this->algoConfig.ignoreEmptyDate) {
+				while(
+						tokenIndex < tokens.size()
+						&& tokenIndex < articleMap[articleIndex].pos
+				) {
+					++tokenIndex;
+				}
+			}
+
+			// go through all tokens of the current article
+			while(
+					tokenIndex < tokens.size()
+					&& tokenIndex < articleMap[articleIndex].pos + articleMap[articleIndex].length
+			) {
+				this->processToken(
+						tokenIndex,
+						tokens[tokenIndex],
+						articleIt->second,
+						warningsTo
+				);
+
+				++tokenIndex;
+			}
+
+			// update offset of article
+			articleIt->second.offset += articleMap[articleIndex].length;
+
+			++articleIndex;
+		}
+
+		// log warnings if necessary
+		while(!warningsTo.empty()) {
+			this->log(generalLoggingExtended, warningsTo.front());
+
+			warningsTo.pop();
+		}
+
+		// update progress
+		++dateCounter;
+
+		this->setProgress(static_cast<float>(dateCounter) / dateMapSize);
+
+		if(!(this->isRunning())) {
+			return;
+		}
+	}
 
 	// add date
 	AssocOverTime::DateAssociationMap::iterator AssocOverTime::addDate(const std::string& date) {

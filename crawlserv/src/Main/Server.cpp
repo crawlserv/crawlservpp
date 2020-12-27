@@ -562,81 +562,102 @@ namespace crawlservpp::Main {
 			}
 		}
 
-		// check whether a thread was shut down and the shutdown is finished
-		for(std::size_t n{1}; n <= this->crawlers.size(); ++n) {
-			if(
-					this->crawlers.at(n - 1)->isShutdown()
-					&& this->crawlers.at(n - 1)->isFinished()
-			) {
-				--n;
+		// remove module threads if they have been successfully shut down
+		this->crawlers.erase(
+				std::remove_if(
+						this->crawlers.begin(),
+						this->crawlers.end(),
+						[](auto& crawler) {
+							if(crawler->isShutdown() && crawler->isFinished()) {
+								crawler->Module::Thread::end();
 
-				this->crawlers.at(n)->Module::Thread::end();
+								return true;
+							}
 
-				this->crawlers.erase(this->crawlers.begin() + n);
-			}
-		}
+							return false;
+						}
+				),
+				this->crawlers.end()
+		);
 
-		for(std::size_t n{1}; n <= this->parsers.size(); ++n) {
-			if(
-					this->parsers.at(n - 1)->isShutdown()
-					&& this->parsers.at(n - 1)->isFinished()
-			) {
-				--n;
+		this->parsers.erase(
+				std::remove_if(
+						this->parsers.begin(),
+						this->parsers.end(),
+						[](auto& parser) {
+							if(parser->isShutdown() && parser->isFinished()) {
+								parser->Module::Thread::end();
 
-				this->parsers.at(n)->Module::Thread::end();
+								return true;
+							}
 
-				this->parsers.erase(this->parsers.begin() + n);
-			}
-		}
+							return false;
+						}
+				),
+				this->parsers.end()
+		);
 
-		for(std::size_t n{1}; n <= this->extractors.size(); ++n) {
-			if(
-					this->extractors.at(n - 1)->isShutdown()
-					&& this->extractors.at(n - 1)->isFinished()
-			) {
-				--n;
+		this->extractors.erase(
+				std::remove_if(
+						this->extractors.begin(),
+						this->extractors.end(),
+						[](auto& extractor) {
+							if(extractor->isShutdown() && extractor->isFinished()) {
+								extractor->Module::Thread::end();
 
-				this->extractors.at(n)->Module::Thread::end();
+								return true;
+							}
 
-				this->extractors.erase(this->extractors.begin() + n);
-			}
-		}
+							return false;
+						}
+				),
+				this->extractors.end()
+		);
 
-		for(std::size_t n{1}; n <= this->analyzers.size(); ++n) {
-			if(
-					this->analyzers.at(n - 1)->isShutdown()
-					&& this->analyzers.at(n - 1)->isFinished()
-			) {
-				--n;
+		this->analyzers.erase(
+				std::remove_if(
+						this->analyzers.begin(),
+						this->analyzers.end(),
+						[](auto& analyzer) {
+							if(analyzer->isShutdown() && analyzer->isFinished()) {
+								analyzer->Module::Thread::end();
 
-				this->analyzers.at(n)->Module::Thread::end();
+								return true;
+							}
 
-				this->analyzers.erase(this->analyzers.begin() + n);
-			}
-		}
+							return false;
+						}
+				),
+				this->analyzers.end()
+		);
 
 		// check whether worker threads were terminated
 		if(!(this->workers.empty())) {
 			std::lock_guard<std::mutex> workersLocked{this->workersLock};
 
-			for(std::size_t n{1}; n <= this->workers.size(); ++n) {
-				if(!(this->workersRunning.at(n - 1))) {
-					// join and remove thread
-					--n;
+			this->workers.erase(
+					std::remove_if(
+							this->workers.begin(),
+							this->workers.end(),
+							[this](auto& worker) {
+								const auto index{
+									//NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+									&worker - &(this->workers)[0]
+								};
 
-					std::thread& worker{this->workers.at(n)};
+								if(this->workersRunning.at(index)) {
+									if(worker.joinable()) {
+										worker.join();
+									}
 
-					if(worker.joinable()) {
-						worker.join();
-					}
+									return true;
+								}
 
-					this->workers.erase(this->workers.begin() + n);
-
-					this->workersRunning.erase(
-							this->workersRunning.begin() + n
-					);
-				}
-			}
+								return false;
+							}
+					),
+					this->workers.end()
+			);
 		}
 
 		// try to re-connect to database if it is offline
@@ -4942,8 +4963,7 @@ namespace crawlservpp::Main {
 															tempResult,
 															dateTimeFormat,
 															dateTimeLocale
-													)
-													+ "\n";
+													) + "\n";
 									}
 
 									result += toAppend;
@@ -5479,8 +5499,7 @@ namespace crawlservpp::Main {
 																	tempResult,
 																	dateTimeFormat,
 																	dateTimeLocale
-															)
-															+ '\n';
+															) + '\n';
 											}
 
 											result += toAppend;

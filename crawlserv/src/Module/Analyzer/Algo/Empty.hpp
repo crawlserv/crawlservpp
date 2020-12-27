@@ -49,7 +49,7 @@
 //#include "../../../Struct/CorpusProperties.hpp"
 //#include "../../../Struct/QueryProperties.hpp"
 //#include "../../../Struct/QueryStruct.hpp"
-//#include "../../../Struct/StatusSetter.hpp"
+#include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
@@ -99,13 +99,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: add aliases of used data structures
 		 */
-		//using QueryProperties = Struct::QueryProperties;
-		//using QueryStruct = Struct::QueryStruct;
-
 		using Exception = Module::Analyzer::Thread::Exception;
 
 		//using CorpusProperties = Struct::CorpusProperties;
-		//using StatusSetter = Struct::StatusSetter;
+		//using QueryProperties = Struct::QueryProperties;
+		//using QueryStruct = Struct::QueryStruct;
+		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 
@@ -177,6 +176,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				std::vector<QueryStruct>& propertiesTo
 		);
 		*/
+
+		// internal helper function
+		/*
+		bool addCorpus(
+				std::size_t index,
+				std::size_t& outAddBytes,
+				std::size_t& outAddTokens,
+				std::size_t& outAddSources,
+				StatusSetter& statusSetter
+		);
+		 */
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

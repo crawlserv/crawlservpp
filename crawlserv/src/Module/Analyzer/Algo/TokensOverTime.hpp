@@ -126,6 +126,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t currentCorpus{0};
 		std::vector<Data::Corpus> corpora;
 		std::vector<DateCount> dateCounts;
+
+		// internal helper function
+		void addCorpus(
+				std::size_t index,
+				StatusSetter& statusSetter
+		);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

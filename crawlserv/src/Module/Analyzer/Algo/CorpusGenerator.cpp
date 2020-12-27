@@ -112,11 +112,22 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   SQL statements have already been initialized.
 	 */
 	void CorpusGenerator::onAlgoInit() {
-		// reset progress
-		this->setProgress(0.F);
+		StatusSetter statusSetter(
+				"Initializing algorithm...",
+				1.F,
+				[this](const auto& status) {
+					this->setStatusMessage(status);
+				},
+				[this](const auto progress) {
+					this->setProgress(progress);
+				},
+				[this]() {
+					return this->isRunning();
+				}
+		);
 
 		// check your sources
-		this->setStatusMessage("Checking sources...");
+		statusSetter.change("Checking sources...");
 
 		this->log(generalLoggingVerbose, "checks sources...");
 
@@ -139,92 +150,23 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		};
 
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
-			std::string dateFrom;
-			std::string dateTo;
-			std::size_t corpusSources{0};
-
-			if(this->config.filterDateEnable) {
-				dateFrom = this->config.filterDateFrom;
-				dateTo = this->config.filterDateTo;
-			}
-
-			Data::Corpus corpus(this->config.generalCorpusChecks);
-
-			std::string statusStr;
-
-			if(this->config.generalInputSources.size() > 1) {
-				std::ostringstream corpusStatusStrStr;
-
-				corpusStatusStrStr.imbue(std::locale(""));
-
-				corpusStatusStrStr << "Getting text corpus #";
-				corpusStatusStrStr << n + 1;
-				corpusStatusStrStr << "/";
-				corpusStatusStrStr << this->config.generalInputSources.size();
-				corpusStatusStrStr << "...";
-
-				statusStr = corpusStatusStrStr.str();
-			}
-			else {
-				statusStr = "Getting text corpus...";
-			}
-
-			StatusSetter statusSetter(
-					statusStr,
-					1.F,
-					[this](const auto& status) {
-						this->setStatusMessage(status);
-					},
-					[this](const auto progress) {
-						this->setProgress(progress);
-					},
-					[this]() {
-						return this->isRunning();
-					}
-			);
-
-			if(!(this->database.getCorpus(
-					CorpusProperties(
-							this->config.generalInputSources.at(n),
-							this->config.generalInputTables.at(n),
-							this->config.generalInputFields.at(n),
-							this->config.tokenizerSentenceManipulators,
-							this->config.tokenizerSentenceModels,
-							this->config.tokenizerWordManipulators,
-							this->config.tokenizerWordModels,
-							this->config.tokenizerSavePoints,
-							this->config.tokenizerFreeMemoryEvery
-					),
-					dateFrom,
-					dateTo,
-					corpus,
-					corpusSources,
-					statusSetter
-			))) {
-				return;
-			}
-
-			if(!corpus.empty()) {
+			if(this->addCorpus(n, bytes, tokens, sources, statusSetter)) {
 				++corpora;
-
-				bytes += corpus.size();
-
-				if(corpus.isTokenized()) {
-					tokens += corpus.getNumTokens();
-				}
-
-				sources += corpusSources;
 			}
 
 			if(statusSetter.change("Creating corpus statistics...")) {
+				const auto& corpus{this->corpora.back()};
+
 				// calculate token (word) lengths
 				std::vector<std::size_t> tokenLengths;
 
 				tokenLengths.reserve(corpus.getNumTokens());
 
-				for(const auto& token : corpus.getcTokens()) {
+				const auto& tokens{corpus.getcTokens()};
+
+				std::for_each(tokens.cbegin(), tokens.cend(), [&tokenLengths](const auto& token) {
 					tokenLengths.push_back(Helper::Utf8::length(token));
-				}
+				});
 
 				const auto avgTokenLength{
 					Helper::Math::avg<float>(tokenLengths)
@@ -237,12 +179,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 				// calculate sentence lengths
 				std::vector<std::size_t> sentenceLengths;
+				const auto& sentenceMap{corpus.getcSentenceMap()};
 
-				sentenceLengths.reserve(corpus.getcSentenceMap().size());
+				sentenceLengths.reserve(sentenceMap.size());
 
-				for(const auto& sentence : corpus.getcSentenceMap()) {
+				std::for_each(sentenceMap.cbegin(), sentenceMap.cend(), [&sentenceLengths](const auto& sentence) {
 					sentenceLengths.push_back(sentence.second);
-				}
+				});
 
 				const auto avgSentenceLength{
 					Helper::Math::avg<float>(sentenceLengths)
@@ -334,6 +277,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						Data::Value(medSentenceLength)
 				);
 
+				// clear memory
+				std::vector<Data::Corpus>{}.swap(this->corpora);
+
+				// save results
 				this->database.insertCustomData(data);
 
 				this->database.updateTargetTable();
@@ -392,7 +339,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		else {
 			this->status = "IDLE No corpus created.";
 		}
-
 	}
 
 	//! Sleeps until the thread is terminated.
@@ -435,5 +381,80 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	//! Does nothing
 	void CorpusGenerator::resetAlgo() {}
+
+	/*
+	 * INTERNAL HELPER FUNCTION (private)
+	 */
+
+	// add corpus, returns true if corpus is not empty
+	bool CorpusGenerator::addCorpus(
+			std::size_t index,
+			std::size_t& outAddBytes,
+			std::size_t& outAddTokens,
+			std::size_t& outAddSources,
+			StatusSetter& statusSetter
+	) {
+		std::size_t corpusSources{0};
+
+		this->corpora.emplace_back(this->config.generalCorpusChecks);
+
+		std::string statusStr;
+
+		if(this->config.generalInputSources.size() > 1) {
+			std::ostringstream corpusStatusStrStr;
+
+			corpusStatusStrStr.imbue(std::locale(""));
+
+			corpusStatusStrStr << "Getting text corpus #";
+			corpusStatusStrStr << index + 1;
+			corpusStatusStrStr << "/";
+			corpusStatusStrStr << this->config.generalInputSources.size();
+			corpusStatusStrStr << "...";
+
+			statusStr = corpusStatusStrStr.str();
+		}
+		else {
+			statusStr = "Getting text corpus...";
+		}
+
+		statusSetter.change(statusStr);
+
+		if(!(this->database.getCorpus(
+				CorpusProperties(
+						this->config.generalInputSources.at(index),
+						this->config.generalInputTables.at(index),
+						this->config.generalInputFields.at(index),
+						this->config.tokenizerSentenceManipulators,
+						this->config.tokenizerSentenceModels,
+						this->config.tokenizerWordManipulators,
+						this->config.tokenizerWordModels,
+						this->config.tokenizerSavePoints,
+						this->config.tokenizerFreeMemoryEvery
+				),
+				this->config.filterDateEnable ? this->config.filterDateFrom : std::string{},
+				this->config.filterDateEnable ? this->config.filterDateTo : std::string{},
+				this->corpora.back(),
+				corpusSources,
+				statusSetter
+		))) {
+			return false;
+		}
+
+		if(this->corpora.back().empty()) {
+			this->corpora.pop_back();
+
+			return false;
+		}
+
+		outAddBytes += this->corpora.back().size();
+
+		if(this->corpora.back().isTokenized()) {
+			outAddTokens += this->corpora.back().getNumTokens();
+		}
+
+		outAddSources += corpusSources;
+
+		return true;
+	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

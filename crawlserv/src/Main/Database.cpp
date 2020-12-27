@@ -618,9 +618,9 @@ namespace crawlservpp::Main {
 					" VALUES"
 			);
 
-			for(std::size_t n{0}; n < locales.size(); ++n) {
+			std::for_each(locales.cbegin(), locales.cend(), [&sqlQuery](const auto&) {
 				sqlQuery += " (?),";
-			}
+			});
 
 			sqlQuery.pop_back();
 
@@ -682,9 +682,9 @@ namespace crawlservpp::Main {
 					" VALUES"
 			);
 
-			for(std::size_t n{0}; n < versions.size(); ++n) {
+			std::for_each(versions.cbegin(), versions.cend(), [&sqlQuery](const auto&) {
 				sqlQuery += " (?, ?),";
-			}
+			});
 
 			sqlQuery.pop_back();
 
@@ -8775,11 +8775,13 @@ namespace crawlservpp::Main {
 
 			sqlQuery += ") VALUES(";
 
-			for(std::size_t n{0}; n < data.columns_values.size() - 1; ++n) {
+			std::for_each(data.columns_values.cbegin(), data.columns_values.cend(), [&sqlQuery](const auto&) {
 				sqlQuery += "?, ";
-			}
+			});
 
-			sqlQuery += "?)";
+			sqlQuery.pop_back();
+			sqlQuery.pop_back();
+			sqlQuery.push_back(')');
 
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement{
@@ -9004,11 +9006,16 @@ namespace crawlservpp::Main {
 
 			sqlQuery += ") VALUES(";
 
-			for(std::size_t n{0}; n < data.columns_types_values.size() - 1; ++n) {
+			std::for_each(
+					data.columns_types_values.cbegin(),
+					data.columns_types_values.cend(),
+					[&sqlQuery](const auto&) {
 				sqlQuery += "?, ";
-			}
+			});
 
-			sqlQuery += "?)";
+			sqlQuery.pop_back();
+			sqlQuery.pop_back();
+			sqlQuery.push_back(')');
 
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement{

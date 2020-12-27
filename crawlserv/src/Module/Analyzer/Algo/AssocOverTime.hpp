@@ -45,7 +45,7 @@
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
-#include <algorithm>		// std::find_if, std::min, std::sort
+#include <algorithm>		// std::find_if, std::for_each, std::min, std::sort
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint16_t, std::uint64_t
 #include <limits>			// std::numeric_limits
@@ -84,15 +84,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 	class AssocOverTime final : public Module::Analyzer::Thread {
 		// for convenience
+		using CorpusProperties = Struct::CorpusProperties;
 		using QueryProperties = Struct::QueryProperties;
 		using QueryStruct = Struct::QueryStruct;
-
-		using Exception = Module::Analyzer::Thread::Exception;
-
-		using CorpusProperties = Struct::CorpusProperties;
 		using StatusSetter = Struct::StatusSetter;
+		using TextMap = Struct::TextMap;
+		using TextMapEntry = Struct::TextMapEntry;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
+
+		using Exception = Module::Analyzer::Thread::Exception;
 
 	public:
 		///@name Construction
@@ -171,6 +172,20 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		// internal helper functions
+		void addCorpus(std::size_t index, StatusSetter& statusSetter);
+		void addArticlesForDate(
+				const TextMapEntry& date,
+				DateAssociationMap::iterator& dateIt,
+				std::size_t& dateCounter,
+				std::size_t firstDatePos,
+				bool& dateSaved,
+				std::size_t dateMapSize,
+				std::size_t& articleIndex,
+				const TextMap& articleMap,
+				std::size_t& tokenIndex,
+				const std::vector<std::string>& tokens,
+				std::queue<std::string>& warningsTo
+		);
 		DateAssociationMap::iterator addDate(const std::string& date);
 		ArticleAssociationMap::iterator addArticleToDate(
 				const std::string& article,

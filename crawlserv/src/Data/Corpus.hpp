@@ -310,6 +310,13 @@ namespace crawlservpp::Data {
 		WordRemover wordRemover;
 
 		// internal helper functions
+		void addArticle(
+				std::string& text,
+				std::string& id,
+				std::string& dateTime,
+				TextMapEntry& dateMapEntry,
+				bool deleteInputData
+		);
 		[[nodiscard]] bool tokenizeTokenized(
 				std::optional<SentenceFunc> callbackSentence,
 				std::optional<WordFunc> callbackWord,
@@ -882,83 +889,17 @@ namespace crawlservpp::Data {
 		// clear old corpus
 		this->clear();
 
+		std::string emptyString;
 		TextMapEntry dateMapEntry;
 
 		for(std::size_t n{0}; n < texts.size(); ++n) {
-			auto pos{this->corpus.size()};
-			auto& text{texts.at(n)};
-
-			// add article ID (or empty article) to article map
-			if(articleIds.size() > n) {
-				auto& articleId{articleIds.at(n)};
-
-				this->articleMap.emplace_back(pos, text.length(), articleId);
-
-				if(deleteInputData && !articleId.empty()) {
-					// free memory early
-					std::string{}.swap(articleId);
-				}
-			}
-			else if(!(this->articleMap.empty()) && this->articleMap.back().value.empty()) {
-				// expand empty article in the end of the article map
-				this->articleMap.back().length += text.length() + 1; /* include space before current text */
-			}
-			else {
-				// add empty article to the end of the article map
-				this->articleMap.emplace_back(pos, text.length());
-			}
-
-			// add date to date map if necessary
-			if(dateTimes.size() > n) {
-				auto& dateTime{dateTimes.at(n)};
-
-				// check for valid (long enough) date/time
-				if(dateTime.length() >= dateLength) {
-					// get only date (YYYY-MM-DD) from date/time
-					const std::string date(dateTime, 0, dateLength);
-
-					// check whether a date is already set
-					if(!dateMapEntry.value.empty()) {
-						// date is already set -> compare with current date
-						if(dateMapEntry.value == date) {
-							// last date equals current date -> append text to last date
-							dateMapEntry.length += text.length() + 1;	/* include space before current text */
-						}
-						else {
-							// last date differs from current date -> conclude last date and start new date
-							this->dateMap.emplace_back(dateMapEntry);
-
-							dateMapEntry = TextMapEntry(this->corpus.size(), text.length(), date);
-						}
-					}
-					else {
-						// no date is set yet -> start new date
-						dateMapEntry = TextMapEntry(this->corpus.size(), text.length(), date);
-					}
-				}
-				else if(!dateMapEntry.value.empty()) {
-					// no valid date found, but last date is set -> conclude last date
-					this->dateMap.emplace_back(dateMapEntry);
-
-					dateMapEntry = TextMapEntry();
-				}
-
-				if(deleteInputData && !dateTime.empty()) {
-					// free memory early
-					std::string{}.swap(dateTime);
-				}
-			}
-
-			// concatenate corpus text
-			this->corpus += text;
-
-			if(deleteInputData) {
-				// free memory early
-				std::string{}.swap(text);
-			}
-
-			// add space at the end of the corpus
-			this->corpus.push_back(' ');
+			addArticle(
+					texts.at(n),
+					articleIds.size() > n ? articleIds.at(n) : emptyString,
+					dateTimes.size() > n ? dateTimes.at(n) : emptyString,
+					dateMapEntry,
+					deleteInputData
+			);
 		}
 
 		if(deleteInputData) {
@@ -3111,6 +3052,85 @@ namespace crawlservpp::Data {
 	/*
 	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
+
+	// add an article to the (continuous) corpus
+	inline void Corpus::addArticle(
+			std::string& text,
+			std::string& id,
+			std::string& dateTime,
+			TextMapEntry& dateMapEntry,
+			bool deleteInputData
+	) {
+		auto pos{this->corpus.size()};
+
+		// add article ID (or empty article) to article map
+		if(!id.empty()) {
+			this->articleMap.emplace_back(pos, text.length(), id);
+
+			if(deleteInputData) {
+				// free memory early
+				std::string{}.swap(id);
+			}
+		}
+		else if(!(this->articleMap.empty()) && this->articleMap.back().value.empty()) {
+			// expand empty article in the end of the article map
+			this->articleMap.back().length += text.length() + 1; /* include space before current text */
+		}
+		else {
+			// add empty article to the end of the article map
+			this->articleMap.emplace_back(pos, text.length());
+		}
+
+		// add date to date map if necessary
+		if(!dateTime.empty()) {
+			// check for valid (long enough) date/time
+			if(dateTime.length() >= dateLength) {
+				// get only date (YYYY-MM-DD) from date/time
+				const std::string date(dateTime, 0, dateLength);
+
+				// check whether a date is already set
+				if(!dateMapEntry.value.empty()) {
+					// date is already set -> compare with current date
+					if(dateMapEntry.value == date) {
+						// last date equals current date -> append text to last date
+						dateMapEntry.length += text.length() + 1;	/* include space before current text */
+					}
+					else {
+						// last date differs from current date -> conclude last date and start new date
+						this->dateMap.emplace_back(dateMapEntry);
+
+						dateMapEntry = TextMapEntry(this->corpus.size(), text.length(), date);
+					}
+				}
+				else {
+					// no date is set yet -> start new date
+					dateMapEntry = TextMapEntry(this->corpus.size(), text.length(), date);
+				}
+			}
+			else if(!dateMapEntry.value.empty()) {
+				// no valid date found, but last date is set -> conclude last date
+				this->dateMap.emplace_back(dateMapEntry);
+
+				TextMapEntry{}.swap(dateMapEntry);
+			}
+
+			if(deleteInputData && !dateTime.empty()) {
+				// free memory early
+				std::string{}.swap(dateTime);
+			}
+		}
+
+		// concatenate corpus text
+		this->corpus += text;
+
+		if(deleteInputData) {
+			// free memory early
+			std::string{}.swap(text);
+		}
+
+		// add space at the end of the corpus
+		this->corpus.push_back(' ');
+	}
 
 	// tokenize already tokenized corpus
 	inline bool Corpus::tokenizeTokenized(

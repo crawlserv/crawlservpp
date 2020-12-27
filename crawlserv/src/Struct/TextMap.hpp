@@ -33,6 +33,7 @@
 
 #include <cstddef>	// std::size_t
 #include <string>	// std::string
+#include <utility>	// std::swap
 #include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
@@ -103,6 +104,14 @@ namespace crawlservpp::Struct {
 				std::size_t setLength,
 				const std::string& setValue
 		) : pos(setPos), length(setLength), value(setValue) {}
+
+		///@}
+		///@name Swap
+		///@{
+
+		void swap(TextMapEntry& other) {
+			std::swap(*this, other);
+		}
 
 		///@}
 		///@name Cleanup

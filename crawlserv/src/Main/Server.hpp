@@ -120,7 +120,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <algorithm>	// std::count, std::count_if, std::find_if
+#include <algorithm>	// std::count, std::count_if, std::find_if, std::remove_if
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint32_t, std::uint64_t
