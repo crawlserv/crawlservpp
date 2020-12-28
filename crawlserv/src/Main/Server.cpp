@@ -634,30 +634,28 @@ namespace crawlservpp::Main {
 		// check whether worker threads were terminated
 		if(!(this->workers.empty())) {
 			std::lock_guard<std::mutex> workersLocked{this->workersLock};
+			bool erased{false};
 
-			this->workers.erase(
-					std::remove_if(
-							this->workers.begin(),
-							this->workers.end(),
-							[this](auto& worker) {
-								const auto index{
-									//NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-									&worker - &(this->workers)[0]
-								};
+			for(std::size_t i{0}; i < this->workers.size(); ++i) {
+				if(erased) {
+					--i;
 
-								if(this->workersRunning.at(index)) {
-									if(worker.joinable()) {
-										worker.join();
-									}
+					erased = false;
+				}
 
-									return true;
-								}
+				auto& worker{this->workers[i]};
 
-								return false;
-							}
-					),
-					this->workers.end()
-			);
+				if(!(this->workersRunning[i])) {
+					if(worker.joinable()) {
+						worker.join();
+					}
+
+					this->workers.erase(this->workers.begin() + i);
+					this->workersRunning.erase(this->workersRunning.begin() + i);
+
+					erased = true;
+				}
+			}
 		}
 
 		// try to re-connect to database if it is offline
