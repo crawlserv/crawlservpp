@@ -139,7 +139,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		};
 
 		using DateAssociationMap = std::unordered_map<std::string, std::unordered_map<std::string, Associations>>;
+		using DateAssociation = std::pair<std::string, std::unordered_map<std::string, Associations>>;
 		using ArticleAssociationMap = std::unordered_map<std::string, Associations>;
+		using ArticleAssociation = std::pair<std::string, Associations>;
 
 		// corpora and associations
 		std::size_t currentCorpus{0};
@@ -159,6 +161,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		QueryStruct queryKeyWord;
 		std::vector<QueryStruct> queriesCategories;
 
+		// state
+		std::size_t dateCounter{};
+		std::size_t firstDatePos{};
+		bool dateSaved{false};
+		std::size_t dateMapSize{};
+		std::string lastDate;
+		std::size_t articleIndex{};
+		std::size_t tokenIndex{};
+		std::size_t processedDates{};
+
 		// algorithm functions
 		void addCurrent();
 		void saveAssociations();
@@ -176,13 +188,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		void addArticlesForDate(
 				const TextMapEntry& date,
 				DateAssociationMap::iterator& dateIt,
-				std::size_t& dateCounter,
-				std::size_t firstDatePos,
-				bool& dateSaved,
-				std::size_t dateMapSize,
-				std::size_t& articleIndex,
 				const TextMap& articleMap,
-				std::size_t& tokenIndex,
 				const std::vector<std::string>& tokens,
 				std::queue<std::string>& warningsTo
 		);
@@ -192,10 +198,36 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				DateAssociationMap::iterator date
 		);
 		void processToken(
-				std::size_t index,
 				const std::string& token,
 				Associations& associationsTo,
 				std::queue<std::string>& warningsTo
+		);
+		void processDate(
+				const DateAssociation& date,
+				std::vector<std::pair<std::string, std::vector<std::uint64_t>>>& resultsTo
+		);
+		void processArticle(
+				const ArticleAssociation& article,
+				std::size_t& occurrencesTo,
+				std::vector<std::uint64_t>& catsCountersTo
+		);
+		void processTermOccurrence(
+				const ArticleAssociation& article,
+				std::uint64_t occurrence,
+				std::size_t& occurrencesTo,
+				std::vector<std::uint64_t>& catsCountersTo
+		);
+		void processCategory(
+				const ArticleAssociation& article,
+				std::uint64_t termOccurrence,
+				std::size_t index,
+				std::vector<std::uint64_t>& catsCountersTo
+		);
+		bool processCategoryOccurrence(
+				std::uint64_t termOccurrence,
+				std::uint64_t catOccurrence,
+				std::size_t catIndex,
+				std::vector<std::uint64_t>& catsCountersTo
 		);
 	};
 

@@ -310,9 +310,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			throw Exception("Date map, but no article map found!");
 		}
 
-		std::size_t articleIndex{0};
-		std::size_t tokenIndex{0};
-		std::size_t dateCounter{0};
+		std::string{}.swap(this->lastDate);
 
 		// set status message and reset progress
 		std::string status{"co-occurrences in corpus #"};
@@ -327,15 +325,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(generalLoggingDefault, "counts " + status);
 
+		// set initial state
+		this->dateCounter = 0;
+		this->firstDatePos = tokens.size();
+		this->dateSaved = false;
+		this->dateMapSize = dateMap.size();
+		this->articleIndex = 0;
+		this->tokenIndex = 0;
+
 		auto dateIt{this->associations.begin()};
-		std::size_t firstDatePos{tokens.size()};
-		bool dateSaved{false};
 
 		if(!dateMap.empty()) {
-			firstDatePos = dateMap.front().pos;
+			this->firstDatePos = dateMap.front().pos;
 		}
 
-		if(firstDatePos > 0 && !(this->algoConfig.ignoreEmptyDate)) {
+		if(this->firstDatePos > 0 && !(this->algoConfig.ignoreEmptyDate)) {
 			if(articleMap.empty()) {
 				// no date and no article map: treat input as one article
 				dateIt = this->addDate("");
@@ -345,10 +349,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				};
 
 				// go through all tokens
-				for(; tokenIndex < tokens.size(); ++tokenIndex) {
+				for(; this->tokenIndex < tokens.size(); ++(this->tokenIndex)) {
 					this->processToken(
-							tokenIndex,
-							tokens[tokenIndex],
+							tokens[this->tokenIndex],
 							articleIt->second,
 							warnings
 					);
@@ -357,40 +360,40 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			else {
 				// handle articles without date
 				while(
-						articleIndex < articleMap.size()
-						&& articleMap[articleIndex].pos < firstDatePos
+						this->articleIndex < articleMap.size()
+						&& articleMap[this->articleIndex].pos < this->firstDatePos
 				) {
 					// add empty date if still necessary
-					if(!dateSaved) {
+					if(!(this->dateSaved)) {
 						dateIt = this->addDate("");
 
-						dateSaved = true;
+						this->dateSaved = true;
 					}
 
 					// add article if still necessary, and save its iterator
 					const auto articleIt{
-						this->addArticleToDate(articleMap[articleIndex].value, dateIt)
+						this->addArticleToDate(articleMap[this->articleIndex].value, dateIt)
 					};
 
 					// go through all tokens of the current article
 					while(
-							tokenIndex < tokens.size()
-							&& tokenIndex < articleMap[articleIndex].pos + articleMap[articleIndex].length
+							this->tokenIndex < tokens.size()
+							&& this->tokenIndex < articleMap[this->articleIndex].pos
+							+ articleMap[this->articleIndex].length
 					) {
 						this->processToken(
-								tokenIndex,
-								tokens[tokenIndex],
+								tokens[this->tokenIndex],
 								articleIt->second,
 								warnings
 						);
 
-						++tokenIndex;
+						++(this->tokenIndex);
 					}
 
 					// update offset of article
-					articleIt->second.offset += articleMap[articleIndex].length;
+					articleIt->second.offset += articleMap[this->articleIndex].length;
 
-					++articleIndex;
+					++(this->articleIndex);
 				}
 			}
 
@@ -408,26 +411,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				[
 				 this,
 				 &dateIt,
-				 &dateCounter,
-				 &firstDatePos,
-				 &dateSaved,
 				 &dateMap,
-				 &articleIndex,
 				 &articleMap,
-				 &tokenIndex,
 				 &tokens,
 				 &warnings
 				](const auto& date) {
 					this->addArticlesForDate(
 							date,
 							dateIt,
-							dateCounter,
-							firstDatePos,
-							dateSaved,
-							dateMap.size(),
-							articleIndex,
 							articleMap,
-							tokenIndex,
 							tokens,
 							warnings
 					);
@@ -441,56 +433,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage("Calculating associations...");
 		this->setProgress(0.F);
 
-		std::size_t dateCounter{0};
 		std::vector<std::pair<std::string, std::vector<std::uint64_t>>> results;
 
-		for(const auto& date : this->associations) {
-			std::uint64_t occurrences{0};
-			std::vector<std::uint64_t> catsCounters(this->algoConfig.categoryLabels.size(), 0);
+		this->processedDates = 0;
 
-			for(const auto& article : date.second) {
-				for(const auto occurrence : article.second.keywordPositions) {
-					++occurrences;
-
-					for(std::size_t cat{0}; cat < this->algoConfig.categoryLabels.size(); ++cat) {
-						for(const auto catOccurrence : article.second.categoriesPositions[cat]) {
-							if(catOccurrence > occurrence + this->algoConfig.windowSize) {
-								break;
-							}
-
-							if(
-									occurrence < this->algoConfig.windowSize
-									|| catOccurrence >= occurrence - this->algoConfig.windowSize
-							) {
-								++(catsCounters[cat]);
-							}
-						}
-					}
+		std::for_each(
+				this->associations.cbegin(),
+				this->associations.cend(),
+				[this, &results](const auto& date) {
+					this->processDate(date, results);
 				}
-			}
-
-			// add row to results
-			results.emplace_back(
-					date.first,
-					std::vector<std::uint64_t>{}
-			);
-
-			results.back().second.push_back(date.second.size());
-			results.back().second.push_back(occurrences);
-
-			for(const auto counter : catsCounters) {
-				results.back().second.push_back(counter);
-			}
-
-			// update progress
-			++dateCounter;
-
-			this->setProgress(static_cast<float>(dateCounter) / this->associations.size());
-
-			if(!(this->isRunning())) {
-				return;
-			}
-		}
+		);
 
 		// sort results
 		std::sort(results.begin(), results.end(), [](const auto& a, const auto&b) {
@@ -680,25 +633,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void AssocOverTime::addArticlesForDate(
 			const TextMapEntry& date,
 			DateAssociationMap::iterator& dateIt,
-			std::size_t& dateCounter,
-			std::size_t firstDatePos,
-			bool& dateSaved,
-			const std::size_t dateMapSize,
-			std::size_t& articleIndex,
 			const TextMap& articleMap,
-			std::size_t& tokenIndex,
 			const std::vector<std::string>& tokens,
 			std::queue<std::string>& warningsTo
 	) {
-		std::string lastDate;
-
 		// skip articles without date
-		if(firstDatePos > 0 && this->algoConfig.ignoreEmptyDate) {
+		if(this->firstDatePos > 0 && this->algoConfig.ignoreEmptyDate) {
 			while(
-					articleIndex < articleMap.size()
-					&& articleMap[articleIndex].pos < date.pos
+					this->articleIndex < articleMap.size()
+					&& articleMap[this->articleIndex].pos < date.pos
 			) {
-				++articleIndex;
+				++(this->articleIndex);
 			}
 		}
 
@@ -711,52 +656,52 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		// add date if still necessary, and save its iterator
-		if(!dateSaved || lastDate != reducedDate) {
+		if(!(this->dateSaved) || this->lastDate != reducedDate) {
 			dateIt = this->addDate(reducedDate);
 
-			lastDate = reducedDate;
-			dateSaved = true;
+			this->lastDate = reducedDate;
+			this->dateSaved = true;
 		}
 
 		// go through all articles of the current date
 		while(
-				articleIndex < articleMap.size()
-				&& articleMap[articleIndex].pos < date.pos + date.length
+				this->articleIndex < articleMap.size()
+				&& articleMap[this->articleIndex].pos < date.pos + date.length
 		) {
 			// add article if still necessary, and save its iterator
 			const auto articleIt{
-				this->addArticleToDate(articleMap[articleIndex].value, dateIt)
+				this->addArticleToDate(articleMap[this->articleIndex].value, dateIt)
 			};
 
 			// skip tokens without date
 			if(this->algoConfig.ignoreEmptyDate) {
 				while(
-						tokenIndex < tokens.size()
-						&& tokenIndex < articleMap[articleIndex].pos
+						this->tokenIndex < tokens.size()
+						&& this->tokenIndex < articleMap[this->articleIndex].pos
 				) {
-					++tokenIndex;
+					++(this->tokenIndex);
 				}
 			}
 
 			// go through all tokens of the current article
 			while(
-					tokenIndex < tokens.size()
-					&& tokenIndex < articleMap[articleIndex].pos + articleMap[articleIndex].length
+					this->tokenIndex < tokens.size()
+					&& this->tokenIndex < articleMap[this->articleIndex].pos
+					+ articleMap[this->articleIndex].length
 			) {
 				this->processToken(
-						tokenIndex,
-						tokens[tokenIndex],
+						tokens[this->tokenIndex],
 						articleIt->second,
 						warningsTo
 				);
 
-				++tokenIndex;
+				++(this->tokenIndex);
 			}
 
 			// update offset of article
-			articleIt->second.offset += articleMap[articleIndex].length;
+			articleIt->second.offset += articleMap[this->articleIndex].length;
 
-			++articleIndex;
+			++(this->articleIndex);
 		}
 
 		// log warnings if necessary
@@ -767,9 +712,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// update progress
-		++dateCounter;
+		++(this->dateCounter);
 
-		this->setProgress(static_cast<float>(dateCounter) / dateMapSize);
+		this->setProgress(static_cast<float>(this->dateCounter) / this->dateMapSize);
 
 		if(!(this->isRunning())) {
 			return;
@@ -802,7 +747,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// process token and add as keyword or category if necessary
 	void AssocOverTime::processToken(
-			std::size_t index,
 			const std::string& token,
 			Associations& associationsTo,
 			std::queue<std::string>& warningsTo
@@ -821,7 +765,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			// found keyword
 			associationsTo.keywordPositions.push_back(
 					associationsTo.offset
-					+ index
+					+ this->tokenIndex
 			);
 		}
 		else {
@@ -844,11 +788,123 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					// found category
 					associationsTo.categoriesPositions[catIndex].push_back(
 							associationsTo.offset
-							+ index
+							+ this->tokenIndex
 					);
 				}
 			}
 		}
+	}
+
+	// process date
+	void AssocOverTime::processDate(
+			const DateAssociation& date,
+			std::vector<std::pair<std::string, std::vector<std::uint64_t>>>& resultsTo
+	) {
+		std::uint64_t occurrences{0};
+		std::vector<std::uint64_t> catsCounters(this->algoConfig.categoryLabels.size(), 0);
+
+		std::for_each(
+				date.second.cbegin(),
+				date.second.cend(),
+				[this, &occurrences, &catsCounters](const auto& article) {
+					this->processArticle(article, occurrences, catsCounters);
+				}
+		);
+
+		// add row to results
+		resultsTo.emplace_back(
+				date.first,
+				std::vector<std::uint64_t>{}
+		);
+
+		resultsTo.back().second.push_back(date.second.size());
+		resultsTo.back().second.push_back(occurrences);
+
+		std::for_each(
+				catsCounters.cbegin(),
+				catsCounters.cend(),
+				[&resultsTo](const auto& counter) {
+					resultsTo.back().second.push_back(counter);
+				}
+		);
+
+		// update progress
+		++(this->processedDates);
+
+		this->setProgress(static_cast<float>(this->processedDates) / this->associations.size());
+
+		if(!(this->isRunning())) {
+			return;
+		}
+	}
+
+	// process article
+	void AssocOverTime::processArticle(
+			const ArticleAssociation& article,
+			std::size_t& occurrencesTo,
+			std::vector<std::uint64_t>& catsCountersTo
+	) {
+		std::for_each(
+				article.second.keywordPositions.cbegin(),
+				article.second.keywordPositions.cend(),
+				[this, &article, &occurrencesTo, &catsCountersTo](const auto occurrence) {
+					processTermOccurrence(article, occurrence, occurrencesTo, catsCountersTo);
+				}
+		);
+	}
+
+	// process single term occurrence
+	void AssocOverTime::processTermOccurrence(
+			const ArticleAssociation& article,
+			std::uint64_t occurrence,
+			std::size_t& occurrencesTo,
+			std::vector<std::uint64_t>& catsCountersTo
+	) {
+		++occurrencesTo;
+
+		for(std::size_t cat{0}; cat < this->algoConfig.categoryLabels.size(); ++cat) {
+			processCategory(article, occurrence, cat, catsCountersTo);
+		}
+	}
+
+	// process category
+	void AssocOverTime::processCategory(
+			const ArticleAssociation& article,
+			std::uint64_t termOccurrence,
+			std::size_t index,
+			std::vector<std::uint64_t>& catsCountersTo
+	) {
+		for(const auto catOccurrence : article.second.categoriesPositions[index]) {
+				if(!(this->processCategoryOccurrence(
+						termOccurrence,
+						catOccurrence,
+						index,
+						catsCountersTo
+				))) {
+					break;
+				}
+		}
+	}
+
+	// process single category occurrence, return false if the end of the window has been reached
+	bool AssocOverTime::processCategoryOccurrence(
+			std::uint64_t termOccurrence,
+			std::uint64_t catOccurrence,
+			std::size_t catIndex,
+			std::vector<std::uint64_t>& catsCountersTo
+	) {
+		if(catOccurrence > termOccurrence + this->algoConfig.windowSize) {
+			return false;
+		}
+
+		if(
+				termOccurrence < this->algoConfig.windowSize
+				|| catOccurrence >= termOccurrence - this->algoConfig.windowSize
+		) {
+			++(catsCountersTo[catIndex]);
+		}
+
+		return true;
 	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
