@@ -40,11 +40,11 @@
 //! Namespace for global math functions.
 namespace crawlservpp::Helper::Math {
 
-	///@name Average and Median
+	///@name Mean, Median, and Standard Derivation
 	///@{
 
 	/*!
-	 * Calculates the average of all elements in the given container.
+	 * Calculates the average (mean) of all elements in the given container.
 	 *
 	 * \param values Constant reference to
 	 *   the container.
@@ -100,6 +100,47 @@ namespace crawlservpp::Helper::Math {
 		std::nth_element(values.begin(), iterator, values.end());
 
 		return *iterator;
+	}
+
+	/*!
+	 * Calculates the variance from the given mean of all elements in the given container.
+	 *
+	 * \param mean Mean of all elements in
+	 *   the container.
+	 * \param values Reference to the
+	 *   container.
+	 *
+	 * \returns The variance from the
+	 *   given mean of all elements in the
+	 *   given container.
+	 *
+	 */
+	template<typename R, typename T, template<typename, typename> class Container>
+		R variance(R mean, Container<T, std::allocator<T>>& values) {
+		R sum{};
+
+		for(const auto value : values) {
+			sum += (value - mean) * (value - mean);
+		}
+
+		return sum / values.size();
+	}
+
+	/*!
+	 * Calculates the variance of all elements in the given container.
+	 *
+	 * \param values Reference to the
+	 *   container.
+	 *
+	 * \returns The variance from the
+	 *   mean of all elements in the given
+	 *   container.
+	 */
+	template<typename R, typename T, template<typename, typename> class Container>
+		R variance(Container<T, std::allocator<T>>& values) {
+		const auto mean{mean(values)};
+
+		return variance(mean, values);
 	}
 
 	///@}
