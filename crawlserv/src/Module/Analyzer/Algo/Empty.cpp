@@ -330,8 +330,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void Empty::initQueries() {
 		//TODO: initialize queries
 
-		// use this->addQuery(...), this->addOptionalQuery(...),
-		// and/or this->addQueries(..) to add queries, if needed.
+		// use this->addOptionalQuery(...) and/or
+		// this->addQueries(..) to add queries,
+		// if needed
 	}
 	*/
 
