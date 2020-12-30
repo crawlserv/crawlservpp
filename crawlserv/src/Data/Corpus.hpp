@@ -47,7 +47,7 @@
 #include "../Struct/StatusSetter.hpp"
 #include "../Struct/TextMap.hpp"
 
-#include <algorithm>	// std::find_if, std::remove_if
+#include <algorithm>	// std::all_of, std::count_if, std::find_if, std::remove_if
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint8_t, std::uint16_t
 #include <functional>	// std::function
@@ -77,8 +77,11 @@ namespace crawlservpp::Data {
 	//! Maximum number of bytes used by one UTF-8-encoded multibyte character.
 	inline constexpr std::uint8_t utf8MaxBytes{4};
 
-	//! Every after how many sentences the status is updated when tokenizing a corpus.
+	//! After how many sentences the status is updated when tokenizing a corpus.
 	inline constexpr auto tokenizeUpdateEvery{1000};
+
+	//! After how many articles the status is updated when filtering a corpus (by queries).
+	inline constexpr auto filterUpdateEvery{1000};
 
 	//! Minimum length of single UTF-8 code points to remove.
 	inline constexpr auto minSingleUtf8CharSize{2};
@@ -155,6 +158,7 @@ namespace crawlservpp::Data {
 		using TextMapEntry = Struct::TextMapEntry;
 
 	public:
+		using ArticleFunc = std::function<bool(const std::vector<std::string>&, std::size_t, std::size_t)>;
 		using SentenceFunc = std::function<void(std::vector<std::string>&)>;
 		using WordFunc = std::function<void(std::string& token)>;
 
@@ -247,6 +251,7 @@ namespace crawlservpp::Data {
 		///@{
 
 		bool filterByDate(const std::string& from, const std::string& to);
+		std::size_t filterArticles(ArticleFunc callbackArticle, StatusSetter& statusSetter);
 
 		///@}
 		///@name Tokenization
@@ -303,7 +308,8 @@ namespace crawlservpp::Data {
 		// internal state
 		bool tokenized{false};
 		bool checkConsistency{false};
-		std::size_t tokenBytes{0};
+		std::size_t tokenBytes{};
+		std::size_t emptyTokens{};
 
 		// lemmatizer and word remover
 		Lemmatizer lemmatizer;
@@ -476,11 +482,15 @@ namespace crawlservpp::Data {
 
 	//! Gets the number of tokens in the corpus.
 	/*!
+	 * Does not count previously emptied tokens.
+	 *
 	 * \returns The number of tokens in the
 	 *   corpus.
 	 *
 	 * \throws Corpus::Exception if the corpus
 	 *   has not been tokenized
+	 *
+	 * \sa filterArticles
 	 */
 	inline std::size_t Corpus::getNumTokens() const {
 		if(!(this->tokenized)) {
@@ -490,7 +500,7 @@ namespace crawlservpp::Data {
 			);
 		}
 
-		return this->tokens.size();
+		return this->tokens.size() - this->emptyTokens;
 	}
 
 	//! Gets a reference to the article map of the corpus.
@@ -764,12 +774,16 @@ namespace crawlservpp::Data {
 
 	//! Checks whether the corpus is empty.
 	/*!
+	 * \note If the corpus is tokenized,
+	 *   the tokens will be checked whether
+	 *   all of them are empty.
+	 *
 	 * \returns True, if the corpus is empty.
 	 *   False otherwise.
 	 */
 	inline bool Corpus::empty() const {
 		if(this->tokenized) {
-			return this->tokens.empty();
+			return this->emptyTokens >= this->tokens.size();
 		}
 
 		return this->corpus.empty();
@@ -892,7 +906,7 @@ namespace crawlservpp::Data {
 		std::string emptyString;
 		TextMapEntry dateMapEntry;
 
-		for(std::size_t n{0}; n < texts.size(); ++n) {
+		for(std::size_t n{}; n < texts.size(); ++n) {
 			addArticle(
 					texts.at(n),
 					articleIds.size() > n ? articleIds.at(n) : emptyString,
@@ -1197,7 +1211,7 @@ namespace crawlservpp::Data {
 
 			auto chunkOffset{this->tokens.size()};
 			bool skipSeparator{skipNextSeparator};
-			std::size_t begin{0};
+			std::size_t begin{};
 
 			skipNextSeparator = false;
 
@@ -1668,7 +1682,7 @@ namespace crawlservpp::Data {
 
 		if(this->articleMap.empty()) {
 			// no article part: simply add parts of the corpus
-			std::size_t pos{0};
+			std::size_t pos{};
 
 			while(pos < this->corpus.size()) {
 				to.emplace_back(
@@ -1688,8 +1702,8 @@ namespace crawlservpp::Data {
 			noSpace = true;
 		}
 		else {
-			std::size_t corpusPos{0};
-			std::size_t articlePos{0};
+			std::size_t corpusPos{};
+			std::size_t articlePos{};
 			auto articleIt{this->articleMap.cbegin()};
 			auto dateIt{this->dateMap.cbegin()};
 
@@ -2067,10 +2081,10 @@ namespace crawlservpp::Data {
 		TextMap currentDateMap;
 		SentenceMap currentSentenceMap;
 		std::string currentChunk;
-		std::size_t chunkOffset{0};
-		std::size_t chunkNumCompleteTokens{0};
-		std::size_t nextArticleIndex{0};
-		std::size_t nextDateIndex{0};
+		std::size_t chunkOffset{};
+		std::size_t chunkNumCompleteTokens{};
+		std::size_t nextArticleIndex{};
+		std::size_t nextDateIndex{};
 		bool reserveMemory{true};
 
 		for(const auto& sentence : this->sentenceMap) {
@@ -2081,7 +2095,7 @@ namespace crawlservpp::Data {
 
 			if(reserveMemory) {
 				// reserve memory for chunk
-				std::size_t bytes{0};
+				std::size_t bytes{};
 
 				for(
 						auto tokenIt = this->tokens.begin() + sentence.first;
@@ -2224,7 +2238,7 @@ namespace crawlservpp::Data {
 				currentChunk.pop_back(); /* remove last newline */
 
 				std::string rest;
-				std::size_t restNumTokens{0};
+				std::size_t restNumTokens{};
 				TextMapEntry articleRest;
 				TextMapEntry dateRest;
 				bool splitToken{false};
@@ -2410,7 +2424,7 @@ namespace crawlservpp::Data {
 	 * FILTERING
 	 */
 
-	//! Filters a continous text corpus by the given date(s).
+	//! Filters a text corpus by the given date(s).
 	/*!
 	 * Afterwards, the corpus will only contain
 	 *  text marked with the given date(s), or
@@ -2434,14 +2448,13 @@ namespace crawlservpp::Data {
 	 *   the given date. False, if it remains
 	 *   unchanged.
 	 *
-	 * \throws Corpus::Exception if
-	 *   consistency checks have been enabled
-	 *   on construction and the date map does
-	 *   not start at the beginning of the
-	 *   corpus, the date map and the article
-	 *   map contradict each other, or they
-	 *   contain other inconsistencies – or if
-	 *   the corpus has been tokenized.
+	 * \throws Corpus::Exception if consistency
+	 *   checks have been enabled on
+	 *   construction and the date map does not
+	 *   start at the beginning of the corpus,
+	 *   the date map and the article map
+	 *   contradict each other, or they contain
+	 *   other inconsistencies.
 	 */
 	inline bool Corpus::filterByDate(const std::string& from, const std::string& to) {
 		// check arguments
@@ -2514,7 +2527,7 @@ namespace crawlservpp::Data {
 		// trim corpus
 		if(this->tokenized) {
 			// (and calculate new size, in bytes)
-			std::size_t deleteBytes{0};
+			std::size_t deleteBytes{};
 
 			const auto deleteTo{this->tokens.begin() + offset};
 
@@ -2722,6 +2735,84 @@ namespace crawlservpp::Data {
 		}
 
 		return true;
+	}
+
+	//! Filters a tokenized corpus by removing articles.
+	/*!
+	 * \note For performance reasons, the
+	 *   empty tokens of the deleted
+	 *   articles will be kept. Make sure
+	 *   to re-tokenize the corpus if
+	 *   they need to be removed.
+	 *
+	 * \param callbackArticle Callback
+	 *   function that returns whether to
+	 *   keep the given article. It will
+	 *   receive a constant reference to
+	 *   all tokens in the corpus, as well
+	 *   as the start and the length of
+	 *   the article. If it the callback
+	 *   function returns true, the given
+	 *   article will be kept. If not, its
+	 *   tokens will be emptied.
+	 * \param statusSetter Reference to a
+	 *   structure containing callbacks
+	 *   for updating the status and
+	 *   checking whether the thread is
+	 *   still supposed to be running.
+	 *
+	 * \returns The number of articles
+	 *   that have been emptied, or zero
+	 *   if no changes have been made to
+	 *   the corpus.
+	 *
+	 * \throws Corpus::Exception if the
+	 *  corpus has not been tokenized.
+	 */
+	inline std::size_t Corpus::filterArticles(ArticleFunc callbackArticle, StatusSetter& statusSetter) {
+		if(!(this->tokenized)) {
+			throw Exception("Corpus::filterArticle(): Corpus has not been tokenized");
+		}
+
+		if(this->tokens.empty()) {
+			return 0;
+		}
+
+		statusSetter.change("Filtering corpus...");
+
+		std::size_t articleCounter{};
+		std::size_t statusCounter{};
+		std::size_t removed{};
+
+		const auto total{this->articleMap.size()};
+
+		for(const auto& article : this->articleMap) {
+			if(!callbackArticle(this->tokens, article.pos, article.length)) {
+				// empty all tokens belonging to the article that has been filtered out
+				for(std::size_t index{article.pos}; index < article.pos + article.length; ++index) {
+					this->tokenBytes -= this->tokens[index].size();
+
+					std::string{}.swap(this->tokens[index]);
+
+					++(this->emptyTokens);
+				}
+
+				++removed;
+			}
+
+			++articleCounter;
+			++statusCounter;
+
+			if(statusCounter == filterUpdateEvery) {
+				if(!statusSetter.update(articleCounter, total)) {
+					return 0;
+				}
+
+				statusCounter = 0;
+			}
+		}
+
+		return removed;
 	}
 
 	/*
@@ -2997,6 +3088,8 @@ namespace crawlservpp::Data {
 			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
+		this->emptyTokens = 0;
+
 		if(this->tokenized) {
 			if(!(this->tokenizeTokenized(
 					callbackSentence,
@@ -3047,6 +3140,7 @@ namespace crawlservpp::Data {
 
 		this->tokenized = false;
 		this->tokenBytes = 0;
+		this->emptyTokens = 0;
 	}
 
 	/*
@@ -3143,11 +3237,11 @@ namespace crawlservpp::Data {
 
 		// run manipulators on already tokenized corpus
 		if(callbackSentence || callbackWord) {
-			std::size_t numDeletedWords{0};
-			std::size_t dateIndex{0};
-			std::size_t articleIndex{0};
-			std::size_t sentenceCounter{0};
-			std::size_t statusCounter{0};
+			std::size_t numDeletedWords{};
+			std::size_t dateIndex{};
+			std::size_t articleIndex{};
+			std::size_t sentenceCounter{};
+			std::size_t statusCounter{};
 			bool inDate{false};
 			bool inArticle{false};
 			bool emptyDates{false};
@@ -3354,21 +3448,21 @@ namespace crawlservpp::Data {
 		// tokenize continuous text corpus
 		std::vector<std::string> sentence;
 
-		std::size_t wordBegin{0};
-		std::size_t sentenceFirstWord{0};
-		std::size_t currentWord{0};
-		std::size_t statusCounter{0};
-		std::size_t corpusTrimmed{0};
+		std::size_t wordBegin{};
+		std::size_t sentenceFirstWord{};
+		std::size_t currentWord{};
+		std::size_t statusCounter{};
+		std::size_t corpusTrimmed{};
 
 		bool inArticle{false};
 		bool inDate{false};
 
-		std::size_t articleFirstWord{0};
-		std::size_t dateFirstWord{0};
-		std::size_t articleEnd{0};
-		std::size_t dateEnd{0};
-		std::size_t nextArticle{0};
-		std::size_t nextDate{0};
+		std::size_t articleFirstWord{};
+		std::size_t dateFirstWord{};
+		std::size_t articleEnd{};
+		std::size_t dateEnd{};
+		std::size_t nextArticle{};
+		std::size_t nextDate{};
 
 		TextMap newArticleMap;
 		TextMap newDateMap;
@@ -3377,7 +3471,7 @@ namespace crawlservpp::Data {
 		newDateMap.reserve(this->dateMap.size());
 
 		// go through all characters in the continous text corpus
-		for(std::size_t pos{0}; pos < this->corpus.size() + corpusTrimmed; ++pos) {
+		for(std::size_t pos{}; pos < this->corpus.size() + corpusTrimmed; ++pos) {
 			bool sentenceEnd{false};
 			bool noSeparator{false};
 			bool appendToArticle{false};
@@ -4003,7 +4097,7 @@ namespace crawlservpp::Data {
 		}
 
 		// cut a maximum of three bytes
-		std::uint8_t cut{0};
+		std::uint8_t cut{};
 
 		for(; cut < utf8MaxBytes; ++cut) {
 			if(cut > maxLength) {
@@ -4053,7 +4147,7 @@ namespace crawlservpp::Data {
 		}
 
 		// check the start positions of all entries in the map
-		std::size_t last{0};
+		std::size_t last{};
 
 		for(const auto& entry : map) {
 			if(last > 0 && entry.pos != last) {
@@ -4124,7 +4218,7 @@ namespace crawlservpp::Data {
 		}
 
 		// check the start positions of all entries in the map
-		std::size_t last{0};
+		std::size_t last{};
 
 		for(const auto& entry : map) {
 			if(entry.first != last) {
