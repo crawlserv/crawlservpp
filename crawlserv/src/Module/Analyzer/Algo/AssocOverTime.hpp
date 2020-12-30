@@ -68,7 +68,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	inline constexpr auto updateProgressEvery{100};
 
 	//! Number of default columns to be written to the target table.
-	inline constexpr auto resultMinNumColumns{2};
+	inline constexpr auto resultMinNumColumns{3};
 
 	//@}
 
