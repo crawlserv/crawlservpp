@@ -261,7 +261,7 @@ namespace crawlservpp::Data {
 		///@{
 
 		bool filterByDate(const std::string& from, const std::string& to);
-		std::size_t filterArticles(ArticleFunc callbackArticle, StatusSetter& statusSetter);
+		std::size_t filterArticles(const ArticleFunc& callbackArticle, StatusSetter& statusSetter);
 
 		///@}
 		///@name Tokenization
@@ -2809,7 +2809,7 @@ namespace crawlservpp::Data {
 	 * \throws Corpus::Exception if the
 	 *  corpus has not been tokenized.
 	 */
-	inline std::size_t Corpus::filterArticles(ArticleFunc callbackArticle, StatusSetter& statusSetter) {
+	inline std::size_t Corpus::filterArticles(const ArticleFunc& callbackArticle, StatusSetter& statusSetter) {
 		if(!(this->tokenized)) {
 			throw Exception("Corpus::filterArticle(): Corpus has not been tokenized");
 		}

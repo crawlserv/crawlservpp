@@ -1780,13 +1780,12 @@ namespace crawlservpp::Module::Crawler {
 
 						continue;
 					}
-					else {
-						emptyTokenError += " from ";
-						emptyTokenError += sourceUrl;
-						emptyTokenError += ".";
 
-						this->log(crawlerLoggingDefault, "WARNING: " + emptyTokenError);
-					}
+					emptyTokenError += " from ";
+					emptyTokenError += sourceUrl;
+					emptyTokenError += ".";
+
+					this->log(crawlerLoggingDefault, "WARNING: " + emptyTokenError);
 				}
 				else if(cachedSeconds > 0) {
 					// save token value in cache
@@ -1834,9 +1833,8 @@ namespace crawlservpp::Module::Crawler {
 				if(this->config.customTokensRequired.at(index)) {
 					throw Exception(tokenError);
 				}
-				else {
-					this->log(crawlerLoggingDefault, "WARNING: " + tokenError);
-				}
+
+				this->log(crawlerLoggingDefault, "WARNING: " + tokenError);
 			}
 			catch(const Utf8Exception& e) {
 				// unset custom HTTP headers (including cookies) if necessary
@@ -1855,9 +1853,8 @@ namespace crawlservpp::Module::Crawler {
 				if(this->config.customTokensRequired.at(index)) {
 					throw Exception(tokenError);
 				}
-				else {
-					this->log(crawlerLoggingDefault, "WARNING: " + tokenError);
-				}
+
+				this->log(crawlerLoggingDefault, "WARNING: " + tokenError);
 			}
 
 			break;

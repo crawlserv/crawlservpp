@@ -216,7 +216,7 @@ namespace crawlservpp::Module::Analyzer {
 		///@{
 
 		void setTargetTable(const std::string& table);
-		void setTargetFields(const std::vector<StringString>& types);
+		void setTargetFields(const std::vector<StringString>& fields);
 		void setCorpusSlicing(std::uint8_t percentageOfMaxAllowedPackageSize);
 		void setIsRunningCallback(const IsRunningCallback& isRunningCallback);
 

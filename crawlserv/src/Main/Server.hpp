@@ -417,8 +417,8 @@ namespace crawlservpp::Main {
 		ServerCommandResponse cmdDeleteConfig();
 		ServerCommandResponse cmdDuplicateConfig();
 
-		ServerCommandResponse cmdListDicts();
-		ServerCommandResponse cmdListMdls();
+		static ServerCommandResponse cmdListDicts();
+		static ServerCommandResponse cmdListMdls();
 
 		ServerCommandResponse cmdWarp();
 
