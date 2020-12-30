@@ -33,9 +33,11 @@
 
 #include "../Helper/Portability/mysqlcppconn.h"
 
+#include "../_extern/asio/asio/include/asio/version.hpp"
 #include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
 #include "../_extern/mongoose/mongoose.h"
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
+#include "../_extern/wapiti/wapiti.h"
 
 #include <aspell.h>
 #include <boost/version.hpp>
@@ -62,13 +64,25 @@ namespace crawlservpp::Helper::Versions {
 	///@name Constants
 	///@{
 
+	//! Divisor to retrieve the major version of the Asio library.
+	inline constexpr auto asioMajor{100000};
+
+	//! Divisor to retrieve the minor version of the Asio library.
+	inline constexpr auto asioMinor{100};
+
+	//! Mod divisor to retrieve the minor version of the Asio library.
+	inline constexpr auto asioModMinor{1000};
+
+	//! Mod divisor to retrieve the patch version of the Asio library.
+	inline constexpr auto asioPatch{100};
+
 	//! Divisor to retrieve the major version of the Boost library.
 	inline constexpr auto boostMajor{100000};
 
 	//! Divisor to retrieve the minor version of the Boost library.
 	inline constexpr auto boostMinor{1000};
 
-	//! Divisor to retrieve the patch level of the Boost library.
+	//! Mod divisor to retrieve the patch level of the Boost library.
 	inline constexpr auto boostPatch{100};
 
 	//! Divisor to retrieve the major version of the pugixml library.
@@ -113,6 +127,16 @@ namespace crawlservpp::Helper::Versions {
 	inline std::vector<StringString> getLibraryVersions() {
 		std::vector<StringString> result;
 
+		// asio
+		result.emplace_back(
+				"Asio",
+				std::to_string(ASIO_VERSION / asioMajor)
+				+ '.'
+				+ std::to_string(ASIO_VERSION / asioMinor % asioModMinor)
+				+ '.'
+				+ std::to_string(ASIO_VERSION % asioPatch)
+		);
+
 		// Boost
 		result.emplace_back(
 				"Boost",
@@ -123,13 +147,10 @@ namespace crawlservpp::Helper::Versions {
 				+ std::to_string(BOOST_VERSION % boostPatch)
 		);
 
-		// cURL
-		result.emplace_back("cURL", curl_version_info(CURLVERSION_NOW)->version);
-
 		// GNU Aspell
 		result.emplace_back("GNU Aspell", aspell_version_string());
 
-		// date.h (no version information available)
+		// Howard E. Hinnant's date.h library (no version information available)
 		result.emplace_back("Howard E. Hinnant's date.h", "");
 
 		// jsoncons
@@ -142,8 +163,11 @@ namespace crawlservpp::Helper::Versions {
 				+ std::to_string(JSONCONS_VERSION_PATCH)
 		);
 
+		// libcurl
+		result.emplace_back("libcurl", curl_version_info(CURLVERSION_NOW)->version);
+
 		// mongoose
-		result.emplace_back("mongoose", MG_VERSION);
+		result.emplace_back("Mongoose", MG_VERSION);
 
 		// MySQL Connector/C++
 		sql::Driver * driver{get_driver_instance()};
@@ -167,6 +191,9 @@ namespace crawlservpp::Helper::Versions {
 				+ std::to_string(PCRE2_MINOR)
 		);
 
+		// porter2_stemmer (no version information available)
+		result.emplace_back("porter2_stemmer", "");
+
 		// pugixml
 		result.emplace_back(
 				"pugixml",
@@ -179,9 +206,6 @@ namespace crawlservpp::Helper::Versions {
 
 		// RapidJSON
 		result.emplace_back("RapidJSON", RAPIDJSON_VERSION_STRING);
-
-		// rawr-gen (no version information available)
-		result.emplace_back("rawr-gen by Kelly Rauchenberger", "");
 
 		// tidy-html5
 		result.emplace_back("tidy-html5", tidyLibraryVersion());
@@ -199,6 +223,9 @@ namespace crawlservpp::Helper::Versions {
 
 		// UTF8-CPP (WARNING: hard-coded version information not necessarily accurate)
 		result.emplace_back("UTF8-CPP", utf8CppVersion);
+
+		// Wapiti
+		result.emplace_back("Wapiti", Data::wapiti::version);
 
 		// zlib
 		result.emplace_back("zlib", ZLIB_VERSION);
