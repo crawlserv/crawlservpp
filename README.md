@@ -120,7 +120,7 @@ The documentation will be written to `crawlserv/docs`.
 
 ### Server Commands
 
-The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of August 2020):
+The server performs commands and sends back their results. Some commands need to be confirmed before being actually performed and some commands can be restricted by the configuration file loaded when starting the server. The following commands are implemented (as of December 2020):
 
 * **`addconfig`** (arguments: `website`, `module`, `name`, `config`): Add a configuration to the database.
 * **`addquery`** (arguments: `website`, `name`, `query`, `type`, `resultbool`, `resultsingle`, `resultmulti`, `resultsubsets`, `textonly`): Add a RegEx, XPath or JSONPointer query to the database.
@@ -234,16 +234,18 @@ As can be seen from the commands, the server also manages threads for performing
 
 Configurations for these modules are saved as JSON arrays in the shared `configs` table.
 
-Analyzers are implemented by their own set of subclasses &mdash; algorithm classes. The following algorithms are implemented at the moment (as of August 2020):
+Analyzers are implemented by their own set of subclasses &mdash; algorithm classes. The following algorithms are implemented at the moment (as of December 2020):
  
-* **CorpusGenerator**: Uses the built-in functionality for building text corpora from its input data and quits.
-* **MarkovText**: Markov Chain Text Generator.
-* **MarkovTweet**: Markov Chain Tweet Generator.
-* **TokensOverTime**: Counts the tokens in a text corpus over time.
+* **AssocOverTime**: Counts co-occurrences between a specific term and different categories in a text corpus over time.
+* **CorpusGenerator**: Creates a text corpus and collects statistical information about it.
+* ~~**SentimentOverTime**: Analyzes the sentiment surrounding specific terms in a text corpus over time.~~
+* ~~**TokensOverTime**: Counts specific tokens in a text corpus over time.~~
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Main_1_1Database.html) class. Additionally, thread connections to the database (instances of [`Module::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Database.html) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Wrapper_1_1Database.html) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the [source code documentation](https://codedocs.xyz/crawlserv/crawlservpp/) of the command-and-control server for further details.
 
-The parser, extractor and analyzer threads may pre-cache (and therefore temporarily multiply) data in memory, while the crawler threads work directly on the database, which minimizes memory usage. Because the usual bottleneck for parsers and extractors are requests to the crawled/extracted website, **multiple threads are encouraged for crawling and extracting.** **Multiple threads for parsing and analyzing can be reasonable when using multiple CPU cores**, although some additional memory usage by the in-memory multiplication of data should be expected as well as some blocking because of simultaneous database access. At the same time, a slow database connection or server can have significant impact on performance in any case.
+The parser, extractor and analyzer threads may pre-cache (and therefore temporarily multiply) data in memory, while the crawler threads work directly on the database, which minimizes memory usage. Because the usual bottleneck for parsers and extractors are requests to the crawled/extracted website, **multiple threads are encouraged for crawling and extracting.** **Multiple threads for parsing can be reasonable when using multiple CPU cores**, although some additional memory usage by the in-memory multiplication of data should be expected as well as some blocking because of simultaneous database access. At the same time, a slow database connection or server can have significant impact on performance in any case.
+
+Algorithms need to be specifically optimized for multi-threading. Otherwise, multiple analyzer threads will not improve performance and might even conflict with each other.
 
 ### Third-party Libraries
 
@@ -257,18 +259,17 @@ The following third-party libraries are used by the command-and-control server:
 * [libcurl](https://curl.haxx.se/libcurl/)
 * [Mongoose Embedded Web Server](https://github.com/cesanta/mongoose) (included in `crawlserv/src/_extern/mongoose`)
 * [MySQL Connector/C++ 8.0](https://dev.mysql.com/doc/connector-cpp/8.0/en/)
-* [Perl Compatible Regular Expressions 2](https://www.pcre.org/)
+* [PCRE2](https://www.pcre.org/)
 * [porter2_stemmer](https://github.com/smassung/porter2_stemmer)  (included in `crawlserv/src/_extern/porter2_stemmer`)
 * [pugixml](https://github.com/zeux/pugixml)
 * [RapidJSON](https://github.com/Tencent/rapidjson) (included in `crawlserv/src/_extern/rapidjson`)
-* [rawr-gen](https://github.com/hatkirby/rawr-ebooks) (included in `crawlserv/src/_extern/rawr`)
-* [HTML Tidy API](http://www.html-tidy.org/)
+* [tidy-html5](http://www.html-tidy.org/)
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8`)
 * [Wapiti](https://github.com/Jekub/Wapiti) (included, modified, in `crawlserv/src/_extern/wapiti`)
 * [zlib](https://www.zlib.net/)
 
-While `Asio`, `date.h`, `jsoncons`, Mongoose, RapidJSON, `rawr-gen` and `UTF8-CPP` are included in the source code and compiled together with the server, all other libraries need to be externally present.
+While Asio, `date.h`, `jsoncons`, Mongoose, `porter2_stemmer`, RapidJSON, `UTF8-CPP`, and Wapiti are included in the source code and compiled together with the server, all other libraries need to be externally present.
 
 ## Frontend
 
