@@ -72,6 +72,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 
 	//! Algorithm building a text corpus and creating corpus statistics from the input data.
+	/*!
+	 * \note Empty words and sentences will be ignored.
+	 */
 	class CorpusGenerator final : public Module::Analyzer::Thread {
 		// for convenience
 		using DataType = Data::Type;
@@ -129,6 +132,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	private:
 		// status message saved in-class
 		std::string status;
+
+		// static internal helper function
+		static bool isSentenceEmpty(
+				const std::pair<std::size_t, std::size_t>& sentence,
+				const std::vector<std::string>& tokens
+		);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

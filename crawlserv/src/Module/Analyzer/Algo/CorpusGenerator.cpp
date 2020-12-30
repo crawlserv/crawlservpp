@@ -161,7 +161,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				const auto& tokens{corpus.getcTokens()};
 
 				for(const auto& token : tokens) {
-					tokenLengths.push_back(Helper::Utf8::length(token));
+					if(!token.empty()) {
+						tokenLengths.push_back(Helper::Utf8::length(token));
+					}
 				};
 
 				const auto avgTokenLength{
@@ -183,7 +185,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				sentenceLengths.reserve(sentenceMap.size());
 
 				for(const auto& sentence : sentenceMap) {
-					sentenceLengths.push_back(sentence.second);
+					if(!CorpusGenerator::isSentenceEmpty(sentence, tokens)) {
+						sentenceLengths.push_back(sentence.second);
+					}
 				}
 
 				const auto avgSentenceLength{
@@ -358,5 +362,22 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	//! Does nothing
 	void CorpusGenerator::resetAlgo() {}
+
+	/*
+	 * STATIC INTERNAL HELPER FUNCTION (private)
+	 */
+
+	bool CorpusGenerator::isSentenceEmpty(
+			const std::pair<std::size_t, std::size_t>& sentence,
+			const std::vector<std::string>& tokens
+	) {
+		for(std::size_t index{sentence.first}; index < sentence.first + sentence.second; ++index) {
+			if(!tokens.at(index).empty()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
