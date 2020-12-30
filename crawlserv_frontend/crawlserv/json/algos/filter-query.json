@@ -1,0 +1,20 @@
+{
+	"label": "Filter by query",
+	"open": false,
+	
+	"queries": {
+		"type": "array",
+		"item-type": "query",
+		"query-results": [
+			"bool"
+		],
+		"query-types": [
+			"regex"
+		],
+		"default": [],
+		"label": "Keep articles containing:",
+		"description": "Articles that do not contain a single word fulfilling one of these queries will be filtered out.",
+		"simple": true,
+		"position": 1
+	}
+}
