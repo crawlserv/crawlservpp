@@ -114,7 +114,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		fields.reserve(...);
 
-		fields.emplace_back(...);
+		fields.emplace_back("[NAME]", "[TYPE]");
 		...
 
 		this->database.setTargetFields(fields);
