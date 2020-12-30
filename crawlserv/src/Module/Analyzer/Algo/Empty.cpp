@@ -172,10 +172,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		std::size_t corpora{0};
+		std::size_t corpora{};
 
-		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
-			if(this->addCorpus(n, statusSetter)) {
+		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
+			if(this->addCorpus(index, statusSetter)) {
 				++corpora;
 			}
 		}
@@ -189,7 +189,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->log(generalLoggingExtended, "is ready.");
 
 		/*
-		 * NOTE: Do not set any threat status here, as the parent class
+		 * NOTE: Do not set any thread status here, as the parent class
 		 *        will revert to the original thread status after initialization.
 		 */
 	}

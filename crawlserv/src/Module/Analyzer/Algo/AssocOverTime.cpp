@@ -142,15 +142,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
-			this->addCorpus(n, statusSetter);
+		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
+			this->addCorpus(index, statusSetter);
 		}
 
 		// algorithm is ready
 		this->log(generalLoggingExtended, "is ready.");
 
 		/*
-		 * NOTE: Do not set any threat status here, as the parent class
+		 * NOTE: Do not set any thread status here, as the parent class
 		 *        will revert to the original thread status after initialization.
 		 */
 	}
@@ -259,7 +259,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// remove empty labels, invalid queries
-		for(std::size_t index{0}; index < this->algoConfig.categoryLabels.size(); ++index) {
+		for(std::size_t index{}; index < this->algoConfig.categoryLabels.size(); ++index) {
 			if(
 					this->algoConfig.categoryLabels[index].empty()
 					|| this->algoConfig.categoryQueries[index] == 0
@@ -453,8 +453,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage("Writing results to database...");
 		this->setProgress(0.F);
 
-		std::size_t statusCounter{0};
-		std::size_t resultCounter{0};
+		std::size_t statusCounter{};
+		std::size_t resultCounter{};
 
 		const auto resultNumColumns{
 			assocResultMinNumColumns
@@ -478,7 +478,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					Data::Value(result.first)
 			);
 
-			std::size_t n{0};
+			std::size_t n{};
 
 			for(const auto& number : result.second) {
 				std::string column;
@@ -693,7 +693,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		else {
 			// look for categories
 			for(
-					std::size_t catIndex{0};
+					std::size_t catIndex{};
 					catIndex < this->queriesCategories.size();
 					++catIndex
 			) {
@@ -723,7 +723,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			const DateAssociation& date,
 			std::vector<std::pair<std::string, std::vector<std::uint64_t>>>& resultsTo
 	) {
-		std::uint64_t occurrences{0};
+		std::uint64_t occurrences{};
 		std::vector<std::uint64_t> catsCounters(this->algoConfig.categoryLabels.size(), 0);
 
 		for(const auto& article : date.second) {
@@ -773,7 +773,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	) {
 		++occurrencesTo;
 
-		for(std::size_t cat{0}; cat < this->algoConfig.categoryLabels.size(); ++cat) {
+		for(std::size_t cat{}; cat < this->algoConfig.categoryLabels.size(); ++cat) {
 			processCategory(article, occurrence, cat, catsCountersTo);
 		}
 	}

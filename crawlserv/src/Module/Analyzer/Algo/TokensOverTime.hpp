@@ -116,7 +116,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		} algoConfig;
 
 		// corpora and counts
-		std::size_t currentCorpus{0};
+		std::size_t currentCorpus{};
 		std::vector<DateArticlesOccurrences> dateCounts;
 	};
 

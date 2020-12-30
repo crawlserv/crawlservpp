@@ -139,14 +139,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		std::size_t corpora{0};
+		std::size_t corpora{};
 
 		const auto resultTable{
 			this->getTargetTableName()
 		};
 
-		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
-			if(this->addCorpus(n, statusSetter)) {
+		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
+			if(this->addCorpus(index, statusSetter)) {
 				++corpora;
 			}
 
@@ -211,7 +211,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 				std::string source;
 
-				switch(this->config.generalInputSources.at(n)) {
+				switch(this->config.generalInputSources[index]) {
 				case generalInputSourcesParsing:
 					source = "parsing";
 
@@ -237,9 +237,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				}
 
 				source += ".";
-				source += this->config.generalInputTables.at(n);
+				source += this->config.generalInputTables.at(index);
 				source += ".";
-				source += this->config.generalInputFields.at(n);
+				source += this->config.generalInputFields.at(index);
 
 				data.columns_types_values.emplace_back(
 						"analyzed__source",
