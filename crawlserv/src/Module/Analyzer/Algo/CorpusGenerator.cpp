@@ -91,29 +91,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 	void CorpusGenerator::onAlgoInitTarget() {
 		// set target fields
-		std::vector<std::string> fields;
-		std::vector<std::string> types;
+		std::vector<StringString> fields;
 
 		fields.reserve(numFields);
-		types.reserve(numFields);
 
-		fields.emplace_back("source");
-		fields.emplace_back("wordcount");
-		fields.emplace_back("avgwordlen");
-		fields.emplace_back("medwordlen");
-		fields.emplace_back("sentencecount");
-		fields.emplace_back("avgsentencelen");
-		fields.emplace_back("medsentencelen");
+		fields.emplace_back("source", "TEXT");
+		fields.emplace_back("wordcount", "BIGINT UNSIGNED");
+		fields.emplace_back("avg_wordlen", "FLOAT");
+		fields.emplace_back("med_wordlen", "FLOAT");
+		fields.emplace_back("sd2_wordlen", "FLOAT");
+		fields.emplace_back("sentencecount", "BIGINT UNSIGNED");
+		fields.emplace_back("avg_sentencelen", "FLOAT");
+		fields.emplace_back("med_sentencelen", "FLOAT");
+		fields.emplace_back("sd2_sentencelen", "FLOAT");
 
-		types.emplace_back("TEXT");
-		types.emplace_back("BIGINT UNSIGNED");
-		types.emplace_back("FLOAT");
-		types.emplace_back("FLOAT");
-		types.emplace_back("BIGINT UNSIGNED");
-		types.emplace_back("FLOAT");
-		types.emplace_back("FLOAT");
-
-		this->database.setTargetFields(fields, types);
+		this->database.setTargetFields(fields);
 
 		// initialize target table
 		this->database.initTargetTable(true, true);
@@ -168,15 +160,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 				const auto& tokens{corpus.getcTokens()};
 
-				std::for_each(tokens.cbegin(), tokens.cend(), [&tokenLengths](const auto& token) {
+				for(const auto& token : tokens) {
 					tokenLengths.push_back(Helper::Utf8::length(token));
-				});
+				};
 
 				const auto avgTokenLength{
 					Helper::Math::avg<float>(tokenLengths)
 				};
 				const auto medTokenLength{
 					Helper::Math::median<float>(tokenLengths)
+				};
+				const auto sd2TokenLength{
+					Helper::Math::variance<float>(avgTokenLength, tokenLengths)
 				};
 
 				std::vector<std::size_t>{}.swap(tokenLengths);
@@ -187,15 +182,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 				sentenceLengths.reserve(sentenceMap.size());
 
-				std::for_each(sentenceMap.cbegin(), sentenceMap.cend(), [&sentenceLengths](const auto& sentence) {
+				for(const auto& sentence : sentenceMap) {
 					sentenceLengths.push_back(sentence.second);
-				});
+				}
 
 				const auto avgSentenceLength{
 					Helper::Math::avg<float>(sentenceLengths)
 				};
 				const auto medSentenceLength{
 					Helper::Math::median<float>(sentenceLengths)
+				};
+				const auto sd2SentenceLength{
+					Helper::Math::variance<float>(avgSentenceLength, sentenceLengths)
 				};
 
 				std::vector<std::size_t>{}.swap(sentenceLengths);
@@ -252,15 +250,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				);
 
 				data.columns_types_values.emplace_back(
-						"analyzed__avgwordlen",
+						"analyzed__avg_wordlen",
 						DataType::_double,
 						DataValue(avgTokenLength)
 				);
 
 				data.columns_types_values.emplace_back(
-						"analyzed__medwordlen",
+						"analyzed__med_wordlen",
 						DataType::_double,
 						DataValue(medTokenLength)
+				);
+
+				data.columns_types_values.emplace_back(
+						"analyzed__sd2_wordlen",
+						DataType::_double,
+						DataValue(sd2TokenLength)
 				);
 
 				data.columns_types_values.emplace_back(
@@ -270,15 +274,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				);
 
 				data.columns_types_values.emplace_back(
-						"analyzed__avgsentencelen",
+						"analyzed__avg_sentencelen",
 						DataType::_double,
 						DataValue(avgSentenceLength)
 				);
 
 				data.columns_types_values.emplace_back(
-						"analyzed__medsentencelen",
+						"analyzed__med_sentencelen",
 						DataType::_double,
 						DataValue(medSentenceLength)
+				);
+
+				data.columns_types_values.emplace_back(
+						"analyzed__sd2_sentencelen",
+						DataType::_double,
+						DataValue(sd2SentenceLength)
 				);
 
 				// clear memory
