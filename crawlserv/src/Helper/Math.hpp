@@ -102,17 +102,17 @@ namespace crawlservpp::Helper::Math {
 		return *iterator;
 	}
 
+	//! Calculates the variance from the given mean of all elements in the given container.
 	/*!
-	 * Calculates the variance from the given mean of all elements in the given container.
-	 *
 	 * \param mean Mean of all elements in
 	 *   the container.
 	 * \param values Reference to the
 	 *   container.
 	 *
-	 * \returns The variance from the
-	 *   given mean of all elements in the
-	 *   given container.
+	 * \returns The variance, i.e. the
+	 *   squared standard deviation, from
+	 *   the given mean of all elements in
+	 *   the given container.
 	 *
 	 */
 	template<typename R, typename T, template<typename, typename> class Container>
@@ -132,13 +132,14 @@ namespace crawlservpp::Helper::Math {
 	 * \param values Reference to the
 	 *   container.
 	 *
-	 * \returns The variance from the
-	 *   mean of all elements in the given
-	 *   container.
+	 * \returns The variance, i.e. the
+	 *   squared standard deviation, from
+	 *   the mean of all elements in the
+	 *   given container.
 	 */
 	template<typename R, typename T, template<typename, typename> class Container>
 		R variance(Container<T, std::allocator<T>>& values) {
-		const auto mean{mean(values)};
+		const auto mean{avg(values)};
 
 		return variance(mean, values);
 	}
