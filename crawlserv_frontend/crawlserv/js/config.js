@@ -1030,7 +1030,7 @@ class Config {
 			}
 		}, "json")
 		.fail(function() {
-			this.error("Retrieving dictionaries failed: Connection to server required.");
+			t.error("Retrieving dictionaries failed: Connection to server required.");
 		});	
 		
 		return result;
@@ -1094,7 +1094,7 @@ class Config {
 			}
 		}, "json")
 		.fail(function() {
-			this.error("Retrieving dictionaries failed: Connection to server required.");
+			t.error("Retrieving dictionaries failed: Connection to server required.");
 		});
 		
 		return result;
