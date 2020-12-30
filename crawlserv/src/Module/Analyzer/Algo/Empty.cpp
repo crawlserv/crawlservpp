@@ -110,18 +110,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// set target fields
 		/*
-		std::vector<std::string> fields;
-		std::vector<std::string> types;
+		std::vector<StringString> fields;
 
 		fields.reserve(...);
-		types.reserve(...);
 
 		fields.emplace_back(...);
 		...
-		types.emplace_back(...);
-		...
 
-		this->database.setTargetFields(fields, types);
+		this->database.setTargetFields(fields);
 		*/
 
 		/*

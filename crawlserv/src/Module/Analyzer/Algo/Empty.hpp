@@ -56,6 +56,7 @@
 //#include <cstddef>	// std::size_t
 //#include <string>		// std::string
 #include <string_view>	// std::string_view
+//#include <utility>	// std::pair
 //#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
@@ -99,6 +100,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
+
+		//using StringString = std::pair<std::string, std::string>;
 
 	public:
 		///@name Construction
