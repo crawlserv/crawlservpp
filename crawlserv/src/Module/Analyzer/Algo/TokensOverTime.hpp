@@ -39,15 +39,13 @@
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
-#include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint16_t, std::uint64_t
-#include <functional>	// std::function
-#include <limits>		// std::numeric_limits
-#include <locale>		// std::locale
-#include <map>			// std::map
-#include <sstream>		// std::ostringstream
-#include <string>		// std::string
-#include <string_view>	// std::string_view
+#include <cstddef>			// std::size_t
+#include <cstdint>			// std::uint64_t
+#include <limits>			// std::numeric_limits
+#include <string>			// std::string
+#include <string_view>		// std::string_view
+#include <unordered_map>	// std::unordered_map
+#include <vector>			// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
@@ -67,7 +65,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 
-		using DateArticlesOccurrences = std::map<std::string, std::uint64_t, std::uint64_t>;
+		using DateOccurrences = std::unordered_map<std::string, std::uint64_t>;
+		using DateArticlesOccurrences = std::unordered_map<std::string, DateOccurrences>;
 
 	public:
 		///@name Construction
