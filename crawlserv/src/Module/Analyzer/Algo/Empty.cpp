@@ -237,7 +237,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	/*
-	 * TODO: add description to the function.
+	 * TODO: add description to the function, if necessary.
 	 */
 	//! Does nothing.
 	void Empty::onAlgoPause() {
@@ -247,7 +247,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	/*
-	 * TODO: add description to the function.
+	 * TODO: add description to the function, if necessary.
 	 */
 	//! Does nothing.
 	void Empty::onAlgoUnpause() {
@@ -257,7 +257,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	/*
-	 * TODO: add description to the function.
+	 * TODO: add description to the function, if necessary.
 	 */
 	//! Does nothing.
 	void Empty::onAlgoClear() {
