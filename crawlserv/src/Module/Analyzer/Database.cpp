@@ -782,7 +782,7 @@ namespace crawlservpp::Module::Analyzer {
 
 			logStrStr.imbue(std::locale(""));
 
-			logStrStr	<< "filtered corpus to "
+			logStrStr	<< "filtered corpus (by date) to "
 						<< corpusTo.size()
 						<< " bytes.";
 
