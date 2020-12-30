@@ -53,10 +53,10 @@ namespace crawlservpp::Struct {
 		 * Zero indicates the very beginning
 		 *  of the text.
 		 */
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		//! The length of the annotated part inside the text.
-		std::size_t length{0};
+		std::size_t length{};
 
 		//! Value of the annotation.
 		/*!
@@ -109,6 +109,11 @@ namespace crawlservpp::Struct {
 		///@name Swap
 		///@{
 
+		//! Swaps the text map entry with another.
+		/*!
+		 * \param other Reference to the other
+		 *   text map entry to be swapped with.
+		 */
 		void swap(TextMapEntry& other) {
 			std::swap(*this, other);
 		}
