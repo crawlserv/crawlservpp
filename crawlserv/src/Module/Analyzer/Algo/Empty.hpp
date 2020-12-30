@@ -70,6 +70,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	/*
 	 * TODO: add constants for the algorithm here
+	 *
+	 * NOTE: choose a distinct prefix to avoid name conflicts with other algorithms
+	 * 			(or use a namespace)
 	 */
 	//inline constexpr auto ...{...};
 

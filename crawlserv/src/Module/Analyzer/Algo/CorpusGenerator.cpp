@@ -93,7 +93,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// set target fields
 		std::vector<StringString> fields;
 
-		fields.reserve(numFields);
+		fields.reserve(corpusNumFields);
 
 		fields.emplace_back("source", "TEXT");
 		fields.emplace_back("wordcount", "BIGINT UNSIGNED");
@@ -205,7 +205,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				// write data to target table
 				Data::InsertFieldsMixed data;
 
-				data.columns_types_values.reserve(numFields);
+				data.columns_types_values.reserve(corpusNumFields);
 
 				data.table = resultTable;
 

@@ -91,7 +91,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::vector<StringString> fields;
 
 		const auto numFields{
-			resultMinNumColumns
+			assocResultMinNumColumns
 			+ this->algoConfig.categoryLabels.size()
 		};
 
@@ -457,7 +457,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t resultCounter{0};
 
 		const auto resultNumColumns{
-			resultMinNumColumns
+			assocResultMinNumColumns
 			+ this->algoConfig.categoryLabels.size()
 		};
 
@@ -512,7 +512,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			++statusCounter;
 			++resultCounter;
 
-			if(statusCounter == updateProgressEvery) {
+			if(statusCounter == assocUpdateProgressEvery) {
 				this->setProgress(
 						static_cast<float>(resultCounter)
 						/ results.size()

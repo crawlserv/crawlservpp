@@ -63,7 +63,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	///@{
 
 	//! Number of target fields
-	inline constexpr auto numFields{9};
+	inline constexpr auto corpusNumFields{9};
 
 	//@}
 
