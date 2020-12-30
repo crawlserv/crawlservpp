@@ -26,7 +26,9 @@
  *
  *  Original: https://github.com/LeonieWeissweiler/CISTEM
  *
- *  Paper: Weißweiler, Leonie / Fraser, Alexander: Developing a Stemmer for
+ *  See:
+ *
+ *  Weißweiler, Leonie / Fraser, Alexander: Developing a Stemmer for
  *   German Based on a Comparative Analysis of Publicly Available Stemmers,
  *   in: Proceedings of the German Society for Computational Linguistics and
  *   Language Technology (GSCL), 27th International Conference. Berlin,
