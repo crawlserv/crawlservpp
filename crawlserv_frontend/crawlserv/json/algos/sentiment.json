@@ -1,0 +1,45 @@
+{
+	"label": "Sentiment",
+	"open": true,
+	
+	"add.article.sentiment": {
+		"type": "bool",
+		"default": false,
+		"label": "Add article-based sentiment scores",
+		"description": "Calculates sentiment scores based on whole articles for each category, in addition to the default sentence-based sentiment scores.",
+		"simple": true,
+		"position": 4
+	},
+	"cat.labels": {
+		"type": "array",
+		"item-type": "string",
+		"default": [],
+		"label": "Category Labels:",
+		"description": "Labels of the categories to measure the sentiment for.",
+		"simple": true,
+		"position": 1
+	},
+	"cat.queries": {
+		"type": "array",
+		"item-type": "query",
+		"query-results": [
+			"bool"
+		],
+		"query-types": [
+			"regex"
+		],
+		"default": [],
+		"label": "Category Queries:",
+		"description": "Queries identifying the category with the same array index.",
+		"simple": true,
+		"position": 2	
+	},
+	"ignore.empty.date": {
+		"type": "bool",
+		"default": true,
+		"label": "Ignore articles without date",
+		"description": "Exclude articles without date from the analysis.",
+		"simple": true,
+		"position": 3
+	}
+}
