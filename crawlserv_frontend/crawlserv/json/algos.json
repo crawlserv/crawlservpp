@@ -4,23 +4,15 @@
 	"Corpus Analyses": {
 		"Corpus Generator": {
 			"algo-id": 40,
-			"config-cats": [ "tokenizer", "filter-date" ]
+			"config-cats": [ "tokenizer", "filter-date", "filter-query" ]
 		},
 		"Count Tokens over Time": {
 			"algo-id": 41,
-			"config-cats": [ "tokenizer", "tokens", "group-date", "filter-date" ]
+			"config-cats": [ "tokenizer", "tokens", "group-date", "filter-date", "filter-query" ]
 		},
 		"Associations over Time": {
 			"algo-id": 42,
-			"config-cats": [ "tokenizer", "associations", "group-date", "filter-date" ]
-		},
-		"Markov Text Generator": {
-			"algo-id": 43,
-			"config-cats": [ "markov-text", "filter-date" ]
-		},
-		"Markov Tweet Generator": {
-			"algo-id": 44,
-			"config-cats": [ "markov-tweet", "filter-date" ]
+			"config-cats": [ "tokenizer", "associations", "group-date", "filter-date", "filter-query" ]
 		}
 	},
 	"Network Analyses": {
