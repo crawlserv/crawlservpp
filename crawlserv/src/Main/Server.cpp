@@ -956,8 +956,8 @@ namespace crawlservpp::Main {
 		MAIN_SERVER_CMD("deleteconfig", this->cmdDeleteConfig);
 		MAIN_SERVER_CMD("duplicateconfig", this->cmdDuplicateConfig);
 
-		MAIN_SERVER_CMD("listdicts", this->cmdListDicts);
-		MAIN_SERVER_CMD("listmdls", this->cmdListMdls);
+		MAIN_SERVER_CMD("listdicts", Server::cmdListDicts);
+		MAIN_SERVER_CMD("listmdls", Server::cmdListMdls);
 
 		MAIN_SERVER_CMD("warp", this->cmdWarp);
 
