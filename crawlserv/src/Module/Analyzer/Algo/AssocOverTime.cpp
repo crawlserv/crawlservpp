@@ -91,8 +91,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::vector<StringString> fields;
 
 		const auto numFields{
-			this->algoConfig.categoryLabels.size()
-			+ 2
+			resultMinNumColumns
+			+ this->algoConfig.categoryLabels.size()
 		};
 
 		fields.reserve(numFields);
