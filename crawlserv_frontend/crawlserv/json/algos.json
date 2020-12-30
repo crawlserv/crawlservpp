@@ -13,6 +13,10 @@
 		"Associations over Time": {
 			"algo-id": 42,
 			"config-cats": [ "tokenizer", "associations", "group-date", "filter-date", "filter-query" ]
+		},
+		"Sentiment over Time": {
+			"algo-id": 43,
+			"config-cats": [ "tokenizer", "sentiment", "group-date", "filter-date", "filter-query" ]
 		}
 	},
 	"Network Analyses": {
