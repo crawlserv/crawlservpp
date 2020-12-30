@@ -417,7 +417,7 @@ namespace crawlservpp::Data {
 				std::vector<float>& sentiments,
 				bool isCapDifference
 		);
-		SentimentScores scoreValence(const std::vector<float>& sentiments, const WORDS& words);
+		SentimentScores scoreValence(const std::vector<float>& sentiments, const WORDS& /*words*/);
 		void leastCheck(float& valence, const WORDS& wordsLower, std::size_t index) const;
 
 		// static internal helper functions
@@ -521,7 +521,7 @@ namespace crawlservpp::Data {
 	/*!
 	 * \returns Number of entries in the dictionary.
 	 */
-	std::size_t Sentiment::getDictSize() const {
+	inline std::size_t Sentiment::getDictSize() const {
 		return this->dictMap.size();
 	}
 
@@ -529,7 +529,7 @@ namespace crawlservpp::Data {
 	/*!
 	 * \returns Number of emojis in the dictionary.
 	 */
-	std::size_t Sentiment::getEmojiNum() const {
+	inline std::size_t Sentiment::getEmojiNum() const {
 		return this->emojiMap.size();
 	}
 
@@ -547,7 +547,7 @@ namespace crawlservpp::Data {
 	 *   Positive values are positive valence,
 	 *   negative values are negative valence.
 	 */
-	SentimentScores Sentiment::analyze(const WORDS& words) {
+	inline SentimentScores Sentiment::analyze(const WORDS& words) {
 		const bool isCapDifference{
 			Sentiment::isAllCapDifferential(words)
 		};
@@ -655,7 +655,7 @@ namespace crawlservpp::Data {
 	 */
 
 	// calculate sentiment valence
-	void Sentiment::sentimentValence(
+	inline void Sentiment::sentimentValence(
 				float& valence,
 				const WORDS& words,
 				const WORDS& wordsLower,
@@ -742,7 +742,7 @@ namespace crawlservpp::Data {
 	}
 
 	// calculate valence score
-	SentimentScores Sentiment::scoreValence(const std::vector<float>& sentiments, const WORDS& words) {
+	inline SentimentScores Sentiment::scoreValence(const std::vector<float>& sentiments, const WORDS& /*words*/) {
 		if(sentiments.empty()) {
 			return SentimentScores{};
 		}
@@ -791,7 +791,7 @@ namespace crawlservpp::Data {
 	}
 
 	// check for negation case using "least"
-	void Sentiment::leastCheck(float& valence, const WORDS& wordsLower, std::size_t index) const {
+	inline void Sentiment::leastCheck(float& valence, const WORDS& wordsLower, std::size_t index) const {
 		if(
 				index > VaderOne
 				&& this->dictMap.find(wordsLower[index - VaderOne]) == this->dictMap.end()
@@ -818,7 +818,7 @@ namespace crawlservpp::Data {
 	 */
 
 	// Create lower-case copies of given words
-	std::vector<std::string> Sentiment::toLower(const WORDS& words) {
+	inline std::vector<std::string> Sentiment::toLower(const WORDS& words) {
 		std::vector<std::string> wordsLower;
 
 		wordsLower.reserve(words.size());
@@ -838,7 +838,8 @@ namespace crawlservpp::Data {
 		return wordsLower;
 	}
 
-	bool Sentiment::isNegated(const std::string& wordLower) {
+	// Return whether a word is a negation word.
+	inline bool Sentiment::isNegated(const std::string& wordLower) {
 		if(Sentiment::NEGATE.find(wordLower) != Sentiment::NEGATE.end()) {
 			return true;
 		}
@@ -851,7 +852,7 @@ namespace crawlservpp::Data {
 	}
 
 	// Determine if input contains negation words (NOTE: strings in vector need to be lowercase!)
-	bool Sentiment::isNegated(const WORDS& wordsLower) {
+	inline bool Sentiment::isNegated(const WORDS& wordsLower) {
 		for(const auto& wordLower : wordsLower) {
 			if(Sentiment::isNegated(wordLower)) {
 				return true;
@@ -862,7 +863,7 @@ namespace crawlservpp::Data {
 	}
 
 	// Normalize the score to be between -1 and 1 using an alpha that approximates the max expected value
-	float Sentiment::normalize(float score) {
+	inline float Sentiment::normalize(float score) {
 		constexpr auto alpha{15};
 
 		const float normScore{score / std::sqrt((score * score) + alpha)};
@@ -878,14 +879,14 @@ namespace crawlservpp::Data {
 	}
 
 	// Check whether word is ALL CAPS
-	bool Sentiment::isAllCaps(const std::string& word) {
+	inline bool Sentiment::isAllCaps(const std::string& word) {
 		return std::all_of(word.begin(), word.end(), [](const char c) {
 			return std::isupper(c);
 		});
 	}
 
 	// Check whether just some words in the input are ALL CAPS (returns false if ALL or NONE of the words are ALL CAPS)
-	bool Sentiment::isAllCapDifferential(const WORDS& words) {
+	inline bool Sentiment::isAllCapDifferential(const WORDS& words) {
 		std::size_t allCapWords{0};
 
 		for(const auto& word : words) {
@@ -898,7 +899,7 @@ namespace crawlservpp::Data {
 	}
 
 	// Check if the preceding words increase, decrease, or negate/nullify the valence
-	float Sentiment::scalarIncDec(
+	inline float Sentiment::scalarIncDec(
 				const std::string& word,
 				const std::string& wordLower,
 				float valence,
@@ -932,11 +933,11 @@ namespace crawlservpp::Data {
 	 * (the following functions are not used, because punctuation is removed by the tokenizer)
 	 *
 	// add emphasis from exclamation points and question marks
-	float Sentiment::punctuationEmphasis(const WORDS& words) {
+	inline float Sentiment::punctuationEmphasis(const WORDS& words) {
 		return Sentiment::amplifyEP(words) + amplifyQM(words);
 	}
 
-	float Sentiment::amplifyEP(const WORDS& words) {
+	inline float Sentiment::amplifyEP(const WORDS& words) {
 		auto epCount{std::accumulate(words.begin(), words.end(), std::uint64_t{}, [](auto count, const auto& word) {
 			return count + std::count(word.begin(), word.end(), '!');
 		})};
@@ -948,7 +949,7 @@ namespace crawlservpp::Data {
 		return VaderEPFactor * epCount;
 	}
 
-	float Sentiment::amplifyQM(const WORDS& words) {
+	inline float Sentiment::amplifyQM(const WORDS& words) {
 		auto qmCount{std::accumulate(words.begin(), words.end(), std::uint64_t{}, [](auto count, const auto& word) {
 			return count + std::count(word.begin(), word.end(), '?');
 		})};
@@ -966,7 +967,7 @@ namespace crawlservpp::Data {
 	*/
 
 	// check for modification in sentiment due to contrastive conjunction 'but'
-	void Sentiment::butCheck(const WORDS& wordsLower, std::vector<float>& sentiments) {
+	inline void Sentiment::butCheck(const WORDS& wordsLower, std::vector<float>& sentiments) {
 		const auto it{std::find(wordsLower.cbegin(), wordsLower.cend(), "but")};
 
 		if(it != wordsLower.cend()) {
@@ -984,7 +985,7 @@ namespace crawlservpp::Data {
 	}
 
 	// check for negation (either by "never so/this" or by "without doubt")
-	void Sentiment::negationCheck(float& valence, const WORDS& wordsLower, std::uint8_t startIndex, std::size_t index) {
+	inline void Sentiment::negationCheck(float& valence, const WORDS& wordsLower, std::uint8_t startIndex, std::size_t index) {
 		switch(startIndex) {
 		case VaderZero:
 			if(Sentiment::isNegated(wordsLower[index - (startIndex + VaderOne)])) {
@@ -1054,7 +1055,7 @@ namespace crawlservpp::Data {
 	}
 
 	// check for special idioms
-	void Sentiment::specialIdiomsCheck(float& valence, const WORDS& wordsLower, std::size_t index) {
+	inline void Sentiment::specialIdiomsCheck(float& valence, const WORDS& wordsLower, std::size_t index) {
 		const auto oneZero{
 			wordsLower[index - VaderOne]
 			+ " "
@@ -1144,7 +1145,7 @@ namespace crawlservpp::Data {
 	}
 
 	// calculate final sentiment scores
-	void Sentiment::siftSentimentScores(
+	inline void Sentiment::siftSentimentScores(
 				const std::vector<float>& sentiments,
 				float& positiveSumTo,
 				float& negativeSumTo,
