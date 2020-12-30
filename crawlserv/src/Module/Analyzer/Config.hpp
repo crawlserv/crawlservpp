@@ -191,6 +191,16 @@ namespace crawlservpp::Module::Analyzer {
 			std::string filterDateTo;
 
 			///@}
+			///@name Filter by Query
+			///@{
+
+			//! Queries which need to be fulfilled for at least one word in an article in order to keep it.
+			/*!
+			 * If no queries are given, no filtering will take place.
+			 */
+			std::vector<std::uint64_t> filterQueryQueries;
+
+			///@}
 			///@name Corpus Tokenization
 			///@{
 
@@ -343,6 +353,10 @@ namespace crawlservpp::Module::Analyzer {
 		this->option("enable", this->config.filterDateEnable);
 		this->option("from", this->config.filterDateFrom);
 		this->option("to", this->config.filterDateTo);
+
+		// filter by query option
+		this->category("filter-query");
+		this->option("queries", this->config.filterQueryQueries);
 
 		// corpus tokenization options
 		this->category("tokenizer");
