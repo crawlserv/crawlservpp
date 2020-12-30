@@ -208,13 +208,6 @@ namespace crawlservpp::Module::Extractor {
 		///@}
 
 	private:
-		// shadow functions not to be used by the thread
-		void pause();
-		void start();
-		void unpause();
-		void stop();
-		void interrupt();
-
 		// table names for locking them
 		std::string extractingTable;
 		std::string targetTable;
@@ -256,7 +249,22 @@ namespace crawlservpp::Module::Extractor {
 		std::uint64_t posDist{0};	// distance between the positions of first and last URL fetched
 		std::uint64_t total{0};		// number of total URLs in URL list
 
-		// initializing function
+		// initializing functions
+		void setUpConfig(std::queue<std::string>& warningsTo);
+		void checkQueries();
+		void setUpLogging();
+		void setUpContainer();
+		void setUpDatabase();
+		void setUpSources();
+		void setUpTableNames();
+		void setUpTarget();
+		void setUpSqlStatements();
+		void setUpNetworking();
+		void setUpTor();
+		void setUpQueries();
+		void checkExtractingTable();
+		void setUpTimers();
+		void logWarnings(std::queue<std::string>& warnings);
 		void initQueries() override;
 
 		// query functions
@@ -322,8 +330,15 @@ namespace crawlservpp::Module::Extractor {
 				std::string_view error,
 				std::string_view name,
 				std::string_view url,
-				bool linked
+				bool isLinked
 		);
+
+		// shadow functions not to be used by the thread
+		void pause();
+		void start();
+		void unpause();
+		void stop();
+		void interrupt();
 	};
 
 } /* namespace crawlservpp::Module::Extractor */

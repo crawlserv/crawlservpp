@@ -115,213 +115,40 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
-		// load configuration
-		this->setStatusMessage("Loading configuration...");
+		// set up everything
+		this->setUpConfig(configWarnings);
 
-		this->setCrossDomain(this->database.getWebsiteDomain(this->getWebsite()).empty());
+		this->checkQuery();
 
-		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
+		this->setUpLogging();
 
-		// show warnings if necessary
-		while(!configWarnings.empty()) {
-			this->log(crawlerLoggingDefault, "WARNING: " + configWarnings.front());
+		this->logWarnings(configWarnings);
 
-			configWarnings.pop();
-		}
+		this->setUpContainer();
+		this->setUpDatabase();
+		this->setUpTableNames();
+		this->setUpSqlStatements();
 
-		// check required query
-		if(this->config.crawlerQueriesLinks.empty()) {
-			throw Exception(
-					"Crawler::Thread::onInit():"
-					" No query for link extraction has been specified"
-			);
-		}
+		this->checkUrlList();
 
-		// set query container options
-		this->setRepairCData(this->config.crawlerRepairCData);
-		this->setRepairComments(this->config.crawlerRepairComments);
-		this->setRemoveXmlInstructions(this->config.crawlerRemoveXmlInstructions);
-		this->setTidyErrorsAndWarnings(
-				this->config.crawlerTidyWarnings,
-				this->config.crawlerTidyErrors
-		);
+		this->setUpDomain();
+		this->setUpUriParser();
+		this->setUpNetworking();
+		this->setUpTor();
+		this->setUpCustomUrls();
 
-		// set database options
-		this->setStatusMessage("Setting database options...");
-
-		this->database.setLogging(
-				this->config.crawlerLogging,
-				crawlerLoggingDefault,
-				crawlerLoggingVerbose
-		);
-
-		this->log(crawlerLoggingVerbose, "sets database options...");
-
-		this->database.setMaxBatchSize(this->config.crawlerMaxBatchSize);
-		this->database.setRecrawl(this->config.crawlerReCrawl);
-		this->database.setUrlCaseSensitive(this->config.crawlerUrlCaseSensitive);
-		this->database.setUrlDebug(this->config.crawlerUrlDebug);
-		this->database.setUrlStartupCheck(this->config.crawlerUrlStartupCheck);
-		this->database.setSleepOnError(this->config.crawlerSleepMySql);
-
-		// create table names for table locking
-		this->urlListTable = "crawlserv_"
-				+ this->websiteNamespace
-				+ "_"
-				+ this->urlListNamespace;
-		this->crawlingTable = this->urlListTable
-				+ "_crawling";
-
-		// prepare SQL statements for crawler
-		this->setStatusMessage("Preparing SQL statements...");
-
-		this->log(crawlerLoggingVerbose, "prepares SQL statements...");
-
-		this->database.prepare();
-
-		{ // try to lock URL list for checking
-			DatabaseTryLock urlListLock(
-					this->database,
-					"urlListCheck."
-					+ this->websiteNamespace
-					+ "_"
-					+ this->urlListNamespace
-			);
-
-			if(urlListLock.isActive()) {
-				// cancel if not running anymore
-				if(!(this->isRunning())) {
-					return;
-				}
-
-				// check URL list
-				this->setStatusMessage("Checking URL list...");
-
-				this->log(crawlerLoggingVerbose, "checks URL list...");
-
-				// check hashs of URLs
-				this->database.urlHashCheck();
-
-				// optional startup checks
-				if(this->config.crawlerUrlStartupCheck) {
-					this->database.urlDuplicationCheck();
-					this->database.urlEmptyCheck();
-					this->database.urlHashCheck();
-				}
-			}
-			else {
-				this->log(
-						crawlerLoggingDefault,
-						"skipped checking the URL list (already in progress)"
-				);
-			}
-		}
-
-		// get domain
-		this->setStatusMessage("Getting website domain...");
-
-		this->log(crawlerLoggingVerbose, "gets website domain...");
-
-		this->domain = this->database.getWebsiteDomain(this->getWebsite());
-
-		this->noSubDomain = !(this->domain.empty())
-				&& std::count(this->domain.cbegin(), this->domain.cend(), '.') < 2
-				&& (
-						this->domain.length() < wwwString.length()
-						|| this->domain.substr(0, wwwString.length()) != wwwString
-				); // handle "www.*" as sub-domain
-
-		// initialize URI parser
-		this->setStatusMessage("Initializing URI parser...");
-
-		this->log(crawlerLoggingVerbose, "initializes URI parser...");
-
-		this->uriParser.setCurrentDomain(this->domain);
-
-		// set network configuration
-		this->setStatusMessage("Setting network configuration...");
-
-		this->log(crawlerLoggingVerbose, "sets network configuration...");
-
-		this->networking.setConfigGlobal(*this, false, configWarnings);
-
-		while(!configWarnings.empty()) {
-			this->log(
-					crawlerLoggingDefault,
-					"WARNING: "
-					+ configWarnings.front()
-			);
-
-			configWarnings.pop();
-		}
-
-		if(this->networkConfig.resetTorAfter > 0) {
-			this->torControl.setNewIdentityMax(this->networkConfig.resetTorAfter);
-		}
-
-		if(this->networkConfig.resetTorOnlyAfter > 0) {
-			this->torControl.setNewIdentityMin(this->networkConfig.resetTorOnlyAfter);
-		}
-
-		// initialize custom URLs
-		this->setStatusMessage("Generating custom URLs...");
-
-		this->log(crawlerLoggingVerbose, "generates custom URLs...");
-
-		this->initCustomUrls();
-
-		// cancel if not running anymore
 		if(!(this->isRunning())) {
-			return;
+			return; // cancel if not running anymore
 		}
 
-		// initialize queries
-		this->setStatusMessage("Initializing custom queries...");
+		this->setUpQueries();
 
-		this->log(crawlerLoggingVerbose, "initializes custom queries...");
-
-		this->initQueries();
-
-		// cancel if not running anymore
 		if(!(this->isRunning())) {
-			return;
+			return; // cancel if not running anymore
 		}
 
-		// initialize networking for archives if necessary
-		if(this->config.crawlerArchives) {
-			this->setStatusMessage("Initializing networking for archives...");
-
-			this->log(crawlerLoggingVerbose, "initializes networking for archives...");
-
-			if(!(this->networkingArchives)) {
-				this->networkingArchives = std::make_unique<Network::Curl>(
-						this->cookieDir,
-						this->networkOptions
-				);
-			}
-
-			this->networkingArchives->setConfigGlobal(*this, true, configWarnings);
-
-			// log warnings if necessary
-			while(!configWarnings.empty()) {
-				this->log(
-						crawlerLoggingDefault,
-						"WARNING: "
-						+ configWarnings.front()
-				);
-
-				configWarnings.pop();
-			}
-
-			// fill memento cache with URIs that will always be skipped
-			this->mCache = this->config.crawlerArchivesUrlsSkip;
-		}
-
-		// save start time and initialize counter
-		this->startTime = std::chrono::steady_clock::now();
-		this->pauseTime = std::chrono::steady_clock::time_point::min();
-
-		this->tickCounter = 0;
+		this->setUpNetworkingArchives();
+		this->setUpTimers();
 
 		// save last ID
 		this->penultimateId = this->getLast();
@@ -612,37 +439,234 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	/*
-	 *  shadowing functions not to be used by thread (private)
-	 */
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::pause() {
-		this->pauseByThread();
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::start() {
-		throw std::logic_error("Thread::start() not to be used by thread itself");
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::unpause() {
-		throw std::logic_error("Thread::unpause() not to be used by thread itself");
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::stop() {
-		throw std::logic_error("Thread::stop() not to be used by thread itself");
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::interrupt() {
-		throw std::logic_error("Thread::interrupt() not to be used by thread itself");
-	}
-
-	/*
 	 * INITIALIZING FUNCTIONS (private)
 	 */
+
+	// load configuration
+	void Thread::setUpConfig(std::queue<std::string>& warningsTo) {
+		this->setStatusMessage("Loading configuration...");
+
+		this->setCrossDomain(this->database.getWebsiteDomain(this->getWebsite()).empty());
+
+		this->loadConfig(this->database.getConfiguration(this->getConfig()), warningsTo);
+	}
+
+	// check query required for crawling
+	void Thread::checkQuery() {
+		if(this->config.crawlerQueriesLinks.empty()) {
+			throw Exception(
+					"Crawler::Thread::checkQuery():"
+					" No query for link extraction has been specified"
+			);
+		}
+	}
+
+	// set up logging
+	void Thread::setUpLogging() {
+		this->database.setLogging(
+				this->config.crawlerLogging,
+				crawlerLoggingDefault,
+				crawlerLoggingVerbose
+		);
+	}
+
+	// set query container options
+	void Thread::setUpContainer() {
+		this->setRepairCData(this->config.crawlerRepairCData);
+		this->setRepairComments(this->config.crawlerRepairComments);
+		this->setRemoveXmlInstructions(this->config.crawlerRemoveXmlInstructions);
+		this->setTidyErrorsAndWarnings(
+				this->config.crawlerTidyWarnings,
+				this->config.crawlerTidyErrors
+		);
+	}
+
+	// set database options
+	void Thread::setUpDatabase() {
+		this->setStatusMessage("Setting database options...");
+
+		this->log(crawlerLoggingVerbose, "sets database options...");
+
+		this->database.setMaxBatchSize(this->config.crawlerMaxBatchSize);
+		this->database.setRecrawl(this->config.crawlerReCrawl);
+		this->database.setUrlCaseSensitive(this->config.crawlerUrlCaseSensitive);
+		this->database.setUrlDebug(this->config.crawlerUrlDebug);
+		this->database.setUrlStartupCheck(this->config.crawlerUrlStartupCheck);
+		this->database.setSleepOnError(this->config.crawlerSleepMySql);
+	}
+
+	// create table names for table locking
+	void Thread::setUpTableNames() {
+		this->urlListTable = "crawlserv_"
+				+ this->websiteNamespace
+				+ "_"
+				+ this->urlListNamespace;
+		this->crawlingTable = this->urlListTable
+				+ "_crawling";
+	}
+
+	void Thread::setUpSqlStatements() {
+		// prepare SQL statements for crawler
+		this->setStatusMessage("Preparing SQL statements...");
+
+		this->log(crawlerLoggingVerbose, "prepares SQL statements...");
+
+		this->database.prepare();
+	}
+
+	void Thread::checkUrlList() {
+		DatabaseTryLock urlListLock(
+				this->database,
+				"urlListCheck."
+				+ this->websiteNamespace
+				+ "_"
+				+ this->urlListNamespace
+		);
+
+		if(!urlListLock.isActive()) {
+			this->log(
+					crawlerLoggingDefault,
+					"skipped checking the URL list (already in progress)"
+			);
+
+			return;
+		}
+
+		// cancel if not running anymore
+		if(!(this->isRunning())) {
+			return;
+		}
+
+		// check URL list
+		this->setStatusMessage("Checking URL list...");
+
+		this->log(crawlerLoggingVerbose, "checks URL list...");
+
+		// check hashs of URLs
+		this->database.urlHashCheck();
+
+		// optional startup checks
+		if(this->config.crawlerUrlStartupCheck) {
+			this->database.urlDuplicationCheck();
+			this->database.urlEmptyCheck();
+			this->database.urlHashCheck();
+		}
+	}
+
+	// get domain
+	void Thread::setUpDomain() {
+		this->setStatusMessage("Getting website domain...");
+
+		this->log(crawlerLoggingVerbose, "gets website domain...");
+
+		this->domain = this->database.getWebsiteDomain(this->getWebsite());
+
+		this->noSubDomain = !(this->domain.empty())
+				&& std::count(this->domain.cbegin(), this->domain.cend(), '.') < 2
+				&& (
+						this->domain.length() < wwwString.length()
+						|| this->domain.substr(0, wwwString.length()) != wwwString
+				); // handle "www.*" as sub-domain
+	}
+
+	// initialize URI parser
+	void Thread::setUpUriParser() {
+		this->setStatusMessage("Initializing URI parser...");
+
+		this->log(crawlerLoggingVerbose, "initializes URI parser...");
+
+		this->uriParser.setCurrentDomain(this->domain);
+	}
+
+	// set network configuration
+	void Thread::setUpNetworking() {
+		std::queue<std::string> configWarnings;
+
+		this->setStatusMessage("Setting network configuration...");
+
+		this->log(crawlerLoggingVerbose, "sets network configuration...");
+
+		this->networking.setConfigGlobal(*this, false, configWarnings);
+
+		this->logWarnings(configWarnings);
+	}
+
+	// set TOR options
+	void Thread::setUpTor() {
+		if(this->networkConfig.resetTorAfter > 0) {
+			this->torControl.setNewIdentityMax(this->networkConfig.resetTorAfter);
+		}
+
+		if(this->networkConfig.resetTorOnlyAfter > 0) {
+			this->torControl.setNewIdentityMin(this->networkConfig.resetTorOnlyAfter);
+		}
+	}
+
+	// initialize custom URLs
+	void Thread::setUpCustomUrls() {
+		this->setStatusMessage("Generating custom URLs...");
+
+		this->log(crawlerLoggingVerbose, "generates custom URLs...");
+
+		this->initCustomUrls();
+	}
+
+	// initialize queries
+	void Thread::setUpQueries() {
+		this->setStatusMessage("Initializing custom queries...");
+
+		this->log(crawlerLoggingVerbose, "initializes custom queries...");
+
+		this->initQueries();
+	}
+
+	// initialize networking for archives if necessary
+	void Thread::setUpNetworkingArchives() {
+		if(!(this->config.crawlerArchives)) {
+			return;
+		}
+
+		std::queue<std::string> configWarnings;
+
+		this->setStatusMessage("Initializing networking for archives...");
+
+		this->log(crawlerLoggingVerbose, "initializes networking for archives...");
+
+		if(!(this->networkingArchives)) {
+			this->networkingArchives = std::make_unique<Network::Curl>(
+					this->cookieDir,
+					this->networkOptions
+			);
+		}
+
+		this->networkingArchives->setConfigGlobal(*this, true, configWarnings);
+
+		this->logWarnings(configWarnings);
+
+		// fill memento cache with URIs that will always be skipped
+		this->mCache = this->config.crawlerArchivesUrlsSkip;
+	}
+
+	// save start time and initialize counter
+	void Thread::setUpTimers() {
+		this->startTime = std::chrono::steady_clock::now();
+		this->pauseTime = std::chrono::steady_clock::time_point::min();
+
+		this->tickCounter = 0;
+	}
+
+	// log warnings received by external function
+	void Thread::logWarnings(std::queue<std::string>& warnings) {
+		while(!warnings.empty()) {
+			this->log(
+					crawlerLoggingDefault,
+					"WARNING: "
+					+ warnings.front()
+			);
+
+			warnings.pop();
+		}
+	}
 
 	// initialize custom URLs, throws Thread::Exception
 	void Thread::initCustomUrls() {
@@ -4567,6 +4591,35 @@ namespace crawlservpp::Module::Crawler {
 
 		// return next page
 		return nextPage;
+	}
+
+	/*
+	 *  shadowing functions not to be used by thread (private)
+	 */
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::pause() {
+		this->pauseByThread();
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::start() {
+		throw std::logic_error("Thread::start() not to be used by thread itself");
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::unpause() {
+		throw std::logic_error("Thread::unpause() not to be used by thread itself");
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::stop() {
+		throw std::logic_error("Thread::stop() not to be used by thread itself");
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::interrupt() {
+		throw std::logic_error("Thread::interrupt() not to be used by thread itself");
 	}
 
 } /* namespace crawlservpp::Module::Crawler */

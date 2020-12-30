@@ -224,13 +224,6 @@ namespace crawlservpp::Module::Crawler {
 		///@}
 
 	private:
-		// shadow functions not to be used by the thread
-		void pause();
-		void start();
-		void unpause();
-		void stop();
-		void interrupt();
-
 		// structure for mementos (archived versions of websites)
 		struct Memento {
 			std::string url;
@@ -299,6 +292,23 @@ namespace crawlservpp::Module::Crawler {
 		std::chrono::steady_clock::time_point httpTime{std::chrono::steady_clock::time_point::min()};
 
 		// initializing functions
+		void setUpConfig(std::queue<std::string>& warningsTo);
+		void checkQuery();
+		void setUpLogging();
+		void setUpContainer();
+		void setUpDatabase();
+		void setUpTableNames();
+		void setUpSqlStatements();
+		void checkUrlList();
+		void setUpDomain();
+		void setUpUriParser();
+		void setUpNetworking();
+		void setUpTor();
+		void setUpCustomUrls();
+		void setUpQueries();
+		void setUpNetworkingArchives();
+		void setUpTimers();
+		void logWarnings(std::queue<std::string>& warnings);
 		void initCustomUrls();
 		void initRobotsTxt();
 		void initDoGlobalCounting(
@@ -413,6 +423,13 @@ namespace crawlservpp::Module::Crawler {
 				std::queue<std::string>& warningsTo,
 				std::queue<Memento>& mementosTo
 		);
+
+		// shadow functions not to be used by the thread
+		void pause();
+		void start();
+		void unpause();
+		void stop();
+		void interrupt();
 	};
 
 } /* namespace crawlservpp::Module::Crawler */

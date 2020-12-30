@@ -108,238 +108,32 @@ namespace crawlservpp::Module::Extractor {
 	 */
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
-		std::vector<std::string> fields;
 
-		// load configuration
-		this->setStatusMessage("Loading configuration...");
+		this->setUpConfig(configWarnings);
 
-		this->loadConfig(this->database.getConfiguration(this->getConfig()), configWarnings);
+		this->checkQueries();
 
-		// show warnings if necessary
-		while(!configWarnings.empty()) {
-			this->log(
-					generalLoggingDefault,
-					"WARNING: "
-					+ configWarnings.front()
-			);
+		this->setUpLogging();
 
-			configWarnings.pop();
+		this->logWarnings(configWarnings);
+
+		this->setUpContainer();
+		this->setUpDatabase();
+		this->setUpSources();
+		this->setUpTableNames();
+		this->setUpTarget();
+		this->setUpSqlStatements();
+		this->setUpNetworking();
+		this->setUpTor();
+		this->setUpQueries();
+
+		if(!(this->isRunning())) {
+			return; // cancel if not running anymore
 		}
 
-		// check required queries
-		if(this->config.extractingDatasetQueries.empty()) {
-			throw Exception(
-					"Extractor::Thread::onInit():"
-					" No dataset extraction query has been specified"
-			);
-		}
+		this->checkExtractingTable();
 
-		if(this->config.extractingIdQueries.empty()) {
-			throw Exception(
-					"Extractor::Thread::onInit():"
-					" No ID extraction query has been specified"
-			);
-		}
-
-		// set query container options
-		this->setRepairCData(this->config.extractingRepairCData);
-		this->setRepairComments(this->config.extractingRepairComments);
-		this->setRemoveXmlInstructions(this->config.extractingRemoveXmlInstructions);
-		this->setMinimizeMemory(this->config.generalMinimizeMemory);
-		this->setTidyErrorsAndWarnings(
-				this->config.generalTidyWarnings,
-				this->config.generalTidyErrors
-		);
-
-		// set database options
-		this->setStatusMessage("Setting database options...");
-
-		this->database.setLogging(
-				this->config.generalLogging,
-				generalLoggingDefault,
-				generalLoggingVerbose
-		);
-
-		this->log(
-				generalLoggingVerbose,
-				"sets database options..."
-		);
-
-		this->database.setCacheSize(this->config.generalCacheSize);
-		this->database.setMaxBatchSize(this->config.generalMaxBatchSize);
-		this->database.setReExtract(this->config.generalReExtract);
-		this->database.setExtractCustom(this->config.generalExtractCustom);
-		this->database.setTargetTable(this->config.generalTargetTable);
-		this->database.setLinkedTable(this->config.linkedTargetTable);
-		this->database.setTargetFields(this->config.extractingFieldNames);
-		this->database.setLinkedFields(this->config.linkedFieldNames);
-		this->database.setLinkedField(this->config.linkedLink);
-		this->database.setOverwrite(this->config.extractingOverwrite);
-		this->database.setOverwriteLinked(this->config.linkedOverwrite);
-		this->database.setSleepOnError(this->config.generalSleepMySql);
-
-		this->database.setRawContentIsSource(
-				std::find(
-						this->config.variablesSource.cbegin(),
-						this->config.variablesSource.cend(),
-						variablesSourcesContent
-				) != this->config.variablesSource.cend()
-		);
-
-		// set sources
-		std::queue<StringString> sources;
-
-		for(std::size_t n{0}; n < this->config.variablesName.size(); ++n) {
-			if(this->config.variablesSource.at(n) == variablesSourcesParsed) {
-				if(
-						this->config.variablesParsedColumn.at(n) == "id"
-						|| this->config.variablesParsedColumn.at(n) == "datetime"
-				) {
-					sources.push(
-							StringString(
-									this->config.variablesParsedTable.at(n),
-									"parsed_" + this->config.variablesParsedColumn.at(n)
-							)
-					);
-				}
-				else {
-					sources.push(
-							StringString(
-									this->config.variablesParsedTable.at(n),
-									"parsed__" + this->config.variablesParsedColumn.at(n)
-							)
-					);
-				}
-			}
-		}
-
-
-		this->database.setSources(sources);
-
-		// create table names for locking
-		const std::string urlListTable(
-				"crawlserv_"
-				+ this->websiteNamespace
-				+ "_" + this->urlListNamespace
-		);
-
-		this->extractingTable = urlListTable
-				+ "_extracting";
-		this->targetTable = urlListTable
-				+ "_extracted_"
-				+ this->config.generalTargetTable;
-
-		if(!(this->config.linkedTargetTable.empty())) {
-			this->linkedTable = urlListTable
-					+ "_extracted_"
-					+ this->config.linkedTargetTable;
-		}
-
-		// initialize target tables
-		this->setStatusMessage("Initializing target tables...");
-
-		this->log(generalLoggingVerbose, "initializes target tables...");
-
-		this->database.initTargetTables();
-
-		// prepare SQL statements for extractor
-		this->setStatusMessage("Preparing SQL statements...");
-
-		this->log(generalLoggingVerbose, "prepares SQL statements...");
-
-		this->database.prepare();
-
-		// set network configuration
-		this->setStatusMessage("Setting network configuration...");
-
-		this->log(generalLoggingVerbose, "sets network configuration...");
-
-		this->networking.setConfigGlobal(*this, false, configWarnings);
-
-		while(!configWarnings.empty()) {
-			this->log(
-					generalLoggingDefault,
-					"WARNING: "
-					+ configWarnings.front()
-			);
-
-			configWarnings.pop();
-		}
-
-		if(this->networkConfig.resetTorAfter > 0) {
-			this->torControl.setNewIdentityMax(this->networkConfig.resetTorAfter);
-		}
-
-		// initialize queries
-		this->setStatusMessage("Initializing custom queries...");
-
-		this->log(
-				generalLoggingVerbose,
-				"initializes custom queries..."
-		);
-
-		this->initQueries();
-
-		{
-			// wait for extracting table lock
-			this->setStatusMessage("Waiting for extracting table...");
-
-			DatabaseLock(
-					this->database,
-					"extractingTable." + this->extractingTable,
-					[this]() {
-						return this->isRunning();
-					}
-			);
-
-			if(!(this->isRunning())) {
-				return;
-			}
-
-			// check extracting table
-			this->setStatusMessage("Checking extracting table...");
-
-			this->log(
-					generalLoggingVerbose,
-					"checks extracting table..."
-			);
-
-			const auto deleted{this->database.checkExtractingTable()};
-
-			// log deletion warning if necessary
-			if(this->isLogLevel(generalLoggingDefault)) {
-				switch(deleted) {
-				case 0:
-					break;
-
-				case 1:
-					this->log(
-							generalLoggingDefault,
-							"WARNING:"
-							" Deleted a duplicate URL lock."
-					);
-
-					break;
-
-				default:
-					std::ostringstream logStrStr;
-
-					logStrStr.imbue(std::locale(""));
-
-					logStrStr << "WARNING: Deleted "
-							<< deleted
-							<< " duplicate URL locks!";
-
-					this->log(generalLoggingDefault, logStrStr.str());
-				}
-			}
-		}
-
-		// save start time and initialize counter
-		this->startTime = std::chrono::steady_clock::now();
-		this->pauseTime = std::chrono::steady_clock::time_point::min();
-
-		this->tickCounter = 0;
+		this->setUpTimers();
 
 		// extractor is ready
 		this->log(generalLoggingExtended, "is ready.");
@@ -644,45 +438,267 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	/*
-	 * shadowing functions not to be used by thread (private)
-	 */
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::pause() {
-		this->pauseByThread();
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::start() {
-		throw std::logic_error(
-				"Thread::start() not to be used by thread itself"
-		);
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::unpause() {
-		throw std::logic_error(
-				"Thread::unpause() not to be used by thread itself"
-		);
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::stop() {
-		throw std::logic_error(
-				"Thread::stop() not to be used by thread itself"
-		);
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::interrupt() {
-		throw std::logic_error(
-				"Thread::interrupt() not to be used by thread itself"
-		);
-	}
-
-	/*
 	 * INITIALIZING FUNCTIONS (private)
 	 */
+
+	// load configuration
+	void Thread::setUpConfig(std::queue<std::string>& warningsTo) {
+		this->setStatusMessage("Loading configuration...");
+
+		this->loadConfig(this->database.getConfiguration(this->getConfig()), warningsTo);
+	}
+
+	// check required queries
+	void Thread::checkQueries() {
+		if(this->config.extractingDatasetQueries.empty()) {
+			throw Exception(
+					"Extractor::Thread::checkQueries():"
+					" No dataset extraction query has been specified"
+			);
+		}
+
+		if(this->config.extractingIdQueries.empty()) {
+			throw Exception(
+					"Extractor::Thread::checkQueries():"
+					" No ID extraction query has been specified"
+			);
+		}
+	}
+
+	// set up logging
+	void Thread::setUpLogging() {
+		this->database.setLogging(
+				this->config.generalLogging,
+				generalLoggingDefault,
+				generalLoggingVerbose
+		);
+	}
+
+	// set query container options
+	void Thread::setUpContainer() {
+		this->setRepairCData(this->config.extractingRepairCData);
+		this->setRepairComments(this->config.extractingRepairComments);
+		this->setRemoveXmlInstructions(this->config.extractingRemoveXmlInstructions);
+		this->setMinimizeMemory(this->config.generalMinimizeMemory);
+		this->setTidyErrorsAndWarnings(
+				this->config.generalTidyWarnings,
+				this->config.generalTidyErrors
+		);
+	}
+
+	// set database options
+	void Thread::setUpDatabase() {
+		this->setStatusMessage("Setting database options...");
+
+		this->log(generalLoggingVerbose, "sets database options...");
+
+		this->database.setCacheSize(this->config.generalCacheSize);
+		this->database.setMaxBatchSize(this->config.generalMaxBatchSize);
+		this->database.setReExtract(this->config.generalReExtract);
+		this->database.setExtractCustom(this->config.generalExtractCustom);
+		this->database.setTargetTable(this->config.generalTargetTable);
+		this->database.setLinkedTable(this->config.linkedTargetTable);
+		this->database.setTargetFields(this->config.extractingFieldNames);
+		this->database.setLinkedFields(this->config.linkedFieldNames);
+		this->database.setLinkedField(this->config.linkedLink);
+		this->database.setOverwrite(this->config.extractingOverwrite);
+		this->database.setOverwriteLinked(this->config.linkedOverwrite);
+		this->database.setSleepOnError(this->config.generalSleepMySql);
+
+		this->database.setRawContentIsSource(
+				std::find(
+						this->config.variablesSource.cbegin(),
+						this->config.variablesSource.cend(),
+						variablesSourcesContent
+				) != this->config.variablesSource.cend()
+		);
+	}
+
+	// set sources
+	void Thread::setUpSources() {
+		std::queue<StringString> sources;
+
+		for(std::size_t index{}; index < this->config.variablesName.size(); ++index) {
+			if(this->config.variablesSource.at(index) == variablesSourcesParsed) {
+				if(
+						this->config.variablesParsedColumn.at(index) == "id"
+						|| this->config.variablesParsedColumn.at(index) == "datetime"
+				) {
+					sources.push(
+							StringString(
+									this->config.variablesParsedTable.at(index),
+									"parsed_"
+									+ this->config.variablesParsedColumn.at(index)
+							)
+					);
+				}
+				else {
+					sources.push(
+							StringString(
+									this->config.variablesParsedTable.at(index),
+									"parsed__"
+									+ this->config.variablesParsedColumn.at(index)
+							)
+					);
+				}
+			}
+		}
+
+		this->database.setSources(sources);
+	}
+
+	// create table names for locking
+	void Thread::setUpTableNames() {
+		const std::string urlListTable(
+				"crawlserv_"
+				+ this->websiteNamespace
+				+ "_" + this->urlListNamespace
+		);
+
+		this->extractingTable = urlListTable
+				+ "_extracting";
+		this->targetTable = urlListTable
+				+ "_extracted_"
+				+ this->config.generalTargetTable;
+
+		if(!(this->config.linkedTargetTable.empty())) {
+			this->linkedTable = urlListTable
+					+ "_extracted_"
+					+ this->config.linkedTargetTable;
+		}
+	}
+
+	// initialize target tables
+	void Thread::setUpTarget() {
+		this->setStatusMessage("Initializing target tables...");
+
+		this->log(generalLoggingVerbose, "initializes target tables...");
+
+		this->database.initTargetTables();
+	}
+
+	// prepare SQL statements for extractor
+	void Thread::setUpSqlStatements() {
+		this->setStatusMessage("Preparing SQL statements...");
+
+		this->log(generalLoggingVerbose, "prepares SQL statements...");
+
+		this->database.prepare();
+	}
+
+	// set network configuration
+	void Thread::setUpNetworking() {
+		std::queue<std::string> configWarnings;
+
+		this->setStatusMessage("Setting network configuration...");
+
+		this->log(generalLoggingVerbose, "sets network configuration...");
+
+		this->networking.setConfigGlobal(*this, false, configWarnings);
+
+		this->logWarnings(configWarnings);
+	}
+
+	// set TOR options
+	void Thread::setUpTor() {
+		if(this->networkConfig.resetTorAfter > 0) {
+			this->torControl.setNewIdentityMax(this->networkConfig.resetTorAfter);
+		}
+
+		if(this->networkConfig.resetTorOnlyAfter > 0) {
+			this->torControl.setNewIdentityMin(this->networkConfig.resetTorOnlyAfter);
+		}
+	}
+
+	// initialize queries
+	void Thread::setUpQueries() {
+		this->setStatusMessage("Initializing custom queries...");
+
+		this->log(
+				generalLoggingVerbose,
+				"initializes custom queries..."
+		);
+
+		this->initQueries();
+	}
+
+	// check extracting table
+	void Thread::checkExtractingTable() {
+		// wait for extracting table lock
+		this->setStatusMessage("Waiting for extracting table...");
+
+		DatabaseLock(
+				this->database,
+				"extractingTable." + this->extractingTable,
+				[this]() {
+					return this->isRunning();
+				}
+		);
+
+		// cancel if not running anymore
+		if(!(this->isRunning())) {
+			return;
+		}
+
+		// check extracting table
+		this->setStatusMessage("Checking extracting table...");
+
+		this->log(
+				generalLoggingVerbose,
+				"checks extracting table..."
+		);
+
+		const auto deleted{this->database.checkExtractingTable()};
+
+		// log deletion warning if necessary
+		if(this->isLogLevel(generalLoggingDefault)) {
+			switch(deleted) {
+			case 0:
+				break;
+
+			case 1:
+				this->log(
+						generalLoggingDefault,
+						"WARNING:"
+						" Deleted a duplicate URL lock."
+				);
+
+				break;
+
+			default:
+				std::ostringstream logStrStr;
+
+				logStrStr.imbue(std::locale(""));
+
+				logStrStr << "WARNING: Deleted "
+						<< deleted
+						<< " duplicate URL locks!";
+
+				this->log(generalLoggingDefault, logStrStr.str());
+			}
+		}
+	}
+
+	// save start time and initialize counter
+	void Thread::setUpTimers() {
+		this->startTime = std::chrono::steady_clock::now();
+		this->pauseTime = std::chrono::steady_clock::time_point::min();
+
+		this->tickCounter = 0;
+	}
+
+	// log warnings received by external function
+	void Thread::logWarnings(std::queue<std::string>& warnings) {
+		while(!warnings.empty()) {
+			this->log(
+					generalLoggingDefault,
+					"WARNING: "
+					+ warnings.front()
+			);
+
+			warnings.pop();
+		}
+	}
 
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
@@ -3301,13 +3317,13 @@ namespace crawlservpp::Module::Extractor {
 			std::string_view error,
 			std::string_view fieldName,
 			std::string_view url,
-			bool linked
+			bool isLinked
 	) {
 		std::string logString{"WARNING: "};
 
 		logString += error;
 
-		if(linked) {
+		if(isLinked) {
 			logString += " for linked field '";
 		}
 		else {
@@ -3320,6 +3336,43 @@ namespace crawlservpp::Module::Extractor {
 		logString += "]";
 
 		this->log(generalLoggingDefault, logString);
+	}
+
+	/*
+	 * shadowing functions not to be used by thread (private)
+	 */
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::pause() {
+		this->pauseByThread();
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::start() {
+		throw std::logic_error(
+				"Thread::start() not to be used by thread itself"
+		);
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::unpause() {
+		throw std::logic_error(
+				"Thread::unpause() not to be used by thread itself"
+		);
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::stop() {
+		throw std::logic_error(
+				"Thread::stop() not to be used by thread itself"
+		);
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::interrupt() {
+		throw std::logic_error(
+				"Thread::interrupt() not to be used by thread itself"
+		);
 	}
 
 } /* namespace crawlservpp::Module::Extractor */

@@ -82,160 +82,26 @@ namespace crawlservpp::Module::Parser {
 	//! Initializes the parser.
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
-		std::vector<std::string> fields;
 
-		// load configuration
-		this->setStatusMessage("Loading configuration...");
+		this->setUpConfig(configWarnings);
+		this->setUpLogging();
 
-		this->loadConfig(
-				this->database.getConfiguration(
-						this->getConfig()
-				),
-				configWarnings
-		);
+		this->logWarnings(configWarnings);
 
-		// show warnings if necessary
-		while(!configWarnings.empty()) {
-			this->log(
-					generalLoggingDefault,
-					"WARNING: "
-					+ configWarnings.front()
-			);
+		this->setUpContainer();
+		this->setUpDatabase();
+		this->setUpTableNames();
+		this->setUpTarget();
+		this->setUpSqlStatements();
+		this->setUpQueries();
 
-			configWarnings.pop();
+		if(!(this->isRunning())) {
+			return; // cancel if not running anymore
 		}
 
-		// set query container options
-		this->setRepairCData(this->config.parsingRepairCData);
-		this->setRepairComments(this->config.parsingRepairComments);
-		this->setRemoveXmlInstructions(this->config.parsingRemoveXmlInstructions);
-		this->setTidyErrorsAndWarnings(
-				this->config.parsingTidyWarnings,
-				this->config.parsingTidyErrors
-		);
+		this->checkParsingTable();
 
-		// set database options
-		this->setStatusMessage("Setting database options...");
-
-		this->database.setLogging(
-				this->config.generalLogging,
-				generalLoggingDefault,
-				generalLoggingVerbose
-		);
-
-		this->log(generalLoggingVerbose, "sets database options...");
-
-		this->database.setCacheSize(this->config.generalCacheSize);
-		this->database.setMaxBatchSize(this->config.generalMaxBatchSize);
-		this->database.setReparse(this->config.generalReParse);
-		this->database.setParseCustom(this->config.generalParseCustom);
-		this->database.setTargetTable(this->config.generalResultTable);
-		this->database.setTargetFields(this->config.parsingFieldNames);
-		this->database.setSleepOnError(this->config.generalSleepMySql);
-
-		if(this->config.generalDbTimeOut > 0) {
-			this->database.setTimeOut(this->config.generalDbTimeOut);
-		}
-
-		// create table names for locking
-		const std::string urlListTable{
-			"crawlserv_"
-			+ this->websiteNamespace
-			+ "_"
-			+ this->urlListNamespace
-		};
-
-		this->parsingTable = urlListTable + "_parsing";
-		this->targetTable = urlListTable + "_parsed_" + this->config.generalResultTable;
-
-		// initialize target table
-		this->setStatusMessage("Initializing target table...");
-
-		this->log(generalLoggingVerbose, "initializes target table...");
-
-		this->database.initTargetTable();
-
-		// prepare SQL statements for parser
-		this->setStatusMessage("Preparing SQL statements...");
-
-		this->log(generalLoggingVerbose, "prepares SQL statements...");
-
-		this->database.prepare();
-
-		// initialize queries
-		this->setStatusMessage("Initializing custom queries...");
-
-		this->log(
-				generalLoggingVerbose,
-				"initializes custom queries..."
-		);
-
-		this->initQueries();
-
-		{
-			// wait for parsing table lock
-			this->setStatusMessage("Waiting for parsing table...");
-
-			this->log(
-					generalLoggingVerbose,
-					"waits for parsing table..."
-			);
-
-			DatabaseLock(
-					this->database,
-					"parsingTable." + this->parsingTable,
-					[this]() {
-						return this->isRunning();
-					}
-			);
-
-			if(!(this->isRunning())) {
-				return;
-			}
-
-			// check parsing table
-			this->setStatusMessage("Checking parsing table...");
-
-			this->log(
-					generalLoggingVerbose,
-					"checks parsing table..."
-			);
-
-			const auto deleted{this->database.checkParsingTable()};
-
-			// log deleted URL locks if necessary
-			if(this->isLogLevel(generalLoggingDefault)) {
-				switch(deleted) {
-				case 0:
-					break;
-
-				case 1:
-					this->log(
-							generalLoggingDefault,
-							"WARNING: Deleted a duplicate URL lock."
-					);
-
-					break;
-
-				default:
-					std::ostringstream logStrStr;
-
-					logStrStr.imbue(std::locale(""));
-
-					logStrStr << "WARNING: Deleted "
-								<< deleted
-								<< " duplicate URL locks!";
-
-					this->log(generalLoggingDefault, logStrStr.str());
-				}
-			}
-		}
-
-		// save start time and initialize counter
-		this->startTime = std::chrono::steady_clock::now();
-		this->pauseTime = std::chrono::steady_clock::time_point::min();
-
-		this->tickCounter = 0;
+		this->setUpTimers();
 
 		// parser is ready
 		this->log(generalLoggingExtended, "is ready.");
@@ -537,45 +403,187 @@ namespace crawlservpp::Module::Parser {
 	}
 
 	/*
-	 *  shadowing functions not to be used by thread (private)
-	 */
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::pause() {
-		this->pauseByThread();
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::start() {
-		throw std::logic_error(
-				"Thread::start() not to be used by thread itself"
-		);
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::unpause() {
-		throw std::logic_error(
-				"Thread::unpause() not to be used by thread itself"
-		);
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::stop() {
-		throw std::logic_error(
-				"Thread::stop() not to be used by thread itself"
-		);
-	}
-
-	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
-	void Thread::interrupt() {
-		throw std::logic_error(
-				"Thread::interrupt() not to be used by thread itself"
-		);
-	}
-
-	/*
 	 * INITIALIZING FUNCTION (private)
 	 */
+
+	// load configuration
+	void Thread::setUpConfig(std::queue<std::string>& warningsTo) {
+		this->setStatusMessage("Loading configuration...");
+
+		this->loadConfig(
+				this->database.getConfiguration(
+						this->getConfig()
+				),
+				warningsTo
+		);
+	}
+
+	// set up logging
+	void Thread::setUpLogging() {
+		this->database.setLogging(
+				this->config.generalLogging,
+				generalLoggingDefault,
+				generalLoggingVerbose
+		);
+	}
+
+	// set query container options
+	void Thread::setUpContainer() {
+		this->setRepairCData(this->config.parsingRepairCData);
+		this->setRepairComments(this->config.parsingRepairComments);
+		this->setRemoveXmlInstructions(this->config.parsingRemoveXmlInstructions);
+		this->setTidyErrorsAndWarnings(
+				this->config.parsingTidyWarnings,
+				this->config.parsingTidyErrors
+		);
+	}
+
+	// set database options
+	void Thread::setUpDatabase() {
+		this->setStatusMessage("Setting database options...");
+
+		this->log(generalLoggingVerbose, "sets database options...");
+
+		this->database.setCacheSize(this->config.generalCacheSize);
+		this->database.setMaxBatchSize(this->config.generalMaxBatchSize);
+		this->database.setReparse(this->config.generalReParse);
+		this->database.setParseCustom(this->config.generalParseCustom);
+		this->database.setTargetTable(this->config.generalResultTable);
+		this->database.setTargetFields(this->config.parsingFieldNames);
+		this->database.setSleepOnError(this->config.generalSleepMySql);
+
+		if(this->config.generalDbTimeOut > 0) {
+			this->database.setTimeOut(this->config.generalDbTimeOut);
+		}
+	}
+
+	// create table names for locking
+	void Thread::setUpTableNames() {
+		const std::string urlListTable{
+			"crawlserv_"
+			+ this->websiteNamespace
+			+ "_"
+			+ this->urlListNamespace
+		};
+
+		this->parsingTable = urlListTable
+				+ "_parsing";
+		this->targetTable = urlListTable
+				+ "_parsed_"
+				+ this->config.generalResultTable;
+	}
+
+	// initialize target table
+	void Thread::setUpTarget() {
+		this->setStatusMessage("Initializing target table...");
+
+		this->log(generalLoggingVerbose, "initializes target table...");
+
+		this->database.initTargetTable();
+	}
+
+	void Thread::setUpSqlStatements() {
+		// prepare SQL statements for parser
+		this->setStatusMessage("Preparing SQL statements...");
+
+		this->log(generalLoggingVerbose, "prepares SQL statements...");
+
+		this->database.prepare();
+	}
+
+	// initialize queries
+	void Thread::setUpQueries() {
+		this->setStatusMessage("Initializing custom queries...");
+
+		this->log(
+				generalLoggingVerbose,
+				"initializes custom queries..."
+		);
+
+		this->initQueries();
+	}
+
+	// check parsing table
+	void Thread::checkParsingTable() {
+		// wait for parsing table lock
+		this->setStatusMessage("Waiting for parsing table...");
+
+		this->log(
+				generalLoggingVerbose,
+				"waits for parsing table..."
+		);
+
+		DatabaseLock(
+				this->database,
+				"parsingTable." + this->parsingTable,
+				[this]() {
+					return this->isRunning();
+				}
+		);
+
+		// cancel if not running anymore
+		if(!(this->isRunning())) {
+			return;
+		}
+
+		// check parsing table
+		this->setStatusMessage("Checking parsing table...");
+
+		this->log(
+				generalLoggingVerbose,
+				"checks parsing table..."
+		);
+
+		const auto deleted{this->database.checkParsingTable()};
+
+		// log deleted URL locks if necessary
+		if(this->isLogLevel(generalLoggingDefault)) {
+			switch(deleted) {
+			case 0:
+				break;
+
+			case 1:
+				this->log(
+						generalLoggingDefault,
+						"WARNING: Deleted a duplicate URL lock."
+				);
+
+				break;
+
+			default:
+				std::ostringstream logStrStr;
+
+				logStrStr.imbue(std::locale(""));
+
+				logStrStr << "WARNING: Deleted "
+							<< deleted
+							<< " duplicate URL locks!";
+
+				this->log(generalLoggingDefault, logStrStr.str());
+			}
+		}
+	}
+
+	// save start time and initialize counter
+	void Thread::setUpTimers() {
+		this->startTime = std::chrono::steady_clock::now();
+		this->pauseTime = std::chrono::steady_clock::time_point::min();
+
+		this->tickCounter = 0;
+	}
+
+	// log warnings received by external function
+	void Thread::logWarnings(std::queue<std::string>& warnings) {
+		while(!warnings.empty()) {
+			this->log(
+					generalLoggingDefault,
+					"WARNING: "
+					+ warnings.front()
+			);
+
+			warnings.pop();
+		}
+	}
 
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
@@ -1708,6 +1716,43 @@ namespace crawlservpp::Module::Parser {
 		logString += "]";
 
 		this->log(generalLoggingDefault, logString);
+	}
+
+	/*
+	 *  shadowing functions not to be used by thread (private)
+	 */
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::pause() {
+		this->pauseByThread();
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::start() {
+		throw std::logic_error(
+				"Thread::start() not to be used by thread itself"
+		);
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::unpause() {
+		throw std::logic_error(
+				"Thread::unpause() not to be used by thread itself"
+		);
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::stop() {
+		throw std::logic_error(
+				"Thread::stop() not to be used by thread itself"
+		);
+	}
+
+	// NOLINTNEXTLINE(readability-convert-member-functions-to-static)
+	void Thread::interrupt() {
+		throw std::logic_error(
+				"Thread::interrupt() not to be used by thread itself"
+		);
 	}
 
 } /* namespace crawlservpp::Module::Parser */

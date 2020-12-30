@@ -162,13 +162,6 @@ namespace crawlservpp::Module::Parser {
 		///@}
 
 	private:
-		// shadow functions not to be used by the thread
-		void pause();
-		void start();
-		void unpause();
-		void stop();
-		void interrupt();
-
 		// table names for locking them
 		std::string parsingTable;
 		std::string targetTable;
@@ -199,7 +192,18 @@ namespace crawlservpp::Module::Parser {
 		std::uint64_t posDist{0};	// distance between the positions of first and last URL fetched
 		std::uint64_t total{0};		// number of total URLs in URL list
 
-		// initializing function
+		// initializing functions
+		void setUpConfig(std::queue<std::string>& warningsTo);
+		void setUpLogging();
+		void setUpContainer();
+		void setUpDatabase();
+		void setUpTableNames();
+		void setUpTarget();
+		void setUpSqlStatements();
+		void setUpQueries();
+		void checkParsingTable();
+		void setUpTimers();
+		void logWarnings(std::queue<std::string>& warnings);
 		void initQueries() override;
 
 		// query functions
@@ -231,6 +235,13 @@ namespace crawlservpp::Module::Parser {
 				std::string_view name,
 				std::string_view url
 		);
+
+		// shadow functions not to be used by the thread
+		void pause();
+		void start();
+		void unpause();
+		void stop();
+		void interrupt();
 	};
 
 } /* namespace crawlservpp::Module::Parser */
