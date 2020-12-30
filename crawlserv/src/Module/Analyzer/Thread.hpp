@@ -38,22 +38,35 @@
 #include "../Config.hpp"
 #include "../Thread.hpp"
 
+#include "../../Data/Corpus.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Query/Container.hpp"
+#include "../../Struct/CorpusProperties.hpp"
+#include "../../Struct/QueryProperties.hpp"
+#include "../../Struct/QueryStruct.hpp"
+#include "../../Struct/StatusSetter.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 
+#include <cstddef>		// std::size_t
 #include <functional>	// std::bind
+#include <locale>		// std::locale
 #include <queue>		// std::queue
+#include <sstream>		// std::ostringstream
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::string
 #include <tuple>		// std::tuple
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer {
 
 	//! Abstract class providing thread functionality to algorithm (child) classes.
 	class Thread : public Module::Thread, public Query::Container, protected Config {
 		// for convenience
+		using CorpusProperties = Struct::CorpusProperties;
+		using QueryProperties = Struct::QueryProperties;
+		using QueryStruct = Struct::QueryStruct;
+		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 
@@ -78,6 +91,13 @@ namespace crawlservpp::Module::Analyzer {
 		Database database;
 
 		///@}
+		///@name Corpora
+		///@{
+
+		//! Vector of corpora for the analyzer thread.
+		std::vector<Data::Corpus> corpora;
+
+		///@}
 		///@name Implemented Thread Functions
 		///@{
 
@@ -93,6 +113,11 @@ namespace crawlservpp::Module::Analyzer {
 		///@{
 
 		void initQueries() override;
+		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
+		void addQueries(
+				const std::vector<std::uint64_t>& queryIds,
+				std::vector<QueryStruct>& propertiesTo
+		);
 
 		///@}
 		///@name Algorithm Events
@@ -152,10 +177,12 @@ namespace crawlservpp::Module::Analyzer {
 		void pause();
 
 		///@}
-		///@name Helper Function for Algorithms
+		///@name Helper Functions for Algorithms
 		///@{
 
 		[[nodiscard]] std::string getTargetTableName() const;
+		bool addCorpus(std::size_t index, StatusSetter& statusSetter);
+		void checkCorpusSources(StatusSetter& statusSetter);
 
 		///@}
 
@@ -163,11 +190,17 @@ namespace crawlservpp::Module::Analyzer {
 		MAIN_EXCEPTION_CLASS();
 
 	private:
+		// queries for filtering corpora
+		std::vector<QueryStruct> queriesFilterQuery;
+
 		// hide other functions not to be used by the thread
 		void start();
 		void unpause();
 		void stop();
 		void interrupt();
+
+		// internal helper function
+		void filterCorpusByQuery(StatusSetter& statusSetter);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer */
