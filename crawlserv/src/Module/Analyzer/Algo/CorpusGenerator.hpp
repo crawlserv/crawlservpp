@@ -41,7 +41,6 @@
 #include "../../../Helper/Math.hpp"
 #include "../../../Helper/Utf8.hpp"
 #include "../../../Main/Database.hpp"
-#include "../../../Struct/CorpusProperties.hpp"
 #include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
@@ -50,9 +49,9 @@
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint64_t
 #include <limits>		// std::numeric_limits
-#include <locale>		// std::locale
-#include <sstream>		// std::ostringstream
 #include <string>		// std::string
+#include <string_view>	// std::string_view
+#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
@@ -80,7 +79,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		using Exception = Module::Analyzer::Thread::Exception;
 
-		using CorpusProperties = Struct::CorpusProperties;
 		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
@@ -98,6 +96,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions
 		);
+
+		///@}
+		///@name Implemented Getter
+		///@{
+
+		std::string_view getName() const override;
 
 		///@}
 		///@name Implemented Algorithm Functions
@@ -121,17 +125,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		///@}
 
 	private:
+		// status message saved in-class
 		std::string status;
-		std::vector<Data::Corpus> corpora;
-
-		// internal helper function
-		bool addCorpus(
-				std::size_t index,
-				std::size_t& outAddBytes,
-				std::size_t& outAddTokens,
-				std::size_t& outAddSources,
-				StatusSetter& statusSetter
-		);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

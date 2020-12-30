@@ -80,6 +80,20 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	/*
+	 * IMPLEMENTED GETTER
+	 */
+
+	//! Returns the name of the algorithm.
+	/*!
+	 * \returns A string view containing the
+		 *   name of the implemented algorithm.
+	 */
+	std::string_view Empty::getName() const {
+		// TODO: Insert the name of the algorithm.
+		return "Empty";
+	}
+
+	/*
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
@@ -149,32 +163,23 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// check your sources
 		/*
-		this->setStatusMessage("Checking sources...");
-
 		this->log(generalLoggingVerbose, "checks sources...");
 
-		this->database.checkSources(
-				this->config.generalInputSources,
-				this->config.generalInputTables,
-				this->config.generalInputFields
-		);
+		this->checkCorpusSources(statusSetter);
 		*/
 
 		/*
 		 * TODO: [OPTIONAL] get text corpus, filtered by date
 		 */
 
-		/*
 		// request text corpus
-		this->log(generalLoggingVerbose, "gets text corpus...");
+		/*
+		this->log(generalLoggingDefault, "gets text corpus...");
 
 		std::size_t corpora{0};
-		std::size_t bytes{0};
-		std::size_t tokens{0};
-		std::size_t sources{0};
 
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
-			if(this->addCorpus(n, bytes, tokens, sources, statusSetter)) {
+			if(this->addCorpus(n, statusSetter)) {
 				++corpora;
 			}
 		}
@@ -187,7 +192,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// algorithm is ready
 		this->log(generalLoggingExtended, "is ready.");
 
-		statusSetter.change("Ready.");
+		/*
+		 * NOTE: Do not set any threat status here, as the parent class
+		 *        will revert to the original thread status after initialization.
+		 */
 	}
 
 	/*
@@ -228,7 +236,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		/*
 		//  update progress
-		this->setProgress(static_cast<float>(this->getLast()) / this->markovTextMax);
+		this->setProgress(static_cast<float>(this->getLast()) / [TOTAL]);
 		*/
 	}
 
@@ -321,105 +329,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// initialize algorithm-specific queries
 	void Empty::initQueries() {
 		//TODO: initialize queries
-	}
 
-	// add optional query
-	void Empty::addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo) {
-		if(queryId > 0) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(queryId, properties);
-
-			propertiesTo = this->addQuery(queryId, properties);
-		}
-	}
-
-	// add multiple queries at once, ignoring empty ones
-	void Empty::addQueries(
-			const std::vector<std::uint64_t>& queryIds,
-			std::vector<QueryStruct>& propertiesTo
-	) {
-		// reserve memory first
-		propertiesTo.reserve(queryIds.size());
-
-		for(const auto& queryId : queryIds) {
-			if(queryId > 0) {
-				QueryProperties properties;
-
-				this->database.getQueryProperties(queryId, properties);
-
-				propertiesTo.emplace_back(this->addQuery(queryId, properties));
-			}
-		}
-	}
-
-	// add corpus, returns true if corpus is not empty
-	bool Empty::addCorpus(
-			std::size_t index,
-			std::size_t& outAddBytes,
-			std::size_t& outAddTokens,
-			std::size_t& outAddSources,
-			StatusSetter& statusSetter
-	) {
-		std::size_t corpusSources{0};
-
-		this->corpora.emplace_back(this->config.generalCorpusChecks);
-
-		std::string statusStr;
-
-		if(this->config.generalInputSources.size() > 1) {
-			std::ostringstream corpusStatusStrStr;
-
-			corpusStatusStrStr.imbue(std::locale(""));
-
-			corpusStatusStrStr << "Getting text corpus #";
-			corpusStatusStrStr << index + 1;
-			corpusStatusStrStr << "/";
-			corpusStatusStrStr << this->config.generalInputSources.size();
-			corpusStatusStrStr << "...";
-
-			statusStr = corpusStatusStrStr.str();
-		}
-		else {
-			statusStr = "Getting text corpus...";
-		}
-
-		if(!(this->database.getCorpus(
-				CorpusProperties(
-						this->config.generalInputSources.at(index),
-						this->config.generalInputTables.at(index),
-						this->config.generalInputFields.at(index),
-						this->config.tokenizerSentenceManipulators,
-						this->config.tokenizerSentenceModels,
-						this->config.tokenizerWordManipulators,
-						this->config.tokenizerWordModels,
-						this->config.tokenizerSavePoints,
-						this->config.tokenizerFreeMemoryEvery
-				),
-				this->config.filterDateEnable ? this->config.filterDateFrom : std::string{},
-				this->config.filterDateEnable ? this->config.filterDateTo : std::string{},
-				this->corpora.back(),
-				corpusSources,
-				statusSetter
-		))) {
-			return false;
-		}
-
-		if(this->corpora.back().empty()) {
-			this->corpora.pop_back();
-
-			return false;
-		}
-
-		outAddBytes += this->corpora.back().size();
-
-		if(this->corpora.back().isTokenized()) {
-			outAddTokens += this->corpora.back().getNumTokens();
-		}
-
-		outAddSources += corpusSources;
-
-		return true;
+		// use this->addQuery(...), this->addOptionalQuery(...),
+		// and/or this->addQueries(..) to add queries, if needed.
 	}
 	*/
 

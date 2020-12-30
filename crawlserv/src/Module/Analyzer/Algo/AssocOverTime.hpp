@@ -34,12 +34,9 @@
 
 #include "../Thread.hpp"
 
-#include "../../../Data/Corpus.hpp"
 #include "../../../Data/Data.hpp"
 #include "../../../Helper/DateTime.hpp"
 #include "../../../Main/Database.hpp"
-#include "../../../Struct/CorpusProperties.hpp"
-#include "../../../Struct/QueryProperties.hpp"
 #include "../../../Struct/QueryStruct.hpp"
 #include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
@@ -53,6 +50,7 @@
 #include <queue>			// std::queue
 #include <sstream>			// std::ostringstream
 #include <string>			// std::string
+#include <string_view>		// std::string_view
 #include <unordered_map>	// std::unordered_map
 #include <vector>			// std::vector
 
@@ -84,8 +82,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 	class AssocOverTime final : public Module::Analyzer::Thread {
 		// for convenience
-		using CorpusProperties = Struct::CorpusProperties;
-		using QueryProperties = Struct::QueryProperties;
 		using QueryStruct = Struct::QueryStruct;
 		using StatusSetter = Struct::StatusSetter;
 		using TextMap = Struct::TextMap;
@@ -108,6 +104,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions
 		);
+
+		///@}
+		///@name Implemented Getter
+		///@{
+
+		std::string_view getName() const override;
 
 		///@}
 		///@name Implemented Algorithm Functions
@@ -135,7 +137,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		struct Associations {
 			std::vector<std::uint64_t> keywordPositions;
 			std::vector<std::vector<std::uint64_t>> categoriesPositions;
-			std::uint64_t offset{0};
+			std::uint64_t offset{};
 		};
 
 		using DateAssociationMap = std::unordered_map<std::string, std::unordered_map<std::string, Associations>>;
@@ -143,14 +145,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using ArticleAssociationMap = std::unordered_map<std::string, Associations>;
 		using ArticleAssociation = std::pair<std::string, Associations>;
 
-		// corpora and associations
-		std::size_t currentCorpus{0};
-		std::vector<Data::Corpus> corpora;
-		DateAssociationMap associations;
-
 		// algorithm options
 		struct Entries {
-			std::uint64_t keyWordQuery{0};
+			std::uint64_t keyWordQuery{};
 			std::vector<std::string> categoryLabels;
 			std::vector<std::uint64_t> categoryQueries;
 			bool ignoreEmptyDate{true};
@@ -161,7 +158,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		QueryStruct queryKeyWord;
 		std::vector<QueryStruct> queriesCategories;
 
-		// state
+		// algorithm state
+		std::size_t currentCorpus{};
+		DateAssociationMap associations;
 		std::size_t dateCounter{};
 		std::size_t firstDatePos{};
 		bool dateSaved{false};
@@ -175,16 +174,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		void addCurrent();
 		void saveAssociations();
 
-		// query functions
+		// query function
 		void initQueries() override;
-		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
-		void addQueries(
-				const std::vector<std::uint64_t>& queryIds,
-				std::vector<QueryStruct>& propertiesTo
-		);
 
 		// internal helper functions
-		void addCorpus(std::size_t index, StatusSetter& statusSetter);
 		void addArticlesForDate(
 				const TextMapEntry& date,
 				DateAssociationMap::iterator& dateIt,

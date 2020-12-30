@@ -43,11 +43,8 @@
 /*
  * TODO: add additional crawlserv++ headers
  */
-//#include "../../../Data/Corpus.hpp"
 //#include "../../../Data/Data.hpp"
 #include "../../../Main/Database.hpp"
-//#include "../../../Struct/CorpusProperties.hpp"
-//#include "../../../Struct/QueryProperties.hpp"
 //#include "../../../Struct/QueryStruct.hpp"
 #include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
@@ -56,13 +53,10 @@
 /*
  * TODO: add standard library includes here
  */
-/*
-#include <cstddef>	// std::size_t
-#include <locale>	// std::locale
-#include <sstream>	// std::ostringstream
-#include <string>	// std::string
-#include <vector>	// std::vector
-*/
+//#include <cstddef>	// std::size_t
+//#include <string>		// std::string
+#include <string_view>	// std::string_view
+//#include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
@@ -101,8 +95,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 		using Exception = Module::Analyzer::Thread::Exception;
 
-		//using CorpusProperties = Struct::CorpusProperties;
-		//using QueryProperties = Struct::QueryProperties;
 		//using QueryStruct = Struct::QueryStruct;
 		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
@@ -127,6 +119,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		///@}
+		///@name Implemented Getter
+		///@{
+
+		std::string_view getName() const override;
+
+		///@}
 		///@name Implemented Algorithm Functions
 		///@{
 
@@ -148,12 +146,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		///@}
 
 	private:
-		/*
-		 * TODO: add additional private member variables here
-		 */
-		//std::size_t currentCorpus{0};
-		//std::vector<Data::Corpus> corpora;
-
 		// algorithm options
 		struct Entries {
 		/*
@@ -161,31 +153,32 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 		} algoConfig;
 
-		// algorithm functions
+		// algorithm queries
 		/*
-		 * TODO: add the definitions of internal algorithm functions here
+		 * TODO: decide whether queries are needed
+		 *
+		 * use QueryStruct (or vectors of it) to store queries
 		 */
 
-		// query functions
+		// algorithm state
+		/*
+		 * TODO: add additional private member variables here
+		 */
+
+		// algorithm functions
+		/*
+		 * TODO: add internal algorithm functions here
+		 */
+
+		// query function
 		/*
 		 * TODO: decide whether queries are needed
 		void initQueries() override;
-		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
-		void addQueries(
-				const std::vector<std::uint64_t>& queryIds,
-				std::vector<QueryStruct>& propertiesTo
-		);
 		*/
 
-		// internal helper function
+		// internal helper functions
 		/*
-		bool addCorpus(
-				std::size_t index,
-				std::size_t& outAddBytes,
-				std::size_t& outAddTokens,
-				std::size_t& outAddSources,
-				StatusSetter& statusSetter
-		);
+		 * TODO: add additional helper functions here
 		 */
 	};
 

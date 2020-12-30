@@ -22,7 +22,7 @@
  *
  * TokensOverTime.cpp
  *
- * Count tokens in a text corpus over time.
+ * Count occurrences of specific tokens in a text corpus over time.
  *
  *  Created on: Aug 2, 2020
  *      Author: ans
@@ -64,6 +64,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	/*
+	 * IMPLEMENTED GETTER
+	 */
+
+	//! Returns the name of the algorithm.
+	/*!
+	 * \returns A string view containing the
+		 *   name of the implemented algorithm.
+	 */
+	std::string_view TokensOverTime::getName() const {
+		return "TokensOverTime";
+	}
+
+	/*
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
@@ -101,24 +114,24 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		// check your sources
-		statusSetter.change("Checking sources...");
-
 		this->log(generalLoggingVerbose, "checks sources...");
 
-		this->database.checkSources(
-				this->config.generalInputSources,
-				this->config.generalInputTables,
-				this->config.generalInputFields
-		);
+		this->checkCorpusSources(statusSetter);
 
 		// request text corpus
-		this->log(generalLoggingVerbose, "gets text corpus...");
+		this->log(generalLoggingDefault, "gets text corpus...");
 
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
 			this->addCorpus(n, statusSetter);
 		}
 
-		statusSetter.change("Counting tokens...");
+		// algorithm is ready
+		this->log(generalLoggingExtended, "is ready.");
+
+		/*
+		 * NOTE: Do not set any threat status here, as the parent class
+		 *        will revert to the original thread status after initialization.
+		 */
 	}
 
 	//! Counts the tokens in the text corpus.
@@ -134,21 +147,54 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 	void TokensOverTime::onAlgoTick() {
 		if(this->currentCorpus < this->corpora.size()) {
-			//TODO count tokens (-> private member function)
+			// set status message and reset progress
+			std::string status{"occurrences"};
+
+			if(this->corpora.size() > 1) {
+				status += " in corpus #";
+				status += std::to_string(this->currentCorpus + 1);
+				status += "/";
+				status += std::to_string(this->corpora.size());
+			}
+
+			status += "...";
+
+			this->setStatusMessage("Counting " + status);
+			this->setProgress(0.F);
+
+			this->log(generalLoggingDefault, "counts " + status);
+
+			const auto& corpus{this->corpora[this->currentCorpus]};
 
 			++(this->currentCorpus);
+
+			if(!corpus.hasDateMap()) {
+				this->log(
+						generalLoggingDefault,
+						"WARNING: Corpus #"
+						+ std::to_string(this->currentCorpus + 1)
+						+ " does not have a date map and has been skipped."
+				);
+
+				return;
+			}
+
+			//TODO count occurrences (-> private member function)
+
+			if(corpus.hasArticleMap()) {
+				// count tokens per article and date
+			}
+			else {
+				// count tokens per date only
+			}
 		}
 		else {
-			//TODO save tokens (-> private member function)
+			//TODO save result (-> private member function)
 
-			/*
-			// sleep forever (i.e. until the thread is terminated)
 			this->finished();
-			this->sleep(std::numeric_limits<std::uint64_t>::max());
-			*/
 
-			//TODO debug changes to the configuration
-			this->setStatusMessage(this->algoConfig.dbg);
+			// sleep forever (i.e. until the thread is terminated)
+			this->sleep(std::numeric_limits<std::uint64_t>::max());
 		}
 	}
 
@@ -170,8 +216,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// algorithm options
 		this->category("tokens");
 
-		// TODO DEBUG
-		this->option("dbg", this->algoConfig.dbg);
+		//TODO: add algo options
+		//this->option("[...]", this->algoConfig.[...]);
 	}
 
 	//! Does nothing.
@@ -185,63 +231,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Resets the configuration options for the algorithm.
 	void TokensOverTime::resetAlgo() {
 		this->algoConfig = {};
-	}
-
-	/*
-	 * INTERNAL HELPER FUNCTIONS (private)
-	 */
-
-	// add corpus
-	void TokensOverTime::addCorpus(std::size_t index, StatusSetter& statusSetter) {
-		std::size_t corpusSources{0};
-
-		this->corpora.emplace_back(this->config.generalCorpusChecks);
-
-		std::string statusStr;
-
-		if(this->config.generalInputSources.size() > 1) {
-			std::ostringstream corpusStatusStrStr;
-
-			corpusStatusStrStr.imbue(std::locale(""));
-
-			corpusStatusStrStr << "Getting text corpus #";
-			corpusStatusStrStr << index + 1;
-			corpusStatusStrStr << "/";
-			corpusStatusStrStr << this->config.generalInputSources.size();
-			corpusStatusStrStr << "...";
-
-			statusStr = corpusStatusStrStr.str();
-		}
-		else {
-			statusStr = "Getting text corpus...";
-		}
-
-		statusSetter.change(statusStr);
-
-		if(!(this->database.getCorpus(
-				CorpusProperties(
-						this->config.generalInputSources.at(index),
-						this->config.generalInputTables.at(index),
-						this->config.generalInputFields.at(index),
-						this->config.tokenizerSentenceManipulators,
-						this->config.tokenizerSentenceModels,
-						this->config.tokenizerWordManipulators,
-						this->config.tokenizerWordModels,
-						this->config.tokenizerSavePoints,
-						this->config.tokenizerFreeMemoryEvery
-				),
-				this->config.filterDateEnable ? this->config.filterDateFrom : std::string{},
-				this->config.filterDateEnable ? this->config.filterDateTo : std::string{},
-				this->corpora.back(),
-				corpusSources,
-				statusSetter
-		))) {
-			return;
-		}
-
-		if(this->corpora.back().empty()) {
-			this->corpora.pop_back();
-		}
 	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

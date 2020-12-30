@@ -775,6 +775,9 @@ namespace crawlservpp::Module::Analyzer {
 			return false;
 		}
 
+		// start timer
+		Timer::Simple timer;
+
 		// filter corpus by date(s) if necessary
 		if(corpusTo.filterByDate(filterDateFrom, filterDateTo)) {
 			// log new corpus size
@@ -784,7 +787,9 @@ namespace crawlservpp::Module::Analyzer {
 
 			logStrStr	<< "filtered corpus (by date) to "
 						<< corpusTo.size()
-						<< " bytes.";
+						<< " bytes in "
+						<< timer.tickStr()
+						<< ".";
 
 			this->log(this->getLoggingMin(), logStrStr.str());
 		}

@@ -34,14 +34,10 @@
 #include "../Thread.hpp"
 
 #include "../../../Data/Corpus.hpp"
-#include "../../../Data/Stemmer/German.hpp"
-#include "../../../Helper/DateTime.hpp"
 #include "../../../Main/Database.hpp"
-#include "../../../Struct/CorpusProperties.hpp"
 #include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
-#include "../../../Timer/Simple.hpp"
 
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint16_t, std::uint64_t
@@ -51,12 +47,7 @@
 #include <map>			// std::map
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string
-
-//TODO(ans)
-// DEBUG
-#include <iostream>
-#include <locale>
-// END DEBUG
+#include <string_view>	// std::string_view
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
@@ -72,13 +63,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		using Exception = Module::Analyzer::Thread::Exception;
 
-		using CorpusProperties = Struct::CorpusProperties;
 		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 
-		using DateCount = std::map<std::string, std::uint64_t>;
-		using TokenizerFunc = std::function<void(std::string&)>;
+		using DateArticlesOccurrences = std::map<std::string, std::uint64_t, std::uint64_t>;
 
 	public:
 		///@name Construction
@@ -93,6 +82,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions
 		);
+
+		///@}
+		///@name Implemented Getter
+		///@{
+
+		std::string_view getName() const override;
 
 		///@}
 		///@name Implemented Algorithm Functions
@@ -118,20 +113,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	private:
 		// algorithm options
 		struct Entries {
-			// TODO DEBUG
-			std::string dbg;
+			//TODO add algo options
 		} algoConfig;
 
 		// corpora and counts
 		std::size_t currentCorpus{0};
-		std::vector<Data::Corpus> corpora;
-		std::vector<DateCount> dateCounts;
-
-		// internal helper function
-		void addCorpus(
-				std::size_t index,
-				StatusSetter& statusSetter
-		);
+		std::vector<DateArticlesOccurrences> dateCounts;
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

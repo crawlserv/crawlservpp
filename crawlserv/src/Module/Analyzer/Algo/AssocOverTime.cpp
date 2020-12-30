@@ -64,6 +64,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	/*
+	 * IMPLEMENTED GETTER
+	 */
+
+	//! Returns the name of the algorithm.
+	/*!
+	 * \returns A string view containing the
+		 *   name of the implemented algorithm.
+	 */
+	std::string_view AssocOverTime::getName() const {
+		return "AssocOverTime";
+	}
+
+	/*
 	 * IMPLEMENTED ALGORITHM FUNCTIONS
 	 */
 
@@ -131,18 +144,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		// check your sources
-		statusSetter.change("Checking sources...");
-
 		this->log(generalLoggingVerbose, "checks sources...");
 
-		this->database.checkSources(
-				this->config.generalInputSources,
-				this->config.generalInputTables,
-				this->config.generalInputFields
-		);
+		this->checkCorpusSources(statusSetter);
 
 		// request text corpus
-		this->log(generalLoggingVerbose, "gets text corpus...");
+		this->log(generalLoggingDefault, "gets text corpus...");
 
 		for(std::size_t n{0}; n < this->config.generalInputSources.size(); ++n) {
 			this->addCorpus(n, statusSetter);
@@ -151,7 +158,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// algorithm is ready
 		this->log(generalLoggingExtended, "is ready.");
 
-		statusSetter.change("Calculating associations...");
+		/*
+		 * NOTE: Do not set any threat status here, as the parent class
+		 *        will revert to the original thread status after initialization.
+		 */
 	}
 
 	//! Calculates the associations in the text corpus.
@@ -313,17 +323,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::string{}.swap(this->lastDate);
 
 		// set status message and reset progress
-		std::string status{"co-occurrences in corpus #"};
+		std::string status{"term and category occurrences"};
 
-		status += std::to_string(this->currentCorpus + 1);
-		status += "/";
-		status += std::to_string(this->corpora.size());
+		if(this->corpora.size() > 1) {
+			status += " in corpus #";
+			status += std::to_string(this->currentCorpus + 1);
+			status += "/";
+			status += std::to_string(this->corpora.size());
+		}
+
 		status += "...";
 
-		this->setStatusMessage("Counting " + status);
+		this->setStatusMessage("Identifying " + status);
 		this->setProgress(0.F);
 
-		this->log(generalLoggingDefault, "counts " + status);
+		this->log(generalLoggingDefault, "identifies " + status);
 
 		// set initial state
 		this->dateCounter = 0;
@@ -335,9 +349,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		auto dateIt{this->associations.begin()};
 
-		if(!dateMap.empty()) {
-			this->firstDatePos = dateMap.front().pos;
+		if(dateMap.empty()) {
+			this->log(
+					generalLoggingDefault,
+					"WARNING: Corpus #"
+					+ std::to_string(this->currentCorpus + 1)
+					+ " does not have a date map and has been skipped."
+			);
+
+			return;
 		}
+
+		this->firstDatePos = dateMap.front().pos;
 
 		if(this->firstDatePos > 0 && !(this->algoConfig.ignoreEmptyDate)) {
 			if(articleMap.empty()) {
@@ -542,92 +565,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->addOptionalQuery(this->algoConfig.keyWordQuery, this->queryKeyWord);
 	}
 
-	// add optional query
-	void AssocOverTime::addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo) {
-		if(queryId > 0) {
-			QueryProperties properties;
-
-			this->database.getQueryProperties(queryId, properties);
-
-			propertiesTo = this->addQuery(queryId, properties);
-		}
-	}
-
-	// add multiple queries at once, ignoring empty ones
-	void AssocOverTime::addQueries(
-			const std::vector<std::uint64_t>& queryIds,
-			std::vector<QueryStruct>& propertiesTo
-	) {
-		// reserve memory first
-		propertiesTo.reserve(queryIds.size());
-
-		for(const auto& queryId : queryIds) {
-			if(queryId > 0) {
-				QueryProperties properties;
-
-				this->database.getQueryProperties(queryId, properties);
-
-				propertiesTo.emplace_back(this->addQuery(queryId, properties));
-			}
-		}
-	}
-
 	/*
 	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
-
-	// add corpus
-	void AssocOverTime::addCorpus(std::size_t index, StatusSetter& statusSetter) {
-		std::size_t corpusSources{0};
-
-		this->corpora.emplace_back(this->config.generalCorpusChecks);
-
-		std::string statusStr;
-
-		if(this->config.generalInputSources.size() > 1) {
-			std::ostringstream corpusStatusStrStr;
-
-			corpusStatusStrStr.imbue(std::locale(""));
-
-			corpusStatusStrStr << "Getting text corpus #";
-			corpusStatusStrStr << index + 1;
-			corpusStatusStrStr << "/";
-			corpusStatusStrStr << this->config.generalInputSources.size();
-			corpusStatusStrStr << "...";
-
-			statusStr = corpusStatusStrStr.str();
-		}
-		else {
-			statusStr = "Getting text corpus...";
-		}
-
-		statusSetter.change(statusStr);
-
-		if(!(this->database.getCorpus(
-				CorpusProperties(
-						this->config.generalInputSources.at(index),
-						this->config.generalInputTables.at(index),
-						this->config.generalInputFields.at(index),
-						this->config.tokenizerSentenceManipulators,
-						this->config.tokenizerSentenceModels,
-						this->config.tokenizerWordManipulators,
-						this->config.tokenizerWordModels,
-						this->config.tokenizerSavePoints,
-						this->config.tokenizerFreeMemoryEvery
-				),
-				this->config.filterDateEnable ? this->config.filterDateFrom : std::string{},
-				this->config.filterDateEnable ? this->config.filterDateTo : std::string{},
-				this->corpora.back(),
-				corpusSources,
-				statusSetter
-		))) {
-			return;
-		}
-
-		if(this->corpora.back().empty()) {
-			this->corpora.pop_back();
-		}
-	}
 
 	// add the articles of a specific date
 	void AssocOverTime::addArticlesForDate(
@@ -751,6 +691,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			Associations& associationsTo,
 			std::queue<std::string>& warningsTo
 	) {
+		// ignore empty tokens
+		if(token.empty()) {
+			return;
+		}
+
+		// look for keyword
 		bool result{false};
 
 		if(
@@ -769,6 +715,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 		}
 		else {
+			// look for categories
 			for(
 					std::size_t catIndex{0};
 					catIndex < this->queriesCategories.size();
