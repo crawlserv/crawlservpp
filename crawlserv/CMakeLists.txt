@@ -244,8 +244,6 @@ add_executable(${PROJECT_NAME}
 		src/Module/Analyzer/Algo/All.cpp
 		src/Module/Analyzer/Algo/AssocOverTime.cpp
 		src/Module/Analyzer/Algo/CorpusGenerator.cpp
-		src/Module/Analyzer/Algo/MarkovText.cpp
-		src/Module/Analyzer/Algo/MarkovTweet.cpp
 		src/Module/Analyzer/Algo/TokensOverTime.cpp
 		src/Module/Analyzer/Database.cpp
 		src/Module/Analyzer/Thread.cpp
@@ -261,11 +259,6 @@ add_executable(${PROJECT_NAME}
 		src/_extern/mongoose/mongoose.c
 		src/_extern/porter2_stemmer/porter2_stemmer.cpp
 		src/_extern/wapiti/wapiti.cpp
-
-# NOTE: The following might be removed in the near future.
-		src/_extern/rawr/histogram.cpp
-		src/_extern/rawr/kgramstats.cpp
-		src/_extern/rawr/prefix_search.cpp
 )
 
 # C++ 17 (including corresponding standard library) is required

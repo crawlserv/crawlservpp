@@ -40,8 +40,6 @@
 // <ADD HEADER OF ALGORITHM HERE>
 #include "AssocOverTime.hpp"
 #include "CorpusGenerator.hpp"
-#include "MarkovText.hpp"
-#include "MarkovTweet.hpp"
 #include "TokensOverTime.hpp"
 // </ADD HEADER OF ALGORITHM HERE>
 
@@ -78,8 +76,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		REGISTER_ALGORITHM(40, CorpusGenerator);	// NOLINT(cppcoreguidelines-macro-usage)
 		REGISTER_ALGORITHM(41, TokensOverTime);		// NOLINT(cppcoreguidelines-macro-usage)
 		REGISTER_ALGORITHM(42, AssocOverTime);		// NOLINT(cppcoreguidelines-macro-usage)
-		REGISTER_ALGORITHM(43, MarkovText);			// NOLINT(cppcoreguidelines-macro-usage)
-		REGISTER_ALGORITHM(44, MarkovTweet);		// NOLINT(cppcoreguidelines-macro-usage)
 		// </ADD REGISTRATION OF ALGORITHM HERE>
 
 		return nullptr;
