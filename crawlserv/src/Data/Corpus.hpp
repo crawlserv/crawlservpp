@@ -81,7 +81,7 @@ namespace crawlservpp::Data {
 	inline constexpr auto tokenizeUpdateEvery{1000};
 
 	//! After how many articles the status is updated when filtering a corpus (by queries).
-	inline constexpr auto filterUpdateEvery{1000};
+	inline constexpr auto filterUpdateEvery{10000};
 
 	//! Minimum length of single UTF-8 code points to remove.
 	inline constexpr auto minSingleUtf8CharSize{2};
@@ -175,21 +175,31 @@ namespace crawlservpp::Data {
 
 		[[nodiscard]] std::string& getCorpus();
 		[[nodiscard]] const std::string& getcCorpus() const;
+
 		[[nodiscard]] bool isTokenized() const;
 		[[nodiscard]] std::vector<std::string>& getTokens();
 		[[nodiscard]] const std::vector<std::string>& getcTokens() const;
 		[[nodiscard]] std::size_t getNumTokens() const;
+
+		[[nodiscard]] bool hasArticleMap() const;
 		[[nodiscard]] TextMap& getArticleMap();
 		[[nodiscard]] const TextMap& getcArticleMap() const;
+
+		[[nodiscard]] bool hasDateMap() const;
 		[[nodiscard]] TextMap& getDateMap();
 		[[nodiscard]] const TextMap& getcDateMap() const;
+
+		[[nodiscard]] bool hasSentenceMap() const;
 		[[nodiscard]] SentenceMap& getSentenceMap();
 		[[nodiscard]] const SentenceMap& getcSentenceMap() const;
+
 		[[nodiscard]] std::string get(std::size_t index) const;
 		[[nodiscard]] std::string get(const std::string& id) const;
 		[[nodiscard]] std::string getDate(const std::string& date) const;
+
 		[[nodiscard]] std::size_t size() const;
 		[[nodiscard]] bool empty() const;
+
 		[[nodiscard]] std::string substr(std::size_t from, std::size_t len);
 
 		///@}
@@ -503,6 +513,16 @@ namespace crawlservpp::Data {
 		return this->tokens.size() - this->emptyTokens;
 	}
 
+	//! Checks whether the corpus has an article map.
+	/*!
+	 * \returns True, if the corpus has an
+	 *   article map, i.e. consists of
+	 *   articles and is not empty.
+	 */
+	inline bool Corpus::hasArticleMap() const {
+		return !(this->articleMap.empty());
+	}
+
 	//! Gets a reference to the article map of the corpus.
 	/*!
 	 * \returns A reference to the article map
@@ -521,6 +541,16 @@ namespace crawlservpp::Data {
 		return this->articleMap;
 	}
 
+	//! Checks whether the corpus has a date map.
+	/*!
+	 * \returns True, if the corpus has a
+	 *   date map, i.e. consists of dates
+	 *   and is not empty.
+	 */
+	inline bool Corpus::hasDateMap() const {
+		return !(this->dateMap.empty());
+	}
+
 	//! Gets a reference to the date map of the corpus.
 	/*!
 	 * \returns A reference to the date map
@@ -537,6 +567,16 @@ namespace crawlservpp::Data {
 	 */
 	inline const Struct::TextMap& Corpus::getcDateMap() const {
 		return this->dateMap;
+	}
+
+	//! Checks whether the corpus has sentence map.
+	/*!
+	 * \returns True, if the corpus has a
+	 *   sentence map, i.e. consists of
+	 *   sentences and is not empty.
+	 */
+	inline bool Corpus::hasSentenceMap() const {
+		return !(this->sentenceMap.empty());
 	}
 
 	//! Gets a reference to the sentence map of the corpus.
