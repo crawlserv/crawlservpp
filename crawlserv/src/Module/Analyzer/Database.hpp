@@ -56,7 +56,7 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <algorithm>	// std::find_if, std::sort, std::upper_bound
+#include <algorithm>	// std::all_of, std::sort, std::upper_bound
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint8_t, std::uint16_t, std::uint64_t
@@ -203,6 +203,7 @@ namespace crawlservpp::Module::Analyzer {
 		using IsRunningCallback = std::function<bool()>;
 		using SentenceMap = std::vector<std::pair<std::size_t, std::size_t>>;
 		using SqlResultSetPtr = std::unique_ptr<sql::ResultSet>;
+		using StringString = std::pair<std::string, std::string>;
 
 	public:
 		///@name Construction
@@ -215,7 +216,7 @@ namespace crawlservpp::Module::Analyzer {
 		///@{
 
 		void setTargetTable(const std::string& table);
-		void setTargetFields(const std::vector<std::string>& fields, const std::vector<std::string>& types);
+		void setTargetFields(const std::vector<StringString>& types);
 		void setCorpusSlicing(std::uint8_t percentageOfMaxAllowedPackageSize);
 		void setIsRunningCallback(const IsRunningCallback& isRunningCallback);
 
@@ -231,8 +232,13 @@ namespace crawlservpp::Module::Analyzer {
 		///@{
 
 		void prepare();
-		void prepareAlgo(const std::vector<std::string>& statements, std::vector<std::uint16_t>& idsTo);
-		[[nodiscard]] sql::PreparedStatement& getPreparedAlgoStatement(std::size_t sqlStatementId);
+		void prepareAlgo(
+				const std::vector<std::string>& statements,
+				std::vector<std::uint16_t>& idsTo
+		);
+		[[nodiscard]] sql::PreparedStatement& getPreparedAlgoStatement(
+				std::size_t sqlStatementId
+		);
 
 		///@}
 		///@name Text Corpus
@@ -280,11 +286,8 @@ namespace crawlservpp::Module::Analyzer {
 		//! The full name of the target table to be written to, including prefixes.
 		std::string targetTableFull;
 
-		//! The names of the target fields, i.e. the columns in the target table, to be written to.
-		std::vector<std::string> targetFieldNames;
-
-		//! The types of the target fields, i.e. the columns in the target table, to be written to.
-		std::vector<std::string> targetFieldTypes;
+		//! The names and types of the target fields, i.e. the columns in the target table to be written to.
+		std::vector<StringString> targetFields;
 
 		//! The maximum size of the text corpus chunks, in percentage of the maximum package size allowed by the MySQL server.
 		/*!

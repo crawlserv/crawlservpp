@@ -83,18 +83,8 @@ namespace crawlservpp::Module::Analyzer {
 	 *   data types of the fields in the
 	 *   target table
 	 */
-	void Database::setTargetFields(
-			const std::vector<std::string>& fields,
-			const std::vector<std::string>& types
-	) {
-		this->targetFieldNames = fields;
-		this->targetFieldTypes = types;
-
-		// replace undefined types with empty strings
-		//  NOTE: This will lead to an error in initTargetTable() if the corresponding names are not empty!
-		while(this->targetFieldTypes.size() < this->targetFieldNames.size()) {
-			this->targetFieldTypes.emplace_back();
-		}
+	void Database::setTargetFields(const std::vector<StringString>& fields) {
+		this->targetFields = fields;
 	}
 
 	//! Sets the size of corpus chunks, in percentage of the maximum package size allowed by the MySQL server.
@@ -171,13 +161,13 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		if(
-				std::find_if(
-						this->targetFieldNames.cbegin(),
-						this->targetFieldNames.cend(),
-						[](const auto& targetFieldName){
-							return !targetFieldName.empty();
+				std::all_of(
+						this->targetFields.cbegin(),
+						this->targetFields.cend(),
+						[](const auto& nameType) {
+							return nameType.first.empty();
 						}
-				) == this->targetFieldNames.cend()
+				)
 		) {
 			throw Exception(
 					"Analyzer::Database::initTargetTable():"
@@ -204,23 +194,23 @@ namespace crawlservpp::Module::Analyzer {
 				compressed
 		);
 
-		for(auto it{this->targetFieldNames.cbegin()}; it != this->targetFieldNames.cend(); ++it) {
-			if(!(it->empty())) {
-				const auto index{it - this->targetFieldNames.cbegin()};
+		for(const auto& field : this->targetFields) {
+			if(field.first.empty()) {
+				continue;
+			}
 
-				propertiesTarget.columns.emplace_back(
-						"analyzed__" + *it,
-						this->targetFieldTypes.at(index)
+			propertiesTarget.columns.emplace_back(
+					"analyzed__" + field.first,
+					field.second
+			);
+
+			if(propertiesTarget.columns.back().type.empty()) {
+				throw Exception(
+						"Analyzer::Database::initTargetTable():"
+						" No type for target field '"
+						+ field.first
+						+ "' has been specified"
 				);
-
-				if(propertiesTarget.columns.back().type.empty()) {
-					throw Exception(
-							"Analyzer::Database::initTargetTable():"
-							" No type for target field '"
-							+ *it
-							+ "' has been specified"
-					);
-				}
 			}
 		}
 
@@ -622,7 +612,10 @@ namespace crawlservpp::Module::Analyzer {
 	 *   a MySQL error occurs during the
 	 *   preparation of the SQL statements.
 	 */
-	void Database::prepareAlgo(const std::vector<std::string>& statements, std::vector<uint16_t>& idsTo) {
+	void Database::prepareAlgo(
+			const std::vector<std::string>& statements,
+			std::vector<uint16_t>& idsTo
+	) {
 		// check connection to database
 		this->checkConnection();
 
@@ -658,7 +651,9 @@ namespace crawlservpp::Module::Analyzer {
 	 *    error occured while retrieving the
 	 *    prepared SQL statement.
 	 */
-	sql::PreparedStatement& Database::getPreparedAlgoStatement(std::size_t sqlStatementId) {
+	sql::PreparedStatement& Database::getPreparedAlgoStatement(
+			std::size_t sqlStatementId
+	) {
 		return this->getPreparedStatement(sqlStatementId);
 	}
 
