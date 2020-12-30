@@ -76,81 +76,21 @@ namespace crawlservpp::Module::Analyzer {
 	void Thread::onInit() {
 		std::queue<std::string> configWarnings;
 
-		// load configuration
-		this->setStatusMessage("Loading configuration...");
+		this->setUpConfig(configWarnings);
+		this->setUpLogging();
 
-		this->loadConfig(
-				this->database.getConfiguration(
-						this->getConfig()
-				),
-				configWarnings
-		);
+		this->logWarnings(configWarnings);
 
-		// show warnings if necessary
-		while(!configWarnings.empty()) {
-			this->log(
-					generalLoggingDefault,
-					"WARNING: "
-					+ configWarnings.front()
-			);
+		this->setUpDatabase();
+		this->setUpTarget();
+		this->setUpSqlStatements();
+		this->setUpQueries();
 
-			configWarnings.pop();
+		if(!(this->isRunning())) {
+			return; // cancel if not running anymore
 		}
 
-		// set database configuration
-		this->setStatusMessage("Setting database configuration...");
-
-		this->database.setLogging(
-				this->config.generalLogging,
-				generalLoggingDefault,
-				generalLoggingVerbose
-		);
-
-		this->log(generalLoggingVerbose, "sets database configuration...");
-
-		this->database.setTargetTable(this->config.generalTargetTable);
-		this->database.setSleepOnError(this->config.generalSleepMySql);
-		this->database.setCorpusSlicing(this->config.generalCorpusSlicing);
-		this->database.setIsRunningCallback([this]() {
-					return this->isRunning();
-		});
-
-		// initialize target table
-		this->setStatusMessage("Initializing target table...");
-
-		this->log(generalLoggingVerbose, "initializes target table...");
-
-		this->onAlgoInitTarget();
-
-		// prepare SQL statements for analyzer
-		this->setStatusMessage("Preparing SQL statements...");
-
-		this->log(generalLoggingVerbose, "prepares SQL statements...");
-
-		this->database.prepare();
-
-		// initialize queries
-		this->setStatusMessage("Initializing queries...");
-
-		this->log(generalLoggingVerbose, "initializes queries...");
-
-		this->addQueries(this->config.filterQueryQueries, this->queriesFilterQuery);
-
-		this->initQueries();
-
-		// initialize algorithm
-		this->setStatusMessage("Initializing algorithm...");
-
-		this->log(generalLoggingVerbose, "initializes algorithm...");
-
-		this->onAlgoInit();
-
-		if(this->isRunning()) {
-			this->setStatusMessage("Starting algorithm...");
-		}
-		else {
-			this->setStatusMessage("Cancelled on startup.");
-		}
+		this->setUpAlgorithm();
 	}
 
 	//! Performs an algorithm tick.
@@ -348,7 +288,7 @@ namespace crawlservpp::Module::Analyzer {
 			std::size_t index,
 			StatusSetter& statusSetter
 	) {
-		std::size_t corpusSources{0};
+		std::size_t corpusSources{};
 
 		this->corpora.emplace_back(this->config.generalCorpusChecks);
 
@@ -396,6 +336,10 @@ namespace crawlservpp::Module::Analyzer {
 			return false;
 		}
 
+		if(!(this->isRunning())) {
+			return false;
+		}
+
 		if(this->corpora.back().empty()) {
 			this->corpora.pop_back();
 
@@ -403,7 +347,7 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		// filter corpus by query
-		this->filterCorpusByQuery(statusSetter);
+		corpusSources -= this->filterCorpusByQuery(statusSetter);
 
 		// log corpus statistics
 		std::ostringstream logStrStr;
@@ -438,6 +382,194 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	/*
+	 * INITIALIZATION FUNCTIONS (private)
+	 */
+
+	// load configuration
+	void Thread::setUpConfig(std::queue<std::string>& warningsTo) {
+		this->setStatusMessage("Loading configuration...");
+
+		this->loadConfig(
+				this->database.getConfiguration(
+						this->getConfig()
+				),
+				warningsTo
+		);
+	}
+
+	// set up logging
+	void Thread::setUpLogging() {
+		this->database.setLogging(
+				this->config.generalLogging,
+				generalLoggingDefault,
+				generalLoggingVerbose
+		);
+	}
+
+	// set database configuration
+	void Thread::setUpDatabase() {
+		this->setStatusMessage("Setting database configuration...");
+
+		this->log(generalLoggingVerbose, "sets database configuration...");
+
+		this->database.setTargetTable(this->config.generalTargetTable);
+		this->database.setSleepOnError(this->config.generalSleepMySql);
+		this->database.setCorpusSlicing(this->config.generalCorpusSlicing);
+		this->database.setIsRunningCallback([this]() {
+			return this->isRunning();
+		});
+	}
+
+	// initialize target table
+	void Thread::setUpTarget() {
+		this->setStatusMessage("Initializing target table...");
+
+		this->log(generalLoggingVerbose, "initializes target table...");
+
+		this->onAlgoInitTarget();
+	}
+
+	// prepare SQL statements for analyzer
+	void Thread::setUpSqlStatements() {
+		this->setStatusMessage("Preparing SQL statements...");
+
+		this->log(generalLoggingVerbose, "prepares SQL statements...");
+
+		this->database.prepare();
+	}
+
+	// initialize queries
+	void Thread::setUpQueries() {
+		this->setStatusMessage("Initializing queries...");
+
+		this->log(generalLoggingVerbose, "initializes queries...");
+
+		this->addQueries(this->config.filterQueryQueries, this->queryFilterQueries);
+
+		this->initQueries();
+	}
+
+	// initialize algorithm
+	void Thread::setUpAlgorithm() {
+		const std::string algoName{this->getName()};
+
+		this->setStatusMessage("Initializing " + algoName + "...");
+
+		this->log(generalLoggingDefault, "initializes " + algoName + "...");
+
+		this->onAlgoInit();
+
+		if(this->isRunning()) {
+			this->log(generalLoggingDefault, "starts " + algoName + "...");
+
+			this->setStatusMessage("Starting " + algoName + "...");
+		}
+		else {
+			this->log(generalLoggingVerbose, "cancelled on startup.");
+
+			this->setStatusMessage("Cancelled on startup.");
+		}
+	}
+
+	// log warnings received by external function
+	void Thread::logWarnings(std::queue<std::string>& warnings) {
+		while(!warnings.empty()) {
+			this->log(
+					generalLoggingDefault,
+					"WARNING: "
+					+ warnings.front()
+			);
+
+			warnings.pop();
+		}
+	}
+
+	/*
+	 * INTERNAL HELPER FUNCTION (private)
+	 */
+
+	// filter the corpus using the queries provided in the configuration, return the number of removed articles
+	std::size_t Thread::filterCorpusByQuery(StatusSetter& statusSetter) {
+		std::queue<std::string> warnings;
+
+		if(this->queryFilterQueries.empty()) {
+			return 0;
+		}
+
+		// start timer
+		Timer::Simple timer;
+
+		// filter by query
+		std::size_t removed{
+			this->corpora.back().filterArticles(
+					[this, &warnings](
+							const auto& tokens,
+							auto articlePos,
+							auto articleLen
+					) {
+						return std::any_of(
+								this->queryFilterQueries.begin(),
+								this->queryFilterQueries.end(),
+								[this, &tokens, articlePos, articleLen, &warnings](const auto& query) {
+									for(std::size_t index{articlePos}; index < articlePos + articleLen; ++index) {
+										this->setQueryTarget(tokens[index], "");
+
+										bool result{false};
+
+										if(this->getBoolFromQuery(query, result, warnings)) {
+											if(result) {
+												return true;
+											}
+										}
+									}
+
+									return false;
+								}
+						);
+					},
+					statusSetter
+			)
+		};
+
+		while(!warnings.empty()) {
+			this->log(generalLoggingDefault, warnings.front());
+
+			warnings.pop();
+		}
+
+		if(!(this->isRunning())) {
+			return 0;
+		}
+
+		if(removed > 0) {
+			// log new corpus size
+			std::ostringstream logStrStr;
+
+			logStrStr.imbue(std::locale(""));
+
+			logStrStr	<< "filtered corpus (by query) to "
+						<< this->corpora.back().size()
+						<< " bytes (removed ";
+
+			switch(removed)  {
+			case 1:
+				logStrStr << " one article";
+
+				break;
+
+			default:
+				logStrStr << removed << " articles";
+			}
+
+			logStrStr << ") in " << timer.tickStr() << ".";
+
+			this->log(generalLoggingDefault, logStrStr.str());
+		}
+
+		return removed;
+	}
+
+	/*
 	 *  shadowing functions not to be used by thread (private)
 	 */
 
@@ -467,82 +599,6 @@ namespace crawlservpp::Module::Analyzer {
 		throw std::logic_error(
 				"Thread::interrupt() not to be used by thread itself"
 		);
-	}
-
-	/*
-	 * INTERNAL HELPER FUNCTION (private)
-	 */
-
-	// filter the corpus using the queries provided in the configuration.
-	void Thread::filterCorpusByQuery(StatusSetter& statusSetter) {
-		std::queue<std::string> warnings;
-
-		// filter corpus by query
-		if(!(this->queriesFilterQuery.empty())) {
-			std::size_t removed{
-				this->corpora.back().filterArticles(
-						[this, &warnings](
-								const auto& tokens,
-								auto articlePos,
-								auto articleLen
-						) {
-							return std::any_of(
-									this->queriesFilterQuery.begin(),
-									this->queriesFilterQuery.end(),
-									[this, &tokens, articlePos, articleLen, &warnings](const auto& query) {
-										for(std::size_t index{articlePos}; index < articlePos + articleLen; ++index) {
-											this->setQueryTarget(tokens[index], "");
-
-											bool result{false};
-
-											if(this->getBoolFromQuery(query, result, warnings)) {
-												if(result) {
-													return true;
-												}
-											}
-										}
-
-										return false;
-									}
-							);
-						},
-						statusSetter
-				)
-			};
-
-			while(!warnings.empty()) {
-				this->log(generalLoggingDefault, warnings.front());
-
-				warnings.pop();
-			}
-
-			if(!(this->isRunning())) {
-				return;
-			}
-
-			if(removed > 0) {
-				// log new corpus size
-				std::ostringstream logStrStr;
-
-				logStrStr.imbue(std::locale(""));
-
-				logStrStr	<< "filtered corpus (by query) to "
-							<< this->corpora.back().size()
-							<< " bytes (removed ";
-
-				switch(removed)  {
-				case 1:
-					logStrStr << " one article)";
-
-					break;
-
-				default:
-					logStrStr << removed << " articles)";
-				}
-
-				this->log(generalLoggingDefault, logStrStr.str());
-			}
-		}
 	}
 
 } /* namespace crawlservpp::Module::Analyzer */

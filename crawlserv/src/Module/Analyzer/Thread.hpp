@@ -47,6 +47,7 @@
 #include "../../Struct/StatusSetter.hpp"
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
+#include "../../Timer/Simple.hpp"
 
 #include <cstddef>		// std::size_t
 #include <functional>	// std::bind
@@ -55,6 +56,7 @@
 #include <sstream>		// std::ostringstream
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::string
+#include <string_view>	// std::string_view
 #include <tuple>		// std::tuple
 #include <vector>		// std::vector
 
@@ -98,6 +100,20 @@ namespace crawlservpp::Module::Analyzer {
 		std::vector<Data::Corpus> corpora;
 
 		///@}
+		///@name Getter
+		///@{
+
+		//! Returns the name of the algorithm.
+		/*!
+		 * Needs to be implemented by the (child)
+		 *  class for the specific algorithm.
+		 *
+		 * \returns A string view containing the
+		 *   name of the implemented algorithm.
+		 */
+		virtual std::string_view getName() const = 0;
+
+		///@}
 		///@name Implemented Thread Functions
 		///@{
 
@@ -125,47 +141,53 @@ namespace crawlservpp::Module::Analyzer {
 
 		//! Initializes the target table for the algorithm.
 		/*!
-		 * Needs to be implemented by the (child) class
-		 *  for the specific algorithm.
+		 * Needs to be implemented by the
+		 *  (child) class for the specific
+		 *  algorithm.
 		 *
-		 * \note The SQL statements for the analyzer will
-		 *   not be yet prepared when this function is
-		 *   called.
+		 * \note The SQL statements for the
+		 *   analyzer will not be yet prepared
+		 *   when this function is called.
 		 */
 		virtual void onAlgoInitTarget() = 0;
 
 		//! Initializes the algorithm.
 		/*!
-		 * Needs to be implemented by the (child) class
-		 *  for the specific algorithm.
+		 * Needs to be implemented by the
+		 *  (child) class for the specific
+		 *  algorithm.
 		 */
 		virtual void onAlgoInit() = 0;
 
 		//! Performs an algorithm tick.
 		/*!
-		 * Needs to be implemented by the (child) class
-		 *  for the specific algorithm.
+		 * Needs to be implemented by the
+		 *  (child) class for the specific
+		 *  algorithm.
 		 */
 		virtual void onAlgoTick() = 0;
 
 		//! Pauses the algorithm.
 		/*!
-		 * Needs to be implemented by the (child) class
-		 *  for the specific algorithm.
+		 * Needs to be implemented by the
+		 *  (child) class for the specific
+		 *  algorithm.
 		 */
 		virtual void onAlgoPause() = 0;
 
 		//! Unpauses the algorithm.
 		/*!
-		 * Needs to be implemented by the (child) class
-		 *  for the specific algorithm.
+		 * Needs to be implemented by the
+		 *  (child) class for the specific
+		 *  algorithm.
 		 */
 		virtual void onAlgoUnpause() = 0;
 
 		//! Clears the algorithm.
 		/*!
-		 * Needs to be implemented by the (child) class
-		 *  for the specific algorithm.
+		 * Needs to be implemented by the
+		 *  (child) class for the specific
+		 *  algorithm.
 		 */
 		virtual void onAlgoClear() = 0;
 
@@ -190,17 +212,27 @@ namespace crawlservpp::Module::Analyzer {
 		MAIN_EXCEPTION_CLASS();
 
 	private:
-		// queries for filtering corpora
-		std::vector<QueryStruct> queriesFilterQuery;
+		// queries for filtering a text corpus
+		std::vector<QueryStruct> queryFilterQueries;
+
+		// initialization functions
+		void setUpConfig(std::queue<std::string>& warningsTo);
+		void setUpLogging();
+		void setUpDatabase();
+		void setUpTarget();
+		void setUpSqlStatements();
+		void setUpQueries();
+		void setUpAlgorithm();
+		void logWarnings(std::queue<std::string>& warnings);
+
+		// internal helper function
+		std::size_t filterCorpusByQuery(StatusSetter& statusSetter);
 
 		// hide other functions not to be used by the thread
 		void start();
 		void unpause();
 		void stop();
 		void interrupt();
-
-		// internal helper function
-		void filterCorpusByQuery(StatusSetter& statusSetter);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer */
