@@ -42,7 +42,7 @@
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
-#include <algorithm>		// std::find_if, std::for_each, std::min, std::sort
+#include <algorithm>		// std::all_of, std::min, std::sort
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint16_t, std::uint64_t
 #include <limits>			// std::numeric_limits
@@ -52,6 +52,7 @@
 #include <string>			// std::string
 #include <string_view>		// std::string_view
 #include <unordered_map>	// std::unordered_map
+#include <utility>			// std::pair
 #include <vector>			// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
@@ -90,6 +91,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using ThreadStatus = Struct::ThreadStatus;
 
 		using Exception = Module::Analyzer::Thread::Exception;
+
+		using StringString = std::pair<std::string, std::string>;
 
 	public:
 		///@name Construction

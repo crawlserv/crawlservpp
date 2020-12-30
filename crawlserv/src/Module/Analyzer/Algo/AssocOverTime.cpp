@@ -88,8 +88,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 	void AssocOverTime::onAlgoInitTarget() {
 		// set target fields
-		std::vector<std::string> fields;
-		std::vector<std::string> types;
+		std::vector<StringString> fields;
 
 		const auto numFields{
 			this->algoConfig.categoryLabels.size()
@@ -97,24 +96,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		};
 
 		fields.reserve(numFields);
-		types.reserve(numFields);
 
-		fields.emplace_back("date");
-		fields.emplace_back("n");
-		fields.emplace_back("occurrences");
-		types.emplace_back("VARCHAR(10)");
-		types.emplace_back("BIGINT UNSIGNED");
-		types.emplace_back("BIGINT UNSIGNED");
+		fields.emplace_back("date", "VARCHAR(10)");
+		fields.emplace_back("n", "BIGINT UNSIGNED");
+		fields.emplace_back("occurrences", "BIGINT UNSIGNED");
 
-		std::for_each(
-				this->algoConfig.categoryLabels.cbegin(),
-				this->algoConfig.categoryLabels.cend(),
-				[&fields, &types](const auto& label) {
-			fields.emplace_back(label);
-			types.emplace_back("BIGINT UNSIGNED");
-		});
+		for(const auto& label : this->algoConfig.categoryLabels) {
+			fields.emplace_back(label, "BIGINT UNSIGNED");
+		}
 
-		this->database.setTargetFields(fields, types);
+		this->database.setTargetFields(fields);
 
 		// initialize target table
 		this->database.initTargetTable(true, true);
@@ -228,14 +219,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// check categories
 		if(
-				this->algoConfig.categoryQueries.empty()
-				|| std::find_if(
-						this->algoConfig.categoryQueries.begin(),
-						this->algoConfig.categoryQueries.end(),
+				std::all_of(
+						this->algoConfig.categoryQueries.cbegin(),
+						this->algoConfig.categoryQueries.cend(),
 						[](const auto query) {
-							return query > 0;
+							return query == 0;
 						}
-				) == this->algoConfig.categoryQueries.end()) {
+				)
+		) {
 			throw Exception("No category defined");
 		}
 
@@ -428,26 +419,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 		}
 
-		std::for_each(
-				dateMap.cbegin(),
-				dateMap.cend(),
-				[
-				 this,
-				 &dateIt,
-				 &dateMap,
-				 &articleMap,
-				 &tokens,
-				 &warnings
-				](const auto& date) {
-					this->addArticlesForDate(
-							date,
-							dateIt,
-							articleMap,
-							tokens,
-							warnings
-					);
-				}
-		);
+		for(const auto& date : dateMap) {
+			this->addArticlesForDate(
+					date,
+					dateIt,
+					articleMap,
+					tokens,
+					warnings
+			);
+		}
 	}
 
 	// calculate and save associations
@@ -460,13 +440,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->processedDates = 0;
 
-		std::for_each(
-				this->associations.cbegin(),
-				this->associations.cend(),
-				[this, &results](const auto& date) {
-					this->processDate(date, results);
-				}
-		);
+		for(const auto& date : this->associations) {
+			this->processDate(date, results);
+		}
 
 		// sort results
 		std::sort(results.begin(), results.end(), [](const auto& a, const auto&b) {
@@ -750,13 +726,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::uint64_t occurrences{0};
 		std::vector<std::uint64_t> catsCounters(this->algoConfig.categoryLabels.size(), 0);
 
-		std::for_each(
-				date.second.cbegin(),
-				date.second.cend(),
-				[this, &occurrences, &catsCounters](const auto& article) {
-					this->processArticle(article, occurrences, catsCounters);
-				}
-		);
+		for(const auto& article : date.second) {
+			this->processArticle(article, occurrences, catsCounters);
+		}
 
 		// add row to results
 		resultsTo.emplace_back(
@@ -767,13 +739,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		resultsTo.back().second.push_back(date.second.size());
 		resultsTo.back().second.push_back(occurrences);
 
-		std::for_each(
-				catsCounters.cbegin(),
-				catsCounters.cend(),
-				[&resultsTo](const auto& counter) {
-					resultsTo.back().second.push_back(counter);
-				}
-		);
+		for(const auto& counter : catsCounters) {
+			resultsTo.back().second.push_back(counter);
+		}
 
 		// update progress
 		++(this->processedDates);
@@ -791,13 +759,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			std::size_t& occurrencesTo,
 			std::vector<std::uint64_t>& catsCountersTo
 	) {
-		std::for_each(
-				article.second.keywordPositions.cbegin(),
-				article.second.keywordPositions.cend(),
-				[this, &article, &occurrencesTo, &catsCountersTo](const auto occurrence) {
-					processTermOccurrence(article, occurrence, occurrencesTo, catsCountersTo);
-				}
-		);
+		for(const auto& occurrence : article.second.keywordPositions) {
+			processTermOccurrence(article, occurrence, occurrencesTo, catsCountersTo);
+		}
 	}
 
 	// process single term occurrence
