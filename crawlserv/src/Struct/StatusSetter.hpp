@@ -52,7 +52,7 @@ namespace crawlservpp::Struct {
 
 	///@}
 
-	//! Data needed to keep the status updated.
+	//! Structure containing all the data needed to keep the status of a thread updated.
 	struct StatusSetter {
 		///@name Properties
 		///@{
@@ -220,6 +220,7 @@ namespace crawlservpp::Struct {
 
 		//! Re-sets the progress of the thread.
 		void finish() const {
+			this->callbackSetStatus(this->currentStatus + " [done]");
 			this->callbackSetProgress(this->progressAfter);
 		}
 	};
