@@ -1065,6 +1065,8 @@ class Config {
 		
 		result += ">[none]</option>\n";
 		
+		result += "</select>\n";
+		
 		// get language models from server
 		var body = JSON.stringify({ cmd: "listmdls" });
 		let t = this;
