@@ -524,6 +524,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t resultCounter{};
 
 		for(const auto& date : this->dateData) {
+			if(date.first.empty() && this->algoConfig.ignoreEmptyDate) {
+				continue;
+			}
+
 			Data::InsertFieldsMixed data;
 
 			data.columns_types_values.reserve(resultNumColumns);
