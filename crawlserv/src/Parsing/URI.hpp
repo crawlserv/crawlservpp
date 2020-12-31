@@ -38,6 +38,10 @@
 
 #include <uriparser/Uri.h>
 
+#if URI_VER_MINOR < 9
+#error "uriparser version 0.9.0 or higher required!"
+#endif
+
 #include <algorithm>	// std::find
 #include <cstddef>		// std::size_t
 #include <memory>		// std::make_unique
