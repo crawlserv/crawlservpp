@@ -32,7 +32,7 @@
 #define HELPER_PORTABILITY_COMPILER_H_
 
 // check compiler version
-#if defined(__CLANG__)
+#if defined(__clang__)
 #if __clang_major__ < 5
 #warning "Compiler version is not supported."
 #endif
