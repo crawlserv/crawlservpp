@@ -302,17 +302,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void AssocOverTime::addCurrent() {
 		std::queue<std::string> warnings;
 
-		const auto& corpus = this->corpora[this->currentCorpus];
-		const auto& dateMap = corpus.getcDateMap();
-		const auto& articleMap = corpus.getcArticleMap();
-		const auto& tokens = corpus.getcTokens();
-
-		if(!dateMap.empty() && articleMap.empty()) {
-			throw Exception("Date map, but no article map found!");
-		}
-
-		std::string{}.swap(this->lastDate);
-
 		// set status message and reset progress
 		std::string status{"term and category occurrences"};
 
@@ -330,6 +319,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(generalLoggingDefault, "identifies " + status);
 
+		// set current corpus
+		const auto& corpus = this->corpora[this->currentCorpus];
+		const auto& dateMap = corpus.getcDateMap();
+		const auto& articleMap = corpus.getcArticleMap();
+		const auto& tokens = corpus.getcTokens();
+
 		// set initial state
 		this->dateCounter = 0;
 		this->firstDatePos = tokens.size();
@@ -338,8 +333,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->articleIndex = 0;
 		this->tokenIndex = 0;
 
+		std::string{}.swap(this->lastDate);
+
 		auto dateIt{this->associations.begin()};
 
+		// check date map
 		if(dateMap.empty()) {
 			this->log(
 					generalLoggingDefault,
@@ -351,19 +349,20 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			return;
 		}
 
+		// handle articles without date
 		this->firstDatePos = dateMap.front().pos;
 
 		if(this->firstDatePos > 0 && !(this->algoConfig.ignoreEmptyDate)) {
 			if(articleMap.empty()) {
-				// no date and no article map: treat input as one article
+				// no date and no article map: treat as one article
 				dateIt = this->addDate("");
 
 				const auto articleIt{
 					this->addArticleToDate("", dateIt)
 				};
 
-				// go through all tokens
-				for(; this->tokenIndex < tokens.size(); ++(this->tokenIndex)) {
+				// go through all tokens without date
+				for(; this->tokenIndex < this->firstDatePos; ++(this->tokenIndex)) {
 					this->processToken(
 							tokens[this->tokenIndex],
 							articleIt->second,
@@ -419,6 +418,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 		}
 
+		// process dates
 		for(const auto& date : dateMap) {
 			this->addArticlesForDate(
 					date,
@@ -803,7 +803,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			std::uint64_t catOccurrence,
 			std::size_t catIndex,
 			std::vector<std::uint64_t>& catsCountersTo
-	) {
+	) const {
 		if(catOccurrence > termOccurrence + this->algoConfig.windowSize) {
 			return false;
 		}

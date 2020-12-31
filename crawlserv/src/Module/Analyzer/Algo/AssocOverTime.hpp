@@ -224,7 +224,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				std::uint64_t catOccurrence,
 				std::size_t catIndex,
 				std::vector<std::uint64_t>& catsCountersTo
-		);
+		) const;
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
