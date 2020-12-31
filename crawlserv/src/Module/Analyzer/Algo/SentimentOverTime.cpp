@@ -501,6 +501,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage("Calculating and saving results...");
 		this->setProgress(0.F);
 
+		this->log(generalLoggingDefault, "calculates and saves results...");
+
 		auto resultNumColumns{
 			sentimentMinNumColumns
 		};
