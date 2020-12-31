@@ -214,10 +214,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		else {
 			this->saveSentiments();
 
-			// sleep forever (i.e. until the thread is terminated)
-			this->finished();
-
 			if(this->isRunning()) {
+				this->finished();
+
+				// sleep forever (i.e. until the thread is terminated)
 				this->sleep(std::numeric_limits<std::uint64_t>::max());
 			}
 		}
@@ -488,6 +488,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 				statusCounter = 0;
 			}
+
+			if(!(this->isRunning())) {
+				return;
+			}
 		}
 	}
 
@@ -595,6 +599,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				);
 
 				statusCounter = 0;
+			}
+
+			if(!(this->isRunning())) {
+				return;
 			}
 		}
 	}
