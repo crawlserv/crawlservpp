@@ -73,10 +73,12 @@ class Config {
 			var categories = [];
 			var results = [];
 			var includes = [];
+			var names = [];
 			
 			// get data for algorithms from external JSONs
+			let namesArr = names;
 			if(typeof algo !== 'undefined') {
-				$.each(algo.config_cats, function(index, category) {
+				$.each(algo.config_cats, function(_, category) {
 					if(category != "general") {
 						categories.push(category);
 						
@@ -84,19 +86,21 @@ class Config {
 						
 						deferreds.push($.getJSON("json/algos/" + category + ".json", function(data) {
 							results.push(data);
+							namesArr.push(category);
 						}));
 					}
 				});
 			}
 			
-			// get included data from external JSONs
+			// get included data from external JSONs			
 			if(data.hasOwnProperty("#include")) {
 				if($.isArray(data["#include"])) {
-					$.each(data["#include"], function(index, include) {
+					$.each(data["#include"], function(_, include) {
 						console.log("> json/" + include);
 						
 						deferreds.push($.getJSON("json/" + include, function(data) {
 							includes.push(data);
+							n.push(include);
 						}));
 					});
 				}
@@ -111,16 +115,16 @@ class Config {
 				delete data["#include"];
 			}
 			
-			$.when.apply($, deferreds).then(function() {
+			$.when.apply($, deferreds).then(function() {				
 				// include algo data				
 				$.each(results, function(index, algoData) {
-					data[categories[index]] = algoData;
+					data[namesArr[index]] = algoData;
 				});
 				
 				// merge with included JSON data
-				$.each(includes, function(index, include) {
+				$.each(includes, function(_, include) {					
 					$.extend(data, include);
-				})
+				});
 				
 				thisClass.config_base = data;
 								
@@ -1256,7 +1260,7 @@ class Config {
 			}
 		}
 		else {
-			result += this.emptyarray(cat, id, type);
+			result += this.emptyarray(cat, id);
 		}
 		
 		result += "</div>\n";
@@ -1265,7 +1269,7 @@ class Config {
 	}
 	
 	// show empty array
-	emptyarray(cat, id, type) {
+	emptyarray(cat, id) {
 		return "<div class=\"opt-array-item\" data-item=\"0\"> \
 				<div class=\"opt-empty\">[empty]</div>\n \
 				<input type=\"button\" \
@@ -1414,7 +1418,7 @@ class Config {
 		var toRemove = null;
 		
 		// rename and renumber
-		array.find("div.opt-array-item").each(function(i, obj) {			
+		array.find("div.opt-array-item").each(function(_, obj) {			
   			var objn = parseInt($(obj).data("item"), 10);
   			if(item == objn) {
   				toRemove = obj;
@@ -1440,7 +1444,7 @@ class Config {
 		
 		// if a placeholder is removed, all other empty elements with placeholders need to be set
 		if(isPlaceholder) {
-			array.find("div.opt-array-item").each(function(i, obj) {
+			array.find("div.opt-array-item").each(function(_, obj) {
 				var element = $(obj).find("input.opt-array");
 				
 				if(
@@ -1465,8 +1469,7 @@ class Config {
 		if(count == 1)
 			array.append(this.emptyarray(
 					array.data("cat"),
-					array.data("id"), 
-					array.data("type")
+					array.data("id")
 			));
 		
 		// delete element
@@ -1503,6 +1506,12 @@ class Config {
 	
 	// update and get current configuration
 	updateConf() {
+		if(typeof this.config_current === "undefined") {
+			alert("Something went wrong. Please try again.");
+			
+			throw Error("Something went wrong. Please try again.");
+		}
+		
 		// update configuration: go through all categories and options in base
 		for(var cat in this.config_base) {
 			for(var opt in this.config_base[cat]) {
@@ -1788,9 +1797,9 @@ class Config {
 		if(algo) {
 			let thisClass = this;
 			
-			$.each(algo.config_cats, function(index, algoCat) {
+			$.each(algo.config_cats, function(_, algoCat) {
 				if(algoCat != "general") {
-					$.each(thisClass.config_current, function(index, configEntry) {
+					$.each(thisClass.config_current, function(_, configEntry) {
 						if(configEntry["name"] != "_algo" && configEntry["cat"] == algoCat) {
 							found = true;
 							
