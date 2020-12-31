@@ -661,7 +661,7 @@ class Config {
 					"\" data-cat=\"" + cat +
 					"\" data-type=\"" + type +
 					"\" data-value=\'" + htmlentities(JSON.stringify(value)) +
-					"\"'>\n";
+					"\'>\n";
 					
 		return result;
 	}
@@ -999,6 +999,8 @@ class Config {
 		
 		result += ">[none]</option>\n";
 		
+		result += "</select>\n";
+		
 		// get dictionaries from server
 		var body = JSON.stringify({ cmd: "listdicts" });
 		let t = this;
@@ -1031,7 +1033,7 @@ class Config {
 		}, "json")
 		.fail(function() {
 			t.error("Retrieving dictionaries failed: Connection to server required.");
-		});	
+		});
 		
 		return result;
 	}
