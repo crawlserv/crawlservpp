@@ -69,7 +69,7 @@
 	"use.threshold": {
 		"type": "bool",
 		"default": false,
-		"label": "Ignore sentiment scores below threshold.",
+		"label": "Ignore sentiment below threshold",
 		"description": "Ignores the sentiment scores that fall below the specified threshold.",
 		"simple": true,
 		"position": 3
