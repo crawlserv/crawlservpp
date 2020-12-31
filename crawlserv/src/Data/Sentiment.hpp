@@ -417,7 +417,7 @@ namespace crawlservpp::Data {
 				std::vector<float>& sentiments,
 				bool isCapDifference
 		);
-		SentimentScores scoreValence(const std::vector<float>& sentiments, const WORDS& /*words*/);
+		static SentimentScores scoreValence(const std::vector<float>& sentiments, const WORDS& /*words*/);
 		void leastCheck(float& valence, const WORDS& wordsLower, std::size_t index) const;
 
 		// static internal helper functions
@@ -558,7 +558,7 @@ namespace crawlservpp::Data {
 		// copy trimmed string
 		newWords.reserve(words.size());
 
-		for(auto& word : words) {
+		for(const auto& word : words) {
 			std::string wordCopy;
 
 			std::size_t beg{};
@@ -566,7 +566,7 @@ namespace crawlservpp::Data {
 			for(; beg < word.length(); ++beg) {
 				const auto c{word[beg]};
 
-				if(!std::ispunct(c) && !std::iscntrl(c) && c != ' ') {
+				if(std::ispunct(c) == 0 && std::iscntrl(c) == 0 && c != ' ') {
 					break;
 				}
 			}
@@ -576,7 +576,7 @@ namespace crawlservpp::Data {
 			do {
 				const auto c{word[beg + len - VaderOne]};
 
-				if(!std::ispunct(c) && !std::iscntrl(c) && c != ' ') {
+				if(std::ispunct(c) == 0 && std::iscntrl(c) == 0 && c != ' ') {
 					break;
 				}
 
@@ -593,17 +593,14 @@ namespace crawlservpp::Data {
 				emojiWord.reserve(it->second.length());
 
 				for(auto c : it->second) {
-					switch(c) {
-					case ' ':
+					if(c == ' ') {
 						if(!emojiWord.empty()) {
 							newWords.emplace_back(emojiWord);
 
 							emojiWord.clear();
 						}
-
-						break;
-
-					default:
+					}
+					else {
 						emojiWord.push_back(c);
 					}
 				}
@@ -871,7 +868,8 @@ namespace crawlservpp::Data {
 		if(normScore < -1.F) {
 			return -1.F;
 		}
-		else if(normScore > 1.F) {
+
+		if(normScore > 1.F) {
 			return 1.F;
 		}
 

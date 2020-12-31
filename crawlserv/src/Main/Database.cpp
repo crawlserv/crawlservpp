@@ -618,7 +618,7 @@ namespace crawlservpp::Main {
 					" VALUES"
 			);
 
-			std::for_each(locales.cbegin(), locales.cend(), [&sqlQuery](const auto&) {
+			std::for_each(locales.cbegin(), locales.cend(), [&sqlQuery](const auto& /*unused*/) {
 				sqlQuery += " (?),";
 			});
 
@@ -682,7 +682,7 @@ namespace crawlservpp::Main {
 					" VALUES"
 			);
 
-			std::for_each(versions.cbegin(), versions.cend(), [&sqlQuery](const auto&) {
+			std::for_each(versions.cbegin(), versions.cend(), [&sqlQuery](const auto& /*unused*/) {
 				sqlQuery += " (?, ?),";
 			});
 
@@ -8775,9 +8775,13 @@ namespace crawlservpp::Main {
 
 			sqlQuery += ") VALUES(";
 
-			std::for_each(data.columns_values.cbegin(), data.columns_values.cend(), [&sqlQuery](const auto&) {
-				sqlQuery += "?, ";
-			});
+			std::for_each(
+					data.columns_values.cbegin(),
+					data.columns_values.cend(),
+					[&sqlQuery](const auto& /*unused*/) {
+						sqlQuery += "?, ";
+					}
+			);
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();
@@ -9009,9 +9013,10 @@ namespace crawlservpp::Main {
 			std::for_each(
 					data.columns_types_values.cbegin(),
 					data.columns_types_values.cend(),
-					[&sqlQuery](const auto&) {
-				sqlQuery += "?, ";
-			});
+					[&sqlQuery](const auto& /*unused*/) {
+						sqlQuery += "?, ";
+					}
+			);
 
 			sqlQuery.pop_back();
 			sqlQuery.pop_back();

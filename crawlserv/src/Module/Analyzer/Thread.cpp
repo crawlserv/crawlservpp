@@ -551,13 +551,10 @@ namespace crawlservpp::Module::Analyzer {
 						<< this->corpora.back().size()
 						<< " bytes (removed ";
 
-			switch(removed)  {
-			case 1:
+			if(removed == 1) {
 				logStrStr << " one article";
-
-				break;
-
-			default:
+			}
+			else {
 				logStrStr << removed << " articles";
 			}
 
