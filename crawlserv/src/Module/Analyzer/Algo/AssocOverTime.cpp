@@ -453,9 +453,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage("Writing results to database...");
 		this->setProgress(0.F);
 
-		std::size_t statusCounter{};
-		std::size_t resultCounter{};
-
 		const auto resultNumColumns{
 			assocResultMinNumColumns
 			+ this->algoConfig.categoryLabels.size()
@@ -464,6 +461,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		const auto resultTable{
 			this->getTargetTableName()
 		};
+
+		std::size_t statusCounter{};
+		std::size_t resultCounter{};
 
 		for(const auto& result : results) {
 			Data::InsertFieldsMixed data;
