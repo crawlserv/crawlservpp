@@ -999,7 +999,7 @@ class Config {
 		
 		result += ">[none]</option>\n";
 		
-		result += "</select>\n";
+		result += "</select>";
 		
 		// get dictionaries from server
 		var body = JSON.stringify({ cmd: "listdicts" });
@@ -1065,7 +1065,7 @@ class Config {
 		
 		result += ">[none]</option>\n";
 		
-		result += "</select>\n";
+		result += "</select>";
 		
 		// get language models from server
 		var body = JSON.stringify({ cmd: "listmdls" });
