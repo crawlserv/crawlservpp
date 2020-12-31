@@ -37,7 +37,7 @@
 #warning "Compiler version is not supported."
 #endif
 #elif defined(__GNUC__) || defined(__GNUG__)
-#if __GNUC__ < 6
+#if __GNUC__ < 7
 #warning "Compiler version is not supported."
 #endif
 #elif defined(_MSC_VER)
