@@ -2733,7 +2733,7 @@ namespace crawlservpp::Data {
 			++smEnd; /* current sentence is in range as has already been checked */
 
 			for(; smEnd != this->sentenceMap.cend(); ++smEnd) {
-				if(smEnd->first > len) {
+				if(smEnd->first >= offset + len) {
 					break;
 				}
 			}
