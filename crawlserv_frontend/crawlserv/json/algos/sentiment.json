@@ -8,7 +8,7 @@
 		"label": "Add article-based sentiment scores",
 		"description": "Calculates sentiment scores based on whole articles for each category, in addition to the default sentence-based sentiment scores.",
 		"simple": true,
-		"position": 5
+		"position": 6
 	},
 	"cat.labels": {
 		"type": "array",
@@ -40,7 +40,7 @@
 		"label": "Dictionary:",
 		"description": "The dictionary containing the scores of sentimental (English) words to be used.",
 		"simple": true,
-		"position": 3
+		"position": 4
 	},
 	"emojis": {
 		"type": "dict",
@@ -54,6 +54,16 @@
 		"label": "Ignore articles without date",
 		"description": "Exclude articles without date from the analysis.",
 		"simple": true,
-		"position": 4
+		"position": 5
+	},
+	"threshold": {
+		"type": "number",
+		"min": 0,
+		"max": 100,
+		"default": 10,
+		"label": "Threshold (in %):",
+		"description": "Sentiment scores lower than this value will be ignored.",
+		"simple": true,
+		"position": 3
 	}
 }
