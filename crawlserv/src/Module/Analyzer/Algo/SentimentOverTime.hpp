@@ -207,6 +207,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			std::uint8_t threshold{sentimentDefaultThreshold};
 			bool addArticleSentiment{false};
 			bool ignoreEmptyDate{true};
+			bool useThreshold{false};
 			std::string dictionary{sentimentDictionary};
 			std::string emojis{sentimentEmojis};
 		} algoConfig;

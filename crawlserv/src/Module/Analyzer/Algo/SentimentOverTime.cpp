@@ -248,6 +248,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->option("emojis", this->algoConfig.emojis);
 		this->option("ignore.empty.date", this->algoConfig.ignoreEmptyDate);
 		this->option("threshold", this->algoConfig.threshold);
+		this->option("use.threshold", this->algoConfig.useThreshold);
 	}
 
 	//! Checks the configuration options for the algorithm.
@@ -680,14 +681,20 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			if(found) {
 				if(toAnalyze) {
 					sentiment = this->getSentenceScore(sentence, tokens);
-					meetsThreshold = SentimentOverTime::meetsThreshold(sentiment, this->algoConfig.threshold);
+
+					if(this->algoConfig.useThreshold) {
+						meetsThreshold = SentimentOverTime::meetsThreshold(
+								sentiment,
+								this->algoConfig.threshold
+						);
+					}
 
 					toAnalyze = false;
 				}
 
 				auto& data{dateIt->second[category]};
 
-				if(meetsThreshold) {
+				if(!(this->algoConfig.useThreshold) || meetsThreshold) {
 					// add sentiment to category
 					data.sentimentSum += sentiment;
 					data.sentimentCount++;
@@ -808,8 +815,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			) {
 				float sentiment{this->getSentenceScore(*sentenceIt, tokens)};
 
-				result.first += sentiment;
-				++result.second;
+				if(
+						!(this->algoConfig.useThreshold)
+						|| SentimentOverTime::meetsThreshold(
+								sentiment,
+								this->algoConfig.threshold
+						)
+				) {
+					result.first += sentiment;
+
+					++result.second;
+				}
 
 				++sentenceIt;
 			}
