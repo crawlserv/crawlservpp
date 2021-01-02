@@ -100,7 +100,6 @@ class Config {
 						
 						deferreds.push($.getJSON("json/" + include, function(data) {
 							includes.push(data);
-							n.push(include);
 						}));
 					});
 				}
