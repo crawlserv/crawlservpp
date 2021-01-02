@@ -40,18 +40,20 @@ $result = $dbConnection->query(
          ORDER BY id DESC"
 );
 
-if(!$result)
+if(!$result) {
     die("ERROR: Could not get parsing tables.");
+}
     
 if($result->num_rows) {
     $tables = array();
     
-    while($row = $result->fetch_assoc())
+    while($row = $result->fetch_assoc()) {
         $tables[] = array(
             "id" => $row["id"],
             "name" => $row["name"],
             "updated" => $row["updated"]
         );
+    }
         
     $result->close();
     
@@ -138,8 +140,9 @@ if($result->num_rows) {
     if(count($columns)) {
         $query = "SELECT ";
         
-        foreach($columns as $column)
+        foreach($columns as $column) {
             $query .= "b.`".$column."`, ";
+        }
             
         $query .= "b.content";
         
