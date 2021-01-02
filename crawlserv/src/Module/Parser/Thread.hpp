@@ -52,7 +52,7 @@
 #include <algorithm>	// std::find, std::find_if
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint64_t
+#include <cstdint>		// std::uint8_t, std::uint64_t
 #include <iomanip>		// std::setprecision
 #include <ios>			// std::fixed
 #include <locale>		// std::locale
@@ -73,8 +73,8 @@ namespace crawlservpp::Module::Parser {
 	///@name Constants
 	///@{
 
-	//! The number of archived URLs after which the thread status will be updated.
-	inline constexpr auto updateArchiveCounterEvery{100};
+	//! The number of processed contents after which the thread status will be updated.
+	inline constexpr std::uint8_t updateContentCounterEvery{25};
 
 	///@}
 
@@ -174,7 +174,7 @@ namespace crawlservpp::Module::Parser {
 		std::vector<QueryStruct> queriesFields;
 
 		// timing
-		std::uint64_t tickCounter{0};
+		std::uint64_t tickCounter{};
 		std::chrono::steady_clock::time_point startTime{std::chrono::steady_clock::time_point::min()};
 		std::chrono::steady_clock::time_point pauseTime{std::chrono::steady_clock::time_point::min()};
 		std::chrono::steady_clock::time_point idleTime{std::chrono::steady_clock::time_point::min()};
@@ -182,15 +182,15 @@ namespace crawlservpp::Module::Parser {
 		// parsing state
 		bool idle{false};			// waiting for new URLs to be crawled
 		bool idFromUrlOnly{false};	// ID is exclusively parsed from URL
-		std::uint64_t lastUrl{0};	// last URL
+		std::uint64_t lastUrl{};	// last URL
 		std::string lockTime;		// last locking time for currently parsed URL
 
 		// properties used for progress calculation
-		std::uint64_t idFirst{0};	// ID of the first URL fetched
-		std::uint64_t idDist{0};	// distance between the IDs of first and last URL fetched
-		float posFirstF{0.F};		// position of the first URL fetched as float
-		std::uint64_t posDist{0};	// distance between the positions of first and last URL fetched
-		std::uint64_t total{0};		// number of total URLs in URL list
+		std::uint64_t idFirst{};	// ID of the first URL fetched
+		std::uint64_t idDist{};		// distance between the IDs of first and last URL fetched
+		float posFirstF{};			// position of the first URL fetched as float
+		std::uint64_t posDist{};	// distance between the positions of first and last URL fetched
+		std::uint64_t total{};		// number of total URLs in URL list
 
 		// initializing functions
 		void setUpConfig(std::queue<std::string>& warningsTo);

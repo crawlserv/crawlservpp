@@ -475,11 +475,13 @@ namespace crawlservpp::Module::Parser {
 			this->log(verbose, "prepares getLatestContent()...");
 
 			this->ps.getLatestContent = this->addPreparedStatement(
-					"SELECT id, content"
+					"SELECT id, content, crawltime"
 					" FROM `" + this->urlListTable + "_crawled`"
+					" USE INDEX(url)"
 					" WHERE url = ?"
+					" AND crawltime < ?"
 					" ORDER BY crawltime DESC"
-					" LIMIT ?, 1"
+					" LIMIT 1"
 			);
 		}
 
@@ -637,7 +639,7 @@ namespace crawlservpp::Module::Parser {
 
 		// set maximum number of locks at once
 		while(lockingQueue.size() >= this->maxBatchSize) {
-			for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+			for(std::uint16_t n{}; n < this->maxBatchSize; ++n) {
 				sqlStatementLockMax.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
 				sqlStatementLockMax.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
 				sqlStatementLockMax.setString(n * numArgsLockUrl + sqlArg3, lockTime);
@@ -651,7 +653,7 @@ namespace crawlservpp::Module::Parser {
 
 		// set 100 locks at once
 		while(lockingQueue.size() >= nAtOnce100) {
-			for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+			for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 				sqlStatementLock100.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
 				sqlStatementLock100.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
 				sqlStatementLock100.setString(n * numArgsLockUrl + sqlArg3, lockTime);
@@ -665,7 +667,7 @@ namespace crawlservpp::Module::Parser {
 
 		// set 10 locks at once
 		while(lockingQueue.size() >= nAtOnce10) {
-			for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+			for(std::uint8_t n{}; n < nAtOnce10; ++n) {
 				sqlStatementLock10.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
 				sqlStatementLock10.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
 				sqlStatementLock10.setString(n * numArgsLockUrl + sqlArg3, lockTime);
@@ -712,7 +714,7 @@ namespace crawlservpp::Module::Parser {
 	 *   of the URL in the URL list.
 	 */
 	std::uint64_t Database::getUrlPosition(std::uint64_t urlId) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check argument
 		if(urlId == 0) {
@@ -770,7 +772,7 @@ namespace crawlservpp::Module::Parser {
 	 *   of URLs in the URL list.
 	 */
 	std::uint64_t Database::getNumberOfUrls() {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check connection
 		this->checkConnection();
@@ -1234,16 +1236,24 @@ namespace crawlservpp::Module::Parser {
 
 	//! Gets crawled content stored in the database for a specific URL.
 	/*!
+	 * \note Entries with duplicate crawl times
+	 *   in the database will be skipped.
+	 *
 	 * \param urlId The ID of the URL whose crawled
 	 *   content will be retrieved from the database.
-	 * \param index Index of the content to be
-	 *   retrieved for the given URL, starting at
-	 *   zero for the latest content.
+	 * \param lastDateTime Timestamp of the content
+	 *   that has been retrieved last, or an empty
+	 *   string to retrieve the first (i.e. the
+	 *   latest) entry.
 	 * \param contentTo Reference to which the
 	 *   retrieved content for the given URL and its
-	 *   ID will be stored. Will not be changed, if
+	 *   ID will be written. Will not be changed, if
 	 *   no content could be retrieved from the
 	 *   database.
+	 * \param dateTimeTo Reference to which the
+	 *   timestamp of the retrieved content will be
+	 *   written. Use this value to request the next
+	 *   content, if necessary.
 	 *
 	 * \returns True, if content has succesfully
 	 *   been retrieved from the database. False,
@@ -1260,7 +1270,12 @@ namespace crawlservpp::Module::Parser {
 	 *   contents stored for the given URL from the
 	 *   database.
 	 */
-	bool Database::getLatestContent(std::uint64_t urlId, std::uint64_t index, IdString& contentTo) {
+	bool Database::getLatestContent(
+			std::uint64_t urlId,
+			const std::string& lastDateTime,
+			IdString& contentTo,
+			std::string& dateTimeTo
+	) {
 		// check argument
 		if(urlId == 0) {
 			throw Exception(
@@ -1287,7 +1302,13 @@ namespace crawlservpp::Module::Parser {
 		try {
 			// execute SQL query
 			sqlStatement.setUInt64(sqlArg1, urlId);
-			sqlStatement.setUInt64(sqlArg2, index);
+
+			if(lastDateTime.empty()) {
+				sqlStatement.setString(sqlArg2, std::string(maxDateTimeValue));
+			}
+			else {
+				sqlStatement.setString(sqlArg2, lastDateTime);
+			}
 
 			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
 
@@ -1297,6 +1318,8 @@ namespace crawlservpp::Module::Parser {
 						sqlResultSet->getUInt64("id"),
 						sqlResultSet->getString("content")
 				);
+
+				dateTimeTo = sqlResultSet->getString("crawltime");
 
 				return true;
 			}
@@ -1395,7 +1418,7 @@ namespace crawlservpp::Module::Parser {
 	 *   database.
 	 */
 	std::uint64_t Database::getContentIdFromParsedId(const std::string& parsedId) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check argument
 		if(parsedId.empty()) {
@@ -1500,11 +1523,11 @@ namespace crawlservpp::Module::Parser {
 
 		try {
 			const auto total{entries.size()};
-			std::size_t done{0};
+			std::size_t done{};
 
 			// add maximum number of entries at once
 			while(entries.size() >= this->maxBatchSize) {
-				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+				for(std::uint16_t n{}; n < this->maxBatchSize; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
@@ -1553,7 +1576,7 @@ namespace crawlservpp::Module::Parser {
 
 			// add 100 entries at once
 			while(entries.size() >= nAtOnce100) {
-				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
@@ -1602,7 +1625,7 @@ namespace crawlservpp::Module::Parser {
 
 			// add 10 entries at once
 			while(entries.size() >= nAtOnce10) {
-				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce10; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
@@ -1742,7 +1765,7 @@ namespace crawlservpp::Module::Parser {
 		try {
 			// set maximum number of URLs at once
 			while(finished.size() > this->maxBatchSize) {
-				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+				for(std::uint16_t n{}; n < this->maxBatchSize; ++n) {
 					sqlStatementMax.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
 					sqlStatementMax.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
@@ -1754,7 +1777,7 @@ namespace crawlservpp::Module::Parser {
 
 			// set 100 URLs at once
 			while(finished.size() > nAtOnce100) {
-				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 					sqlStatement100.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
 					sqlStatement100.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
@@ -1766,7 +1789,7 @@ namespace crawlservpp::Module::Parser {
 
 			// set 10 URLs at once
 			while(finished.size() > nAtOnce10) {
-				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce10; ++n) {
 					sqlStatement10.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
 					sqlStatement10.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
@@ -1839,7 +1862,7 @@ namespace crawlservpp::Module::Parser {
 	bool Database::checkEntrySize(DataEntry& entry) {
 		// check data sizes
 		const auto max{this->getMaxAllowedPacketSize()};
-		std::size_t tooLarge{0};
+		std::size_t tooLarge{};
 
 		if(entry.dataId.size() > max) {
 			tooLarge = entry.dataId.size();
@@ -1979,7 +2002,7 @@ namespace crawlservpp::Module::Parser {
 									" hash,"
 									" parsed_datetime";
 
-		std::size_t counter{0};
+		std::size_t counter{};
 
 		for(const auto& targetFieldName : this->targetFieldNames) {
 			if(!targetFieldName.empty()) {
@@ -2009,7 +2032,7 @@ namespace crawlservpp::Module::Parser {
 										"),"
 										"?, ?, CRC32( ? ), ?";
 
-			for(std::size_t c{0}; c < counter; ++c) {
+			for(std::size_t c{}; c < counter; ++c) {
 				sqlQueryStr +=	 		", ?";
 			}
 
@@ -2060,7 +2083,7 @@ namespace crawlservpp::Module::Parser {
 									" WHERE ";
 
 		// create WHERE clause
-		for(std::size_t n{0}; n < numberOfUrls; ++n) {
+		for(std::size_t n{}; n < numberOfUrls; ++n) {
 			if(n > 0) {
 				sqlQueryString += " OR ";
 			}

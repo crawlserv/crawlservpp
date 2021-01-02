@@ -124,6 +124,9 @@ namespace crawlservpp::Module::Parser {
 	//! Number of arguments for setting one URL to finished.
 	inline constexpr auto numArgsFinishUrl{2};
 
+	//! The maximum value of a DATETIME in the database.
+	inline constexpr auto maxDateTimeValue{"9999-12-31 23:59:59"sv};
+
 	///@}
 
 	/*
@@ -203,10 +206,20 @@ namespace crawlservpp::Module::Parser {
 
 		std::uint32_t checkParsingTable();
 		[[nodiscard]] std::uint64_t getNumberOfContents(std::uint64_t urlId);
-		bool getLatestContent(std::uint64_t urlId, std::uint64_t index, IdString& contentTo);
+		bool getLatestContent(
+				std::uint64_t urlId,
+				const std::string& lastDateTime,
+				IdString& contentTo,
+				std::string& dateTimeTo
+		);
 		[[nodiscard]] std::queue<IdString> getAllContents(std::uint64_t urlId);
-		[[nodiscard]] std::uint64_t getContentIdFromParsedId(const std::string& parsedId);
-		void updateOrAddEntries(std::queue<DataEntry>& entries, StatusSetter& statusSetter);
+		[[nodiscard]] std::uint64_t getContentIdFromParsedId(
+				const std::string& parsedId
+		);
+		void updateOrAddEntries(
+				std::queue<DataEntry>& entries,
+				StatusSetter& statusSetter
+		);
 		void setUrlsFinishedIfLockOk(std::queue<IdString>& finished);
 		void updateTargetTable();
 
@@ -227,7 +240,7 @@ namespace crawlservpp::Module::Parser {
 		// table names and target table ID
 		std::string urlListTable;
 		std::string parsingTable;
-		std::uint64_t targetTableId{0};
+		std::uint64_t targetTableId{};
 		std::string targetTableFull;
 
 		// IDs of prepared SQL statements

@@ -119,7 +119,7 @@ namespace crawlservpp::Module::Parser {
 	 */
 	void Thread::onTick() {
 		bool skip{false};
-		std::size_t parsed{0};
+		std::size_t parsed{};
 
 		// check for jump in last ID ("time travel")
 		const auto jumpOffset{this->getWarpedOverAndReset()};
@@ -911,8 +911,10 @@ namespace crawlservpp::Module::Parser {
 
 		if(this->config.generalNewestOnly) {
 			// parse newest content of URL
-			std::size_t numberOfContents{0};
-			std::size_t index{0};
+			std::size_t numberOfContents{};
+			std::string lastDateTime{};
+			std::uint64_t contentCounter{};
+			std::uint8_t statusCounter{};
 			bool changedStatus{false};
 
 			while(this->isRunning()) {
@@ -921,8 +923,9 @@ namespace crawlservpp::Module::Parser {
 				if(
 						this->database.getLatestContent(
 								this->urls.front().first,
-								index,
-								latestContent
+								lastDateTime,
+								latestContent,
+								lastDateTime
 						)
 				) {
 					// check whether thread is still running
@@ -938,21 +941,24 @@ namespace crawlservpp::Module::Parser {
 						return 1;
 					}
 
-					++index;
+					++contentCounter;
+					++statusCounter;
 
-					if(index % updateArchiveCounterEvery == 0) {
+					if(statusCounter == updateContentCounterEvery) {
 						if(numberOfContents == 0) {
 							numberOfContents = this->database.getNumberOfContents(
 									this->urls.front().first
 							);
 						}
 
+						statusCounter = 0;
+
 						std::ostringstream statusStrStr;
 
 						statusStrStr.imbue(std::locale(""));
 
 						statusStrStr	<< "["
-										<< index
+										<< contentCounter
 										<< "/"
 										<< numberOfContents
 										<< "] "
@@ -974,7 +980,7 @@ namespace crawlservpp::Module::Parser {
 		}
 		else {
 			// parse all contents of URL
-			std::size_t counter{0};
+			std::size_t counter{};
 
 			auto contents{
 				this->database.getAllContents(this->urls.front().first)
