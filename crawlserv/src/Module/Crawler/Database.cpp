@@ -810,7 +810,7 @@ namespace crawlservpp::Module::Crawler {
 	 *   the database.
 	 */
 	std::size_t Database::addUrlsIfNotExist(std::queue<std::string>& urls, bool manual) {
-		std::size_t result{0};
+		std::size_t result{};
 
 		// check argument
 		if(urls.empty()) {
@@ -842,7 +842,7 @@ namespace crawlservpp::Module::Crawler {
 		try {
 			// add maximum number of URLs at once
 			while(urls.size() >= this->maxBatchSize) {
-				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+				for(std::uint16_t n{}; n < this->maxBatchSize; ++n) {
 					sqlStatementMax.setString(n * numArgsAddUrl + sqlArg1, urls.front());
 					sqlStatementMax.setString(n * numArgsAddUrl + sqlArg2, urls.front());
 					sqlStatementMax.setString(n * numArgsAddUrl + sqlArg3, urls.front());
@@ -861,7 +861,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// add 100 URLs at once
 			while(urls.size() >= nAtOnce100) {
-				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 					sqlStatement100.setString(n * numArgsAddUrl + sqlArg1, urls.front());
 					sqlStatement100.setString(n * numArgsAddUrl + sqlArg2, urls.front());
 					sqlStatement100.setString(n * numArgsAddUrl + sqlArg3, urls.front());
@@ -880,7 +880,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// add 10 URLs at once
 			while(urls.size() >= nAtOnce10) {
-				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce10; ++n) {
 					sqlStatement10.setString(n * numArgsAddUrl + sqlArg1, urls.front());
 					sqlStatement10.setString(n * numArgsAddUrl + sqlArg2, urls.front());
 					sqlStatement10.setString(n * numArgsAddUrl + sqlArg3, urls.front());
@@ -936,7 +936,7 @@ namespace crawlservpp::Module::Crawler {
 	 *   of the URL from the database.
 	 */
 	std::uint64_t Database::getUrlPosition(std::uint64_t urlId) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check argument
 		if(urlId == 0) {
@@ -995,7 +995,7 @@ namespace crawlservpp::Module::Crawler {
 	 *   of URLs from the database.
 	 */
 	std::uint64_t Database::getNumberOfUrls() {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check connection
 		this->checkConnection();
@@ -1081,7 +1081,7 @@ namespace crawlservpp::Module::Crawler {
 						duplicates.push(sqlResultSet->getString("url"));
 					} while(sqlResultSet->next());
 
-					std::size_t numDuplicates{0};
+					std::size_t numDuplicates{};
 
 					while(!duplicates.empty()) {
 						numDuplicates += this->removeDuplicates(duplicates.front());
@@ -1914,7 +1914,7 @@ namespace crawlservpp::Module::Crawler {
 		sqlQueryString += "`(id, url, manual, hash) VALUES ";
 
 		// generate placeholders for VALUES arguments
-		for(std::uint32_t n{0}; n < numberOfUrls; ++n) {
+		for(std::uint32_t n{}; n < numberOfUrls; ++n) {
 			sqlQueryString +=	"(" // begin of VALUES arguments
 									" ("
 										"SELECT id"
@@ -1988,7 +1988,7 @@ namespace crawlservpp::Module::Crawler {
 	// remove duplicates of the specified URL from the URL list (NOT its first occurence)
 	//	return the number of deleted duplicates, throws Database::Exception
 	std::uint32_t Database::removeDuplicates(const std::string& url) {
-		int result{0};
+		int result{};
 
 		// get ID of first occurence
 		const auto first{this->getUrlId(url)};

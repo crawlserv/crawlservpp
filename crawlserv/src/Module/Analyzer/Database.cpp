@@ -1020,7 +1020,7 @@ namespace crawlservpp::Module::Analyzer {
 			this->getPreparedStatement(this->ps.isCorpusChanged)
 		};
 
-		std::uint16_t sourceStatement{0};
+		std::uint16_t sourceStatement{};
 
 		switch(properties.sourceType) {
 		case generalInputSourcesParsing:
@@ -1085,7 +1085,7 @@ namespace crawlservpp::Module::Analyzer {
 				else {
 					std::string lastSavePoint;
 
-					for(std::size_t n{0}; n < properties.wordManipulators.size(); ++n) {
+					for(std::size_t n{}; n < properties.wordManipulators.size(); ++n) {
 						lastSavePoint += 'w';
 						lastSavePoint += std::to_string(properties.wordManipulators[n]);
 						lastSavePoint += '[';
@@ -1097,7 +1097,7 @@ namespace crawlservpp::Module::Analyzer {
 						lastSavePoint += ']';
 					}
 
-					for(std::size_t n{0}; n < properties.sentenceManipulators.size(); ++n) {
+					for(std::size_t n{}; n < properties.sentenceManipulators.size(); ++n) {
 						lastSavePoint += 's';
 						lastSavePoint += std::to_string(properties.sentenceManipulators[n]);
 						lastSavePoint += '[';
@@ -1411,9 +1411,9 @@ namespace crawlservpp::Module::Analyzer {
 				}
 
 				// add corpus chunks to the database
-				std::uint64_t last{0};
+				std::uint64_t last{};
 
-				for(std::size_t n{0}; n < chunks.size(); ++n) {
+				for(std::size_t n{}; n < chunks.size(); ++n) {
 					addStatementContinuous.setUInt(sqlArg1, properties.sourceType);
 					addStatementContinuous.setString(sqlArg2, properties.sourceTable);
 					addStatementContinuous.setString(sqlArg3, properties.sourceColumn);
@@ -1601,9 +1601,9 @@ namespace crawlservpp::Module::Analyzer {
 			);
 
 			// execute SQL query for getting a chunk of the corpus
-			std::uint64_t count{0};
-			std::uint64_t total{0};
-			std::uint64_t previous{0};
+			std::uint64_t count{};
+			std::uint64_t total{};
+			std::uint64_t previous{};
 
 			if(savePoint.empty()) {
 				sqlStatementFirst.setUInt(sqlArg1, properties.sourceType);
@@ -1790,8 +1790,8 @@ namespace crawlservpp::Module::Analyzer {
 	) {
 		std::string savePoint;
 		std::string result;
-		std::size_t numSentenceManipulators{0};
-		std::size_t numWordManipulators{0};
+		std::size_t numSentenceManipulators{};
+		std::size_t numWordManipulators{};
 
 		// check connection to database
 		this->checkConnection();
@@ -1927,7 +1927,7 @@ namespace crawlservpp::Module::Analyzer {
 	) {
 		// tokenize and manipulate corpus, from savepoint to savepoint
 		std::string savePointName;
-		std::size_t done{0};
+		std::size_t done{};
 
 		for(const auto savePoint : properties.savePoints) {
 			if(savePoint == 0) {
@@ -2122,9 +2122,9 @@ namespace crawlservpp::Module::Analyzer {
 
 		try {
 			// save tokenized and sliced corpus to database
-			std::uint64_t last{0};
+			std::uint64_t last{};
 
-			for(std::size_t n{0}; n < chunks.size(); ++n) {
+			for(std::size_t n{}; n < chunks.size(); ++n) {
 				addStatementTokenized.setUInt(sqlArg1, properties.sourceType);
 				addStatementTokenized.setString(sqlArg2, properties.sourceTable);
 				addStatementTokenized.setString(sqlArg3, properties.sourceColumn);

@@ -175,7 +175,7 @@ namespace crawlservpp::Module::Analyzer {
 			 *   Helper::DateTime::dateYears,
 			 *   Helper::DateTime::dateSeconds
 			 */
-			std::uint8_t groupDateResolution{0};
+			std::uint8_t groupDateResolution{};
 
 			///@}
 			///@name Filter by Date
@@ -211,7 +211,7 @@ namespace crawlservpp::Module::Analyzer {
 			 *  with the sentence manipulators, and
 			 *  continues with the word manipulators.
 			 */
-			std::vector<std::uint16_t> tokenizerSavePoints{0};
+			std::vector<std::uint16_t> tokenizerSavePoints{};
 
 			//! Manipulators used on the sentences of the text corpus.
 			/*!

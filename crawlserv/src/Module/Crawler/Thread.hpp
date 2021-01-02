@@ -269,20 +269,20 @@ namespace crawlservpp::Module::Crawler {
 		std::vector<TimeString> customTokens;
 
 		// crawling state
-		std::uint64_t penultimateId{0};	// penultimate ID (last ID saved in parent class)
+		std::uint64_t penultimateId{};	// penultimate ID (last ID saved in parent class)
 		IdString nextUrl;				// next URL (currently crawled URL in automatic mode)
 		std::string lockTime;			// last locking time for currently crawled URL
 		IdString manualUrl;				// custom URL to be retried
-		std::size_t manualCounter{0};	// number of crawled custom URLs
+		std::size_t manualCounter{};	// number of crawled custom URLs
 		bool startCrawled{false};		// start page has been successfully crawled
 		bool manualOff{false};			// manual mode has been turned off (after first URL is crawled)
 		std::string crawledContent;		// crawled content
-		std::uint64_t retryCounter{0};	// number of retries so far
+		std::uint64_t retryCounter{};	// number of retries so far
 		bool archiveRetry{false};		// only archive needs to be retried
 		std::vector<std::string> mCache;// cache of processed mementos (to be skipped on retry)
 
 		// timing
-		std::uint64_t tickCounter{0};
+		std::uint64_t tickCounter{};
 		std::chrono::steady_clock::time_point startTime{std::chrono::steady_clock::time_point::min()};
 		std::chrono::steady_clock::time_point pauseTime{std::chrono::steady_clock::time_point::min()};
 		std::chrono::steady_clock::time_point idleTime{std::chrono::steady_clock::time_point::min()};

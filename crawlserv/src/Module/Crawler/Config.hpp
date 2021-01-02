@@ -337,7 +337,7 @@ namespace crawlservpp::Module::Crawler {
 			bool crawlerStartIgnore{false};
 
 			//! Number  of @c tidyhtml errors to log (if logging is enabled).
-			std::uint32_t crawlerTidyErrors{0};
+			std::uint32_t crawlerTidyErrors{};
 
 			//! Specifies whether to log @c tidyhtml warnings (if logging is enabled).
 			bool crawlerTidyWarnings{false};
@@ -453,7 +453,7 @@ namespace crawlservpp::Module::Crawler {
 			bool expectedErrorIfSmaller{false};
 
 			//! Query to be performed on content to retrieve the expected number of URLs.
-			std::uint64_t expectedQuery{0};
+			std::uint64_t expectedQuery{};
 
 			///@}
 			///@name Dynamic Redirect
@@ -466,10 +466,10 @@ namespace crawlservpp::Module::Crawler {
 			std::vector<std::string> redirectHeaders;
 
 			//! Query on content that specifies whether to redirect to different URL.
-			std::uint64_t redirectQueryContent{0};
+			std::uint64_t redirectQueryContent{};
 
 			//! Query on URL that specifies whether to redirect to different URL.
-			std::uint64_t redirectQueryUrl{0};
+			std::uint64_t redirectQueryUrl{};
 
 			//! Sub-URL (for cross-domain websites: URL without protocol) to redirect to.
 			std::string redirectTo;

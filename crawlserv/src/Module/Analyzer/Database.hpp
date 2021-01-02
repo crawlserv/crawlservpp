@@ -281,7 +281,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::string targetTableName;
 
 		//! The ID of the target table to be written to.
-		std::uint64_t targetTableId{0};
+		std::uint64_t targetTableId{};
 
 		//! The full name of the target table to be written to, including prefixes.
 		std::string targetTableFull;
