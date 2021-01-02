@@ -246,12 +246,12 @@ namespace crawlservpp::Module::Extractor {
 		// table names, target table IDs, and linked field
 		std::string urlListTable;
 		std::string extractingTable;
-		std::uint64_t targetTableId{0};
-		std::uint64_t linkedTableId{0};
+		std::uint64_t targetTableId{};
+		std::uint64_t linkedTableId{};
 		std::string targetTableFull;
 		std::string linkedTableFull;
 		std::string linkedField;
-		std::uint64_t linkedIndex{0};
+		std::uint64_t linkedIndex{};
 
 		// IDs of prepared SQL statements
 		struct _ps {

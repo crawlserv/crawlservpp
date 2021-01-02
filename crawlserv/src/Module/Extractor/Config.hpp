@@ -210,7 +210,7 @@ namespace crawlservpp::Module::Extractor {
 			 * \note Logging needs to be enabled in order
 			 *   for this option to have any effect.
 			 */
-			std::uint32_t generalTidyErrors{0};
+			std::uint32_t generalTidyErrors{};
 
 			//! Specifies whether to write @c tidyhtml warnings to the log.
 			/*!
@@ -429,13 +429,13 @@ namespace crawlservpp::Module::Extractor {
 			 *
 			 *  \sa pagingAlias
 			 */
-			std::int64_t pagingAliasAdd{0};
+			std::int64_t pagingAliasAdd{};
 
 			//! Number of the first page.
 			/*!
 			 * \sa pagingStep
 			 */
-			std::int64_t pagingFirst{0};
+			std::int64_t pagingFirst{};
 
 			//! Name of the first page.
 			/*!
@@ -453,7 +453,7 @@ namespace crawlservpp::Module::Extractor {
 			 * Will be ignored, if no query is set,
 			 *  i.e. the value is zero.
 			 */
-			std::uint64_t pagingIsNextFrom{0};
+			std::uint64_t pagingIsNextFrom{};
 
 			//! Query on page content to find the number(s) or name(s) of additional pages.
 			/*!
@@ -465,7 +465,7 @@ namespace crawlservpp::Module::Extractor {
 			 *   which will no longer be used to
 			 *   determine the number of the next page.
 			 */
-			std::uint64_t pagingNextFrom{0};
+			std::uint64_t pagingNextFrom{};
 
 			//! Query to determine the total number of pages from the content of the first page.
 			/*!
@@ -478,7 +478,7 @@ namespace crawlservpp::Module::Extractor {
 			 *  which will no longer be used to determine
 			 *  the number of the next page.
 			 */
-			std::uint64_t pagingNumberFrom{0};
+			std::uint64_t pagingNumberFrom{};
 
 			//! Number to add to page variable for retrieving the next page, if a page number is used.
 			/*!
@@ -957,7 +957,7 @@ namespace crawlservpp::Module::Extractor {
 			 *
 			 * \sa expectedSource
 			 */
-			std::uint64_t expectedQuery{0};
+			std::uint64_t expectedQuery{};
 
 			//! Source of the query to retrieve the expected number of datasets.
 			/*!

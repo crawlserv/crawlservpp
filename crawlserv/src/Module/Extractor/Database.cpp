@@ -901,7 +901,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// set maximum number of locks at once
 		while(lockingQueue.size() >= this->maxBatchSize) {
-			for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+			for(std::uint16_t n{}; n < this->maxBatchSize; ++n) {
 				sqlStatementLockMax.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
 				sqlStatementLockMax.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
 				sqlStatementLockMax.setString(n * numArgsLockUrl + sqlArg3, lockTime);
@@ -915,7 +915,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// set 100 locks at once
 		while(lockingQueue.size() >= nAtOnce100) {
-			for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+			for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 				sqlStatementLock100.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
 				sqlStatementLock100.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
 				sqlStatementLock100.setString(n * numArgsLockUrl + sqlArg3, lockTime);
@@ -929,7 +929,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// set 10 locks at once
 		while(lockingQueue.size() >= nAtOnce10) {
-			for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+			for(std::uint8_t n{}; n < nAtOnce10; ++n) {
 				sqlStatementLock10.setUInt64(n * numArgsLockUrl + sqlArg1, lockingQueue.front());
 				sqlStatementLock10.setUInt64(n * numArgsLockUrl + sqlArg2, lockingQueue.front());
 				sqlStatementLock10.setString(n * numArgsLockUrl + sqlArg3, lockTime);
@@ -976,7 +976,7 @@ namespace crawlservpp::Module::Extractor {
 	 *   of the URL in the URL list.
 	 */
 	std::uint64_t Database::getUrlPosition(std::uint64_t urlId) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check argument
 		if(urlId == 0) {
@@ -1038,7 +1038,7 @@ namespace crawlservpp::Module::Extractor {
 	 *   of URLs in the URL list.
 	 */
 	std::uint64_t Database::getNumberOfUrls() {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check connection
 		this->checkConnection();
@@ -1669,15 +1669,15 @@ namespace crawlservpp::Module::Extractor {
 
 		try {
 			const auto total{entries.size()};
-			std::size_t done{0};
+			std::size_t done{};
 
 			// add maximum number of entries at once
 			while(entries.size() >= this->maxBatchSize) {
-				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+				for(std::uint16_t n{}; n < this->maxBatchSize; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::size_t counter{0};
+					std::size_t counter{};
 
 					// set standard values
 					if(this->overwrite) {
@@ -1751,11 +1751,11 @@ namespace crawlservpp::Module::Extractor {
 
 			// add 100 entries at once
 			while(entries.size() >= nAtOnce100) {
-				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::size_t counter{0};
+					std::size_t counter{};
 
 					// set standard values
 					if(this->overwrite) {
@@ -1830,11 +1830,11 @@ namespace crawlservpp::Module::Extractor {
 
 			// add 10 entries at once
 			while(entries.size() >= nAtOnce10) {
-				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce10; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::size_t counter{0};
+					std::size_t counter{};
 
 					// set standard values
 					if(this->overwrite) {
@@ -1907,7 +1907,7 @@ namespace crawlservpp::Module::Extractor {
 				// check entry
 				this->checkEntrySize(entries.front());
 
-				std::size_t counter{0};
+				std::size_t counter{};
 
 				// set standard values
 				if(this->overwrite) {
@@ -2053,15 +2053,15 @@ namespace crawlservpp::Module::Extractor {
 
 		try {
 			const auto total{entries.size()};
-			std::size_t done{0};
+			std::size_t done{};
 
 			// add maximum number of entries at once
 			while(entries.size() >= this->maxBatchSize) {
-				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+				for(std::uint16_t n{}; n < this->maxBatchSize; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::size_t counter{0};
+					std::size_t counter{};
 
 					// set standard values
 					if(this->overwriteLinked) {
@@ -2106,11 +2106,11 @@ namespace crawlservpp::Module::Extractor {
 
 			// add 100 entries at once
 			while(entries.size() >= nAtOnce100) {
-				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::size_t counter{0};
+					std::size_t counter{};
 
 					// set standard values
 					if(this->overwriteLinked) {
@@ -2155,11 +2155,11 @@ namespace crawlservpp::Module::Extractor {
 
 			// add 10 entries at once
 			while(entries.size() >= nAtOnce10) {
-				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce10; ++n) {
 					// check entry
 					this->checkEntrySize(entries.front());
 
-					std::size_t counter{0};
+					std::size_t counter{};
 
 					// set standard values
 					if(this->overwriteLinked) {
@@ -2202,7 +2202,7 @@ namespace crawlservpp::Module::Extractor {
 				// check entry
 				this->checkEntrySize(entries.front());
 
-				std::size_t counter{0};
+				std::size_t counter{};
 
 				// set standard values
 				if(this->overwriteLinked) {
@@ -2295,7 +2295,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// set maximum number of URLs at once
 			while(finished.size() > this->maxBatchSize) {
-				for(std::uint16_t n{0}; n < this->maxBatchSize; ++n) {
+				for(std::uint16_t n{}; n < this->maxBatchSize; ++n) {
 					sqlStatementMax.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
 					sqlStatementMax.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
@@ -2307,7 +2307,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// set 100 URLs at once
 			while(finished.size() > nAtOnce100) {
-				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 					sqlStatement100.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
 					sqlStatement100.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
@@ -2319,7 +2319,7 @@ namespace crawlservpp::Module::Extractor {
 
 			// set 10 URLs at once
 			while(finished.size() > nAtOnce10) {
-				for(std::uint8_t n{0}; n < nAtOnce10; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce10; ++n) {
 					sqlStatement10.setUInt64(n * numArgsFinishUrl + sqlArg1, finished.front().first);
 					sqlStatement10.setString(n * numArgsFinishUrl + sqlArg2, finished.front().second);
 
@@ -2395,7 +2395,7 @@ namespace crawlservpp::Module::Extractor {
 	bool Database::checkEntrySize(DataEntry& entry) {
 		// check data sizes
 		const auto max{this->getMaxAllowedPacketSize()};
-		std::size_t tooLarge{0};
+		std::size_t tooLarge{};
 
 		if(entry.dataId.size() > max) {
 			tooLarge = entry.dataId.size();
@@ -2544,7 +2544,7 @@ namespace crawlservpp::Module::Extractor {
 									" hash,"
 									" extracted_datetime";
 
-		std::size_t counter{0};
+		std::size_t counter{};
 
 		for(const auto& targetFieldName : this->targetFieldNames) {
 			if(!targetFieldName.empty()) {
@@ -2588,7 +2588,7 @@ namespace crawlservpp::Module::Extractor {
 
 			sqlQueryString +=			"?, ?, CRC32( ? ), ?";
 
-			for(std::size_t c{0}; c < counter; ++c) {
+			for(std::size_t c{}; c < counter; ++c) {
 				sqlQueryString +=	 		", ?";
 			}
 
@@ -2676,7 +2676,7 @@ namespace crawlservpp::Module::Extractor {
 		sqlQueryString += 			" extracted_id,"
 									" hash";
 
-		std::size_t counter{0};
+		std::size_t counter{};
 
 		for(const auto& linkedFieldName : this->linkedFieldNames) {
 			if(!linkedFieldName.empty()) {
@@ -2715,7 +2715,7 @@ namespace crawlservpp::Module::Extractor {
 
 			sqlQueryString +=			" ?, CRC32( ? )";
 
-			for(std::size_t c{0}; c < counter; ++c) {
+			for(std::size_t c{}; c < counter; ++c) {
 				sqlQueryString +=	 		", ?";
 			}
 
@@ -2768,7 +2768,7 @@ namespace crawlservpp::Module::Extractor {
 							" WHERE ";
 
 		// create WHERE clause
-		for(std::size_t n{0}; n < numberOfUrls; ++n) {
+		for(std::size_t n{}; n < numberOfUrls; ++n) {
 			if(n > 0) {
 				sqlQueryString += " OR ";
 			}
