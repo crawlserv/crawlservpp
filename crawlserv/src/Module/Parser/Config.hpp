@@ -111,7 +111,7 @@ namespace crawlservpp::Module::Parser {
 			std::uint64_t generalCacheSize{defaultCacheSize};
 
 			//! Timeout on MySQL query execution, in milliseconds.
-			std::uint64_t generalDbTimeOut{0};
+			std::uint64_t generalDbTimeOut{};
 
 			//! URL locking time, in seconds.
 			std::uint32_t generalLock{defaultLockS};
@@ -308,7 +308,7 @@ namespace crawlservpp::Module::Parser {
 			 * \note Logging needs to be enabled in order
 			 *   for this option to have any effect.
 			 */
-			std::uint16_t parsingTidyErrors{0};
+			std::uint16_t parsingTidyErrors{};
 
 			//! Specifies whether to write @c tidyhtml warnings to the log.
 			/*!
