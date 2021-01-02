@@ -700,6 +700,48 @@ namespace crawlservpp::Module::Extractor {
 		}
 	}
 
+	// log warnings received by external function when extracting a URL
+	void Thread::logWarningsUrl(std::queue<std::string>& warnings) {
+		while(!warnings.empty()) {
+			std::string logEntry{
+				"WARNING: "
+			};
+
+			logEntry += warnings.front();
+			logEntry += " [";
+			logEntry += this->urls.front().second;
+			logEntry += "]";
+
+			this->log(
+					generalLoggingDefault,
+					"WARNING: "
+					+ warnings.front()
+			);
+
+			warnings.pop();
+		}
+	}
+
+	// log warnings received by external function from a specific source when extracting a URL
+	void Thread::logWarningsSource(std::queue<std::string>& warnings, std::string_view source) {
+		while(!warnings.empty()) {
+			std::string logEntry{
+				"WARNING: "
+			};
+
+			logEntry += warnings.front();
+			logEntry += " from ";
+			logEntry += source;
+			logEntry += " [";
+			logEntry += this->urls.front().second;
+			logEntry += "]";
+
+			this->log(generalLoggingDefault, logEntry);
+
+			warnings.pop();
+		}
+	}
+
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		try {
@@ -1126,9 +1168,9 @@ namespace crawlservpp::Module::Extractor {
 	// extract data from next URL, return number of extracted datasets
 	std::size_t Thread::extractingNext() {
 		std::queue<std::string> queryWarnings;
-		std::size_t expected{0};
-		std::size_t extracted{0};
-		std::size_t linked{0};
+		std::size_t expected{};
+		std::size_t extracted{};
+		std::size_t linked{};
 		bool expecting{false};
 
 		// get datasets
@@ -1184,8 +1226,8 @@ namespace crawlservpp::Module::Extractor {
 		bool pageFirst{true};
 		bool noPageString{this->config.pagingFirstString.empty()};
 		bool queryTargetSet{false};
-		std::size_t pageCounter{0};
-		std::size_t pageTotal{0};
+		std::size_t pageCounter{};
+		std::size_t pageTotal{};
 
 		// add first page
 		if(noPageString) {
@@ -1321,7 +1363,14 @@ namespace crawlservpp::Module::Extractor {
 
 				logStrStr.imbue(std::locale(""));
 
-				logStrStr << "fetched " << pageContent.size() << " byte(s) from " << sourceUrl;
+				logStrStr
+					<< "fetched "
+					<< pageContent.size()
+					<< " byte(s) from "
+					<< sourceUrl
+					<< " ["
+					<< this->urls.front().second
+					<< "]";
 
 				this->log(generalLoggingExtended, logStrStr.str());
 			}
@@ -1370,20 +1419,25 @@ namespace crawlservpp::Module::Extractor {
 					);
 
 					// log warnings if necessary
-					this->log(generalLoggingDefault, queryWarnings);
+					this->logWarningsSource(queryWarnings, sourceUrl);
 
 					// try to convert number of pages to numeric value
 					try {
 						pageTotal = std::stoul(pageTotalString);
 					}
 					catch(const std::exception& e) {
-						this->log(
-								generalLoggingDefault,
-								"WARNING:"
-								" Could convert non-numeric query result '"
-								+ pageTotalString
-								+ "' to number of pages."
-						);
+						std::string logString{
+							"WARNING: Could convert non-numeric query result '"
+						};
+
+						logString += pageTotalString;
+						logString += "' to number of pages from ";
+						logString += sourceUrl;
+						logString += " [";
+						logString += this->urls.front().second;
+						logString += "]";
+
+						this->log(generalLoggingDefault, logString);
 					}
 
 					if(pageTotal == 0) {
@@ -1402,7 +1456,7 @@ namespace crawlservpp::Module::Extractor {
 					);
 
 					// log warnings if necessary
-					this->log(generalLoggingDefault, queryWarnings);
+					this->logWarningsSource(queryWarnings, sourceUrl);
 
 					// try to convert expected number of datasets
 					if(!expectedStr.empty()) {
@@ -1416,9 +1470,11 @@ namespace crawlservpp::Module::Extractor {
 
 							logString += expectedStr;
 							logString += "' cannot be converted to a numeric value"
-											" when extracting the expected number of URLs [";
+											" when extracting the expected number of URLs from ";
 							logString += sourceUrl;
-							logString += "].";
+							logString += " [";
+							logString += this->urls.front().second;
+							logString += "]";
 
 							this->log(
 									generalLoggingDefault,
@@ -1459,7 +1515,7 @@ namespace crawlservpp::Module::Extractor {
 				);
 
 				// log warnings if necessary
-				this->log(generalLoggingDefault, queryWarnings);
+				this->logWarningsSource(queryWarnings, sourceUrl);
 
 				if(!isNext) {
 					// always cancel when query says that the last page is reached
@@ -1506,7 +1562,7 @@ namespace crawlservpp::Module::Extractor {
 				}
 
 				// log warnings if necessary
-				this->log(generalLoggingDefault, queryWarnings);
+				this->logWarningsSource(queryWarnings, sourceUrl);
 			}
 			else if(this->config.pagingStep > 0 && noPageString && !noLimit) {
 				// get ID by incrementing old ID
@@ -1591,8 +1647,9 @@ namespace crawlservpp::Module::Extractor {
 
 	// get values of variables
 	void Thread::extractingGetVariableValues(std::vector<StringString>& variables) {
-		std::size_t parsedSource{0};
-		std::size_t queryCounter{0};
+		std::size_t parsedSource{};
+		std::size_t queryCounter{};
+		std::string logEntry;
 
 		// loop over variables (and their aliases)
 		for(
@@ -1638,13 +1695,14 @@ namespace crawlservpp::Module::Extractor {
 				break;
 
 			default:
-				this->log(
-						generalLoggingDefault,
-						"WARNING:"
-						" Invalid source for value of variable '"
-						+ *it
-						+ "'."
-				);
+				logEntry = "WARNING: Invalid source for value of variable '";
+
+				logEntry += *it;
+				logEntry += "' [";
+				logEntry += this->urls.front().second;
+				logEntry += "]";
+
+				this->log(generalLoggingDefault, logEntry);
 			}
 
 			const auto& dateTimeFormat{this->config.variablesDateTimeFormat.at(index)};
@@ -1663,7 +1721,9 @@ namespace crawlservpp::Module::Extractor {
 
 					logString += " - locale for date/time variable '";
 					logString += *it;
-					logString += "' ignored.";
+					logString += "' ignored [";
+					logString += this->urls.front().second;
+					logString += "]";
 
 					this->log(generalLoggingDefault, logString);
 
@@ -1678,7 +1738,9 @@ namespace crawlservpp::Module::Extractor {
 
 						logString += " - empty date/time variable '";
 						logString += *it;
-						logString += "'.";
+						logString += "' [";
+						logString += this->urls.front().second;
+						logString += "]";
 
 						this->log(generalLoggingDefault, logString);
 
@@ -1690,7 +1752,9 @@ namespace crawlservpp::Module::Extractor {
 
 					logString += " - empty date/time variable '";
 					logString += *it;
-					logString += "'.";
+					logString += "' [";
+					logString += this->urls.front().second;
+					logString += "]";
 
 					this->log(generalLoggingDefault, logString);
 
@@ -1725,9 +1789,11 @@ namespace crawlservpp::Module::Extractor {
 						logString += alias;
 						logString += "' for non-numeric variable '";
 						logString += *it;
-						logString += "' [= '";
+						logString += "' (= '";
 						logString += value;
-						logString += "'].";
+						logString += "') [";
+						logString += this->urls.front().second;
+						logString += "]";
 
 						this->log(generalLoggingDefault, logString);
 					}
@@ -1954,7 +2020,7 @@ namespace crawlservpp::Module::Extractor {
 		std::string content;
 		std::string result;
 		bool success{false};
-		std::uint64_t retryCounter{0};
+		std::uint64_t retryCounter{};
 
 		while(this->isRunning()) {
 			try {
@@ -2069,18 +2135,24 @@ namespace crawlservpp::Module::Extractor {
 			this->clearQueryTarget();
 
 			// logging if necessary
-			this->log(generalLoggingDefault, queryWarnings);
+			this->logWarningsSource(queryWarnings, source);
 
-			this->log(
-					generalLoggingExtended,
+			if(this->isLogLevel(generalLoggingExtended)) {
+				std::string logString{
 					"fetched token '"
-					+ name
-					+ "' from "
-					+ source
-					+ " [= '"
-					+ result
-					+ "']."
-			);
+				};
+
+				logString += name;
+				logString += "' from ";
+				logString += source;
+				logString += " (= '";
+				logString += result;
+				logString += "') [";
+				logString += this->urls.front().second;
+				logString += "]";
+
+				this->log(generalLoggingExtended, logString);
+			}
 		}
 
 		return result;
@@ -2093,7 +2165,7 @@ namespace crawlservpp::Module::Extractor {
 			const std::vector<std::string>& setHeaders,
 			std::string& resultTo
 	) {
-		std::uint64_t retryCounter{0};
+		std::uint64_t retryCounter{};
 
 		while(this->isRunning()) {
 			try {
@@ -2208,7 +2280,7 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// log warnings if necessary
-		this->log(generalLoggingDefault, queryWarnings);
+		this->logWarningsUrl(queryWarnings);
 	}
 
 	// extract data from URL
@@ -2236,7 +2308,7 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// log warnings if necessary
-		this->log(generalLoggingDefault, queryWarnings);
+		this->logWarningsUrl(queryWarnings);
 	}
 
 	// check for an error in the page because of which the page needs to be retried
@@ -3239,15 +3311,17 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// reset connection and retry
-	void Thread::extractingReset(std::string_view error, std::string_view url) {
+	void Thread::extractingReset(std::string_view error, std::string_view source) {
 		// clear query target
 		this->clearQueryTarget();
 
 		// show error
 		std::string errorString{error};
 
-		errorString += " - retrying [";
-		errorString += url;
+		errorString += " - retrying ";
+		errorString += source;
+		errorString += " [";
+		errorString += this->urls.front().second;
 		errorString += "]";
 
 		this->log(generalLoggingDefault, errorString);

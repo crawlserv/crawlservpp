@@ -70,7 +70,7 @@
 #include <stdexcept>	// std::logic_error, std::runtime_error
 #include <string>		// std::stol, std::stoul, std::string, std::to_string
 #include <string_view>	// std::string_view
-#include <utility>		// std::pair
+#include <utility>		// std::move, std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Module::Extractor {
@@ -232,22 +232,22 @@ namespace crawlservpp::Module::Extractor {
 		QueryStruct queryExpected;
 
 		// timing
-		std::uint64_t tickCounter{0};
+		std::uint64_t tickCounter{};
 		std::chrono::steady_clock::time_point startTime{std::chrono::steady_clock::time_point::min()};
 		std::chrono::steady_clock::time_point pauseTime{std::chrono::steady_clock::time_point::min()};
 		std::chrono::steady_clock::time_point idleTime{std::chrono::steady_clock::time_point::min()};
 
 		// state
 		bool idle{false};			// waiting for new URLs to be crawled
-		std::uint64_t lastUrl{0};	// last extracted URL
+		std::uint64_t lastUrl{};	// last extracted URL
 		std::string lockTime;		// last locking time for currently extracted URL
 
 		// properties used for progress calculation
-		std::uint64_t idFirst{0};	// ID of the first URL fetched
-		std::uint64_t idDist{0};	// distance between the IDs of first and last URL fetched
-		float posFirstF{0.F};		// position of the first URL fetched as float
-		std::uint64_t posDist{0};	// distance between the positions of first and last URL fetched
-		std::uint64_t total{0};		// number of total URLs in URL list
+		std::uint64_t idFirst{};	// ID of the first URL fetched
+		std::uint64_t idDist{};		// distance between the IDs of first and last URL fetched
+		float posFirstF{};			// position of the first URL fetched as float
+		std::uint64_t posDist{};	// distance between the positions of first and last URL fetched
+		std::uint64_t total{};		// number of total URLs in URL list
 
 		// initializing functions
 		void setUpConfig(std::queue<std::string>& warningsTo);
@@ -265,6 +265,8 @@ namespace crawlservpp::Module::Extractor {
 		void checkExtractingTable();
 		void setUpTimers();
 		void logWarnings(std::queue<std::string>& warnings);
+		void logWarningsUrl(std::queue<std::string>& warnings);
+		void logWarningsSource(std::queue<std::string>& warnings, std::string_view source);
 		void initQueries() override;
 
 		// query functions
@@ -320,7 +322,7 @@ namespace crawlservpp::Module::Extractor {
 		void extractingUrlFinished(bool success);
 		void extractingSaveLinked();
 		void extractingSaveResults(bool warped);
-		void extractingReset(std::string_view error, std::string_view url);
+		void extractingReset(std::string_view error, std::string_view source);
 		void extractingResetTor();
 		void extractingUnset(
 				const std::string& unsetCookies,
