@@ -246,7 +246,7 @@ namespace crawlservpp::Helper::Strings {
 			std::string_view needle,
 			std::string_view replacement
 	) {
-		std::size_t startPos{0};
+		std::size_t startPos{};
 
 		if(needle.empty()) {
 			return;
@@ -356,7 +356,7 @@ namespace crawlservpp::Helper::Strings {
 			bool ignoreEmpty
 	) {
 		std::string result;
-		std::size_t size{0};
+		std::size_t size{};
 
 		// calculate and reserve needed memory
 		for(const auto& string : strings) {
@@ -404,7 +404,7 @@ namespace crawlservpp::Helper::Strings {
 	) {
 		// calculate and reserve needed memory
 		std::string result;
-		std::size_t size{0};
+		std::size_t size{};
 
 		for(const auto& string : strings) {
 			if(!ignoreEmpty || !string.empty()) {
@@ -933,7 +933,7 @@ namespace crawlservpp::Helper::Strings {
 	 *   the percentage signs will be encoded in-situ.
 	 */
 	inline void encodePercentage(std::string& stringToEncode) {
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		do {
 			pos = stringToEncode.find('%', pos);

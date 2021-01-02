@@ -86,7 +86,7 @@ namespace crawlservpp::Data {
 		struct DictionaryProperty {
 			std::string tag;
 			std::string lemma;
-			std::uint64_t count{0};
+			std::uint64_t count{};
 		};
 
 		// for convenience
@@ -171,7 +171,7 @@ namespace crawlservpp::Data {
 
 		// compare tags
 		std::vector<std::size_t> equalChars;
-		std::size_t max{0};
+		std::size_t max{};
 
 		for(const auto& property : entry->second) {
 			const std::size_t count{
@@ -280,7 +280,7 @@ namespace crawlservpp::Data {
 			std::size_t pos,
 			const std::string& needle
 	) {
-		for(std::size_t n{0}; n < needle.length(); ++n) {
+		for(std::size_t n{}; n < needle.length(); ++n) {
 			if(
 					pos + n >= string.length()
 					|| string[pos + n] != needle[n]

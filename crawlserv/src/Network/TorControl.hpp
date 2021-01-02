@@ -151,10 +151,10 @@ namespace crawlservpp::Network {
 		// settings
 		const bool isActive{false};
 		const std::string server;
-		const std::uint16_t port{0};
+		const std::uint16_t port{};
 		const std::string password;
-		std::uint64_t newIdentityNotBefore{0};
-		std::uint64_t newIdentityAfter{0};
+		std::uint64_t newIdentityNotBefore{};
+		std::uint64_t newIdentityAfter{};
 
 		// asio context and socket
 		asio::io_context context;
@@ -163,8 +163,8 @@ namespace crawlservpp::Network {
 		// identity time and timers
 		Timer::Simple minTimer;
 		Timer::Simple maxTimer;
-		std::uint64_t elapsedMin{0};
-		std::uint64_t elapsedMax{0};
+		std::uint64_t elapsedMin{};
+		std::uint64_t elapsedMax{};
 	};
 
 	/*

@@ -930,7 +930,7 @@ namespace crawlservpp::Main {
 		 */
 		template<class T, class... Args>
 		static int sqlExecuteUpdate(T& statement, Args... args) {
-			int result{0};
+			int result{};
 
 			while(true) { // retry on deadlock
 				try {
@@ -1031,14 +1031,14 @@ namespace crawlservpp::Main {
 	private:
 		// private connection information
 		const DatabaseSettings settings;		// database settings
-		std::uint64_t connectionId{0};			// MySQL connection ID
-		std::uint64_t maxAllowedPacketSize{0};	// maximum packet size
-		std::uint64_t sleepOnError{0};			// number of seconds to sleep on database error
-		std::string mysqlVersion;			// MySQL version
-		std::string dataDir;				// main data directory
-		std::vector<std::string> dirs;		// all known data directories
-		std::string module;					// module for which the database connection was established
-		Timer::Simple reconnectTimer;		// timer for reconnecting to the database
+		std::uint64_t connectionId{};			// MySQL connection ID
+		std::uint64_t maxAllowedPacketSize{};	// maximum packet size
+		std::uint64_t sleepOnError{};			// number of seconds to sleep on database error
+		std::string mysqlVersion;				// MySQL version
+		std::string dataDir;					// main data directory
+		std::vector<std::string> dirs;			// all known data directories
+		std::string module;						// module for which the database connection was established
+		Timer::Simple reconnectTimer;			// timer for reconnecting to the database
 
 		// optional private variables
 #ifdef MAIN_DATABASE_DEBUG_REQUEST_COUNTER

@@ -293,14 +293,14 @@ namespace crawlservpp::Module {
 		std::atomic<bool> shutdown{false};			// shutdown in progress
 		std::atomic<bool> finished{false};			// shutdown is finished
 
-		std::uint64_t id{0};						// the ID of the thread in the database
+		std::uint64_t id{};						// the ID of the thread in the database
 		std::string module;							// the module of the thread (used for logging)
 		ThreadOptions options;						// options for the thread
 
-		std::uint64_t last{0};						// last ID for the thread
-		std::atomic<std::uint64_t> overwriteLast{0};// ID to overwrite last ID with ("time travel")
-		std::int64_t warpedOver{0};					// no. of IDs that have been warped over (might be negative, ONLY for threads!)
-		std::uint64_t processed{0};					// no. of IDs that have been processed
+		std::uint64_t last{};						// last ID for the thread
+		std::atomic<std::uint64_t> overwriteLast{};	// ID to overwrite last ID with ("time travel")
+		std::int64_t warpedOver{};					// no. of IDs that have been warped over (might be negative, ONLY for threads!)
+		std::uint64_t processed{};					// no. of IDs that have been processed
 
 		std::condition_variable pauseCondition;		// condition variable to wait for unpause
 		mutable std::mutex pauseLock;				// lock for accessing the condition variable
@@ -308,7 +308,7 @@ namespace crawlservpp::Module {
 		std::string status; 						// status message of the thread (without pause state)
 		mutable std::mutex statusLock;				// lock for accessing the status message
 
-		float progress{0.F};						// current progress of the thread, in percent
+		float progress{};							// current progress of the thread, in percent
 		mutable std::mutex progressLock;			// lock for accessing the current progress
 
 		std::thread thread;							// pointer to the thread

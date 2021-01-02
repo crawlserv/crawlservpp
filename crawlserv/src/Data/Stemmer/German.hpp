@@ -422,7 +422,7 @@ namespace crawlservpp::Data::Stemmer {
 		}
 
 		// keep important characters sequences
-		std::size_t ignore{0};
+		std::size_t ignore{};
 
 		for(std::size_t n{1}; n < token.size(); ++n) {
 			if(token[n - 1] == 'e' && token[n] == 'i') {
@@ -455,7 +455,7 @@ namespace crawlservpp::Data::Stemmer {
 		}
 
 		// mark double characters
-		char last{0};
+		char last{};
 
 		for(auto& c : token) {
 			if(

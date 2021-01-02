@@ -51,7 +51,7 @@ namespace crawlservpp::Struct {
 		std::string text;
 
 		//! Optional ID returned by the server.
-		std::uint64_t id{0};
+		std::uint64_t id{};
 
 		///@}
 		///@name Construction

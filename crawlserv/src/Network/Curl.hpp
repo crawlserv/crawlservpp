@@ -301,15 +301,15 @@ namespace crawlservpp::Network {
 		CURLcode curlCode{CURLE_OK};
 		std::string content;
 		std::string contentType;
-		std::uint32_t responseCode{0};
-		std::uint32_t xTsHeaderValue{0};
+		std::uint32_t responseCode{};
+		std::uint32_t xTsHeaderValue{};
 		bool limitedSettings{false};
 		bool post{false};
 		std::string tmpCookies;
 		std::string oldCookies;
 		const NetworkOptions networkOptions;
-		int features{0};
-		unsigned int version{0};
+		int features{};
+		unsigned int version{};
 
 		// const pointer to network configuration
 		const Network::Config * config{nullptr};
@@ -838,7 +838,7 @@ namespace crawlservpp::Network {
 		}
 		else {
 			//NOLINTNEXTLINE(google-runtime-int)
-			long redirectPost{0};
+			long redirectPost{};
 
 			if(globalConfig.networkConfig.redirectPost301) {
 				//NOLINTNEXTLINE(hicpp-signed-bitwise)
@@ -1255,7 +1255,7 @@ namespace crawlservpp::Network {
 
 		// get response code
 		//NOLINTNEXTLINE(google-runtime-int)
-		long responseCodeL{0};
+		long responseCodeL{};
 
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		this->curlCode = curl_easy_getinfo(
@@ -1551,7 +1551,7 @@ namespace crawlservpp::Network {
 		);
 
 		if(usePlusForSpace) {
-			std::size_t pos{0};
+			std::size_t pos{};
 
 			while(true) {
 				pos = result.find(encodedSpace, pos);
@@ -1613,7 +1613,7 @@ namespace crawlservpp::Network {
 		);
 
 		if(usePlusForSpace) {
-			std::size_t pos{0};
+			std::size_t pos{};
 
 			while(true) {
 				pos = result.find('+', pos);
@@ -1671,7 +1671,7 @@ namespace crawlservpp::Network {
 			);
 		}
 
-		std::size_t pos{0};
+		std::size_t pos{};
 		std::string result;
 
 		while(pos < urlToEscape.length()) {
@@ -1774,7 +1774,7 @@ namespace crawlservpp::Network {
 		if(size > xTsHeaderNameLen) {
 			bool found{true};
 
-			for(std::size_t n{0}; n < xTsHeaderNameLen; ++n) {
+			for(std::size_t n{}; n < xTsHeaderNameLen; ++n) {
 				if(data[n] != xTsHeaderName[n]) { //NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 					found = false;
 

@@ -103,7 +103,7 @@ namespace crawlservpp::Data::Compression::Zlib {
 		}
 
 		z_stream control{z_stream()};
-		int returnValue{0};
+		int returnValue{};
 		std::array<char, bufferSize> buffer{};
 		std::string result;
 
@@ -168,7 +168,7 @@ namespace crawlservpp::Data::Compression::Zlib {
 		}
 
 		z_stream control{z_stream()};
-		int returnValue{0};
+		int returnValue{};
 		std::array<char, bufferSize> buffer{};
 		std::string result;
 

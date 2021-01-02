@@ -42,16 +42,16 @@ namespace crawlservpp::Struct {
 		///@{
 
 		//! The ID of the thread.
-		std::uint64_t threadId{0};
+		std::uint64_t threadId{};
 
 		//! The ID of the website used by the thread.
-		std::uint64_t websiteId{0};
+		std::uint64_t websiteId{};
 
 		//! The namespace of the website used by the thread.
 		std::string websiteNamespace;
 
 		//! The ID of the URL list used by the thread.
-		std::uint64_t urlListId{0};
+		std::uint64_t urlListId{};
 
 		//! The namespace of the URL list used by the thread.
 		std::string urlListNamespace;

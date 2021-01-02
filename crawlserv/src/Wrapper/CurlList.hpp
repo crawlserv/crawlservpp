@@ -159,7 +159,7 @@ namespace crawlservpp::Wrapper {
 	 *  if the list has not been initialized.
 	 */
 	inline std::size_t CurlList::size() const noexcept {
-		std::size_t count{0};
+		std::size_t count{};
 		const auto * element{this->ptr};
 
 		while(element != nullptr) {

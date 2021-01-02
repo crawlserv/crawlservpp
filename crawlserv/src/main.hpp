@@ -68,7 +68,7 @@ namespace crawlservpp {
 	std::vector<std::string> vectorize(int argc, char ** argv) {
 		std::vector<std::string> result;
 
-		for(int n{0}; n < argc; ++n) {
+		for(int n{}; n < argc; ++n) {
 			result.emplace_back(argv[n]);
 		}
 

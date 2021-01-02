@@ -53,7 +53,7 @@ namespace crawlservpp::Struct {
 		std::string host;
 
 		//! The port to be used to connect to the database server.
-		std::uint16_t port{0};
+		std::uint16_t port{};
 
 		//! The user name to be used to connect to the database.
 		std::string user;

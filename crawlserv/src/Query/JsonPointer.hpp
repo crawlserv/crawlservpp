@@ -321,7 +321,7 @@ namespace crawlservpp::Query {
 		}
 		else {
 			// get all matches
-			std::size_t counter{0};
+			std::size_t counter{};
 
 			while(true) {
 				std::string pointerString(this->pointerStringMulti);
@@ -424,7 +424,7 @@ namespace crawlservpp::Query {
 		}
 		else {
 			// get all matches
-			std::size_t counter{0};
+			std::size_t counter{};
 
 			// loop through all possible matches
 			while(true) {

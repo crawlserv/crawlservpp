@@ -701,7 +701,7 @@ namespace crawlservpp::Data {
 				}
 			}
 
-			for(std::uint8_t startIndex{0}; startIndex < VaderThree; ++startIndex) {
+			for(std::uint8_t startIndex{}; startIndex < VaderThree; ++startIndex) {
 				// dampen the scalar modifier of preceding words and emoticons
 				// (excluding the ones that immediately preceed the item) based
 				// on their distance from the current item.
@@ -885,7 +885,7 @@ namespace crawlservpp::Data {
 
 	// Check whether just some words in the input are ALL CAPS (returns false if ALL or NONE of the words are ALL CAPS)
 	inline bool Sentiment::isAllCapDifferential(const WORDS& words) {
-		std::size_t allCapWords{0};
+		std::size_t allCapWords{};
 
 		for(const auto& word : words) {
 			if(Sentiment::isAllCaps(word)) {

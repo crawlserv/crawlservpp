@@ -61,7 +61,7 @@ namespace crawlservpp::Helper::Portability {
 	 */
 	BOOL CALLBACK addLocale(LPWSTR pStr, DWORD dwFlags, LPARAM lparam) {
 		WCHAR wcBuffer[localeBufferSize];
-		int iResult{0};
+		int iResult{};
 
 		if(GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, localeBufferSize)) {
 			GetLocaleInfoEx(pStr, LOCALE_SENGLANGUAGE, wcBuffer, localeBufferSize);

@@ -239,7 +239,7 @@ namespace crawlservpp::Parsing {
 
 		Wrapper::URIQueryList queryList;
 		const UriQueryListA * queryNext{nullptr};
-		int queryCount{0};
+		int queryCount{};
 		std::string queries;
 
 		// get query string
@@ -660,7 +660,7 @@ namespace crawlservpp::Parsing {
 			)
 		};
 
-		for(std::size_t n{0}; n < string.size(); ++n) {
+		for(std::size_t n{}; n < string.size(); ++n) {
 			cString[n] = string.at(n);
 		}
 
@@ -688,7 +688,7 @@ namespace crawlservpp::Parsing {
 	 */
 	inline std::string URI::escapeUri(std::string_view uriToEscape) {
 		std::string result;
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		while(pos < uriToEscape.size()) {
 			auto end{uriToEscape.find_first_of(";/?:@=&#%", pos)};
@@ -863,7 +863,7 @@ namespace crawlservpp::Parsing {
 			return std::string();
 		}
 
-		int charsRequired{0};
+		int charsRequired{};
 
 		if(
 				uriToStringCharsRequiredA(

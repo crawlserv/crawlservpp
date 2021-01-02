@@ -336,13 +336,13 @@ namespace crawlservpp::Helper::Utf8 {
 		constexpr std::size_t skipTwoBytes{2};
 		constexpr std::size_t skipThreeBytes{3};
 
-		std::size_t result{0};
+		std::size_t result{};
 
 		const auto bytes{
 			str.length()
 		};
 
-		for(std::size_t pos{0}; pos < bytes; ++pos) {
+		for(std::size_t pos{}; pos < bytes; ++pos) {
 			++result;
 
 			const unsigned char byte{

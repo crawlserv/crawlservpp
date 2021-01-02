@@ -230,7 +230,7 @@ namespace crawlservpp::Parsing {
 
 		// options
 		bool warnings{false};
-		std::uint32_t errors{0};
+		std::uint32_t errors{};
 
 		// internal static helper functions
 		static void cDataRepair(std::string& content);
@@ -370,7 +370,7 @@ namespace crawlservpp::Parsing {
 			std::queue<std::string>& warningsTo
 	) {
 		// remove whitespaces at the beginning and null characters
-		std::size_t begin{0};
+		std::size_t begin{};
 
 		while(content.length() > begin && std::isspace(content.at(begin)) != 0) {
 			++begin;
@@ -530,7 +530,7 @@ namespace crawlservpp::Parsing {
 
 	// internal static helper function: replace invalid conditional comments (e.g. created by MS Excel)
 	inline void XML::replaceInvalidConditionalComments(std::string& content) {
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		while(pos < content.length()) {
 			// find next invalid conditional comment
@@ -601,7 +601,7 @@ namespace crawlservpp::Parsing {
 
 	// internal static helper function: replace invalid comments (<? ... ?>)
 	inline void XML::replaceInvalidComments(std::string& content) {
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		while(pos < content.length()) {
 			// find next invalid comment
@@ -655,7 +655,7 @@ namespace crawlservpp::Parsing {
 
 	// internal static helper function: remove XML processing instructions (<?xml:...>)
 	inline void XML::removeXmlProcessingInstructions(std::string& content) {
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		while(pos < content.length()) {
 			pos = content.find(xmlInstructionBegin, pos);

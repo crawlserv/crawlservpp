@@ -322,7 +322,7 @@ namespace crawlservpp::Data {
 
 		rawData->len = wordPtrs.size();
 
-		std::uint32_t index{0};
+		std::uint32_t index{};
 
 		for(auto * wordPtr : wordPtrs) {
 			rawData->lines[index] = wordPtr;

@@ -514,7 +514,7 @@ namespace crawlservpp::Module {
 	 *   in a jump to a previous ID.
 	 */
 	std::int64_t Thread::getWarpedOverAndReset() {
-		std::int64_t result{0};
+		std::int64_t result{};
 
 		std::swap(this->warpedOver, result);
 

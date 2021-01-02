@@ -860,7 +860,7 @@ namespace crawlservpp::Main {
 	 *   of log entries from the database.
 	 */
 	std::uint64_t Database::getNumberOfLogEntries(const std::string& logModule) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check connection
 		this->checkConnection();
@@ -1042,7 +1042,7 @@ namespace crawlservpp::Main {
 	 *   about the new thread to the database.
 	 */
 	std::uint64_t Database::addThread(const ThreadOptions& threadOptions) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check arguments
 		if(threadOptions.module.empty()) {
@@ -1121,7 +1121,7 @@ namespace crawlservpp::Main {
 	 *   time of the thread from the database.
 	 */
 	std::uint64_t Database::getThreadRunTime(std::uint64_t threadId) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check argument
 		if(threadId == 0) {
@@ -1179,7 +1179,7 @@ namespace crawlservpp::Main {
 	 *   time of the thread from the database.
 	 */
 	std::uint64_t Database::getThreadPauseTime(std::uint64_t threadId) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check argument
 		if(threadId == 0) {
@@ -1531,7 +1531,7 @@ namespace crawlservpp::Main {
 	 *   website to the database.
 	 */
 	std::uint64_t Database::addWebsite(const WebsiteProperties& websiteProperties) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 		std::string timeStamp;
 
 		// check arguments
@@ -1763,7 +1763,7 @@ namespace crawlservpp::Main {
 	 *   the database.
 	 */
 	Database::IdString Database::getWebsiteNamespaceFromUrlList(std::uint64_t listId) {
-		std::uint64_t websiteId{0};
+		std::uint64_t websiteId{};
 
 		// check argument
 		if(listId == 0) {
@@ -1825,7 +1825,7 @@ namespace crawlservpp::Main {
 	 *   from the database.
 	 */
 	Database::IdString Database::getWebsiteNamespaceFromConfig(std::uint64_t configId) {
-		std::uint64_t websiteId{0};
+		std::uint64_t websiteId{};
 
 		// check argument
 		if(configId == 0) {
@@ -1893,7 +1893,7 @@ namespace crawlservpp::Main {
 	 *   from the database.
 	 */
 	Database::IdString Database::getWebsiteNamespaceFromTargetTable(const std::string& type, std::uint64_t tableId) {
-		std::uint64_t websiteId{0};
+		std::uint64_t websiteId{};
 
 		// check arguments
 		if(type.empty()) {
@@ -2195,7 +2195,7 @@ namespace crawlservpp::Main {
 			std::uint64_t websiteId,
 			const WebsiteProperties& websiteProperties
 	) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check arguments
 		if(websiteId == 0) {
@@ -2348,7 +2348,7 @@ namespace crawlservpp::Main {
 			std::uint64_t websiteId,
 			const WebsiteProperties& websiteProperties
 	) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check arguments
 		if(websiteId == 0) {
@@ -2939,7 +2939,7 @@ namespace crawlservpp::Main {
 	 *   configurations.
 	 */
 	std::uint64_t Database::duplicateWebsite(std::uint64_t websiteId, const Queries& queries) {
-		std::uint64_t newId{0};
+		std::uint64_t newId{};
 
 		// check argument
 		if(websiteId == 0) {
@@ -3590,7 +3590,7 @@ namespace crawlservpp::Main {
 #endif
 
 				// get number of rows to copy
-				std::uint64_t count{0};
+				std::uint64_t count{};
 
 				SqlResultSetPtr result1{
 					Database::sqlExecuteQuery(
@@ -3850,7 +3850,7 @@ namespace crawlservpp::Main {
 			std::uint64_t websiteId,
 			const UrlListProperties& listProperties
 	) {
-		std::uint64_t newId{0};
+		std::uint64_t newId{};
 
 		// check arguments
 		if(websiteId == 0) {
@@ -4156,7 +4156,7 @@ namespace crawlservpp::Main {
 	 *   non-existing URLs to the URL list.
 	 */
 	std::size_t Database::mergeUrls(std::uint64_t listId, std::queue<std::string>& urls) {
-		std::size_t urlsAdded{0};
+		std::size_t urlsAdded{};
 
 		// check arguments
 		if(listId == 0) {
@@ -4205,7 +4205,7 @@ namespace crawlservpp::Main {
 			// generate placeholders
 			const auto max{urls.size() > nAtOnce500 ? nAtOnce500 : urls.size()};
 
-			for(std::size_t n{0}; n < max; ++n) {
+			for(std::size_t n{}; n < max; ++n) {
 				sqlQueryStr += "(" // begin of VALUES arguments
 								" ("
 									"SELECT id FROM"
@@ -4244,7 +4244,7 @@ namespace crawlservpp::Main {
 				// execute SQL query
 				const std::size_t max{urls.size() > nAtOnce500 ? nAtOnce500 : urls.size()};
 
-				for(std::size_t n{0}; n < max; ++n) {
+				for(std::size_t n{}; n < max; ++n) {
 					sqlStatement->setString(n * numArgsAddUrl + sqlArg1, urls.front());
 					sqlStatement->setString(n * numArgsAddUrl + sqlArg2, urls.front());
 					sqlStatement->setString(n * numArgsAddUrl + sqlArg3, urls.front());
@@ -4493,7 +4493,7 @@ namespace crawlservpp::Main {
 			const std::string& type,
 			std::uint64_t tableId
 	) {
-		std::uint64_t urlListId{0};
+		std::uint64_t urlListId{};
 
 		// check arguments
 		if(type.empty()) {
@@ -5097,7 +5097,7 @@ namespace crawlservpp::Main {
 		// check connection
 		this->checkConnection();
 
-		std::size_t result{0};
+		std::size_t result{};
 
 		try {
 			while(!urlIds.empty()) {
@@ -5112,7 +5112,7 @@ namespace crawlservpp::Main {
 				};
 
 				// add a maximum of 100 URLs to the SQL query
-				for(std::uint8_t n{0}; n < nAtOnce100; ++n) {
+				for(std::uint8_t n{}; n < nAtOnce100; ++n) {
 					// check whether there are more IDs to process
 					if(urlIds.empty()) {
 						break;
@@ -5323,7 +5323,7 @@ namespace crawlservpp::Main {
 	 *   query to the database.
 	 */
 	std::uint64_t Database::addQuery(std::uint64_t websiteId, const QueryProperties& queryProperties) {
-		std::uint64_t newId{0};
+		std::uint64_t newId{};
 
 		// check arguments
 		if(queryProperties.name.empty()) {
@@ -5679,7 +5679,7 @@ namespace crawlservpp::Main {
 	 *   query in the database.
 	 */
 	std::uint64_t Database::duplicateQuery(std::uint64_t queryId) {
-		std::uint64_t newId{0};
+		std::uint64_t newId{};
 
 		// check argument
 		if(queryId == 0) {
@@ -5771,7 +5771,7 @@ namespace crawlservpp::Main {
 			std::uint64_t websiteId,
 			const ConfigProperties& configProperties
 	) {
-		std::uint64_t newId{0};
+		std::uint64_t newId{};
 
 		// check arguments
 		if(configProperties.module.empty()) {
@@ -6027,7 +6027,7 @@ namespace crawlservpp::Main {
 	 *   configuration in the database.
 	 */
 	std::uint64_t Database::duplicateConfiguration(std::uint64_t configId) {
-		std::uint64_t newId{0};
+		std::uint64_t newId{};
 
 		// check argument
 		if(configId == 0) {
@@ -6111,7 +6111,7 @@ namespace crawlservpp::Main {
 	 *   target table in the database.
 	 */
 	std::uint64_t Database::addOrUpdateTargetTable(const TargetTableProperties& properties) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check arguments
 		if(properties.type.empty()) {
@@ -6400,7 +6400,7 @@ namespace crawlservpp::Main {
 			std::uint64_t listId,
 			const std::string& tableName
 	) {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check arguments
 		if(type.empty()) {
@@ -6639,7 +6639,7 @@ namespace crawlservpp::Main {
 	 *   reconnect to the database.
 	 */
 	void Database::checkConnection() {
-		std::uint64_t milliseconds{0};
+		std::uint64_t milliseconds{};
 
 		// check driver
 		if(Database::driver == nullptr) {
@@ -9791,7 +9791,7 @@ namespace crawlservpp::Main {
 	 *   last inserted ID from the database.
 	 */
 	std::uint64_t Database::getLastInsertedId() {
-		std::uint64_t result{0};
+		std::uint64_t result{};
 
 		// check connection
 		this->checkConnection();

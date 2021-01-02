@@ -294,8 +294,8 @@ namespace crawlservpp::Query {
 
 		// subset properties and parsing
 		std::uint8_t subSetType{QueryStruct::typeNone}; // type of subsets
-		std::size_t subSetNumber{0};		// number of subsets
-		std::size_t subSetCurrent{0};		// current subset (index + 1)
+		std::size_t subSetNumber{}	;		// number of subsets
+		std::size_t subSetCurrent{};		// current subset (index + 1)
 		bool subSetXmlParsed{false};		// current subset has been parsed as HTML/XML
 		bool subSetJsonParsedRapid{false};	// current subset has been parsed as JSON using RapidJSON
 		bool subSetJsonParsedCons{false};	// current subset has been parsed as JSON using jsoncons

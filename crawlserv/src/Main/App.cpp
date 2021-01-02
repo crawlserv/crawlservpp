@@ -32,7 +32,7 @@
 #include "App.hpp"
 
 namespace crawlservpp::Main {
-	volatile std::sig_atomic_t App::interruptionSignal{0};
+	volatile std::sig_atomic_t App::interruptionSignal{};
 
 	//! Constructor.
 	/*!
@@ -228,7 +228,7 @@ namespace crawlservpp::Main {
 					<< dbSettings.port
 					<< pwPrompt4;
 
-		char input{0};
+		char input{};
 		bool inputLoop{true};
 		bool inputCancel{false};
 

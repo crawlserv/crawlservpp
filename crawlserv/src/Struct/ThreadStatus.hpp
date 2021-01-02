@@ -56,7 +56,7 @@ namespace crawlservpp::Struct {
 		///@{
 
 		//! The ID of the thread.
-		std::uint64_t id{0};
+		std::uint64_t id{};
 
 		//! The status message of the thread.
 		std::string status;
@@ -65,10 +65,10 @@ namespace crawlservpp::Struct {
 		bool paused{false};
 
 		//! The last ID processed by the thread.
-		std::uint64_t last{0};
+		std::uint64_t last{};
 
 		//! The number of IDs processed by the thread.
-		std::uint64_t processed{0};
+		std::uint64_t processed{};
 
 		///@}
 		///@name Construction

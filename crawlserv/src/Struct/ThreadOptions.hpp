@@ -45,13 +45,13 @@ namespace crawlservpp::Struct {
 		std::string module;
 
 		//! The ID of the website used by the thread
-		std::uint64_t website{0};
+		std::uint64_t website{};
 
 		//! The ID of the URL list used by the thread.
-		std::uint64_t urlList{0};
+		std::uint64_t urlList{};
 
 		//! The ID of the configuration used by the thread.
-		std::uint64_t config{0};
+		std::uint64_t config{};
 
 		///@}
 		///@name Construction

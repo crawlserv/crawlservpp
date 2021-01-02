@@ -74,7 +74,7 @@ namespace crawlservpp::Struct {
 		std::uint8_t type{QueryStruct::typeNone};
 
 		//! The index of the query inside its container.
-		std::size_t index{0};
+		std::size_t index{};
 
 		//! Indicates whether the query generates a boolean result.
 		bool resultBool{false};

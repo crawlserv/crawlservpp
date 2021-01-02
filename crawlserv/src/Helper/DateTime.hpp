@@ -393,7 +393,7 @@ namespace crawlservpp::Helper::DateTime {
 					)
 		) {
 			// get (optional) offset from UNIX time
-			std::int64_t offset{0};
+			std::int64_t offset{};
 
 			if(customFormat.length() > unixTimeFormatXLength) {
 				try {
@@ -409,7 +409,7 @@ namespace crawlservpp::Helper::DateTime {
 			}
 
 			// get UNIX time
-			std::time_t unixTime{0};
+			std::time_t unixTime{};
 
 			try {
 				if(dateTime.find('.') != std::string::npos) {
@@ -1133,11 +1133,11 @@ namespace crawlservpp::Helper::DateTime {
 			const std::array<std::string_view, N>& suffixes,
 			std::string& strInOut
 	) {
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		while(pos < strInOut.length()) {
 			auto next{std::string::npos};
-			std::size_t len{0};
+			std::size_t len{};
 
 			for(const auto& suffix : suffixes) {
 				const auto search{strInOut.find(suffix, pos)};
@@ -1703,7 +1703,7 @@ namespace crawlservpp::Helper::DateTime {
 	 *   in which all single digits will be extended.
 	 */
 	inline void extendSingleDigits(std::string& dateTimeString) {
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		while(pos < dateTimeString.length()) {
 			pos = dateTimeString.find_first_of("123456789", pos);
@@ -1800,7 +1800,7 @@ namespace crawlservpp::Helper::DateTime {
 			return;
 		}
 
-		std::size_t pos{0};
+		std::size_t pos{};
 
 		while(pos < dateTimeString.length()) {
 			auto newPos{pos};

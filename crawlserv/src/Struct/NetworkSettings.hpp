@@ -57,7 +57,7 @@ namespace crawlservpp::Struct {
 		std::string torControlServer;
 
 		//! The port used by the TOR control server.
-		std::uint16_t torControlPort{0};
+		std::uint16_t torControlPort{};
 
 		//! The password used by the TOR control server.
 		std::string torControlPassword;

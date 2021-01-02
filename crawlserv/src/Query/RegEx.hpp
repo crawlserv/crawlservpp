@@ -139,8 +139,8 @@ namespace crawlservpp::Query {
 	 */
 	inline RegEx::RegEx(const std::string& expression, bool single, bool multi) {
 		std::string queryString(expression);
-		std::int32_t errorNumber{0};
-		PCRE2_SIZE errorOffset{0};
+		std::int32_t errorNumber{};
+		PCRE2_SIZE errorOffset{};
 
 		// remove newlines at the end of the expression
 		while(queryString.back() == '\n') {
@@ -501,8 +501,8 @@ namespace crawlservpp::Query {
 		resultTo.emplace_back(text, pcreOVector[0], pcreOVector[1] - pcreOVector[0]);
 
 		// get RegEx options
-		std::uint32_t pcreOptions{0};
-		std::uint32_t pcreNewLineOption{0};
+		std::uint32_t pcreOptions{};
+		std::uint32_t pcreNewLineOption{};
 
 		pcre2_pattern_info(this->expressionMulti.getc(), PCRE2_INFO_ALLOPTIONS, &pcreOptions);
 		pcre2_pattern_info(this->expressionMulti.getc(), PCRE2_INFO_NEWLINE, &pcreNewLineOption);

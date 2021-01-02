@@ -52,10 +52,10 @@ namespace crawlservpp::Struct {
 		std::string type;
 
 		//! The ID of the website used for retrieving data to be stored in the table.
-		std::uint64_t website{0};
+		std::uint64_t website{};
 
 		//! The ID of the URL list used for retrieving data to be stored in the table.
-		std::uint64_t urlList{0};
+		std::uint64_t urlList{};
 
 		//! View of a string containing the name of the table.
 		std::string name;

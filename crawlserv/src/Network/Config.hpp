@@ -324,7 +324,7 @@ namespace crawlservpp::Network {
 			 *
 			 * \sa localPortRange
 			 */
-			std::uint16_t localPort{0};
+			std::uint16_t localPort{};
 
 			//! Number of ports to be tried for outgoing traffic.
 			/*!
@@ -461,7 +461,7 @@ namespace crawlservpp::Network {
 			/*!
 			 * \sa resetTor, resetTorOnlyAfter
 			 */
-			std::uint64_t resetTorAfter{0};
+			std::uint64_t resetTorAfter{};
 
 			//! Number of seconds that need to be parsed before new identity will be requested from the TOR control server.
 			/*!
@@ -473,7 +473,7 @@ namespace crawlservpp::Network {
 			/*!
 			 * Set to zero for unlimited download speed.
 			 */
-			std::uint64_t speedDownLimit{0};
+			std::uint64_t speedDownLimit{};
 
 			//! Low speed limit in bytes per second.
 			/*!
@@ -481,7 +481,7 @@ namespace crawlservpp::Network {
 			 *
 			 * \sa speedLowTime
 			 */
-			std::uint64_t speedLowLimit{0};
+			std::uint64_t speedLowLimit{};
 
 			//! Number of seconds before a timeout occurs while the transfer speed is below the low speed limit.
 			/*!
@@ -490,13 +490,13 @@ namespace crawlservpp::Network {
 			 *
 			 * \sa speedLowLimit
 			 */
-			std::uint64_t speedLowTime{0};
+			std::uint64_t speedLowTime{};
 
 			//! Maximum upload speed in bytes per second.
 			/*!
 			 * Set to zero for unlimited upload speed.
 			 */
-			std::uint64_t speedUpLimit{0};
+			std::uint64_t speedUpLimit{};
 
 			//! Specifies whether to verify that the SSL certificate is for the server it is known as.
 			/*!
@@ -585,7 +585,7 @@ namespace crawlservpp::Network {
 			 * Set to zero for using the default
 			 *  value provided by @c libcurl.
 			 */
-			std::uint16_t timeOutHappyEyeballs{0};
+			std::uint16_t timeOutHappyEyeballs{};
 
 			//! The maximum amount of time a request is allowed to take, in seconds.
 			/*!

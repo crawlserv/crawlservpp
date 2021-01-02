@@ -473,7 +473,7 @@ namespace crawlservpp::Main {
 	 *   currently active on the server.
 	 */
 	std::size_t Server::getActiveThreads() const {
-		std::size_t result{0};
+		std::size_t result{};
 
 		// count active crawlers
 		result += std::count_if(
@@ -636,7 +636,7 @@ namespace crawlservpp::Main {
 			std::lock_guard<std::mutex> workersLocked{this->workersLock};
 			bool erased{false};
 
-			for(std::size_t i{0}; i < this->workers.size(); ++i) {
+			for(std::size_t i{}; i < this->workers.size(); ++i) {
 				if(erased) {
 					--i;
 
@@ -1274,9 +1274,9 @@ namespace crawlservpp::Main {
 	//  start a crawler using the specified website, URL list and configuration
 	Server::ServerCommandResponse Server::cmdStartCrawler() {
 		// get arguments
-		std::uint64_t website{0};
-		std::uint64_t urlList{0};
-		std::uint64_t config{0};
+		std::uint64_t website{};
+		std::uint64_t urlList{};
+		std::uint64_t config{};
 		std::string error;
 
 		if(
@@ -1350,7 +1350,7 @@ namespace crawlservpp::Main {
 	// server command pausecrawler(id): pause a crawler by its ID
 	Server::ServerCommandResponse Server::cmdPauseCrawler() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1392,7 +1392,7 @@ namespace crawlservpp::Main {
 	// server command unpausecrawler(id): unpause a crawler by its ID
 	Server::ServerCommandResponse Server::cmdUnpauseCrawler() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1434,7 +1434,7 @@ namespace crawlservpp::Main {
 	// server command stopcrawler(id): stop a crawler by its ID
 	Server::ServerCommandResponse Server::cmdStopCrawler() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1477,9 +1477,9 @@ namespace crawlservpp::Main {
 	//  start a parser using the specified website, URL list and configuration
 	Server::ServerCommandResponse Server::cmdStartParser() {
 		// get arguments
-		std::uint64_t website{0};
-		std::uint64_t urlList{0};
-		std::uint64_t config{0};
+		std::uint64_t website{};
+		std::uint64_t urlList{};
+		std::uint64_t config{};
 		std::string error;
 
 		if(
@@ -1551,7 +1551,7 @@ namespace crawlservpp::Main {
 	// server command pauseparser(id): pause a parser by its ID
 	Server::ServerCommandResponse Server::cmdPauseParser() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1593,7 +1593,7 @@ namespace crawlservpp::Main {
 	// server command unpauseparser(id): unpause a parser by its ID
 	Server::ServerCommandResponse Server::cmdUnpauseParser() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1635,7 +1635,7 @@ namespace crawlservpp::Main {
 	// server command stopparser(id): stop a parser by its ID
 	Server::ServerCommandResponse Server::cmdStopParser() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1677,7 +1677,7 @@ namespace crawlservpp::Main {
 	// server command resetparsingstatus(urllist): reset the parsing status of a ID-specificed URL list
 	Server::ServerCommandResponse Server::cmdResetParsingStatus() {
 		// get argument
-		std::uint64_t urlList{0};
+		std::uint64_t urlList{};
 		std::string error;
 
 		if(!(this->getArgument("urllist", urlList, error))) {
@@ -1702,9 +1702,9 @@ namespace crawlservpp::Main {
 	//  start an extractor using the specified website, URL list and configuration
 	Server::ServerCommandResponse Server::cmdStartExtractor() {
 		// get arguments
-		std::uint64_t website{0};
-		std::uint64_t urlList{0};
-		std::uint64_t config{0};
+		std::uint64_t website{};
+		std::uint64_t urlList{};
+		std::uint64_t config{};
 		std::string error;
 
 		if(
@@ -1778,7 +1778,7 @@ namespace crawlservpp::Main {
 	// server command pauseextractor(id): pause an extractor by its ID
 	Server::ServerCommandResponse Server::cmdPauseExtractor() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1820,7 +1820,7 @@ namespace crawlservpp::Main {
 	// server command unpauseextractor(id): unpause an extractor by its ID
 	Server::ServerCommandResponse Server::cmdUnpauseExtractor() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1861,7 +1861,7 @@ namespace crawlservpp::Main {
 	// server command stopextractor(id): stop an extractor by its ID
 	Server::ServerCommandResponse Server::cmdStopExtractor() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -1903,7 +1903,7 @@ namespace crawlservpp::Main {
 	// server command resetextractingstatus(urllist): reset the parsing status of a ID-specificed URL list
 	Server::ServerCommandResponse Server::cmdResetExtractingStatus() {
 		// get argument
-		std::uint64_t urlList{0};
+		std::uint64_t urlList{};
 		std::string error;
 
 		if(!(this->getArgument("urllist", urlList, error))) {
@@ -1928,9 +1928,9 @@ namespace crawlservpp::Main {
 	//  start an analyzer using the specified website, URL list, module and configuration
 	Server::ServerCommandResponse Server::cmdStartAnalyzer() {
 		// get arguments
-		std::uint64_t website{0};
-		std::uint64_t urlList{0};
-		std::uint64_t config{0};
+		std::uint64_t website{};
+		std::uint64_t urlList{};
+		std::uint64_t config{};
 		std::string error;
 
 		if(
@@ -2049,7 +2049,7 @@ namespace crawlservpp::Main {
 	// server command pauseparser(id): pause a parser by its ID
 	Server::ServerCommandResponse Server::cmdPauseAnalyzer() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -2096,7 +2096,7 @@ namespace crawlservpp::Main {
 	// server command unpauseanalyzer(id): unpause a parser by its ID
 	Server::ServerCommandResponse Server::cmdUnpauseAnalyzer() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -2138,7 +2138,7 @@ namespace crawlservpp::Main {
 	// server command stopanalyzer(id): stop a parser by its ID
 	Server::ServerCommandResponse Server::cmdStopAnalyzer() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -2180,7 +2180,7 @@ namespace crawlservpp::Main {
 	// server command resetanalyzingstatus(urllist): reset the parsing status of a ID-specificed URL list
 	Server::ServerCommandResponse Server::cmdResetAnalyzingStatus() {
 		// get argument
-		std::uint64_t urlList{0};
+		std::uint64_t urlList{};
 		std::string error;
 
 		if(!(this->getArgument("urllist", urlList, error))) {
@@ -2203,7 +2203,7 @@ namespace crawlservpp::Main {
 
 	// server command pauseall(): pause all running threads
 	Server::ServerCommandResponse Server::cmdPauseAll() {
-		std::size_t counter{0};
+		std::size_t counter{};
 
 		// pause crawlers
 		for(const auto& thread : this->crawlers) {
@@ -2290,7 +2290,7 @@ namespace crawlservpp::Main {
 
 	// server command unpauseall(): unpause all paused threads
 	Server::ServerCommandResponse Server::cmdUnpauseAll() {
-		std::size_t counter{0};
+		std::size_t counter{};
 
 		// unpause crawlers
 		for(const auto& thread : this->crawlers) {
@@ -2384,7 +2384,7 @@ namespace crawlservpp::Main {
 		std::string name;
 		std::string dir;
 		std::string error;
-		std::uint64_t id{0};
+		std::uint64_t id{};
 
 		if(
 				!(this->getArgument("crossdomain", isCrossDomain, true, error))
@@ -2528,7 +2528,7 @@ namespace crawlservpp::Main {
 	// server command updatewebsite(id, crossdomain, domain, namespace, name, [dir]): edit a website
 	Server::ServerCommandResponse Server::cmdUpdateWebsite() {
 		// get arguments
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		bool isCrossDomain{false};
 		std::string domain;
 		std::string nameSpace;
@@ -2790,7 +2790,7 @@ namespace crawlservpp::Main {
 		}
 
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -2867,7 +2867,7 @@ namespace crawlservpp::Main {
 	//			 and their queries (as key values i.e. arrays with objects including "cat" and "name" keys)
 	Server::ServerCommandResponse Server::cmdDuplicateWebsite() {
 		// get arguments
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -3014,7 +3014,7 @@ namespace crawlservpp::Main {
 	// server command addurllist(website, namespace, name): add a URL list to the ID-specified website
 	Server::ServerCommandResponse Server::cmdAddUrlList() {
 		// get arguments
-		std::uint64_t website{0};
+		std::uint64_t website{};
 		std::string nameSpace;
 		std::string name;
 		std::string error;
@@ -3072,7 +3072,7 @@ namespace crawlservpp::Main {
 	// server command updateurllist(id, namespace, name): edit a URL list
 	Server::ServerCommandResponse Server::cmdUpdateUrlList() {
 		// get arguments
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string nameSpace;
 		std::string name;
 		std::string error;
@@ -3160,7 +3160,7 @@ namespace crawlservpp::Main {
 		}
 
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -3236,7 +3236,7 @@ namespace crawlservpp::Main {
 	//  add a query
 	Server::ServerCommandResponse Server::cmdAddQuery() {
 		// get arguments
-		std::uint64_t website{0};
+		std::uint64_t website{};
 		std::string name;
 		std::string query;
 		std::string type;
@@ -3322,7 +3322,7 @@ namespace crawlservpp::Main {
 	//  edit a query
 	Server::ServerCommandResponse Server::cmdUpdateQuery() {
 		// get arguments
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string name;
 		std::string query;
 		std::string type;
@@ -3460,8 +3460,8 @@ namespace crawlservpp::Main {
 
 	// server command movequery(id, to): move a query to another website by their IDs
 	Server::ServerCommandResponse Server::cmdMoveQuery() {
-		std::uint64_t id{0};
-		std::uint64_t to{0};
+		std::uint64_t id{};
+		std::uint64_t to{};
 		std::string error;
 
 		// get arguments
@@ -3511,7 +3511,7 @@ namespace crawlservpp::Main {
 		}
 
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -3543,7 +3543,7 @@ namespace crawlservpp::Main {
 	// server command duplicatequery(id): Duplicate a query by its ID
 	Server::ServerCommandResponse Server::cmdDuplicateQuery() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -3574,7 +3574,7 @@ namespace crawlservpp::Main {
 	// server command addconfig(website, module, name, config): Add configuration to database
 	Server::ServerCommandResponse Server::cmdAddConfig() {
 		// get arguments
-		std::uint64_t website{0};
+		std::uint64_t website{};
 		std::string module;
 		std::string name;
 		std::string config;
@@ -3648,7 +3648,7 @@ namespace crawlservpp::Main {
 	// server command updateconfig(id, name, config): Update a configuration in the database by its ID
 	Server::ServerCommandResponse Server::cmdUpdateConfig() {
 		// get arguments
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string name;
 		std::string config;
 		std::string error;
@@ -3760,7 +3760,7 @@ namespace crawlservpp::Main {
 		}
 
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -3792,7 +3792,7 @@ namespace crawlservpp::Main {
 	// server command duplicateconfig(id): Duplicate a configuration by its ID
 	Server::ServerCommandResponse Server::cmdDuplicateConfig() {
 		// get argument
-		std::uint64_t id{0};
+		std::uint64_t id{};
 		std::string error;
 
 		if(!(this->getArgument("id", id, error))) {
@@ -3857,8 +3857,8 @@ namespace crawlservpp::Main {
 	// server command warp(thread, target): Let thread jump to specified ID
 	Server::ServerCommandResponse Server::cmdWarp() {
 		// get argument
-		std::uint64_t thread{0};
-		std::uint64_t target{0};
+		std::uint64_t thread{};
+		std::uint64_t target{};
 		std::string error;
 
 		if(
@@ -4049,8 +4049,8 @@ namespace crawlservpp::Main {
 				if(!response.fail) {
 					if(dataType == "urllist") {
 						// get arguments for importing a URL list
-						std::uint64_t website{0};
-						std::uint64_t target{0};
+						std::uint64_t website{};
+						std::uint64_t target{};
 
 						if(
 								!Server::getArgument(json, "website", website, error)
@@ -4149,7 +4149,7 @@ namespace crawlservpp::Main {
 									}
 
 									if(!response.fail) {
-										std::size_t added{0};
+										std::size_t added{};
 
 										if(!urls.empty()) {
 											// write to log
@@ -4253,9 +4253,9 @@ namespace crawlservpp::Main {
 			}
 			else if(dataType == "urllist") {
 				// get arguments for merging two URL lists
-				std::uint64_t website{0};
-				std::uint64_t source{0};
-				std::uint64_t target{0};
+				std::uint64_t website{};
+				std::uint64_t source{};
+				std::uint64_t target{};
 
 				if(
 						!Server::getArgument(json, "website", website, error)
@@ -4438,8 +4438,8 @@ namespace crawlservpp::Main {
 
 				if(dataType == "urllist") {
 					// get arguments for exporting a URL list
-					std::uint64_t website{0};
-					std::uint64_t source{0};
+					std::uint64_t website{};
+					std::uint64_t source{};
 
 					if(
 							!Server::getArgument(json, "website", website, error)
@@ -4643,8 +4643,8 @@ namespace crawlservpp::Main {
 
 		if(Server::workerBegin(message, json, response)) {
 			// get arguments
-			std::uint64_t urlList{0};
-			std::uint64_t query{0};
+			std::uint64_t urlList{};
+			std::uint64_t query{};
 			std::string error;
 
 			if(
@@ -4947,7 +4947,7 @@ namespace crawlservpp::Main {
 									result += " [empty]\n";
 								}
 								else {
-									std::size_t counter{0};
+									std::size_t counter{};
 									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
@@ -5044,7 +5044,7 @@ namespace crawlservpp::Main {
 									result += " [empty]\n";
 								}
 								else {
-									std::size_t counter{0};
+									std::size_t counter{};
 									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
@@ -5077,7 +5077,7 @@ namespace crawlservpp::Main {
 									result += " [empty]\n";
 								}
 								else {
-									std::size_t counter{0};
+									std::size_t counter{};
 									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
@@ -5172,7 +5172,7 @@ namespace crawlservpp::Main {
 									result += " [empty]\n";
 								}
 								else {
-									std::size_t counter{0};
+									std::size_t counter{};
 									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
@@ -5205,7 +5205,7 @@ namespace crawlservpp::Main {
 									result += " [empty]\n";
 								}
 								else {
-									std::size_t counter{0};
+									std::size_t counter{};
 									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
@@ -5295,7 +5295,7 @@ namespace crawlservpp::Main {
 									result += " [empty]\n";
 								}
 								else {
-									std::size_t counter{0};
+									std::size_t counter{};
 									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
@@ -5329,7 +5329,7 @@ namespace crawlservpp::Main {
 									result += " [empty]\n";
 								}
 								else {
-									std::size_t counter{0};
+									std::size_t counter{};
 									std::string toAppend(1, '\n');
 
 									for(const auto& tempResult : tempResults) {
@@ -5483,7 +5483,7 @@ namespace crawlservpp::Main {
 											result += " [empty]\n";
 										}
 										else {
-											std::size_t counter{0};
+											std::size_t counter{};
 											std::string toAppend(1, '\n');
 
 											for(const auto& tempResult : tempResults) {
@@ -5516,7 +5516,7 @@ namespace crawlservpp::Main {
 											result += " [empty]\n";
 										}
 										else {
-											std::size_t counter{0};
+											std::size_t counter{};
 											std::string toAppend(1, '\n');
 
 											for(const auto& tempResult : tempResults) {
@@ -5592,7 +5592,7 @@ namespace crawlservpp::Main {
 											result += " [empty]\n";
 										}
 										else {
-											std::size_t counter{0};
+											std::size_t counter{};
 											std::string toAppend(1, '\n');
 
 											for(const auto& tempResult : tempResults) {
@@ -5622,7 +5622,7 @@ namespace crawlservpp::Main {
 											result += " [empty]\n";
 										}
 										else {
-											std::size_t counter{0};
+											std::size_t counter{};
 											std::string toAppend(1, '\n');
 
 											for(const auto& tempResult : tempResults) {
@@ -5906,7 +5906,7 @@ namespace crawlservpp::Main {
 
 	// private static helper function: get algorithm ID from configuration JSON, throws Main::Exception
 	std::uint32_t Server::getAlgoFromConfig(const rapidjson::Document& json) {
-		std::uint32_t result{0};
+		std::uint32_t result{};
 
 		if(!json.IsArray()) {
 			throw Exception("Server::getAlgoFromConfig(): Configuration is no array");

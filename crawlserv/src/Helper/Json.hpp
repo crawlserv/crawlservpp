@@ -446,7 +446,7 @@ namespace crawlservpp::Helper::Json {
 
 		std::string result;
 
-		for(std::size_t n{0}; n < json.length(); ++n) {
+		for(std::size_t n{}; n < json.length(); ++n) {
 			// ignore control characters
 			if(std::iscntrl(json[n]) != 0) {
 				continue;

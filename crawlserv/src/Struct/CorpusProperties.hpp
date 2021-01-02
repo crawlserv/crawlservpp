@@ -49,7 +49,7 @@ namespace crawlservpp::Struct {
 		 *   Module::Analyzer::generalInputSourcesAnalyzing,
 		 *   Module::Analyzer::generalInputSourcesCrawling
 		 */
-		std::uint16_t sourceType{0};
+		std::uint16_t sourceType{};
 
 		//! The name of the table from which the corpus is created.
 		std::string sourceTable;
@@ -81,14 +81,14 @@ namespace crawlservpp::Struct {
 		 * Only the unmanipulated corpus will be stored
 		 *  by default.
 		 */
-		std::vector<std::uint16_t> savePoints{0};
+		std::vector<std::uint16_t> savePoints{{}};
 
 		//! Number of processed bytes in a continuous corpus after which memory will be freed.
 		/*!
 		 * If zero, memory will only be freed after
 		 *  processing is complete.
 		 */
-		std::uint64_t freeMemoryEvery{0};
+		std::uint64_t freeMemoryEvery{};
 
 		//! Tokenization.
 		/*!

@@ -106,7 +106,7 @@ namespace crawlservpp::Data {
 			std::int64_t _i64;
 
 			//! Unsigned 64-bit integer value.
-			std::uint64_t _ui64{0};
+			std::uint64_t _ui64{};
 
 			//! Floating point value (with double precision).
 			double _d;
