@@ -158,9 +158,9 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		// check for jump in last ID ("time travel")
-		const auto warpedOver{this->getWarpedOverAndReset()};
+		const auto jump{this->getWarpedOverAndReset()};
 
-		if(warpedOver != 0) {
+		if(jump != 0) {
 			// save cached results
 			this->extractingSaveResults(true);
 
@@ -171,7 +171,7 @@ namespace crawlservpp::Module::Extractor {
 			this->lastUrl = this->getLast();
 
 			// adjust tick counter
-			this->tickCounter += warpedOver;
+			this->tickCounter += jump;
 		}
 
 		// URL selection if no URLs are left to extract
