@@ -233,6 +233,11 @@ echo rowWebsiteSelect(false, true, false, "move-to", "Move to", [ $website ]);
 
 if($query) {
     echo "<a id=\"query-move\" href=\"#\" class=\"action-link\">Move to website</a>\n";
+    
+    $trigger = "query-update";
+}
+else {
+    $trigger = "query-add";
 }
 
 ?>
@@ -246,7 +251,15 @@ if($query) {
 <div class="entry-row">
 <div class="entry-label">Name:</div><div class="entry-input">
 
-<input id="query-name" type="text" class="entry-input" value="<?php if($query) echo html($queryName); ?>" />
+<input id="query-name" type="text" class="entry-input trigger" data-trigger="<?php
+
+echo $trigger;
+
+?>" value="<?php 
+
+if($query) echo html($queryName); 
+
+?>" />
 
 </div>
 </div>
@@ -358,7 +371,11 @@ if($query && $queryTextOnly) {
 <div class="entry-row">
 <div class="entry-label-top">Query text:</div><div class="entry-input">
 
-<textarea id="query-text" class="entry-input" spellcheck="false" autocomplete="off"><?php
+<textarea id="query-text" class="entry-input trigger" spellcheck="false" autocomplete="off" data-trigger="<?php
+
+echo $trigger;
+
+?>"><?php
 
 if($query) {
     echo html($queryText);
