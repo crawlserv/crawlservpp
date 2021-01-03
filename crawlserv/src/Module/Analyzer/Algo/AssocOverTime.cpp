@@ -509,6 +509,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			this->database.insertCustomData(data);
 
+			// update status if necessary
 			++statusCounter;
 			++resultCounter;
 
@@ -519,6 +520,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				);
 
 				statusCounter = 0;
+			}
+
+			if(!(this->isRunning())) {
+				return;
 			}
 		}
 
