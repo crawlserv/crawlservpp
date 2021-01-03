@@ -128,6 +128,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 		}
 
+		// initialize target table
 		this->database.setTargetFields(fields);
 
 		this->database.initTargetTable(true, true);

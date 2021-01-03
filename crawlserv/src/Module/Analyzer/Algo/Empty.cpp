@@ -116,8 +116,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		fields.emplace_back("[NAME]", "[TYPE]");
 		...
-
-		this->database.setTargetFields(fields);
 		*/
 
 		/*
@@ -126,6 +124,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// initialize target table
 		/*
+		this->database.setTargetFields(fields);
+
 		this->database.initTargetTable(...);
 		*/
 	}
