@@ -232,13 +232,6 @@ namespace crawlservpp::Module::Analyzer {
 		///@{
 
 		void prepare();
-		void prepareAlgo(
-				const std::vector<std::string>& statements,
-				std::vector<std::uint16_t>& idsTo
-		);
-		[[nodiscard]] sql::PreparedStatement& getPreparedAlgoStatement(
-				std::size_t sqlStatementId
-		);
 
 		///@}
 		///@name Text Corpus

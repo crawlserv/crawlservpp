@@ -595,64 +595,6 @@ namespace crawlservpp::Module::Analyzer {
 		}
 	}
 
-	//! Prepares custom SQL statements for the algorithm.
-	/*!
-	 * \param statements Constant reference to
-	 *   a vector of strings containing the
-	 *   SQL statements to prepare.
-	 * \param idsTo Reference to a vector to
-	 *   which the IDs of the prepared SQL
-	 *   statements will be written,
-	 *
-	 * \throws Main::Database::Exception if
-	 *   a MySQL error occurs during the
-	 *   preparation of the SQL statements.
-	 */
-	void Database::prepareAlgo(
-			const std::vector<std::string>& statements,
-			std::vector<uint16_t>& idsTo
-	) {
-		// check connection to database
-		this->checkConnection();
-
-		// reserve memory
-		this->reserveForPreparedStatements(statements.size());
-
-		// prepare SQL statements for algorithm
-		this->log(
-				this->getLoggingVerbose(),
-				"prepares "
-				+ std::to_string(statements.size())
-				+ " SQL statements for the algorithm..."
-		);
-
-		for(const auto& statement : statements) {
-			idsTo.push_back(this->addPreparedStatement(statement));
-		}
-	}
-
-	//! Gets a prepared SQL statement for the algorithm.
-	/*!
-	 * \note Wraps the protected parent member
-	 *  Wrapper::Database::getPreparedStatement
-	 *  to the public for usage by the algorithm.
-	 *
-	 * \param sqlStatementId ID of the prepared
-	 *   SQL statement to retrieve.
-	 *
-	 * \returns A reference to the prepared
-	 *   SQL statement specified.
-	 *
-	 * \throws Main::Database::Exception if a MySQL
-	 *    error occured while retrieving the
-	 *    prepared SQL statement.
-	 */
-	sql::PreparedStatement& Database::getPreparedAlgoStatement(
-			std::size_t sqlStatementId
-	) {
-		return this->getPreparedStatement(sqlStatementId);
-	}
-
 	/*
 	 * TEXT CORPUS
 	 */
