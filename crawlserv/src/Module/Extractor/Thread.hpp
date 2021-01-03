@@ -235,6 +235,7 @@ namespace crawlservpp::Module::Extractor {
 		QueryStruct queryPagingNextFrom;
 		QueryStruct queryPagingNumberFrom;
 		QueryStruct queryExpected;
+		QueryStruct queryExtractingSkip;
 
 		// timing
 		std::uint64_t tickCounter{};
@@ -321,6 +322,7 @@ namespace crawlservpp::Module::Extractor {
 		);
 		void extractingGetValueFromContent(const QueryStruct& query, std::string& resultTo);
 		void extractingGetValueFromUrl(const QueryStruct& query, std::string& resultTo);
+		bool extractingPageIsSkip(std::queue<std::string>& queryWarningsTo);
 		bool extractingPageIsRetry(std::queue<std::string>& queryWarningsTo);
 		std::size_t extractingPage(std::uint64_t contentId, const std::string& url);
 		std::size_t extractingLinked(std::uint64_t contentId, const std::string& url);

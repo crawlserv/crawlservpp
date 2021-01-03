@@ -578,7 +578,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"description": "Log warning when the field with the same array index is empty (and logging is enabled).",
+			"description": "Log a warning when the field with the same array index is empty (and logging is enabled).",
 			"simple": false
 		},
 		"id.ignore": {
@@ -652,6 +652,17 @@
 			"default": true,
 			"description": "Try to repair broken HTML/XML comments.",
 			"simple": false
+		},
+		"skip.query": {
+			"type": "query",
+			"result-types": [
+				"bool"
+			],
+			"default": false,
+			"label": "Skip:",
+			"description": "Extracting will proceed to the next URL if the current page fulfills this query.",
+			"simple": true,
+			"position": 15			
 		}
 	},
 	"linked": {
@@ -785,7 +796,7 @@
 			"type": "array",
 			"item-type": "bool",
 			"default": [],
-			"description": "Log warning when the field with the same array index is empty (and logging is enabled).",
+			"description": "Log a warning when the field with the same array index is empty (and logging is enabled).",
 			"simple": false
 		}
 	},

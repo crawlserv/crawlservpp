@@ -30,6 +30,9 @@
 
 #include "Thread.hpp"
 
+#define DBG_BEG	try {
+#define DBG_END(x) } catch(const std::out_of_range& e) { throw Exception(std::string(e.what()) + " in " + #x); }
+
 namespace crawlservpp::Module::Extractor {
 
 	/*
@@ -513,7 +516,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// set sources
-	void Thread::setUpSources() {
+	void Thread::setUpSources() { DBG_BEG
 		std::queue<StringString> sources;
 
 		for(std::size_t index{}; index < this->config.variablesName.size(); ++index) {
@@ -543,6 +546,8 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		this->database.setSources(sources);
+
+		DBG_END(setUpSources)
 	}
 
 	// create table names for locking
@@ -745,7 +750,7 @@ namespace crawlservpp::Module::Extractor {
 	 */
 
 	// initialize queries, throws Thread::Exception
-	void Thread::initQueries() {
+	void Thread::initQueries() { DBG_BEG
 		try {
 			this->addQueries(
 					this->config.extractingErrorFail,
@@ -780,6 +785,7 @@ namespace crawlservpp::Module::Extractor {
 			 * NOTE: The following queries need to be added even if they are of type 'none'
 			 * 		  as their index needs to correspond to other options.
 			 */
+
 			this->addQueriesTo(
 					this->config.extractingDateTimeQueries,
 					this->queriesDateTime
@@ -973,6 +979,10 @@ namespace crawlservpp::Module::Extractor {
 					this->queryPagingNumberFrom
 			);
 			this->addOptionalQuery(
+					this->config.extractingSkipQuery,
+					this->queryExtractingSkip
+			);
+			this->addOptionalQuery(
 					this->config.expectedQuery,
 					this->queryExpected
 			);
@@ -983,6 +993,8 @@ namespace crawlservpp::Module::Extractor {
 					+ std::string(e.view())
 			);
 		}
+
+		DBG_END(initQueries)
 	}
 
 	// delete queries
@@ -1004,6 +1016,7 @@ namespace crawlservpp::Module::Extractor {
 		queryPagingIsNextFrom = {};
 		queryPagingNextFrom = {};
 		queryPagingNumberFrom = {};
+		queryExtractingSkip = {};
 		queryExpected = {};
 	}
 
@@ -1062,7 +1075,7 @@ namespace crawlservpp::Module::Extractor {
 			const std::vector<std::string>& names,
 			const std::vector<std::uint64_t>& queryIds,
 			std::vector<QueryStruct>& propertiesTo
-	) {
+	) { DBG_BEG
 		// reserve memory first
 		propertiesTo.reserve(queryIds.size());
 
@@ -1097,6 +1110,8 @@ namespace crawlservpp::Module::Extractor {
 			// add even empty queries
 			propertiesTo.emplace_back(this->addQuery(*it, properties));
 		}
+
+		DBG_END(addQueriesTo)
 	}
 
 	/*
@@ -1431,14 +1446,27 @@ namespace crawlservpp::Module::Extractor {
 
 			queryTargetSet = true;
 
+			// check whether to skip the URL
+			const bool skip{
+				this->extractingPageIsSkip(queryWarnings)
+			};
+
+			this->logWarningsSource(queryWarnings, sourceUrl);
+
+			if(skip) {
+				// cancel current URL
+				break;
+			}
+
 			// check for an error in the page because of which the page needs to be retried
 			if(this->extractingPageIsRetry(queryWarnings)) {
 				std::string error("Error in data");
 				std::string target;
 
 				if(this->getTarget(target)) {
-					error += ": ";
+					error += ": '";
 					error += target;
+					error += "'";
 				}
 
 				this->extractingReset(error, sourceUrl);
@@ -1690,7 +1718,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// get values of variables
-	void Thread::extractingGetVariableValues(std::vector<StringString>& variables) {
+	void Thread::extractingGetVariableValues(std::vector<StringString>& variables) { DBG_BEG
 		std::size_t parsedSource{};
 		std::size_t queryCounter{};
 		std::string logEntry;
@@ -1851,10 +1879,12 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 		}
+
+		DBG_END(extractingGetVariableValues)
 	}
 
 	// check values of variables, return true if the current URL needs to be skipped
-	bool Thread::extractingIsSkip(const std::vector<StringString>& variables) {
+	bool Thread::extractingIsSkip(const std::vector<StringString>& variables) { DBG_BEG
 		std::queue<std::string> warnings;
 
 		bool skip{false};
@@ -1890,10 +1920,12 @@ namespace crawlservpp::Module::Extractor {
 		this->logWarningsUrl(warnings);
 
 		return skip;
+
+		DBG_END(extractingIsSkip)
 	}
 
 	// get values of global tokens
-	void Thread::extractingGetTokenValues(std::vector<StringString>& variables) {
+	void Thread::extractingGetTokenValues(std::vector<StringString>& variables) { DBG_BEG
 		if(this->config.pagingVariable.empty()) {
 			// copy headers
 			std::vector<std::string> headers(this->config.variablesTokenHeaders);
@@ -1999,6 +2031,8 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 		}
+
+		DBG_END(extractingGetTokenValues)
 	}
 
 	// get values of page-specific tokens
@@ -2006,7 +2040,7 @@ namespace crawlservpp::Module::Extractor {
 			const std::string& page,
 			std::vector<StringString>& tokens,
 			const std::vector<StringString>& variables
-	) {
+	) { DBG_BEG
 		if(this->config.pagingVariable.empty()) {
 			return;
 		}
@@ -2083,6 +2117,8 @@ namespace crawlservpp::Module::Extractor {
 				);
 			}
 		}
+
+		DBG_END(extractingGetPageTokenValues)
 	}
 
 	// get value of token
@@ -2380,12 +2416,24 @@ namespace crawlservpp::Module::Extractor {
 		std::queue<std::string> queryWarnings;
 
 		if(query.resultSingle) {
-			this->getSingleFromRegEx(query, this->urls.front().second, resultTo, queryWarnings);
+			this->getSingleFromRegEx(
+					query,
+					this->urls.front().second,
+					resultTo,
+					queryWarnings
+			);
 		}
 		else {
 			bool booleanResult{false};
 
-			if(this->getBoolFromRegEx(query, this->urls.front().second, booleanResult, queryWarnings)) {
+			if(
+					this->getBoolFromRegEx(
+							query,
+							this->urls.front().second,
+							booleanResult,
+							queryWarnings
+					)
+			) {
 				resultTo = booleanResult ? "true" : "false";
 			}
 		}
@@ -2394,12 +2442,32 @@ namespace crawlservpp::Module::Extractor {
 		this->logWarningsUrl(queryWarnings);
 	}
 
+	// check whether to skip the page and proceed to the next URL
+	bool Thread::extractingPageIsSkip(std::queue<std::string>& queryWarningsTo) {
+		bool skip{false};
+
+		if(
+				this->getBoolFromQuery(
+						this->queryExtractingSkip,
+						skip,
+						queryWarningsTo
+				)
+		) {
+			return skip;
+		}
+
+		return false;
+	}
+
 	// check for an error in the page because of which the page needs to be retried
 	bool Thread::extractingPageIsRetry(std::queue<std::string>& queryWarningsTo) {
 		for(const auto& query : this->queriesErrorRetry) {
 			bool error{false};
 
-			if(this->getBoolFromQuery(query, error, queryWarningsTo) && error) {
+			if(
+					this->getBoolFromQuery(query, error, queryWarningsTo)
+					&& error
+			) {
 				return true;
 			}
 		}
@@ -2408,7 +2476,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// extract data by parsing page content, return number of extracted datasets
-	std::size_t Thread::extractingPage(std::uint64_t contentId, const std::string& url) {
+	std::size_t Thread::extractingPage(std::uint64_t contentId, const std::string& url) { DBG_BEG
 		std::queue<std::string> queryWarnings;
 
 		// check for errors if necessary
@@ -2847,10 +2915,12 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		return this->results.size() - before;
+
+		DBG_END(extractingPage)
 	}
 
 	// extract linked data by parsing page content, return number of extracted datasets
-	std::size_t Thread::extractingLinked(std::uint64_t contentId, const std::string& url) {
+	std::size_t Thread::extractingLinked(std::uint64_t contentId, const std::string& url) { DBG_BEG
 		std::queue<std::string> queryWarnings;
 
 		// get datasets for linked data
@@ -3180,6 +3250,8 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		return this->linked.size() - before;
+
+		DBG_END(extractingLinked)
 	}
 
 	// check libcurl code and decide whether to retry or skip

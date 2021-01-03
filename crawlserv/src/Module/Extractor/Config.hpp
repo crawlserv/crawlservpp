@@ -752,6 +752,9 @@ namespace crawlservpp::Module::Extractor {
 			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML content.
 			bool extractingRemoveXmlInstructions{true};
 
+			//! Extracting will proceed to the next URL if the current page fulfills this query.
+			std::uint64_t extractingSkipQuery{};
+
 			///@}
 			///@name Linked Data
 			///@{
@@ -1098,6 +1101,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("remove.xml.instructions", this->config.extractingRemoveXmlInstructions);
 		this->option("repair.cdata", this->config.extractingRepairCData);
 		this->option("repair.comments", this->config.extractingRepairComments);
+		this->option("skip.query", this->config.extractingSkipQuery);
 
 		// linked data
 		this->category("linked");
