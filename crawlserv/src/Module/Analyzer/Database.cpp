@@ -75,13 +75,9 @@ namespace crawlservpp::Module::Analyzer {
 	 *  the target table of the analyzer.
 	 *
 	 * \param fields Constant reference to a
-	 *   vector of strings containing the
-	 *   names of the fields in the target
-	 *   table.
-	 * \param types Constant reference to a
-	 *   vector of strings containing the
-	 *   data types of the fields in the
-	 *   target table
+	 *   vector of pars of string containing
+	 *   both the names and the SQL data types
+	 *   of the fields in the target table.
 	 */
 	void Database::setTargetFields(const std::vector<StringString>& fields) {
 		this->targetFields = fields;
