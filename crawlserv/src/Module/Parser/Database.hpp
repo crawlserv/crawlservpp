@@ -82,6 +82,9 @@ namespace crawlservpp::Module::Parser {
 	///@name Constants for MySQL Queries
 	///@{
 
+	//! Process one value at once.
+	inline constexpr auto oneAtOnce{1};
+
 	//! Process ten values at once.
 	inline constexpr auto nAtOnce10{10};
 
@@ -245,32 +248,32 @@ namespace crawlservpp::Module::Parser {
 
 		// IDs of prepared SQL statements
 		struct _ps {
-			std::uint16_t fetchUrls;
-			std::uint16_t lockUrl;
-			std::uint16_t lock10Urls;
-			std::uint16_t lock100Urls;
-			std::uint16_t lockMaxUrls;
-			std::uint16_t getUrlPosition;
-			std::uint16_t getNumberOfUrls;
-			std::uint16_t getLockTime;
-			std::uint16_t getUrlLockTime;
-			std::uint16_t renewUrlLockIfOk;
-			std::uint16_t unLockUrlIfOk;
-			std::uint16_t checkParsingTable;
-			std::uint16_t getNumberOfContents;
-			std::uint16_t getLatestContent;
-			std::uint16_t getAllContents;
-			std::uint16_t getContentIdFromParsedId;
-			std::uint16_t updateOrAddEntry;
-			std::uint16_t updateOrAdd10Entries;
-			std::uint16_t updateOrAdd100Entries;
-			std::uint16_t updateOrAddMaxEntries;
-			std::uint16_t setUrlFinishedIfLockOk;
-			std::uint16_t set10UrlsFinishedIfLockOk;
-			std::uint16_t set100UrlsFinishedIfLockOk;
-			std::uint16_t setMaxUrlsFinishedIfLockOk;
-			std::uint16_t updateTargetTable;
-		} ps{};
+			std::size_t fetchUrls{};
+			std::size_t lockUrl{};
+			std::size_t lock10Urls{};
+			std::size_t lock100Urls{};
+			std::size_t lockMaxUrls{};
+			std::size_t getUrlPosition{};
+			std::size_t getNumberOfUrls{};
+			std::size_t getLockTime{};
+			std::size_t getUrlLockTime{};
+			std::size_t renewUrlLockIfOk{};
+			std::size_t unLockUrlIfOk{};
+			std::size_t checkParsingTable{};
+			std::size_t getNumberOfContents{};
+			std::size_t getLatestContent{};
+			std::size_t getAllContents{};
+			std::size_t getContentIdFromParsedId{};
+			std::size_t updateOrAddEntry{};
+			std::size_t updateOrAdd10Entries{};
+			std::size_t updateOrAdd100Entries{};
+			std::size_t updateOrAddMaxEntries{};
+			std::size_t setUrlFinishedIfLockOk{};
+			std::size_t set10UrlsFinishedIfLockOk{};
+			std::size_t set100UrlsFinishedIfLockOk{};
+			std::size_t setMaxUrlsFinishedIfLockOk{};
+			std::size_t updateTargetTable{};
+		} ps;
 
 		// internal helper function
 		bool checkEntrySize(DataEntry& entry);

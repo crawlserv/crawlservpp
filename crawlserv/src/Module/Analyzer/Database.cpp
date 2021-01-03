@@ -296,73 +296,32 @@ namespace crawlservpp::Module::Analyzer {
 		this->checkConnection();
 
 		// reserve memory
-		this->reserveForPreparedStatements(numPreparedStatements);
+		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::size_t));
 
 		try {
 			// prepare SQL statements for analyzer
-			if(this->ps.getCorpusInfo == 0) {
-				this->log(verbose, "prepares getCorpus() [1/5]...");
+			this->log(verbose, "prepares getCorpus() [1/5]...");
 
-				this->ps.getCorpusInfo = this->addPreparedStatement(
-						"SELECT created"
+			this->addPreparedStatement(
+					"SELECT created"
+					" FROM `crawlserv_corpora`"
+					" WHERE website = "	+ this->getWebsiteIdString() +
+					" AND urllist = " + this->getUrlListIdString() +
+					" AND source_type = ?"
+					" AND source_table LIKE ?"
+					" AND source_field LIKE ?"
+					" AND previous IS NULL"
+					" ORDER BY created DESC"
+					" LIMIT 1",
+					this->ps.getCorpusInfo
+			);
+
+			this->log(verbose, "prepares getCorpus() [2/5...");
+
+			this->addPreparedStatement(
+					"SELECT EXISTS("
+						" SELECT 1"
 						" FROM `crawlserv_corpora`"
-						" WHERE website = "	+ this->getWebsiteIdString() +
-						" AND urllist = " + this->getUrlListIdString() +
-						" AND source_type = ?"
-						" AND source_table LIKE ?"
-						" AND source_field LIKE ?"
-						" AND previous IS NULL"
-						" ORDER BY created DESC"
-						" LIMIT 1"
-				);
-			}
-
-			if(this->ps.checkCorpusSavePoint == 0) {
-				this->log(verbose, "prepares getCorpus() [2/5...");
-
-				this->ps.checkCorpusSavePoint = this->addPreparedStatement(
-						"SELECT EXISTS("
-							" SELECT 1"
-							" FROM `crawlserv_corpora`"
-							" WHERE website = "	+ this->getWebsiteIdString() +
-							" AND urllist = " + this->getUrlListIdString() +
-							" AND source_type = ?"
-							" AND source_table LIKE ?"
-							" AND source_field LIKE ?"
-							" AND created LIKE ?"
-							" AND savepoint LIKE ?"
-							" AND previous IS NULL"
-						") AS result"
-				);
-			}
-
-			if(this->ps.getCorpusFirst == 0) {
-				this->log(verbose, "prepares getCorpus() [3/5]...");
-
-				this->ps.getCorpusFirst = this->addPreparedStatement(
-						"SELECT id, corpus, articlemap, datemap, sources, chunks"
-						" FROM `crawlserv_corpora`"
-						" USE INDEX(urllist)"
-						" WHERE website = "	+ this->getWebsiteIdString() +
-						" AND urllist = " + this->getUrlListIdString() +
-						" AND source_type = ?"
-						" AND source_table LIKE ?"
-						" AND source_field LIKE ?"
-						" AND created LIKE ?"
-						" AND savepoint IS NULL"
-						" AND previous IS NULL"
-						" ORDER BY created DESC"
-						" LIMIT 1"
-				);
-			}
-
-			if(this->ps.getCorpusSavePoint == 0) {
-				this->log(verbose, "prepares getCorpus() [4/5]...");
-
-				this->ps.getCorpusSavePoint = this->addPreparedStatement(
-						"SELECT id, corpus, articlemap, datemap, sentencemap, sources, chunks, words"
-						" FROM `crawlserv_corpora`"
-						" USE INDEX(urllist)"
 						" WHERE website = "	+ this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
@@ -371,224 +330,250 @@ namespace crawlservpp::Module::Analyzer {
 						" AND created LIKE ?"
 						" AND savepoint LIKE ?"
 						" AND previous IS NULL"
-						" ORDER BY created DESC"
-						" LIMIT 1"
-				);
-			}
+					") AS result",
+					this->ps.checkCorpusSavePoint
+			);
 
-			if(this->ps.getCorpusNext == 0) {
-				this->log(verbose, "prepares getCorpus() [5/5]...");
+			this->log(verbose, "prepares getCorpus() [3/5]...");
 
-				this->ps.getCorpusNext = this->addPreparedStatement(
-						"SELECT id, corpus, articlemap, datemap, sentencemap, words"
+			this->addPreparedStatement(
+					"SELECT id, corpus, articlemap, datemap, sources, chunks"
+					" FROM `crawlserv_corpora`"
+					" USE INDEX(urllist)"
+					" WHERE website = "	+ this->getWebsiteIdString() +
+					" AND urllist = " + this->getUrlListIdString() +
+					" AND source_type = ?"
+					" AND source_table LIKE ?"
+					" AND source_field LIKE ?"
+					" AND created LIKE ?"
+					" AND savepoint IS NULL"
+					" AND previous IS NULL"
+					" ORDER BY created DESC"
+					" LIMIT 1",
+					this->ps.getCorpusFirst
+			);
+
+			this->log(verbose, "prepares getCorpus() [4/5]...");
+
+			this->addPreparedStatement(
+					"SELECT id, corpus, articlemap, datemap, sentencemap, sources, chunks, words"
+					" FROM `crawlserv_corpora`"
+					" USE INDEX(urllist)"
+					" WHERE website = "	+ this->getWebsiteIdString() +
+					" AND urllist = " + this->getUrlListIdString() +
+					" AND source_type = ?"
+					" AND source_table LIKE ?"
+					" AND source_field LIKE ?"
+					" AND created LIKE ?"
+					" AND savepoint LIKE ?"
+					" AND previous IS NULL"
+					" ORDER BY created DESC"
+					" LIMIT 1",
+					this->ps.getCorpusSavePoint
+			);
+
+			this->log(verbose, "prepares getCorpus() [5/5]...");
+
+			this->addPreparedStatement(
+					"SELECT id, corpus, articlemap, datemap, sentencemap, words"
+					" FROM `crawlserv_corpora`"
+					" WHERE previous = ?"
+					" LIMIT 1",
+					this->ps.getCorpusNext
+			);
+
+			this->log(verbose, "prepares isCorpusChanged() [1/4]...");
+
+			this->addPreparedStatement(
+					"SELECT EXISTS"
+					" ("
+						" SELECT *"
 						" FROM `crawlserv_corpora`"
-						" WHERE previous = ?"
-						" LIMIT 1"
-				);
-			}
-
-			if(this->ps.isCorpusChanged == 0) {
-				this->log(verbose, "prepares isCorpusChanged() [1/4]...");
-
-				this->ps.isCorpusChanged = this->addPreparedStatement(
-						"SELECT EXISTS"
-						" ("
-							" SELECT *"
-							" FROM `crawlserv_corpora`"
-							" USE INDEX(urllist)"
-							" WHERE website = "	+ this->getWebsiteIdString() + ""
-							" AND urllist = " + this->getUrlListIdString() +
-							" AND source_type = ?"
-							" AND source_table LIKE ?"
-							" AND source_field LIKE ?"
-							" AND ("
-								" savepoint IS NULL"
-								" OR savepoint LIKE LEFT(?, LENGTH(savepoint))"
-							" )"
-							" AND created > ?"
+						" USE INDEX(urllist)"
+						" WHERE website = "	+ this->getWebsiteIdString() + ""
+						" AND urllist = " + this->getUrlListIdString() +
+						" AND source_type = ?"
+						" AND source_table LIKE ?"
+						" AND source_field LIKE ?"
+						" AND ("
+							" savepoint IS NULL"
+							" OR savepoint LIKE LEFT(?, LENGTH(savepoint))"
 						" )"
-						" AS result"
-				);
-			}
+						" AND created > ?"
+					" )"
+					" AS result",
+					this->ps.isCorpusChanged
+			);
 
-			if(this->ps.isCorpusChangedParsing == 0) {
-				this->log(verbose, "prepares isCorpusChanged() [2/4]...");
+			this->log(verbose, "prepares isCorpusChanged() [2/4]...");
 
-				this->ps.isCorpusChangedParsing = this->addPreparedStatement(
-						"SELECT updated"
-						" FROM `crawlserv_parsedtables`"
-						" USE INDEX(urllist)"
-						" WHERE website = "	+ this->getWebsiteIdString() +
-						" AND urllist = " + this->getUrlListIdString() +
-						" AND name = ?"
-				);
-			}
+			this->addPreparedStatement(
+					"SELECT updated"
+					" FROM `crawlserv_parsedtables`"
+					" USE INDEX(urllist)"
+					" WHERE website = "	+ this->getWebsiteIdString() +
+					" AND urllist = " + this->getUrlListIdString() +
+					" AND name = ?",
+					this->ps.isCorpusChangedParsing
+			);
 
-			if(this->ps.isCorpusChangedExtracting == 0) {
-				this->log(verbose, "prepares isCorpusChanged() [3/4]...");
+			this->log(verbose, "prepares isCorpusChanged() [3/4]...");
 
-				this->ps.isCorpusChangedExtracting = this->addPreparedStatement(
-						"SELECT updated"
-						" FROM `crawlserv_extractedtables`"
-						" USE INDEX(urllist)"
-						" WHERE website = "	+ this->getWebsiteIdString() +
-						" AND urllist = " + this->getUrlListIdString() +
-						" AND name = ?"
-				);
-			}
+			this->addPreparedStatement(
+					"SELECT updated"
+					" FROM `crawlserv_extractedtables`"
+					" USE INDEX(urllist)"
+					" WHERE website = "	+ this->getWebsiteIdString() +
+					" AND urllist = " + this->getUrlListIdString() +
+					" AND name = ?",
+					this->ps.isCorpusChangedExtracting
+			);
 
-			if(this->ps.isCorpusChangedAnalyzing == 0) {
-				this->log(verbose, "prepares isCorpusChanged() [4/4]...");
+			this->log(verbose, "prepares isCorpusChanged() [4/4]...");
 
-				this->ps.isCorpusChangedAnalyzing = this->addPreparedStatement(
-						"SELECT updated"
-						" FROM `crawlserv_analyzedtables`"
-						" USE INDEX(urllist)"
-						" WHERE website = "	+ this->getWebsiteIdString() +
-						" AND urllist = " + this->getUrlListIdString() +
-						" AND name = ?"
-				);
-			}
+			this->addPreparedStatement(
+					"SELECT updated"
+					" FROM `crawlserv_analyzedtables`"
+					" USE INDEX(urllist)"
+					" WHERE website = "	+ this->getWebsiteIdString() +
+					" AND urllist = " + this->getUrlListIdString() +
+					" AND name = ?",
+					this->ps.isCorpusChangedAnalyzing
+			);
 
-			if(this->ps.deleteCorpus == 0) {
-				this->log(verbose, "prepares createCorpus() [1/5]...");
+			this->log(verbose, "prepares createCorpus() [1/5]...");
 
-				this->ps.deleteCorpus = this->addPreparedStatement(
-						"DELETE"
+			this->addPreparedStatement(
+					"DELETE"
+					" FROM `crawlserv_corpora`"
+					" WHERE website = " + this->getWebsiteIdString() +
+					" AND urllist = " + this->getUrlListIdString() +
+					" AND source_type = ?"
+					" AND source_table LIKE ?"
+					" AND source_field LIKE ?",
+					this->ps.deleteCorpus
+			);
+
+			this->log(verbose, "prepares createCorpus() [2/5]...");
+
+			this->addPreparedStatement(
+					"INSERT INTO `crawlserv_corpora`"
+					" ("
+						" website,"
+						" urllist,"
+						" source_type,"
+						" source_table,"
+						" source_field,"
+						" corpus,"
+						" articlemap,"
+						" datemap,"
+						" previous,"
+						" sources,"
+						" chunks"
+					") "
+					"VALUES"
+					" (" +
+						this->getWebsiteIdString() + ", " +
+						this->getUrlListIdString() + ","
+						" ?,"
+						" ?,"
+						" ?,"
+						" ?,"
+						" CONVERT( ? USING utf8mb4 ),"
+						" CONVERT( ? USING utf8mb4 ),"
+						" ?,"
+						" ?,"
+						" ?"
+					")",
+					this->ps.addChunkContinuous
+			);
+
+			this->log(verbose, "prepares createCorpus() [3/5]...");
+
+			this->addPreparedStatement(
+					"INSERT INTO `crawlserv_corpora`"
+					" ("
+						" website,"
+						" urllist,"
+						" source_type,"
+						" source_table,"
+						" source_field,"
+						" savepoint,"
+						" corpus,"
+						" articlemap,"
+						" datemap,"
+						" sentencemap,"
+						" previous,"
+						" sources,"
+						" chunks,"
+						" words"
+					") "
+					"VALUES"
+					" (" +
+						this->getWebsiteIdString() + ", " +
+						this->getUrlListIdString() + ","
+						" ?,"
+						" ?,"
+						" ?,"
+						" ?,"
+						" ?,"
+						" CONVERT( ? USING utf8mb4 ),"
+						" CONVERT( ? USING utf8mb4 ),"
+						" CONVERT( ? USING utf8mb4 ),"
+						" ?,"
+						" ?,"
+						" ?,"
+						" ?"
+					")",
+					this->ps.addChunkTokenized
+			);
+
+			this->log(verbose, "prepares createCorpus() [4/5]...");
+
+			this->addPreparedStatement(
+					"UPDATE `crawlserv_corpora`"
+					" SET chunk_length = CHAR_LENGTH(corpus),"
+					" chunk_size = LENGTH(corpus)"
+					" WHERE id = ?"
+					" LIMIT 1",
+					this->ps.measureChunk
+			);
+
+			this->log(verbose, "prepares createCorpus() [5/5]...");
+
+			this->addPreparedStatement(
+					"UPDATE `crawlserv_corpora` AS dest,"
+					" ("
+						"SELECT SUM(chunk_size) AS size, SUM(chunk_length) AS length"
 						" FROM `crawlserv_corpora`"
+						" USE INDEX(urllist)"
 						" WHERE website = " + this->getWebsiteIdString() +
 						" AND urllist = " + this->getUrlListIdString() +
 						" AND source_type = ?"
 						" AND source_table LIKE ?"
 						" AND source_field LIKE ?"
-				);
-			}
-
-			if(this->ps.addChunkContinuous == 0) {
-				this->log(verbose, "prepares createCorpus() [2/5]...");
-
-				this->ps.addChunkContinuous = this->addPreparedStatement(
-						"INSERT INTO `crawlserv_corpora`"
-						" ("
-							" website,"
-							" urllist,"
-							" source_type,"
-							" source_table,"
-							" source_field,"
-							" corpus,"
-							" articlemap,"
-							" datemap,"
-							" previous,"
-							" sources,"
-							" chunks"
-						") "
-						"VALUES"
-						" (" +
-							this->getWebsiteIdString() + ", " +
-							this->getUrlListIdString() + ","
-							" ?,"
-							" ?,"
-							" ?,"
-							" ?,"
-							" CONVERT( ? USING utf8mb4 ),"
-							" CONVERT( ? USING utf8mb4 ),"
-							" ?,"
-							" ?,"
-							" ?"
-						")"
-				);
-			}
-
-			if(this->ps.addChunkTokenized == 0) {
-				this->log(verbose, "prepares createCorpus() [3/5]...");
-
-				this->ps.addChunkTokenized = this->addPreparedStatement(
-						"INSERT INTO `crawlserv_corpora`"
-						" ("
-							" website,"
-							" urllist,"
-							" source_type,"
-							" source_table,"
-							" source_field,"
-							" savepoint,"
-							" corpus,"
-							" articlemap,"
-							" datemap,"
-							" sentencemap,"
-							" previous,"
-							" sources,"
-							" chunks,"
-							" words"
-						") "
-						"VALUES"
-						" (" +
-							this->getWebsiteIdString() + ", " +
-							this->getUrlListIdString() + ","
-							" ?,"
-							" ?,"
-							" ?,"
-							" ?,"
-							" ?,"
-							" CONVERT( ? USING utf8mb4 ),"
-							" CONVERT( ? USING utf8mb4 ),"
-							" CONVERT( ? USING utf8mb4 ),"
-							" ?,"
-							" ?,"
-							" ?,"
-							" ?"
-						")"
-				);
-			}
-
-			if(this->ps.measureChunk == 0) {
-				this->log(verbose, "prepares createCorpus() [4/5]...");
-
-				this->ps.measureChunk = this->addPreparedStatement(
-						"UPDATE `crawlserv_corpora`"
-						" SET chunk_length = CHAR_LENGTH(corpus),"
-						" chunk_size = LENGTH(corpus)"
-						" WHERE id = ?"
 						" LIMIT 1"
-				);
-			}
+					") AS src"
+					" SET"
+					" dest.length = src.length,"
+					" dest.size = src.size"
+					" WHERE dest.website = " + this->getWebsiteIdString() +
+					" AND dest.urllist = " + this->getUrlListIdString() +
+					" AND dest.source_type = ?"
+					" AND dest.source_table LIKE ?"
+					" AND dest.source_field LIKE ?",
+					this->ps.measureCorpus
+			);
 
-			if(this->ps.measureCorpus == 0) {
-				this->log(verbose, "prepares createCorpus() [5/5]...");
+			this->log(verbose, "prepares updateTargetTable()...");
 
-				this->ps.measureCorpus = this->addPreparedStatement(
-						"UPDATE `crawlserv_corpora` AS dest,"
-						" ("
-							"SELECT SUM(chunk_size) AS size, SUM(chunk_length) AS length"
-							" FROM `crawlserv_corpora`"
-							" USE INDEX(urllist)"
-							" WHERE website = " + this->getWebsiteIdString() +
-							" AND urllist = " + this->getUrlListIdString() +
-							" AND source_type = ?"
-							" AND source_table LIKE ?"
-							" AND source_field LIKE ?"
-						    " LIMIT 1"
-						") AS src"
-						" SET"
-						" dest.length = src.length,"
-						" dest.size = src.size"
-						" WHERE dest.website = " + this->getWebsiteIdString() +
-						" AND dest.urllist = " + this->getUrlListIdString() +
-						" AND dest.source_type = ?"
-						" AND dest.source_table LIKE ?"
-						" AND dest.source_field LIKE ?"
-				);
-			}
-
-			if(this->ps.updateTargetTable == 0) {
-				this->log(verbose, "prepares updateTargetTable()...");
-
-				this->ps.updateTargetTable = this->addPreparedStatement(
-						"UPDATE crawlserv_analyzedtables"
-						" SET updated = CURRENT_TIMESTAMP"
-						" WHERE id = " + std::to_string(this->targetTableId) +
-						" LIMIT 1"
-				);
-			}
+			this->addPreparedStatement(
+					"UPDATE crawlserv_analyzedtables"
+					" SET updated = CURRENT_TIMESTAMP"
+					" WHERE id = " + std::to_string(this->targetTableId) +
+					" LIMIT 1",
+					this->ps.updateTargetTable
+			);
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Analyzer::Database::prepare", e);

@@ -86,9 +86,6 @@ namespace crawlservpp::Module::Analyzer {
 	//! The maximum number of columns used when creating a text corpus.
 	inline constexpr auto maxNumCorpusColumns{3};
 
-	//! The number of prepared SQL statements to reserve memory for.
-	inline constexpr auto numPreparedStatements{10};
-
 	//! The progress with creating a corpus after the old corpus has been deleted.
 	inline constexpr auto progressDeletedCorpus{0.05F};
 
@@ -292,24 +289,22 @@ namespace crawlservpp::Module::Analyzer {
 	private:
 		// IDs of prepared SQL statements
 		struct _ps {
-			std::uint16_t getCorpusInfo;
-			std::uint16_t checkCorpusSavePoint;
-			std::uint16_t getCorpusFirst;
-			std::uint16_t getCorpusSavePoint;
-			std::uint16_t getCorpusNext;
-			std::uint16_t isCorpusChanged;
-			std::uint16_t isCorpusChangedParsing;
-			std::uint16_t isCorpusChangedExtracting;
-			std::uint16_t isCorpusChangedAnalyzing;
-			std::uint16_t deleteCorpus;
-			std::uint16_t addChunkContinuous;
-			std::uint16_t addChunkTokenized;
-			std::uint16_t measureChunk;
-			std::uint16_t measureCorpus;
-			std::uint16_t updateTargetTable;
-
-			std::vector<std::uint16_t> algo;
-		} ps{};
+			std::size_t getCorpusInfo{};
+			std::size_t checkCorpusSavePoint{};
+			std::size_t getCorpusFirst{};
+			std::size_t getCorpusSavePoint{};
+			std::size_t getCorpusNext{};
+			std::size_t isCorpusChanged{};
+			std::size_t isCorpusChangedParsing{};
+			std::size_t isCorpusChangedExtracting{};
+			std::size_t isCorpusChangedAnalyzing{};
+			std::size_t deleteCorpus{};
+			std::size_t addChunkContinuous{};
+			std::size_t addChunkTokenized{};
+			std::size_t measureChunk{};
+			std::size_t measureCorpus{};
+			std::size_t updateTargetTable{};
+		} ps;
 
 		// function for checking whether the parent thread is still running
 		IsRunningCallback isRunning;

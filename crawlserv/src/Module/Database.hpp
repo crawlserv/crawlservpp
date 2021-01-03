@@ -42,7 +42,8 @@
 #include "../Struct/DatabaseSettings.hpp"
 #include "../Struct/ModuleOptions.hpp"
 
-#include <cstdint>		// std::uint8_t, std::uint16_t, std::uint64_t
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint8_t, std::uint64_t
 #include <fstream>		// std::flush, std::ofstream
 #include <limits>		// std::numeric_limits
 #include <memory>		// std::unique_ptr
@@ -187,10 +188,10 @@ namespace crawlservpp::Module {
 
 		// IDs of prepared SQL statements
 		struct _ps {
-			std::uint16_t setThreadStatusMessage;
-			std::uint16_t setThreadProgress;
-			std::uint16_t setThreadLast;
-		} ps{};
+			std::size_t setThreadStatusMessage{};
+			std::size_t setThreadProgress{};
+			std::size_t setThreadLast{};
+		} ps;
 	};
 
 } /* namespace crawlservpp::Module */

@@ -187,39 +187,36 @@ namespace crawlservpp::Module {
 		this->checkConnection();
 
 		// reserve memory
-		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::uint16_t));
+		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::size_t));
 
 		// prepare general SQL statements for thread
-		if(this->ps.setThreadStatusMessage == 0) {
-			this->ps.setThreadStatusMessage = this->addPreparedStatement(
-					"UPDATE `crawlserv_threads`"
-					" SET status = ?,"
-					" paused = ?"
-					" WHERE id = ?"
-					" LIMIT 1"
-			);
-		}
+		this->addPreparedStatement(
+				"UPDATE `crawlserv_threads`"
+				" SET status = ?,"
+				" paused = ?"
+				" WHERE id = ?"
+				" LIMIT 1",
+				this->ps.setThreadStatusMessage
+		);
 
-		if(this->ps.setThreadProgress == 0) {
-			this->ps.setThreadProgress = this->addPreparedStatement(
-					"UPDATE `crawlserv_threads`"
-					" SET progress = ?,"
-					" runtime = ?"
-					" WHERE id = ?"
-					" LIMIT 1"
-			);
-		}
+		this->addPreparedStatement(
+				"UPDATE `crawlserv_threads`"
+				" SET progress = ?,"
+				" runtime = ?"
+				" WHERE id = ?"
+				" LIMIT 1",
+				this->ps.setThreadProgress
+		);
 
-		if(this->ps.setThreadLast == 0) {
-			this->ps.setThreadLast = this->addPreparedStatement(
-					"UPDATE `crawlserv_threads`"
-					" SET"
-					"  last = ?,"
-					"  processed = ?"
-					" WHERE id = ?"
-					" LIMIT 1"
-			);
-		}
+		this->addPreparedStatement(
+				"UPDATE `crawlserv_threads`"
+				" SET"
+				"  last = ?,"
+				"  processed = ?"
+				" WHERE id = ?"
+				" LIMIT 1",
+				this->ps.setThreadLast
+		);
 	}
 
 	//! Writes a thread-specific log entry to the database.

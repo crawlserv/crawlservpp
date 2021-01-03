@@ -209,30 +209,30 @@ namespace crawlservpp::Module::Crawler {
 
 		// IDs of prepared SQL statements
 		struct _ps {
-			std::uint16_t getUrlId;
-			std::uint16_t getNextUrl;
-			std::uint16_t addUrlIfNotExists;
-			std::uint16_t add10UrlsIfNotExist;
-			std::uint16_t add100UrlsIfNotExist;
-			std::uint16_t addMaxUrlsIfNotExist;
-			std::uint16_t getUrlPosition;
-			std::uint16_t getNumberOfUrls;
-			std::uint16_t getUrlLockTime;
-			std::uint16_t isUrlCrawled;
-			std::uint16_t addUrlLockIfOk;
-			std::uint16_t renewUrlLockIfOk;
-			std::uint16_t unLockUrlIfOk;
-			std::uint16_t setUrlFinishedIfOk;
-			std::uint16_t saveContent;
-			std::uint16_t saveArchivedContent;
-			std::uint16_t isArchivedContentExists;
-			std::uint16_t urlDuplicationCheck;
-			std::uint16_t urlHashCheck;
-			std::uint16_t urlHashCorrect;
-			std::uint16_t urlEmptyCheck;
-			std::uint16_t getUrls;
-			std::uint16_t removeDuplicates;
-		} ps{};
+			std::size_t getUrlId{};
+			std::size_t getNextUrl{};
+			std::size_t addUrlIfNotExists{};
+			std::size_t add10UrlsIfNotExist{};
+			std::size_t add100UrlsIfNotExist{};
+			std::size_t addMaxUrlsIfNotExist{};
+			std::size_t getUrlPosition{};
+			std::size_t getNumberOfUrls{};
+			std::size_t getUrlLockTime{};
+			std::size_t isUrlCrawled{};
+			std::size_t addUrlLockIfOk{};
+			std::size_t renewUrlLockIfOk{};
+			std::size_t unLockUrlIfOk{};
+			std::size_t setUrlFinishedIfOk{};
+			std::size_t saveContent{};
+			std::size_t saveArchivedContent{};
+			std::size_t isArchivedContentExists{};
+			std::size_t urlDuplicationCheck{};
+			std::size_t urlHashCheck{};
+			std::size_t urlHashCorrect{};
+			std::size_t urlEmptyCheck{};
+			std::size_t getUrls{};
+			std::size_t removeDuplicates{};
+		} ps;
 
 		// internal helper functions
 		std::string queryAddUrlsIfNotExist(std::size_t numberOfUrls, const std::string& hashQuery);

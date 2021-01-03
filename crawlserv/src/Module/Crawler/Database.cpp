@@ -170,332 +170,308 @@ namespace crawlservpp::Module::Crawler {
 		this->checkConnection();
 
 		// reserve memory
-		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::uint16_t));
+		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::size_t));
 
-		if(this->ps.getUrlId == 0) {
-			this->log(verbose, "prepares getUrlId()...");
+		this->log(verbose, "prepares getUrlId()...");
 
-			this->ps.getUrlId = this->addPreparedStatement(
-					"SELECT id"
-					" FROM "
-					" ("
-						"SELECT id, url"
-						" FROM `" + this->urlListTable + "`"
-						" WHERE hash = " + hashQuery +
-						" ORDER BY id"
-					" ) AS tmp"
-					" WHERE url = ?"
-					" LIMIT 1"
-			);
-		}
+		this->addPreparedStatement(
+				"SELECT id"
+				" FROM "
+				" ("
+					"SELECT id, url"
+					" FROM `" + this->urlListTable + "`"
+					" WHERE hash = " + hashQuery +
+					" ORDER BY id"
+				" ) AS tmp"
+				" WHERE url = ?"
+				" LIMIT 1",
+				this->ps.getUrlId
+		);
 
-		if(this->ps.getNextUrl == 0) {
-			this->log(verbose, "prepares getNextUrl()...");
+		this->log(verbose, "prepares getNextUrl()...");
 
-			std::string sqlQueryString{
-								"SELECT `"
-			};
+		std::string sqlQueryString{
+							"SELECT `"
+		};
 
-			sqlQueryString += 		urlListTableAlias;
-			sqlQueryString += 		"1`.id"
-								" AS id,"
+		sqlQueryString += 		urlListTableAlias;
+		sqlQueryString += 		"1`.id"
+							" AS id,"
+							" `";
+		sqlQueryString +=		urlListTableAlias;
+		sqlQueryString +=		"1`.url"
+							" AS url"
+							" FROM `";
+		sqlQueryString += 		this->urlListTable;
+		sqlQueryString += 		"`"
+							" AS `";
+		sqlQueryString += 		urlListTableAlias;
+		sqlQueryString += 		"1`"
+							" LEFT OUTER JOIN `";
+		sqlQueryString += 		this->crawlingTable;
+		sqlQueryString += 		"`"
+							" AS `";
+		sqlQueryString += 		crawlingTableAlias;
+		sqlQueryString += 		"1`"
+							" ON `";
+		sqlQueryString += 		urlListTableAlias;
+		sqlQueryString += 		"1`.id"
+							" = `";
+		sqlQueryString += 		crawlingTableAlias;
+		sqlQueryString += 		"1`.url"
+							" WHERE `";
+		sqlQueryString += 		urlListTableAlias;
+		sqlQueryString += 		"1`.id > ?"
+							" AND manual = FALSE";
+
+		if(!(this->recrawl)) {
+			sqlQueryString +=
+							" AND"
+							" ("
 								" `";
-			sqlQueryString +=		urlListTableAlias;
-			sqlQueryString +=		"1`.url"
-								" AS url"
-								" FROM `";
-			sqlQueryString += 		this->urlListTable;
-			sqlQueryString += 		"`"
-								" AS `";
-			sqlQueryString += 		urlListTableAlias;
-			sqlQueryString += 		"1`"
-								" LEFT OUTER JOIN `";
-			sqlQueryString += 		this->crawlingTable;
-			sqlQueryString += 		"`"
-								" AS `";
-			sqlQueryString += 		crawlingTableAlias;
-			sqlQueryString += 		"1`"
-								" ON `";
-			sqlQueryString += 		urlListTableAlias;
-			sqlQueryString += 		"1`.id"
-								" = `";
-			sqlQueryString += 		crawlingTableAlias;
-			sqlQueryString += 		"1`.url"
-								" WHERE `";
-			sqlQueryString += 		urlListTableAlias;
-			sqlQueryString += 		"1`.id > ?"
-								" AND manual = FALSE";
+			sqlQueryString +=	crawlingTableAlias;
+			sqlQueryString +=	"1`.success IS NULL"
+							" OR `";
+			sqlQueryString +=	crawlingTableAlias;
+			sqlQueryString +=	"1`.success = FALSE"
+							")";
+		}
 
-			if(!(this->recrawl)) {
-				sqlQueryString +=
-								" AND"
-								" ("
-									" `";
-				sqlQueryString +=	crawlingTableAlias;
-				sqlQueryString +=	"1`.success IS NULL"
+		sqlQueryString +=	" AND"
+							" ("
+								" `";
+		sqlQueryString +=			crawlingTableAlias;
+		sqlQueryString +=			"1`.locktime IS NULL"
 								" OR `";
-				sqlQueryString +=	crawlingTableAlias;
-				sqlQueryString +=	"1`.success = FALSE"
-								")";
-			}
+		sqlQueryString +=			crawlingTableAlias;
+		sqlQueryString +=			"1`.locktime < NOW()"
+							" )"
+							" ORDER BY `";
+		sqlQueryString +=			urlListTableAlias;
+		sqlQueryString +=			"1`.id"
+							" LIMIT 1";
 
-			sqlQueryString +=	" AND"
+		this->addPreparedStatement(sqlQueryString, this->ps.getNextUrl);
+
+		this->log(verbose, "prepares addUrlIfNotExists()...");
+
+		sqlQueryString = 	"INSERT IGNORE INTO `";
+
+		sqlQueryString += 		this->urlListTable;
+		sqlQueryString += 		"`(id, url, manual, hash)"
+							"VALUES ("
 								" ("
-									" `";
-			sqlQueryString +=			crawlingTableAlias;
-			sqlQueryString +=			"1`.locktime IS NULL"
-									" OR `";
-			sqlQueryString +=			crawlingTableAlias;
-			sqlQueryString +=			"1`.locktime < NOW()"
-								" )"
-								" ORDER BY `";
-			sqlQueryString +=			urlListTableAlias;
-			sqlQueryString +=			"1`.id"
-								" LIMIT 1";
-
-			this->ps.getNextUrl = this->addPreparedStatement(sqlQueryString);
-		}
-
-		if(this->ps.addUrlIfNotExists == 0) {
-			this->log(verbose, "prepares addUrlIfNotExists()...");
-
-			std::string sqlQueryString{
-								"INSERT IGNORE INTO `"
-			};
-
-			sqlQueryString += 		this->urlListTable;
-			sqlQueryString += 		"`(id, url, manual, hash)"
-								"VALUES ("
+									"SELECT id"
+									" FROM"
 									" ("
-										"SELECT id"
-										" FROM"
-										" ("
-											"SELECT id, url"
-											" FROM `";
-			sqlQueryString +=					this->urlListTable;
-			sqlQueryString +=					"`"
-											" AS `";
-			sqlQueryString +=					urlListTableAlias;
-			sqlQueryString +=					"1`"
-											" WHERE hash = ";
-			sqlQueryString +=					hashQuery;
-			sqlQueryString +=				" ) AS tmp2"
-										" WHERE url = ?"
-										" LIMIT 1"
-									" ),"
-									"?, "
-									"?, ";
-			sqlQueryString +=		hashQuery;
-			sqlQueryString +=	")";
-
-			this->ps.addUrlIfNotExists = this->addPreparedStatement(sqlQueryString);
-		}
-
-		if(this->ps.add10UrlsIfNotExist == 0) {
-			this->log(verbose, "prepares addUrlsIfNotExist() [1/3]...");
-
-			this->ps.add10UrlsIfNotExist = this->addPreparedStatement(
-					this->queryAddUrlsIfNotExist(
-							nAtOnce10,
-							hashQuery
-					)
-			);
-		}
-
-		if(this->ps.add100UrlsIfNotExist == 0) {
-			this->log(verbose, "prepares addUrlsIfNotExist() [2/3]...");
-
-			this->ps.add100UrlsIfNotExist = this->addPreparedStatement(
-					this->queryAddUrlsIfNotExist(
-							nAtOnce100,
-							hashQuery
-					)
-			);
-		}
-
-		if(this->ps.addMaxUrlsIfNotExist == 0) {
-			this->log(verbose, "prepares addUrlsIfNotExist() [3/3]...");
-
-			this->ps.addMaxUrlsIfNotExist = this->addPreparedStatement(
-					this->queryAddUrlsIfNotExist(
-							this->maxBatchSize,
-							hashQuery
-					)
-			);
-		}
-
-		if(this->ps.getUrlPosition == 0) {
-			this->log(verbose, "prepares getUrlPosition()...");
-
-			this->ps.getUrlPosition = this->addPreparedStatement(
-					"SELECT COUNT(*)"
-					" AS result"
-					" FROM `" + this->urlListTable + "`"
-					" WHERE id < ?"
-			);
-		}
-
-		if(this->ps.getNumberOfUrls == 0) {
-			this->log(verbose, "prepares getNumberOfUrls()...");
-
-			this->ps.getNumberOfUrls = this->addPreparedStatement(
-					"SELECT COUNT(*)"
-					" AS result"
-					" FROM `" + this->urlListTable + "`"
-			);
-		}
-
-		if(this->ps.getUrlLockTime == 0) {
-			this->log(verbose, "prepares getUrlLock()...");
-
-			this->ps.getUrlLockTime = this->addPreparedStatement(
-					"SELECT locktime"
-					" FROM `" + this->crawlingTable + "`"
-					" WHERE url = ?"
-					" LIMIT 1"
-			);
-		}
-
-		if(this->ps.isUrlCrawled == 0) {
-			this->log(verbose, "prepares isUrlCrawled()...");
-
-			this->ps.isUrlCrawled = this->addPreparedStatement(
-					"SELECT success"
-					" FROM `" + this->crawlingTable + "`"
-					" WHERE url = ?"
-					" LIMIT 1"
-			);
-		}
-
-		if(this->ps.renewUrlLockIfOk == 0) {
-			this->log(verbose, "prepares lockUrlIfOk() [1/2]...");
-
-			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
-					"UPDATE `" + this->crawlingTable + "`"
-					" SET locktime = GREATEST"
-					"("
-						"NOW() + INTERVAL ? SECOND,"
-						"? + INTERVAL 1 SECOND"
-					")"
-					" WHERE url = ?"
-					" AND"
-					" ("
-						" locktime <= ?"
-						" OR locktime IS NULL"
-						" OR locktime < NOW()"
-					" )"
-					" LIMIT 1"
-			);
-		}
-
-		if(this->ps.addUrlLockIfOk == 0) {
-			this->log(verbose, "prepares lockUrlIfOk() [2/2]...");
-
-			std::string sqlQueryString{
-								"INSERT INTO `"
-			};
-
-			sqlQueryString +=		this->crawlingTable;
-			sqlQueryString +=		"`(id, url, locktime)"
-								" VALUES"
-								" ("
-									" ("
-										"SELECT id"
+										"SELECT id, url"
 										" FROM `";
-			sqlQueryString +=				this->crawlingTable;
-			sqlQueryString +=				"`"
-										" AS ";
-			sqlQueryString +=				crawlingTableAlias;
-			sqlQueryString +=				"1"
-										" WHERE url = ?"
-										" LIMIT 1"
+		sqlQueryString +=					this->urlListTable;
+		sqlQueryString +=					"`"
+										" AS `";
+		sqlQueryString +=					urlListTableAlias;
+		sqlQueryString +=					"1`"
+										" WHERE hash = ";
+		sqlQueryString +=					hashQuery;
+		sqlQueryString +=				" ) AS tmp2"
+									" WHERE url = ?"
+									" LIMIT 1"
+								" ),"
+								"?, "
+								"?, ";
+		sqlQueryString +=		hashQuery;
+		sqlQueryString +=	")";
+
+		this->addPreparedStatement(sqlQueryString, this->ps.addUrlIfNotExists);
+
+		this->log(verbose, "prepares addUrlsIfNotExist() [1/3]...");
+
+		this->addPreparedStatement(
+				this->queryAddUrlsIfNotExist(
+						nAtOnce10,
+						hashQuery
+				),
+				this->ps.add10UrlsIfNotExist
+		);
+
+		this->log(verbose, "prepares addUrlsIfNotExist() [2/3]...");
+
+		this->addPreparedStatement(
+			this->queryAddUrlsIfNotExist(
+					nAtOnce100,
+					hashQuery
+			),
+			this->ps.add100UrlsIfNotExist
+		);
+
+		this->log(verbose, "prepares addUrlsIfNotExist() [3/3]...");
+
+		this->addPreparedStatement(
+				this->queryAddUrlsIfNotExist(
+						this->maxBatchSize,
+						hashQuery
+				),
+				this->ps.addMaxUrlsIfNotExist
+		);
+
+		this->log(verbose, "prepares getUrlPosition()...");
+
+		this->addPreparedStatement(
+				"SELECT COUNT(*)"
+				" AS result"
+				" FROM `" + this->urlListTable + "`"
+				" WHERE id < ?",
+				this->ps.getUrlPosition
+		);
+
+		this->log(verbose, "prepares getNumberOfUrls()...");
+
+		this->addPreparedStatement(
+				"SELECT COUNT(*)"
+				" AS result"
+				" FROM `" + this->urlListTable + "`",
+				this->ps.getNumberOfUrls
+		);
+
+		this->log(verbose, "prepares getUrlLock()...");
+
+		this->addPreparedStatement(
+				"SELECT locktime"
+				" FROM `" + this->crawlingTable + "`"
+				" WHERE url = ?"
+				" LIMIT 1",
+				this->ps.getUrlLockTime
+		);
+
+		this->log(verbose, "prepares isUrlCrawled()...");
+
+		this->addPreparedStatement(
+				"SELECT success"
+				" FROM `" + this->crawlingTable + "`"
+				" WHERE url = ?"
+				" LIMIT 1",
+				this->ps.isUrlCrawled
+		);
+
+		this->log(verbose, "prepares lockUrlIfOk() [1/2]...");
+
+		this->addPreparedStatement(
+				"UPDATE `" + this->crawlingTable + "`"
+				" SET locktime = GREATEST"
+				"("
+					"NOW() + INTERVAL ? SECOND,"
+					"? + INTERVAL 1 SECOND"
+				")"
+				" WHERE url = ?"
+				" AND"
+				" ("
+					" locktime <= ?"
+					" OR locktime IS NULL"
+					" OR locktime < NOW()"
+				" )"
+				" LIMIT 1",
+				this->ps.renewUrlLockIfOk
+		);
+
+		this->log(verbose, "prepares lockUrlIfOk() [2/2]...");
+
+		sqlQueryString =	"INSERT INTO `";
+
+		sqlQueryString +=		this->crawlingTable;
+		sqlQueryString +=		"`(id, url, locktime)"
+							" VALUES"
+							" ("
+								" ("
+									"SELECT id"
+									" FROM `";
+		sqlQueryString +=				this->crawlingTable;
+		sqlQueryString +=				"`"
+									" AS ";
+		sqlQueryString +=				crawlingTableAlias;
+		sqlQueryString +=				"1"
+									" WHERE url = ?"
+									" LIMIT 1"
+								" ),"
+								" ?,"
+								" NOW() + INTERVAL ? SECOND"
+							" )"
+							" ON DUPLICATE KEY UPDATE locktime = "
+								"IF("
+									" ("
+										" locktime IS NULL"
+										" OR locktime < NOW()"
 									" ),"
-									" ?,"
-									" NOW() + INTERVAL ? SECOND"
-								" )"
-								" ON DUPLICATE KEY UPDATE locktime = "
-									"IF("
-										" ("
-											" locktime IS NULL"
-											" OR locktime < NOW()"
-										" ),"
-										" VALUES(locktime),"
-										" locktime"
-									")";
+									" VALUES(locktime),"
+									" locktime"
+								")";
 
-			this->ps.addUrlLockIfOk = this->addPreparedStatement(sqlQueryString);
-		}
+		this->addPreparedStatement(sqlQueryString, this->ps.addUrlLockIfOk);
 
-		if(this->ps.unLockUrlIfOk == 0) {
-			this->log(verbose, "prepares unLockUrlIfOk()...");
+		this->log(verbose, "prepares unLockUrlIfOk()...");
 
-			this->ps.unLockUrlIfOk = this->addPreparedStatement(
-					"UPDATE `" + this->crawlingTable + "`"
-					" SET locktime = NULL"
+		this->addPreparedStatement(
+				"UPDATE `" + this->crawlingTable + "`"
+				" SET locktime = NULL"
+				" WHERE url = ?"
+				" AND"
+				" ("
+					" locktime IS NULL"
+					" OR locktime <= ?"
+					" OR locktime < NOW()"
+				")"
+				" LIMIT 1",
+				this->ps.unLockUrlIfOk
+		);
+
+		this->log(verbose, "prepares setUrlFinishedIfOk()...");
+
+		this->addPreparedStatement(
+				"UPDATE `" + this->crawlingTable + "`"
+				" SET success = TRUE, locktime = NULL"
+				" WHERE url = ?"
+				" AND "
+				" ("
+					" locktime <= ?"
+					" OR locktime IS NULL"
+					" OR locktime < NOW()"
+				")"
+				" LIMIT 1",
+				this->ps.setUrlFinishedIfOk
+		);
+
+		this->log(verbose, "prepares saveContent()...");
+
+		this->addPreparedStatement(
+				"INSERT INTO `" + crawledTable
+				+ "`(url, response, type, content)"
+				" VALUES (?, ?, ?, ?)",
+				this->ps.saveContent
+		);
+
+		this->log(verbose, "prepares saveArchivedContent()...");
+
+		this->addPreparedStatement(
+				"INSERT INTO `" + crawledTable
+				+ "`(url, crawltime, archived, response, type, content)"
+				" VALUES (?, ?, TRUE, ?, ?, ?)",
+				this->ps.saveArchivedContent
+		);
+
+		this->log(verbose, "prepares isArchivedContentExists()...");
+
+		this->addPreparedStatement(
+				"SELECT EXISTS"
+				" ("
+					"SELECT *"
+					" FROM `" + crawledTable + "`"
 					" WHERE url = ?"
-					" AND"
-					" ("
-						" locktime IS NULL"
-						" OR locktime <= ?"
-						" OR locktime < NOW()"
-					")"
-					" LIMIT 1"
-			);
-		}
+					" AND crawltime = ?"
+				" )"
+				" AS result",
+				this->ps.isArchivedContentExists
+		);
 
-		if(this->ps.setUrlFinishedIfOk == 0) {
-			this->log(verbose, "prepares setUrlFinishedIfOk()...");
-
-			this->ps.setUrlFinishedIfOk = this->addPreparedStatement(
-					"UPDATE `" + this->crawlingTable + "`"
-					" SET success = TRUE, locktime = NULL"
-					" WHERE url = ?"
-					" AND "
-					" ("
-						" locktime <= ?"
-						" OR locktime IS NULL"
-						" OR locktime < NOW()"
-					")"
-					" LIMIT 1"
-			);
-		}
-
-		if(this->ps.saveContent == 0) {
-			this->log(verbose, "prepares saveContent()...");
-
-			this->ps.saveContent = this->addPreparedStatement(
-					"INSERT INTO `" + crawledTable
-					+ "`(url, response, type, content)"
-					" VALUES (?, ?, ?, ?)"
-			);
-		}
-
-		if(this->ps.saveArchivedContent == 0) {
-			this->log(verbose, "prepares saveArchivedContent()...");
-
-			this->ps.saveArchivedContent = this->addPreparedStatement(
-					"INSERT INTO `" + crawledTable
-					+ "`(url, crawltime, archived, response, type, content)"
-					" VALUES (?, ?, TRUE, ?, ?, ?)"
-			);
-		}
-
-		if(this->ps.isArchivedContentExists == 0) {
-			this->log(verbose, "prepares isArchivedContentExists()...");
-
-			this->ps.isArchivedContentExists = this->addPreparedStatement(
-					"SELECT EXISTS"
-					" ("
-						"SELECT *"
-						" FROM `" + crawledTable + "`"
-						" WHERE url = ?"
-						" AND crawltime = ?"
-					" )"
-					" AS result"
-			);
-		}
-
-		if(this->ps.urlDuplicationCheck == 0 && (this->urlStartupCheck || this->urlDebug)) {
+		if(this->urlStartupCheck || this->urlDebug) {
 			this->log(verbose, "prepares urlDuplicationCheck()...");
 
 			std::string groupBy;
@@ -507,7 +483,7 @@ namespace crawlservpp::Module::Crawler {
 				groupBy = "LOWER(url)";
 			}
 
-			this->ps.urlDuplicationCheck = this->addPreparedStatement(
+			this->addPreparedStatement(
 					"SELECT "
 					" CAST("
 						+ groupBy +
@@ -522,54 +498,64 @@ namespace crawlservpp::Module::Crawler {
 					")"
 					" HAVING COUNT("
 						+ groupBy + " "
-					") > 1"
+					") > 1",
+					this->ps.urlDuplicationCheck
 			);
 		}
-
-		if(this->ps.urlHashCheck == 0) {
-			this->log(verbose, "prepares urlHashCheck() [1/2]...");
-
-			this->ps.urlHashCheck = this->addPreparedStatement(
-					"SELECT EXISTS"
-					" ("
-						" SELECT *"
-						" FROM `" + this->urlListTable + "`"
-						" WHERE hash <> " + urlHash + ""
-					" )"
-					" AS result"
-			);
+		else if(this->ps.urlDuplicationCheck > 0) {
+			this->clearPreparedStatement(this->ps.urlDuplicationCheck);
 		}
 
-		if(this->ps.urlHashCorrect == 0) {
-			this->log(verbose, "prepares urlHashCheck() [2/2]...");
+		this->log(verbose, "prepares urlHashCheck() [1/2]...");
 
-			this->ps.urlHashCorrect = this->addPreparedStatement(
-					"UPDATE `" + this->urlListTable + "`"
-					" SET hash = " + urlHash
-			);
-		}
+		this->addPreparedStatement(
+				"SELECT EXISTS"
+				" ("
+					" SELECT *"
+					" FROM `" + this->urlListTable + "`"
+					" WHERE hash <> " + urlHash + ""
+				" )"
+				" AS result",
+				this->ps.urlHashCheck
+		);
 
-		if(this->ps.urlEmptyCheck == 0 && this->urlStartupCheck) {
+		this->log(verbose, "prepares urlHashCheck() [2/2]...");
+
+		this->addPreparedStatement(
+				"UPDATE `" + this->urlListTable + "`"
+				" SET hash = " + urlHash,
+				this->ps.urlHashCorrect
+		);
+
+		if(this->urlStartupCheck) {
 			this->log(verbose, "prepares urlEmptyCheck()...");
 
-			this->ps.urlEmptyCheck = this->addPreparedStatement(
+			this->addPreparedStatement(
 					"SELECT id"
 					" FROM `" + this->urlListTable + "`"
 					" WHERE url = ''"
-					" LIMIT 1"
+					" LIMIT 1",
+					this->ps.urlEmptyCheck
 			);
 		}
+		else if(this->ps.urlEmptyCheck > 0) {
+			this->clearPreparedStatement(this->ps.urlEmptyCheck);
+		}
 
-		if(this->ps.getUrls == 0 && this->urlStartupCheck) {
+		if(this->urlStartupCheck) {
 			this->log(verbose, "prepares getUrls()...");
 
-			this->ps.getUrls = this->addPreparedStatement(
+			this->addPreparedStatement(
 					"SELECT url"
-					" FROM `" + this->urlListTable + "`"
+					" FROM `" + this->urlListTable + "`",
+					this->ps.getUrls
 			);
 		}
+		else if(this->ps.getUrls > 0) {
+			this->clearPreparedStatement(this->ps.getUrls);
+		}
 
-		if(this->ps.removeDuplicates == 0 && (this->urlStartupCheck || this->urlDebug)) {
+		if(this->urlStartupCheck || this->urlDebug) {
 			this->log(verbose, "prepares removeDuplicates()...");
 
 			std::string urlComparison;
@@ -581,7 +567,7 @@ namespace crawlservpp::Module::Crawler {
 				urlComparison = "LOWER(url) LIKE LOWER(?)";
 			}
 
-			this->ps.removeDuplicates = this->addPreparedStatement(
+			this->addPreparedStatement(
 					" DELETE"
 					"  FROM `" + this->urlListTable + "`"
 					"  WHERE id IN "
@@ -592,8 +578,12 @@ namespace crawlservpp::Module::Crawler {
 								"  AND hash = " + hashQuery +
 							" ) AS tmp"
 							" WHERE " + urlComparison +
-						" )"
+						" )",
+						this->ps.removeDuplicates
 			);
+		}
+		else if(this->ps.removeDuplicates > 0) {
+			this->clearPreparedStatement(this->ps.removeDuplicates);
 		}
 	}
 

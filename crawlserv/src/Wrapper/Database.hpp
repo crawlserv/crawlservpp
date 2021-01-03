@@ -232,7 +232,8 @@ namespace crawlservpp::Wrapper {
 
 		// wrappers for managing prepared SQL statements
 		void reserveForPreparedStatements(std::size_t n);
-		[[nodiscard]] std::size_t addPreparedStatement(const std::string& sqlQuery);
+		void addPreparedStatement(const std::string& sqlQuery, std::size_t& id);
+		void clearPreparedStatement(std::size_t& id);
 		[[nodiscard]] sql::PreparedStatement& getPreparedStatement(std::size_t id);
 
 		///@}
@@ -517,8 +518,13 @@ namespace crawlservpp::Wrapper {
 	}
 
 	//! \copydoc Main::Database::addPreparedStatement
-	inline std::size_t Database::addPreparedStatement(const std::string& sqlQuery) {
-		return this->database.addPreparedStatement(sqlQuery);
+	inline void Database::addPreparedStatement(const std::string& sqlQuery, std::size_t& id) {
+		this->database.addPreparedStatement(sqlQuery, id);
+	}
+
+	//! \copydoc Main::Database::clearPreparedStatement
+	inline void Database::clearPreparedStatement(std::size_t& id) {
+		this->database.clearPreparedStatement(id);
 	}
 
 	//! \copydoc Main::Database::getPreparedStatement

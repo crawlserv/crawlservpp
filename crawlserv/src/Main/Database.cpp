@@ -539,41 +539,37 @@ namespace crawlservpp::Main {
 	 */
 	void Database::prepare() {
 		// reserve memory for SQL statements
-		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::uint16_t));
+		this->reserveForPreparedStatements(sizeof(this->ps) / sizeof(std::size_t));
 
 		try {
 			// prepare basic SQL statements
-			if(this->ps.lastId == 0) {
-				this->ps.lastId = this->addPreparedStatement(
-						"SELECT LAST_INSERT_ID() AS id"
-				);
-			}
+			this->addPreparedStatement(
+					"SELECT LAST_INSERT_ID() AS id",
+					this->ps.lastId
+			);
 
-			if(this->ps.log == 0) {
-				this->ps.log = this->addPreparedStatement(
-						"INSERT INTO crawlserv_log(module, entry)"
-						" VALUES (?, ?)"
-				);
-			}
+			this->addPreparedStatement(
+					"INSERT INTO crawlserv_log(module, entry)"
+					" VALUES (?, ?)",
+					this->ps.log
+			);
 
 			// prepare thread statements
-			if(this->ps.setThreadStatus == 0) {
-				this->ps.setThreadStatus = this->addPreparedStatement(
-						"UPDATE crawlserv_threads"
-						" SET status = ?, paused = ?"
-						" WHERE id = ?"
-						" LIMIT 1"
-				);
-			}
+			this->addPreparedStatement(
+					"UPDATE crawlserv_threads"
+					" SET status = ?, paused = ?"
+					" WHERE id = ?"
+					" LIMIT 1",
+					this->ps.setThreadStatus
+			);
 
-			if(this->ps.setThreadStatusMessage == 0) {
-				this->ps.setThreadStatusMessage = this->addPreparedStatement(
-						"UPDATE crawlserv_threads"
-						" SET status = ?"
-						" WHERE id = ?"
-						" LIMIT 1"
-				);
-			}
+			this->addPreparedStatement(
+					"UPDATE crawlserv_threads"
+					" SET status = ?"
+					" WHERE id = ?"
+					" LIMIT 1",
+					this->ps.setThreadStatusMessage
+			);
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Main::Database::prepare", e);
@@ -9716,33 +9712,87 @@ namespace crawlservpp::Main {
 		);
 	}
 
-	//! Prepares an additional SQL statement and returns its ID.
+	//! Prepares an additional SQL statement and sets its ID.
 	/*!
+	 * If the current ID is not zero, the
+	 *  old prepared statement will be removed.
+	 *
 	 * \param sqlQuery Constant reference to
 	 *   a string containing the SQL query for
 	 *   the prepared SQL statement.
+	 * \param id Reference to the current ID or
+	 *   zero, which will be set to the new
+	 *   unique ID identifying the prepared SQL
+	 *   query in-class.
 	 *
-	 * \returns A unique ID identifying the
-	 *   prepared SQL query in-class.
-	 *
-	 * \throws Main::Database::Exception if a MySQL
-	 *   error occured while preparing and
+	 * \throws Main::Database::Exception if a
+	 *   MySQL error occured while preparing and
 	 *   adding the SQL statement.
+	 * \throws std::out_of_range if \p id
+	 *   contains an neither zero nor a valid ID.
 	 */
-	std::size_t Database::addPreparedStatement(const std::string& sqlQuery) {
+	void Database::addPreparedStatement(const std::string& sqlQuery, std::size_t& id) {
 		// check connection
 		this->checkConnection();
 
 		// try to prepare SQL statement
 		try {
-			this->preparedStatements.emplace_back(this->connection.get(), sqlQuery);
+			if(id > 0) {
+				// replace existing statement
+				Wrapper::PreparedSqlStatement newStatement(
+						this->connection.get(),
+						sqlQuery
+				);
+
+				std::swap(
+						this->preparedStatements.at(id - 1),
+						newStatement
+				);
+
+				// do not change the old ID
+				return;
+			}
+
+			// add new statement
+			this->preparedStatements.emplace_back(
+					this->connection.get(),
+					sqlQuery
+			);
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Main::Database::addPreparedStatement", e);
 		}
 
 		// The returned ID equals the number of prepared SQL statements
-		return this->preparedStatements.size();
+		id = this->preparedStatements.size();
+	}
+
+	//! Clears a prepared SQL statement.
+	/*!
+	 * \param id Reference to the current ID,
+	 *   which will be set to zero after the
+	 *   corresponding prepared SQL statement
+	 *   has been cleared.
+	 *
+	 * \throws Main::Database::Exception if a
+	 *   MySQL error occured while clearing
+	 *   the prepared SQL statement.
+	 * \throws std::out_of_range if \p id
+	 *   contains zero or an invalid ID.
+	 */
+	void Database::clearPreparedStatement(std::size_t& id) {
+		// check connection
+		this->checkConnection();
+
+		// try to clear SQL statement
+		try {
+			this->preparedStatements.at(id - 1).clear();
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Main::Database::clearPreparedStatement", e);
+		}
+
+		id = 0;
 	}
 
 	//! Gets a reference to a prepared SQL statement.

@@ -81,7 +81,7 @@
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint16_t, std::uint64_t
+#include <cstdint>		// std::uint64_t
 #include <fstream>		// std::ifstream
 #include <functional>	// std::function
 #include <iostream>		// std::cout, std::endl, std::flush
@@ -95,7 +95,7 @@
 #include <string_view>	// std::string_view, std::string_view_literals
 #include <thread>		// std::this_thread
 #include <tuple>		// std::get(std::tuple)
-#include <utility>		// std::pair
+#include <utility>		// std::pair, std::swap
 #include <vector>		// std::vector
 
 // optional header
@@ -160,7 +160,6 @@ namespace crawlservpp::Main {
 	//! Time (in ms) to sleep on SQL deadlock.
 	inline constexpr auto sleepOnDeadLockMs{250};
 
-	//! Maximum number of columns needed for adding a URL list.
 	inline constexpr auto maxColumnsUrlList{6};
 
 	//! Number fo arguments needed for adding one URL.
@@ -756,7 +755,8 @@ namespace crawlservpp::Main {
 		///@{
 
 		void reserveForPreparedStatements(std::size_t n);
-		std::size_t addPreparedStatement(const std::string& sqlQuery);
+		void addPreparedStatement(const std::string& sqlQuery, std::size_t& id);
+		void clearPreparedStatement(std::size_t& id);
 		[[nodiscard]] sql::PreparedStatement& getPreparedStatement(std::size_t id);
 
 		///@}
@@ -1060,11 +1060,11 @@ namespace crawlservpp::Main {
 
 		// IDs of prepared SQL statements
 		struct _ps {
-			std::uint16_t log;
-			std::uint16_t lastId;
-			std::uint16_t setThreadStatus;
-			std::uint16_t setThreadStatusMessage;
-		} ps{};
+			std::size_t log{};
+			std::size_t lastId{};
+			std::size_t setThreadStatus{};
+			std::size_t setThreadStatusMessage{};
+		} ps;
 	};
 
 } /* namespace crawlservpp::Main */

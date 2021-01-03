@@ -229,331 +229,329 @@ namespace crawlservpp::Module::Parser {
 		this->checkConnection();
 
 		// reserve memory
-		this->reserveForPreparedStatements(sizeof(ps) / sizeof(std::uint16_t));
+		this->reserveForPreparedStatements(sizeof(ps) / sizeof(std::size_t));
 
 		// prepare SQL statements
-		if(this->ps.fetchUrls == 0) {
-			this->log(verbose, "prepares fetchUrls()...");
+		this->log(verbose, "prepares fetchUrls()...");
 
-			std::string sqlQueryString{
-									"SELECT tmp1.id, tmp1.url"
-									" FROM"
+		std::string sqlQueryString{
+								"SELECT tmp1.id, tmp1.url"
+								" FROM"
+								" ("
+									" SELECT `"
+		};
+
+		sqlQueryString +=				this->urlListTable;
+		sqlQueryString +=				"`.id,"
+									" `";
+		sqlQueryString +=				this->urlListTable;
+		sqlQueryString +=				"`.url"
+									" FROM `";
+		sqlQueryString +=				this->urlListTable;
+		sqlQueryString +=				"`"
+									" WHERE `";
+		sqlQueryString +=				this->urlListTable;
+		sqlQueryString +=				"`.id > ?";
+
+		if(!(this->parseCustom)) {
+			sqlQueryString +=		" AND `";
+			sqlQueryString +=			this->urlListTable;
+			sqlQueryString +=			"`.manual = FALSE";
+		}
+
+		sqlQueryString +=			" AND EXISTS"
 									" ("
-										" SELECT `"
-			};
-
-			sqlQueryString +=				this->urlListTable;
-			sqlQueryString +=				"`.id,"
-										" `";
-			sqlQueryString +=				this->urlListTable;
-			sqlQueryString +=				"`.url"
+										" SELECT *"
 										" FROM `";
-			sqlQueryString +=				this->urlListTable;
-			sqlQueryString +=				"`"
+		sqlQueryString +=					this->urlListTable;
+		sqlQueryString +=					"_crawled`"
 										" WHERE `";
-			sqlQueryString +=				this->urlListTable;
-			sqlQueryString +=				"`.id > ?";
+		sqlQueryString +=					this->urlListTable;
+		sqlQueryString +=					"_crawled`.url"
+										" = `";
+		sqlQueryString +=					this->urlListTable;
+		sqlQueryString +=					"`.id"
+										" AND `";
+		sqlQueryString +=					this->urlListTable;
+		sqlQueryString +=					"_crawled`.response < 400"
+									" )"
+									" ORDER BY `";
+		sqlQueryString +=				this->urlListTable;
+		sqlQueryString +=				"`.id"
+								" ) AS tmp1"
+								" LEFT OUTER JOIN "
+								" ("
+									" SELECT url, MAX(locktime)"
+									" AS locktime";
 
-			if(!(this->parseCustom)) {
-				sqlQueryString +=		" AND `";
-				sqlQueryString +=			this->urlListTable;
-				sqlQueryString +=			"`.manual = FALSE";
-			}
+		if(!(this->reParse)) {
+			sqlQueryString +=		", MAX(success)"
+									" AS success";
+		}
 
-			sqlQueryString +=			" AND EXISTS"
-										" ("
-											" SELECT *"
-											" FROM `";
-			sqlQueryString +=					this->urlListTable;
-			sqlQueryString +=					"_crawled`"
-											" WHERE `";
-			sqlQueryString +=					this->urlListTable;
-			sqlQueryString +=					"_crawled`.url"
-											" = `";
-			sqlQueryString +=					this->urlListTable;
-			sqlQueryString +=					"`.id"
-											" AND `";
-			sqlQueryString +=					this->urlListTable;
-			sqlQueryString +=					"_crawled`.response < 400"
-										" )"
-										" ORDER BY `";
-			sqlQueryString +=				this->urlListTable;
-			sqlQueryString +=				"`.id"
-									" ) AS tmp1"
-									" LEFT OUTER JOIN "
+		sqlQueryString +=			" FROM `";
+		sqlQueryString +=				this->parsingTable;
+		sqlQueryString +=				"`"
+									" WHERE target = ";
+		sqlQueryString +=				std::to_string(this->targetTableId);
+		sqlQueryString +=			" AND url > ?"
+									" AND"
 									" ("
-										" SELECT url, MAX(locktime)"
-										" AS locktime";
+										"locktime >= NOW()";
 
-			if(!(this->reParse)) {
-				sqlQueryString +=		", MAX(success)"
-										" AS success";
-			}
-
-			sqlQueryString +=			" FROM `";
-			sqlQueryString +=				this->parsingTable;
-			sqlQueryString +=				"`"
-										" WHERE target = ";
-			sqlQueryString +=				std::to_string(this->targetTableId);
-			sqlQueryString +=			" AND url > ?"
-										" AND"
-										" ("
-											"locktime >= NOW()";
-
-			if(!(this->reParse)) {
-				sqlQueryString +=			" OR success = TRUE";
-			}
-
-			sqlQueryString +=			" )"
-										" GROUP BY url"
-									" ) AS tmp2"
-									" ON tmp1.id = tmp2.url"
-									" WHERE tmp2.locktime IS NULL";
-
-			if(!(this->reParse)) {
-				sqlQueryString +=	" AND tmp2.success IS NULL";
-			}
-
-			if(this->cacheSize > 0) {
-				sqlQueryString +=	" LIMIT ";
-				sqlQueryString +=		std::to_string(this->cacheSize);
-			}
-
-			this->log(verbose, "> " + sqlQueryString);
-
-			this->ps.fetchUrls = this->addPreparedStatement(sqlQueryString);
+		if(!(this->reParse)) {
+			sqlQueryString +=			" OR success = TRUE";
 		}
 
-		if(this->ps.lockUrl == 0) {
-			this->log(verbose, "prepares lockUrls() [1/4]...");
+		sqlQueryString +=			" )"
+									" GROUP BY url"
+								" ) AS tmp2"
+								" ON tmp1.id = tmp2.url"
+								" WHERE tmp2.locktime IS NULL";
 
-			this->ps.lockUrl = this->addPreparedStatement(this->queryLockUrls(1));
+		if(!(this->reParse)) {
+			sqlQueryString +=	" AND tmp2.success IS NULL";
 		}
 
-		if(this->ps.lock10Urls == 0) {
-			this->log(verbose, "prepares lockUrls() [2/4]...");
-
-			this->ps.lock10Urls = this->addPreparedStatement(this->queryLockUrls(nAtOnce10));
+		if(this->cacheSize > 0) {
+			sqlQueryString +=	" LIMIT ";
+			sqlQueryString +=		std::to_string(this->cacheSize);
 		}
 
-		if(this->ps.lock100Urls == 0) {
-			this->log(verbose, "prepares lockUrls() [3/4]...");
+		this->log(verbose, "> " + sqlQueryString);
 
-			this->ps.lock100Urls = this->addPreparedStatement(this->queryLockUrls(nAtOnce100));
-		}
+		this->addPreparedStatement(sqlQueryString, this->ps.fetchUrls);
 
-		if(this->ps.lockMaxUrls == 0) {
-			this->log(verbose, "prepares lockUrls() [4/4]...");
+		this->log(verbose, "prepares lockUrls() [1/4]...");
 
-			this->ps.lockMaxUrls = this->addPreparedStatement(this->queryLockUrls(this->maxBatchSize));
-		}
+		this->addPreparedStatement(
+				this->queryLockUrls(oneAtOnce),
+				this->ps.lockUrl
+		);
 
-		if(this->ps.getUrlPosition == 0) {
-			this->log(verbose, "prepares getUrlPosition()...");
+		this->log(verbose, "prepares lockUrls() [2/4]...");
 
-			this->ps.getUrlPosition = this->addPreparedStatement(
-					"SELECT COUNT(id)"
-					" AS result"
-					" FROM `" + this->urlListTable + "`"
-					" WHERE id < ?"
-			);
-		}
+		this->addPreparedStatement(
+				this->queryLockUrls(nAtOnce10),
+				this->ps.lock10Urls
+		);
 
-		if(this->ps.getNumberOfUrls == 0) {
-			this->log(verbose, "prepares getNumberOfUrls()...");
+		this->log(verbose, "prepares lockUrls() [3/4]...");
 
-			this->ps.getNumberOfUrls = this->addPreparedStatement(
-					"SELECT COUNT(id)"
-					" AS result"
-					" FROM `" + this->urlListTable + "`"
-			);
-		}
+		this->addPreparedStatement(
+				this->queryLockUrls(nAtOnce100),
+				this->ps.lock100Urls
+		);
 
-		if(this->ps.getLockTime == 0) {
-			this->log(verbose, "prepares getLockTime()...");
+		this->log(verbose, "prepares lockUrls() [4/4]...");
 
-			this->ps.getLockTime = this->addPreparedStatement(
-					"SELECT NOW() + INTERVAL ? SECOND"
-					" AS locktime"
-			);
-		}
+		this->addPreparedStatement(
+				this->queryLockUrls(this->maxBatchSize),
+				this->ps.lockMaxUrls
+		);
 
-		if(this->ps.getUrlLockTime == 0) {
-			this->log(verbose, "prepares getUrlLockTime()...");
+		this->log(verbose, "prepares getUrlPosition()...");
 
-			this->ps.getUrlLockTime = this->addPreparedStatement(
-					"SELECT MAX(locktime)"
-					" AS locktime"
-					" FROM `" + this->parsingTable + "`"
-					" WHERE target = " + std::to_string(this->targetTableId) +
-					" AND url = ?"
-					" GROUP BY url"
-					" LIMIT 1"
-			);
-		}
+		this->addPreparedStatement(
+				"SELECT COUNT(id)"
+				" AS result"
+				" FROM `" + this->urlListTable + "`"
+				" WHERE id < ?",
+				this->ps.getUrlPosition
+		);
 
-		if(this->ps.renewUrlLockIfOk == 0) {
-			this->log(verbose, "prepares renewUrlLockIfOk()...");
+		this->log(verbose, "prepares getNumberOfUrls()...");
 
-			this->ps.renewUrlLockIfOk = this->addPreparedStatement(
-					"UPDATE `" + this->parsingTable + "`"
-					" SET locktime = GREATEST"
-					"("
-						"?,"
-						"? + INTERVAL 1 SECOND"
-					")"
-					" WHERE target = " + std::to_string(this->targetTableId) +
-					" AND url = ?"
-					" AND"
-					" ("
-						" locktime <= ?"
-						" OR locktime IS NULL"
-						" OR locktime < NOW()"
-					" )"
-			);
-		}
+		this->addPreparedStatement(
+				"SELECT COUNT(id)"
+				" AS result"
+				" FROM `" + this->urlListTable + "`",
+				this->ps.getNumberOfUrls
+		);
 
-		if(this->ps.unLockUrlIfOk == 0) {
-			this->log(verbose, "prepares unLockUrlIfOk()...");
+		this->log(verbose, "prepares getLockTime()...");
 
-			this->ps.unLockUrlIfOk = this->addPreparedStatement(
-					"UPDATE `" + this->parsingTable + "`"
-					" SET locktime = NULL"
-					" WHERE target = " + std::to_string(this->targetTableId) +
-					" AND url = ?"
-					" AND"
-					" ("
-						" locktime <= ?"
-						" OR locktime <= NOW()"
-					" )"
-			);
-		}
+		this->addPreparedStatement(
+				"SELECT NOW() + INTERVAL ? SECOND"
+				" AS locktime",
+				this->ps.getLockTime
+		);
 
-		if(this->ps.checkParsingTable == 0) {
-			this->log(verbose, "prepares checkParsingTable()...");
+		this->log(verbose, "prepares getUrlLockTime()...");
 
-			this->ps.checkParsingTable = this->addPreparedStatement(
-					"DELETE t1"
-					" FROM `" + this->parsingTable + "` t1"
-					" INNER JOIN `" + this->parsingTable + "` t2"
-					" WHERE t1.id < t2.id"
-					" AND t1.url = t2.url"
-					" AND t1.target = t2.target"
-					" AND t1.target = " + std::to_string(this->targetTableId)
-			);
-		}
+		this->addPreparedStatement(
+				"SELECT MAX(locktime)"
+				" AS locktime"
+				" FROM `" + this->parsingTable + "`"
+				" WHERE target = " + std::to_string(this->targetTableId) +
+				" AND url = ?"
+				" GROUP BY url"
+				" LIMIT 1",
+				this->ps.getUrlLockTime
+		);
 
-		if(this->ps.getContentIdFromParsedId == 0) {
-			this->log(verbose, "prepares getContentIdFromParsedId()...");
+		this->log(verbose, "prepares renewUrlLockIfOk()...");
 
-			this->ps.getContentIdFromParsedId = this->addPreparedStatement(
-					"SELECT content"
-					" FROM"
-					" ("
-						" SELECT id, parsed_id, content"
-						" FROM `" + this->targetTableFull + "`"
-						" WHERE hash = CRC32( ? )"
-					" ) AS tmp"
-					" WHERE parsed_id LIKE ?"
-					" ORDER BY id DESC"
-					" LIMIT 1"
-			);
-		}
+		this->addPreparedStatement(
+				"UPDATE `" + this->parsingTable + "`"
+				" SET locktime = GREATEST"
+				"("
+					"?,"
+					"? + INTERVAL 1 SECOND"
+				")"
+				" WHERE target = " + std::to_string(this->targetTableId) +
+				" AND url = ?"
+				" AND"
+				" ("
+					" locktime <= ?"
+					" OR locktime IS NULL"
+					" OR locktime < NOW()"
+				" )",
+				this->ps.renewUrlLockIfOk
+		);
 
-		if(this->ps.getNumberOfContents == 0) {
-			this->log(verbose, "prepares getNumberOfContents()...");
+		this->log(verbose, "prepares unLockUrlIfOk()...");
 
-			this->ps.getNumberOfContents = this->addPreparedStatement(
-					"SELECT COUNT(*)"
-					" AS result"
-					" FROM `" + this->urlListTable + "_crawled`"
-					" WHERE url = ?"
-			);
-		}
+		this->addPreparedStatement(
+				"UPDATE `" + this->parsingTable + "`"
+				" SET locktime = NULL"
+				" WHERE target = " + std::to_string(this->targetTableId) +
+				" AND url = ?"
+				" AND"
+				" ("
+					" locktime <= ?"
+					" OR locktime <= NOW()"
+				" )",
+				this->ps.unLockUrlIfOk
+		);
 
-		if(this->ps.getLatestContent == 0) {
-			this->log(verbose, "prepares getLatestContent()...");
+		this->log(verbose, "prepares checkParsingTable()...");
 
-			this->ps.getLatestContent = this->addPreparedStatement(
-					"SELECT id, content, crawltime"
-					" FROM `" + this->urlListTable + "_crawled`"
-					" USE INDEX(url)"
-					" WHERE url = ?"
-					" AND crawltime < ?"
-					" ORDER BY crawltime DESC"
-					" LIMIT 1"
-			);
-		}
+		this->addPreparedStatement(
+				"DELETE t1"
+				" FROM `" + this->parsingTable + "` t1"
+				" INNER JOIN `" + this->parsingTable + "` t2"
+				" WHERE t1.id < t2.id"
+				" AND t1.url = t2.url"
+				" AND t1.target = t2.target"
+				" AND t1.target = " + std::to_string(this->targetTableId),
+				this->ps.checkParsingTable
+		);
 
-		if(this->ps.getAllContents == 0) {
-			this->log(verbose, "prepares getAllContents()...");
+		this->log(verbose, "prepares getContentIdFromParsedId()...");
 
-			this->ps.getAllContents = this->addPreparedStatement(
-					"SELECT id, content"
-					" FROM `" + this->urlListTable + "_crawled`"
-					" WHERE url = ?"
-					" ORDER BY crawltime DESC"
-			);
-		}
+		this->addPreparedStatement(
+				"SELECT content"
+				" FROM"
+				" ("
+					" SELECT id, parsed_id, content"
+					" FROM `" + this->targetTableFull + "`"
+					" WHERE hash = CRC32( ? )"
+				" ) AS tmp"
+				" WHERE parsed_id LIKE ?"
+				" ORDER BY id DESC"
+				" LIMIT 1",
+				this->ps.getContentIdFromParsedId
+		);
 
-		if(this->ps.setUrlFinishedIfLockOk == 0) {
-			this->log(verbose, "prepares setUrlFinished() [1/4]...");
+		this->log(verbose, "prepares getNumberOfContents()...");
 
-			this->ps.setUrlFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(1));
-		}
+		this->addPreparedStatement(
+				"SELECT COUNT(*)"
+				" AS result"
+				" FROM `" + this->urlListTable + "_crawled`"
+				" WHERE url = ?",
+				this->ps.getNumberOfContents
+		);
 
-		if(this->ps.set10UrlsFinishedIfLockOk == 0) {
-			this->log(verbose, "prepares setUrlFinished() [2/4]...");
+		this->log(verbose, "prepares getLatestContent()...");
 
-			this->ps.set10UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(nAtOnce10));
-		}
+		this->addPreparedStatement(
+				"SELECT id, content, crawltime"
+				" FROM `" + this->urlListTable + "_crawled`"
+				" USE INDEX(url)"
+				" WHERE url = ?"
+				" AND crawltime < ?"
+				" ORDER BY crawltime DESC"
+				" LIMIT 1",
+				this->ps.getLatestContent
+		);
 
-		if(this->ps.set100UrlsFinishedIfLockOk == 0) {
-			this->log(verbose, "prepares setUrlFinished() [3/4]...");
+		this->log(verbose, "prepares getAllContents()...");
 
-			this->ps.set100UrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(nAtOnce100));
-		}
+		this->addPreparedStatement(
+				"SELECT id, content"
+				" FROM `" + this->urlListTable + "_crawled`"
+				" WHERE url = ?"
+				" ORDER BY crawltime DESC",
+				this->ps.getAllContents
+		);
 
-		if(this->ps.setMaxUrlsFinishedIfLockOk == 0) {
-			this->log(verbose, "prepares setUrlFinished() [4/4]...");
+		this->log(verbose, "prepares setUrlFinished() [1/4]...");
 
-			this->ps.setMaxUrlsFinishedIfLockOk = this->addPreparedStatement(this->querySetUrlsFinishedIfLockOk(this->maxBatchSize));
-		}
+		this->addPreparedStatement(
+				this->querySetUrlsFinishedIfLockOk(oneAtOnce),
+				this->ps.setUrlFinishedIfLockOk
+		);
 
-		if(this->ps.updateOrAddEntry == 0) {
-			this->log(verbose, "prepares updateOrAddEntries() [1/4]...");
+		this->log(verbose, "prepares setUrlFinished() [2/4]...");
 
-			this->ps.updateOrAddEntry = this->addPreparedStatement(this->queryUpdateOrAddEntries(1));
-		}
+		this->addPreparedStatement(
+				this->querySetUrlsFinishedIfLockOk(nAtOnce10),
+				this->ps.set10UrlsFinishedIfLockOk
+		);
 
-		if(this->ps.updateOrAdd10Entries == 0) {
-			this->log(verbose, "prepares updateOrAddEntries() [2/4]...");
+		this->log(verbose, "prepares setUrlFinished() [3/4]...");
 
-			this->ps.updateOrAdd10Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(nAtOnce10));
-		}
+		this->addPreparedStatement(
+				this->querySetUrlsFinishedIfLockOk(nAtOnce100),
+				this->ps.set100UrlsFinishedIfLockOk
+		);
 
-		if(this->ps.updateOrAdd100Entries == 0) {
-			this->log(verbose, "prepares updateOrAddEntries() [3/4]...");
+		this->log(verbose, "prepares setUrlFinished() [4/4]...");
 
-			this->ps.updateOrAdd100Entries = this->addPreparedStatement(this->queryUpdateOrAddEntries(nAtOnce100));
-		}
+		this->addPreparedStatement(
+				this->querySetUrlsFinishedIfLockOk(this->maxBatchSize),
+				this->ps.setMaxUrlsFinishedIfLockOk
+		);
 
-		if(this->ps.updateOrAddMaxEntries == 0) {
-			this->log(verbose, "prepares updateOrAddEntries() [4/4]...");
+		this->log(verbose, "prepares updateOrAddEntries() [1/4]...");
 
-			this->ps.updateOrAddMaxEntries = this->addPreparedStatement(this->queryUpdateOrAddEntries(this->maxBatchSize));
-		}
+		this->addPreparedStatement(
+				this->queryUpdateOrAddEntries(oneAtOnce),
+				this->ps.updateOrAddEntry
+		);
 
-		if(this->ps.updateTargetTable == 0) {
-			this->log(verbose, "prepares updateTargetTable()...");
+		this->log(verbose, "prepares updateOrAddEntries() [2/4]...");
 
-			this->ps.updateTargetTable = this->addPreparedStatement(
-					"UPDATE crawlserv_parsedtables"
-					" SET updated = CURRENT_TIMESTAMP"
-					" WHERE id = " + std::to_string(this->targetTableId) +
-					" LIMIT 1"
-			);
-		}
+		this->addPreparedStatement(
+				this->queryUpdateOrAddEntries(nAtOnce10),
+				this->ps.updateOrAdd10Entries
+		);
+
+		this->log(verbose, "prepares updateOrAddEntries() [3/4]...");
+
+		this->addPreparedStatement(
+				this->queryUpdateOrAddEntries(nAtOnce100),
+				this->ps.updateOrAdd100Entries
+		);
+
+		this->log(verbose, "prepares updateOrAddEntries() [4/4]...");
+
+		this->addPreparedStatement(
+				this->queryUpdateOrAddEntries(this->maxBatchSize),
+				this->ps.updateOrAddMaxEntries
+		);
+
+		this->log(verbose, "prepares updateTargetTable()...");
+
+		this->addPreparedStatement(
+				"UPDATE crawlserv_parsedtables"
+				" SET updated = CURRENT_TIMESTAMP"
+				" WHERE id = " + std::to_string(this->targetTableId) +
+				" LIMIT 1",
+				this->ps.updateTargetTable
+		);
 	}
 
 	/*
@@ -1060,8 +1058,8 @@ namespace crawlservpp::Module::Parser {
 	 * \note The SQL statements needed for
 	 *   unlocking the URLs will only be created
 	 *   shortly before query execution, as it
-	 *   should only be used once (on shutdown
-	 *   on the parser). During normal
+	 *   should only be used during shutdown or
+	 *   reset of the parser. During normal
 	 *   operations, URLs are unlocked as they
 	 *   are processed — one by one.
 	 *
@@ -1091,11 +1089,16 @@ namespace crawlservpp::Module::Parser {
 		this->checkConnection();
 
 		// create and get prepared SQL statement
+		std::size_t sqlStatementId{};
+
+		this->addPreparedStatement(
+				this->queryUnlockUrlsIfOk(urls.size()),
+				sqlStatementId
+		);
+
 		auto& sqlStatement{
 			this->getPreparedStatement(
-					this->addPreparedStatement(
-							this->queryUnlockUrlsIfOk(urls.size())
-					)
+					sqlStatementId
 			)
 		};
 
@@ -1119,6 +1122,10 @@ namespace crawlservpp::Module::Parser {
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Parser::Database::unLockUrlsIfOk", e);
+		}
+
+		if(sqlStatementId > 0) {
+			this->clearPreparedStatement(sqlStatementId);
 		}
 
 		lockTime.clear();
