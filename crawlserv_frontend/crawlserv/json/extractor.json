@@ -150,7 +150,7 @@
 			"label": "Variable aliases:",
 			"description": "Alias for the variable with same array index.",
 			"simple": true,
-			"position": 8
+			"position": 9
 		},
 		"alias.add": {
 			"type": "array",
@@ -159,7 +159,7 @@
 			"label": "Increase alias value by:",
 			"description": "Value to add to the variable alias with the same array index.",
 			"simple": true,
-			"position": 9
+			"position": 10
 		},
 		"datetime.format": {
 			"type": "array",
@@ -219,6 +219,21 @@
 			"simple": true,
 			"position": 3
 		},
+		"skip.query": {
+			"type": "array",
+			"item-type": "query",
+			"query-results": [
+				"bool"
+			],
+			"query-types": [
+				"regex"
+			],
+			"default": [],
+			"label": "Skip URL when:",
+			"description": "If the variable with the same index fulfills this query, the current URL will be skipped.",
+			"simple": true,
+			"position": 8
+		},
 		"source": {
 			"type": "array",
 			"item-type": "enum",
@@ -240,7 +255,7 @@
 			"label": "Token variables:",
 			"description": "List of token variables to be replaced in 'source.url', 'source.cookies' and 'source.headers'.",
 			"simple": true,
-			"position": 10
+			"position": 11
 		},
 		"tokens.cookies": {
 			"type": "array",
@@ -249,7 +264,7 @@
 			"label": "Token cookies:",
 			"description": "Custom HTTP Cookie header for the token variable with the same array index.",
 			"simple": true,
-			"position": 13
+			"position": 14
 		},
 		"tokens.query": {
 			"type": "array",
@@ -262,7 +277,7 @@
 			"label": "Token queries:",
 			"description": "Query to extract token variable with the same array index.",
 			"simple": true,
-			"position": 15
+			"position": 16
 		},
 		"tokens.source": {
 			"type": "array",
@@ -271,7 +286,7 @@
 			"label": "Token sources:",
 			"description": "Source URL for the token variable with the same array index (absolute link without protocol).",
 			"simple": true,
-			"position": 12
+			"position": 13
 		},
 		"tokens.use.post": {
 			"type": "array",
@@ -280,7 +295,7 @@
 			"label": "Use POST for tokens:",
 			"description": "Use HTTP POST instead of GET for the token variable with the same array index.",
 			"simple": true,
-			"position": 14
+			"position": 15
 		},
 		"token.headers": {
 			"type": "array",
@@ -289,7 +304,7 @@
 			"label": "Token headers:",
 			"description": "Custom HTTP headers to be used for ALL token variables.",
 			"simple": true,
-			"position": 12
+			"position": 13
 		}
 	},
 	"paging": {

@@ -56,7 +56,7 @@
 #include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <algorithm>	// std::count_if, std::find, std::find_if
+#include <algorithm>	// std::any_of, std::count_if, std::find, std::none_of
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
@@ -215,6 +215,7 @@ namespace crawlservpp::Module::Extractor {
 
 		// queries
 		std::vector<QueryStruct> queriesVariables;
+		std::vector<QueryStruct> queriesVariablesSkip;
 		std::vector<QueryStruct> queriesTokens;
 		std::vector<QueryStruct> queriesErrorFail;
 		std::vector<QueryStruct> queriesErrorRetry;
@@ -292,6 +293,7 @@ namespace crawlservpp::Module::Extractor {
 		void extractingCheckUrls();
 		std::size_t extractingNext();
 		void extractingGetVariableValues(std::vector<StringString>& variables);
+		bool extractingIsSkip(const std::vector<StringString>& variables);
 		void extractingGetTokenValues(std::vector<StringString>& variables);
 		void extractingGetPageTokenValues(
 				const std::string& page,

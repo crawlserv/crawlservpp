@@ -853,38 +853,41 @@ namespace crawlservpp::Module::Extractor {
 			 *  not extracted from parsed data
 			 */
 
-			this->queriesVariables.reserve(
-					std::count_if(
-							this->config.variablesSource.cbegin(),
-							this->config.variablesSource.cend(),
-							[](const auto source) {
-								return	source == variablesSourcesContent
-										|| source == variablesSourcesUrl;
-							}
-					)
-			);
+			const auto validVariables{
+				std::count_if(
+						this->config.variablesSource.cbegin(),
+						this->config.variablesSource.cend(),
+						[](const auto source) {
+							return	source == variablesSourcesContent
+									|| source == variablesSourcesUrl;
+						}
+				)
+			};
 
-			for(
-					auto it{this->config.variablesSource.cbegin()};
-					it != this->config.variablesSource.cend();
-					++it
-			) {
+			this->queriesVariables.reserve(validVariables);
+			this->queriesVariablesSkip.reserve(validVariables);
+
+			for(std::size_t index{0}; index < this->config.variablesSource.size(); ++index) {
+				const auto source{this->config.variablesSource[index]};
+
 				if(
-						*it == variablesSourcesContent
-						|| *it == variablesSourcesUrl
+						source == variablesSourcesContent
+						|| source == variablesSourcesUrl
 				) {
-					QueryProperties properties;
-					const auto index{
-						it - this->config.variablesSource.cbegin()
-					};
-					const auto& query{
+					QueryProperties queryProperties;
+					QueryProperties skipQueryProperties;
+
+					const auto query{
 						this->config.variablesQuery.at(index)
+					};
+					const auto skipQuery{
+						this->config.variablesSkipQuery.at(index)
 					};
 
 					if(query > 0) {
-						this->database.getQueryProperties(query, properties);
+						this->database.getQueryProperties(query, queryProperties);
 
-						if(!properties.resultSingle && !properties.resultBool) {
+						if(!queryProperties.resultSingle && !queryProperties.resultBool) {
 							const auto& name{
 								this->config.variablesName.at(index)
 							};
@@ -900,9 +903,9 @@ namespace crawlservpp::Module::Extractor {
 							}
 						}
 						else if(
-								*it == variablesSourcesUrl
-								&& !properties.type.empty()
-								&& properties.type != "regex"
+								source == variablesSourcesUrl
+								&& !queryProperties.type.empty()
+								&& queryProperties.type != "regex"
 						) {
 							const auto& name{
 								this->config.variablesName.at(index)
@@ -935,7 +938,16 @@ namespace crawlservpp::Module::Extractor {
 						}
 					}
 
-					this->queriesVariables.emplace_back(this->addQuery(*it, properties));
+					if(skipQuery > 0) {
+						this->database.getQueryProperties(skipQuery, skipQueryProperties);
+					}
+
+					this->queriesVariables.emplace_back(
+							this->addQuery(query, queryProperties)
+					);
+					this->queriesVariablesSkip.emplace_back(
+							this->addQuery(skipQuery, skipQueryProperties)
+					);
 				}
 			}
 
@@ -1194,7 +1206,7 @@ namespace crawlservpp::Module::Extractor {
 			return 0;
 		}
 
-		// get values for variables
+		// get values for variables and check whether URL needs to be skipped
 		std::vector<StringString> variables;
 
 		this->log(
@@ -1203,6 +1215,11 @@ namespace crawlservpp::Module::Extractor {
 		);
 
 		this->extractingGetVariableValues(variables);
+
+		if(this->extractingIsSkip(variables)) {
+			// skip the URL
+			return 0;
+		}
 
 		// get values for global tokens
 		this->log(
@@ -1809,6 +1826,47 @@ namespace crawlservpp::Module::Extractor {
 		}
 	}
 
+	// check values of variables, return true if the current URL needs to be skipped
+	bool Thread::extractingIsSkip(const std::vector<StringString>& variables) {
+		std::queue<std::string> warnings;
+
+		bool skip{false};
+
+		for(std::size_t index{}; index < variables.size(); ++index) {
+			const auto& variable{
+				variables[index]
+			};
+			const auto& query{
+				this->queriesVariablesSkip.at(index)
+			};
+
+			if(query.index > 0) {
+				if(
+						this->getBoolFromRegEx(query, variable.second, skip, warnings)
+						&& skip
+				) {
+					// write log entry, if necessary, and skip
+					std::string logEntry{"skipped "};
+
+					logEntry += this->urls.front().second;
+					logEntry += ", because ";
+					logEntry += variable.first;
+					logEntry += " = '";
+					logEntry += variable.second;
+					logEntry += "'.";
+
+					this->log(generalLoggingDefault, logEntry);
+
+					break;
+				}
+			}
+		}
+
+		this->logWarningsUrl(warnings);
+
+		return skip;
+	}
+
 	// get values of global tokens
 	void Thread::extractingGetTokenValues(std::vector<StringString>& variables) {
 		if(this->config.pagingVariable.empty()) {
@@ -1855,13 +1913,13 @@ namespace crawlservpp::Module::Extractor {
 			}
 		}
 		else if(
-				std::find_if(
+				std::none_of(
 						this->config.variablesTokenHeaders.cbegin(),
 						this->config.variablesTokenHeaders.cend(),
 						[this](const auto& header) {
 							return header.find(this->config.pagingVariable) != std::string::npos;
 						}
-				) == this->config.variablesTokenHeaders.cend()
+				)
 		) { /* if headers are page-dependent, all tokens are also dependent on the current page */
 			// copy headers
 			std::vector<std::string> headers(this->config.variablesTokenHeaders);
@@ -1942,13 +2000,13 @@ namespace crawlservpp::Module::Extractor {
 
 		// check whether all tokens are page-specific
 		bool allTokens{
-			std::find_if(
+			std::any_of(
 					headers.cbegin(),
 					headers.cend(),
 					[this](const auto& header) {
 						return header.find(this->config.pagingVariable) != std::string::npos;
 					}
-			) != headers.cend()
+			)
 		};
 
 		for(
@@ -2567,13 +2625,13 @@ namespace crawlservpp::Module::Extractor {
 					// if necessary, check whether array or all values are empty
 					if(this->config.extractingFieldWarningsEmpty.at(index)) {
 						if(
-								std::find_if(
+								std::none_of(
 										extractedFieldValues.cbegin(),
 										extractedFieldValues.cend(),
 										[](auto const& value) {
 											return !value.empty();
 										}
-								) == extractedFieldValues.cend()
+								)
 						) {
 							this->extractingFieldWarning(
 									"is empty",
@@ -2909,13 +2967,13 @@ namespace crawlservpp::Module::Extractor {
 					// if necessary, check whether array or all values are empty
 					if(this->config.linkedWarningsEmpty.at(index)) {
 						if(
-								std::find_if(
+								std::none_of(
 										linkedValues.cbegin(),
 										linkedValues.cend(),
 										[](auto const& value) {
 											return !value.empty();
 										}
-								) == linkedValues.cend()
+								)
 						) {
 							this->extractingFieldWarning(
 									"is empty",

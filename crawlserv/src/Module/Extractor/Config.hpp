@@ -277,6 +277,9 @@ namespace crawlservpp::Module::Extractor {
 			 */
 			std::vector<std::string> variablesDateTimeLocale;
 
+			//! Queries to be used on the value of the variable with the same array index to determine whether to skip the current URL.
+			std::vector<std::uint64_t> variablesSkipQuery;
+
 			//! Variable names.
 			/*!
 			 * Strings to be replaced by the respective variable
@@ -1032,6 +1035,7 @@ namespace crawlservpp::Module::Extractor {
 		this->option("alias.add", this->config.variablesAliasAdd);
 		this->option("datetime.format", this->config.variablesDateTimeFormat);
 		this->option("datetime.locale", this->config.variablesDateTimeLocale);
+		this->option("skip.query", this->config.variablesSkipQuery);
 		this->option("name", this->config.variablesName);
 		this->option("parsed.column", this->config.variablesParsedColumn);
 		this->option("parsed.table", this->config.variablesParsedTable);
@@ -1188,6 +1192,12 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		this->config.variablesQuery.resize(completeVariables);
+
+		if(this->config.variablesSkipQuery.size() > completeVariables) {
+			incompleteVariables = true;
+		}
+
+		this->config.variablesSkipQuery.resize(completeVariables);
 
 		// remove variable tables that are not used, add empty table where none is specified
 		if(this->config.variablesParsedTable.size() > completeVariables) {
