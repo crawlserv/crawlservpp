@@ -246,6 +246,7 @@ namespace crawlservpp::Module::Extractor {
 						" Could not retrieve the size of the URL list"
 				);
 			}
+
 			if(this->idDist > 0) {
 				// cache progress = (current ID - first ID) / (last ID - first ID)
 				const auto cacheProgress{
@@ -417,11 +418,8 @@ namespace crawlservpp::Module::Extractor {
 		// unlock remaining URLs
 		this->database.unLockUrlsIfOk(this->urls, this->cacheLockTime);
 
-		// delete queries
-		this->queriesDateTime.clear();
-		this->queriesFields.clear();
-		this->queriesId.clear();
-
+		// clean up queries
+		this->deleteQueries();
 		this->clearQueries();
 
 		// restore previous status message
@@ -742,6 +740,10 @@ namespace crawlservpp::Module::Extractor {
 		}
 	}
 
+	/*
+	 * QUERY FUNCTIONS (private)
+	 */
+
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		try {
@@ -853,35 +855,32 @@ namespace crawlservpp::Module::Extractor {
 			 *  not extracted from parsed data
 			 */
 
-			const auto validVariables{
-				std::count_if(
-						this->config.variablesSource.cbegin(),
-						this->config.variablesSource.cend(),
-						[](const auto source) {
-							return	source == variablesSourcesContent
-									|| source == variablesSourcesUrl;
-						}
-				)
-			};
+			this->queriesVariables.reserve(
+					std::count_if(
+							this->config.variablesSource.cbegin(),
+							this->config.variablesSource.cend(),
+							[](const auto source) {
+								return	source == variablesSourcesContent
+										|| source == variablesSourcesUrl;
+							}
+					)
+			);
 
-			this->queriesVariables.reserve(validVariables);
-			this->queriesVariablesSkip.reserve(validVariables);
+			this->queriesVariablesSkip.reserve(
+					this->config.variablesName.size()
+			);
 
-			for(std::size_t index{0}; index < this->config.variablesSource.size(); ++index) {
-				const auto source{this->config.variablesSource[index]};
+			for(std::size_t index{0}; index < this->config.variablesName.size(); ++index) {
+				const auto source{this->config.variablesSource.at(index)};
 
 				if(
 						source == variablesSourcesContent
 						|| source == variablesSourcesUrl
 				) {
 					QueryProperties queryProperties;
-					QueryProperties skipQueryProperties;
 
 					const auto query{
 						this->config.variablesQuery.at(index)
-					};
-					const auto skipQuery{
-						this->config.variablesSkipQuery.at(index)
 					};
 
 					if(query > 0) {
@@ -889,7 +888,7 @@ namespace crawlservpp::Module::Extractor {
 
 						if(!queryProperties.resultSingle && !queryProperties.resultBool) {
 							const auto& name{
-								this->config.variablesName.at(index)
+								this->config.variablesName[index]
 							};
 
 							if(!name.empty()) {
@@ -908,7 +907,7 @@ namespace crawlservpp::Module::Extractor {
 								&& queryProperties.type != "regex"
 						) {
 							const auto& name{
-								this->config.variablesName.at(index)
+								this->config.variablesName[index]
 							};
 
 							if(!name.empty()) {
@@ -938,17 +937,27 @@ namespace crawlservpp::Module::Extractor {
 						}
 					}
 
-					if(skipQuery > 0) {
-						this->database.getQueryProperties(skipQuery, skipQueryProperties);
-					}
-
 					this->queriesVariables.emplace_back(
 							this->addQuery(query, queryProperties)
 					);
-					this->queriesVariablesSkip.emplace_back(
-							this->addQuery(skipQuery, skipQueryProperties)
-					);
 				}
+
+				/*
+				 * add a skip query for EACH variable
+				 */
+
+				QueryProperties skipQueryProperties;
+				const auto skipQuery{
+					this->config.variablesSkipQuery.at(index)
+				};
+
+				if(skipQuery > 0) {
+					this->database.getQueryProperties(skipQuery, skipQueryProperties);
+				}
+
+				this->queriesVariablesSkip.emplace_back(
+						this->addQuery(skipQuery, skipQueryProperties)
+				);
 			}
 
 			this->addOptionalQuery(
@@ -976,9 +985,27 @@ namespace crawlservpp::Module::Extractor {
 		}
 	}
 
-	/*
-	 * QUERY FUNCTIONS (private)
-	 */
+	// delete queries
+	void Thread::deleteQueries() {
+		queriesVariables.clear();
+		queriesVariablesSkip.clear();
+		queriesTokens.clear();
+		queriesErrorFail.clear();
+		queriesErrorRetry.clear();
+		queriesDatasets.clear();
+		queriesId.clear();
+		queriesDateTime.clear();
+		queriesFields.clear();
+		queriesRecursive.clear();
+		queriesLinkedDatasets.clear();
+		queriesLinkedId.clear();
+		queriesLinkedFields.clear();
+
+		queryPagingIsNextFrom = {};
+		queryPagingNextFrom = {};
+		queryPagingNumberFrom = {};
+		queryExpected = {};
+	}
 
 	// add optional query
 	inline void Thread::addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo) {
@@ -1840,25 +1867,23 @@ namespace crawlservpp::Module::Extractor {
 				this->queriesVariablesSkip.at(index)
 			};
 
-			if(query.index > 0) {
-				if(
-						this->getBoolFromRegEx(query, variable.second, skip, warnings)
-						&& skip
-				) {
-					// write log entry, if necessary, and skip
-					std::string logEntry{"skipped "};
+			if(
+					this->getBoolFromRegEx(query, variable.second, skip, warnings)
+					&& skip
+			) {
+				// write log entry, if necessary, and skip
+				std::string logEntry{"skipped "};
 
-					logEntry += this->urls.front().second;
-					logEntry += ", because ";
-					logEntry += variable.first;
-					logEntry += " = '";
-					logEntry += variable.second;
-					logEntry += "'.";
+				logEntry += this->urls.front().second;
+				logEntry += ", because ";
+				logEntry += variable.first;
+				logEntry += " = '";
+				logEntry += variable.second;
+				logEntry += "'.";
 
-					this->log(generalLoggingDefault, logEntry);
+				this->log(generalLoggingDefault, logEntry);
 
-					break;
-				}
+				break;
 			}
 		}
 
@@ -2625,11 +2650,11 @@ namespace crawlservpp::Module::Extractor {
 					// if necessary, check whether array or all values are empty
 					if(this->config.extractingFieldWarningsEmpty.at(index)) {
 						if(
-								std::none_of(
+								std::all_of(
 										extractedFieldValues.cbegin(),
 										extractedFieldValues.cend(),
 										[](auto const& value) {
-											return !value.empty();
+											return value.empty();
 										}
 								)
 						) {
@@ -2967,11 +2992,11 @@ namespace crawlservpp::Module::Extractor {
 					// if necessary, check whether array or all values are empty
 					if(this->config.linkedWarningsEmpty.at(index)) {
 						if(
-								std::none_of(
+								std::all_of(
 										linkedValues.cbegin(),
 										linkedValues.cend(),
 										[](auto const& value) {
-											return !value.empty();
+											return value.empty();
 										}
 								)
 						) {

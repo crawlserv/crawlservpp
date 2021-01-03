@@ -244,6 +244,10 @@ namespace crawlservpp::Module::Crawler {
 		std::unique_ptr<Network::Curl> networkingArchives;
 
 		// queries
+		/*
+		 * make sure to initialize AND delete them!
+		 *  -> initQueries(), deleteQueries()
+		 */
 		std::vector<QueryStruct> queriesBlackListContent;
 		std::vector<QueryStruct> queriesBlackListTypes;
 		std::vector<QueryStruct> queriesBlackListUrls;
@@ -330,9 +334,10 @@ namespace crawlservpp::Module::Crawler {
 				std::int64_t aliasAdd
 		);
 		void initTokenCache();
-		void initQueries() override;
 
 		// query functions
+		void initQueries() override;
+		void deleteQueries() override;
 		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
 		void addQueries(
 				const std::vector<std::uint64_t>& queryIds,

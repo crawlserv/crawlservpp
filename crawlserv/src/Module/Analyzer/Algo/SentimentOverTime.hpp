@@ -227,8 +227,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		void addCurrent();
 		void saveSentiments();
 
-		// query function
+		// query functions
 		void initQueries() override;
+		void deleteQueries() override;
 
 		// internal helper functions
 		[[nodiscard]] DateData::iterator addDate(const std::string& date);

@@ -176,10 +176,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 * TODO: add internal algorithm functions here
 		 */
 
-		// query function
+		// query functions
 		/*
 		 * TODO: decide whether queries are needed
 		void initQueries() override;
+		void deleteQueries() override;
 		*/
 
 		// internal helper functions

@@ -330,6 +330,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// this->addQueries(..) to add queries,
 		// if needed
 	}
+
+	// deletes algorithm-specific queries
+	void Empty::deleteQueries() {
+		//TODO: delete queries
+
+		// empty vectors containing
+		// QueryStructs and zero out
+		// single QueryStructs in case
+		// the algorithm is reset!
+	}
 	*/
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

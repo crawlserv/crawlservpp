@@ -618,13 +618,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * QUERY FUNCTIONS (private)
 	 */
 
-	/*
-	 * TODO: [OPTIONAL] add query functionality
-	 */
-
 	// initialize algorithm-specific queries
 	void SentimentOverTime::initQueries() {
 		this->addQueries(this->algoConfig.categoryQueries, this->queriesCategories);
+	}
+
+	// delete algorithm-specific queries
+	void SentimentOverTime::deleteQueries() {
+		this->queriesCategories.clear();
 	}
 
 	/*

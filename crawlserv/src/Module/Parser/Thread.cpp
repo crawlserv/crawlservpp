@@ -585,6 +585,10 @@ namespace crawlservpp::Module::Parser {
 		}
 	}
 
+	/*
+	 * QUERY FUNCTIONS (private)
+	 */
+
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		try {
@@ -632,9 +636,14 @@ namespace crawlservpp::Module::Parser {
 		) == this->config.parsingIdSources.cend();
 	}
 
-	/*
-	 * QUERY FUNCTIONS (private)
-	 */
+	// delete queries
+	inline void Thread::deleteQueries() {
+		queriesSkip.clear();
+		queriesContentIgnore.clear();
+		queriesId.clear();
+		queriesDateTime.clear();
+		queriesFields.clear();
+	}
 
 	// add multiple queries at once, ignoring empty ones
 	inline void Thread::addQueries(

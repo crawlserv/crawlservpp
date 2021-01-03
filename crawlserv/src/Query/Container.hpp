@@ -163,7 +163,7 @@ namespace crawlservpp::Query {
 		bool getXml(std::string& resultTo, std::queue<std::string>& warningsTo);
 
 		///@}
-		///@name Initialization
+		///@name Initialization and Cleanup
 		///@{
 
 		//! Pure virtual function initializing queries.
@@ -174,6 +174,15 @@ namespace crawlservpp::Query {
 		 *  their queries on their own.
 		 */
 		virtual void initQueries() = 0;
+
+		//*! Pure virtual function cleaning queries.
+		/*!
+		 * This function needs to be implemented by
+		 *  the child classes of the container,
+		 *  so that children need to cleanup
+		 *  their queries on their own.
+		 */
+		virtual void deleteQueries() = 0;
 
 		///@}
 		///@name Queries
@@ -275,10 +284,10 @@ namespace crawlservpp::Query {
 		mutable std::mutex queriesIdLock;
 
 		// options
-		bool repairCData{true};						// try to repair CData when parsing HTML/XML
-		bool repairComments{true};					// try to repair broken HTML/XML comments
-		bool removeXmlInstructions{false};			// remove XML processing instructions
-		bool minimizeMemory{false};					// minimize memory usage
+		bool repairCData{true};				// try to repair CData when parsing HTML/XML
+		bool repairComments{true};			// try to repair broken HTML/XML comments
+		bool removeXmlInstructions{false};	// remove XML processing instructions
+		bool minimizeMemory{false};			// minimize memory usage
 
 		// content pointers and parsing
 		const std::string * queryTargetPtr{nullptr}; // ptr to content to perform queries on

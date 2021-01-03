@@ -214,6 +214,10 @@ namespace crawlservpp::Module::Extractor {
 		std::string linkedTable;
 
 		// queries
+		/*
+		 * make sure to initialize AND delete them!
+		 *  -> initQueries(), deleteQueries()
+		 */
 		std::vector<QueryStruct> queriesVariables;
 		std::vector<QueryStruct> queriesVariablesSkip;
 		std::vector<QueryStruct> queriesTokens;
@@ -268,9 +272,10 @@ namespace crawlservpp::Module::Extractor {
 		void logWarnings(std::queue<std::string>& warnings);
 		void logWarningsUrl(std::queue<std::string>& warnings);
 		void logWarningsSource(std::queue<std::string>& warnings, std::string_view source);
-		void initQueries() override;
 
 		// query functions
+		void initQueries() override;
+		void deleteQueries() override;
 		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
 		void addQueries(
 				const std::vector<std::uint64_t>& queryIds,

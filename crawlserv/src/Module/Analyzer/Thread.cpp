@@ -128,8 +128,8 @@ namespace crawlservpp::Module::Analyzer {
 		// clear algorithm
 		this->onAlgoClear();
 
-		// clear queries
-		this->clearQueries();
+		// clean up queries
+		this->cleanUpQueries();
 	}
 
 	//! Resets the algorithm.
@@ -143,7 +143,7 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	/*
-	 * QUERY INITIALIZATION (protected)
+	 * QUERY FUNCTIONS (protected)
 	 */
 
 	//! Does nothing.
@@ -152,6 +152,13 @@ namespace crawlservpp::Module::Analyzer {
 	 *  that use their own queries.
 	 */
 	void Thread::initQueries() {}
+
+	//! Does nothing.
+	/*!
+	 * To be overwritten by algorithms
+	 *   that use their own queries.
+	 */
+	void Thread::deleteQueries() {}
 
 	//! Adds an optional query.
 	/*!
@@ -482,6 +489,18 @@ namespace crawlservpp::Module::Analyzer {
 
 			warnings.pop();
 		}
+	}
+
+	/*
+	 * CLEANUP FUNCTION (private)
+	 */
+
+	// clean up queries
+	void Thread::cleanUpQueries() {
+		this->queryFilterQueries.clear();
+
+		this->deleteQueries();
+		this->clearQueries();
 	}
 
 	/*

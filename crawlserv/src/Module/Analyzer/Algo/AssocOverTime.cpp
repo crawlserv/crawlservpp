@@ -538,7 +538,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// initialize algorithm-specific queries
 	void AssocOverTime::initQueries() {
 		this->addQueries(this->algoConfig.categoryQueries, this->queriesCategories);
+
 		this->addOptionalQuery(this->algoConfig.keyWordQuery, this->queryKeyWord);
+	}
+
+	// delete algorithm-specific queries
+	void AssocOverTime::deleteQueries() {
+		this->queriesCategories.clear();
+
+		this->queryKeyWord = {};
 	}
 
 	/*

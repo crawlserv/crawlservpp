@@ -125,10 +125,11 @@ namespace crawlservpp::Module::Analyzer {
 		void onReset() override;
 
 		///@}
-		///@name Query Initialization
+		///@name Query Functions
 		///@{
 
 		void initQueries() override;
+		void deleteQueries() override;
 		void addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo);
 		void addQueries(
 				const std::vector<std::uint64_t>& queryIds,
@@ -212,7 +213,11 @@ namespace crawlservpp::Module::Analyzer {
 		MAIN_EXCEPTION_CLASS();
 
 	private:
-		// queries for filtering a text corpus
+		// queries
+		/*
+		 * make sure to initialize AND delete them!
+		 *  -> setUpQueries(), cleanUpQueries()
+		 */
 		std::vector<QueryStruct> queryFilterQueries;
 
 		// initialization functions
@@ -224,6 +229,9 @@ namespace crawlservpp::Module::Analyzer {
 		void setUpQueries();
 		void setUpAlgorithm();
 		void logWarnings(std::queue<std::string>& warnings);
+
+		// cleanup function
+		void cleanUpQueries();
 
 		// internal helper function
 		std::size_t filterCorpusByQuery(StatusSetter& statusSetter);

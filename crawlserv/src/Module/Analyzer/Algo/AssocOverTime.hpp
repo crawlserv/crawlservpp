@@ -177,8 +177,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		void addCurrent();
 		void saveAssociations();
 
-		// query function
+		// query functions
 		void initQueries() override;
+		void deleteQueries() override;
 
 		// internal helper functions
 		void addArticlesForDate(

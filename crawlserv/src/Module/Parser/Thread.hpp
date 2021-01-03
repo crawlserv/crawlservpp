@@ -167,6 +167,10 @@ namespace crawlservpp::Module::Parser {
 		std::string targetTable;
 
 		// queries
+		/*
+		 * make sure to initialize AND delete them!
+		 *  -> initQueries(), deleteQueries()
+		 */
 		std::vector<QueryStruct> queriesSkip;
 		std::vector<QueryStruct> queriesContentIgnore;
 		std::vector<QueryStruct> queriesId;
@@ -204,9 +208,10 @@ namespace crawlservpp::Module::Parser {
 		void checkParsingTable();
 		void setUpTimers();
 		void logWarnings(std::queue<std::string>& warnings);
-		void initQueries() override;
 
 		// query functions
+		void initQueries() override;
+		void deleteQueries() override;
 		void addQueries(
 				const std::vector<std::uint64_t>& queryIds,
 				std::vector<QueryStruct>& propertiesTo

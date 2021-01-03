@@ -417,15 +417,8 @@ namespace crawlservpp::Module::Crawler {
 			);
 		}
 
-		// delete queries
-		this->queriesBlackListContent.clear();
-		this->queriesBlackListTypes.clear();
-		this->queriesBlackListUrls.clear();
-		this->queriesLinks.clear();
-		this->queriesWhiteListContent.clear();
-		this->queriesWhiteListTypes.clear();
-		this->queriesWhiteListUrls.clear();
-
+		// clean up queries
+		this->deleteQueries();
 		this->clearQueries();
 	}
 
@@ -1192,6 +1185,10 @@ namespace crawlservpp::Module::Crawler {
 		).swap(this->customTokens);
 	}
 
+	/*
+	 * QUERY FUNCTIONS (private)
+	 */
+
 	// initialize queries, throws Thread::Exception
 	void Thread::initQueries() {
 		try {
@@ -1286,9 +1283,27 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	/*
-	 * QUERY FUNCTIONS (private)
-	 */
+	// delete queries
+	inline void Thread::deleteQueries() {
+		queriesBlackListContent.clear();
+		queriesBlackListTypes.clear();
+		queriesBlackListUrls.clear();
+		queriesLinks.clear();
+		queriesLinksBlackListContent.clear();
+		queriesLinksBlackListTypes.clear();
+		queriesLinksBlackListUrls.clear();
+		queriesLinksWhiteListContent.clear();
+		queriesLinksWhiteListTypes.clear();
+		queriesLinksWhiteListUrls.clear();
+		queriesWhiteListContent.clear();
+		queriesWhiteListTypes.clear();
+		queriesWhiteListUrls.clear();
+		queriesTokens.clear();
+		queryRedirectContent = {};
+		queryRedirectUrl = {};
+		queriesRedirectVars.clear();
+		queryExpected = {};
+	}
 
 	// add optional query
 	inline void Thread::addOptionalQuery(std::uint64_t queryId, QueryStruct& propertiesTo) {
