@@ -310,7 +310,7 @@ namespace crawlservpp::Module::Extractor {
 
 				switch(extracted) {
 				case 0:
-					logStrStr << "skipped ";
+					logStrStr << "no dataset from ";
 
 					break;
 
@@ -1455,6 +1455,14 @@ namespace crawlservpp::Module::Extractor {
 
 			if(skip) {
 				// cancel current URL
+				this->log(
+						generalLoggingExtended,
+						"skipped "
+						+ this->urls.front().second
+						+ " due to query on "
+						+ sourceUrl
+				);
+
 				break;
 			}
 
@@ -1513,7 +1521,7 @@ namespace crawlservpp::Module::Extractor {
 					}
 
 					if(pageTotal == 0) {
-						return 0;	// no pages, no data
+						return 0; // no pages, no data
 					}
 				}
 
