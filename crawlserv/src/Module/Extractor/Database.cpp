@@ -790,20 +790,75 @@ namespace crawlservpp::Module::Extractor {
 			this->log(verbose, "prepares getLatestParsedData()...");
 
 			while(!(this->sources.empty())) {
+				std::string queryString{
+								"SELECT "
+									"`"
+
+				};
+
+				queryString += 		parsedDataTableAlias;
+				queryString += 		"`.`";
+				queryString += 		this->sources.front().second;
+				queryString += 		"`"
+								" AS result"
+								" FROM "
+									"`";
+				queryString += 		this->urlListTable;
+				queryString +=		"_parsed_";
+				queryString += 		this->sources.front().first;
+				queryString += 		"`"
+								" AS "
+									"`";
+				queryString += 		parsedDataTableAlias;
+				queryString +=		"`"
+								" JOIN "
+									"`";
+				queryString += 		this->urlListTable;
+				queryString += 		"_crawled"
+									"`"
+								" AS "
+									"`";
+				queryString += 		crawledDataTableAlias;
+				queryString +=		"`"
+								" ON "
+									"`";
+				queryString +=		parsedDataTableAlias;
+				queryString +=		"`.content"
+									" = "
+									"`";
+				queryString +=		crawledDataTableAlias;
+				queryString +=		"`.id"
+								" JOIN "
+									"`";
+				queryString +=		this->urlListTable;
+				queryString +=		"`"
+								" AS "
+									"`";
+				queryString +=		urlListTableAlias;
+				queryString +=		"`"
+								" ON "
+									"`";
+				queryString +=		crawledDataTableAlias;
+				queryString +=		"`.url"
+									" = "
+									"`";
+				queryString +=		urlListTableAlias;
+				queryString +=		"`.id"
+								" WHERE "
+									"`";
+				queryString +=		urlListTableAlias;
+				queryString +=		"`.id"
+									" = "
+									"?"
+								" ORDER BY "
+									"`";
+				queryString +=		parsedDataTableAlias;
+				queryString +=		"`.id DESC"
+								" LIMIT 1";
+
 				this->psGetLatestParsedData.push_back(
 						this->addPreparedStatement(
-								"SELECT `" + this->sources.front().second + "`"
-								" AS result"
-								" FROM `" + this->urlListTable + "_parsed_" + this->sources.front().first + "`"
-								" WHERE content = ("
-								"	SELECT id"
-								"    FROM `" + this->urlListTable + "_crawled`"
-								"    WHERE url = ?"
-								"    ORDER BY id DESC"
-								"    LIMIT 1"
-								" )"
-								" ORDER BY id DESC"
-								" LIMIT 1"
+								queryString
 						)
 				);
 

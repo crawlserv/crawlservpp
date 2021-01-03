@@ -117,6 +117,15 @@ namespace crawlservpp::Module::Extractor {
 	//! Alias, used in SQL queries, for the linked target table.
 	inline constexpr auto linkedTableAlias{"c"sv};
 
+	//! Alias, used in SQL queries, for the parsed data table.
+	inline constexpr auto parsedDataTableAlias{"a"sv};
+
+	//! Alias, used in SQL queries, for the crawled data table.
+	inline constexpr auto crawledDataTableAlias{"b"sv};
+
+	//! Alias, used in SQL queries, for the URL list table.
+	inline constexpr auto urlListTableAlias{"c"sv};
+
 	//! Number of arguments to lock one URL.
 	inline constexpr auto numArgsLockUrl{3};
 

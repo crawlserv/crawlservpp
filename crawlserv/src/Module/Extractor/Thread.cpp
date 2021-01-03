@@ -1809,6 +1809,8 @@ namespace crawlservpp::Module::Extractor {
 			// add variable
 			variables.emplace_back(*it, value);
 
+			std::cout << "\n" << value << std::flush;
+
 			// get value for alias
 			const auto& alias{this->config.variablesAlias.at(index)};
 
