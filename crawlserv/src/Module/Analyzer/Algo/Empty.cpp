@@ -342,4 +342,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 	*/
 
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
+	/*
+	 * TODO: [OPTIONAL] add internal helper functions
+	 */
+
 } /* namespace crawlservpp::Module::Analyzer::Algo */
