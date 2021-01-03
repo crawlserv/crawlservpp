@@ -479,6 +479,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			// process sentence
 			this->processSentence(tokens, sentence, dateIt, article);
 
+			// update status if necessary
 			++statusCounter;
 			++resultCounter;
 
