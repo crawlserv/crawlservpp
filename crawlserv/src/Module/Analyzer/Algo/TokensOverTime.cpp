@@ -95,8 +95,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * \note When this function is called, both the
 	 *   prepared SQL statements, and the queries have
 	 *   already been initialized.
-	 *
-	 * \sa initQueries
 	 */
 	void TokensOverTime::onAlgoInit() {
 		StatusSetter statusSetter(

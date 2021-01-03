@@ -54,6 +54,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 
 	//! Algorithm counting tokens in a text corpus over time.
+	/*
+	 * \todo Not implemented yet.
+	 */
 	class TokensOverTime final : public Module::Analyzer::Thread {
 		// for convenience
 		using DataType = Data::Type;
