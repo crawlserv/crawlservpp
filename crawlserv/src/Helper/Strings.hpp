@@ -115,6 +115,7 @@ namespace crawlservpp::Helper::Strings {
 	///@name Number Format Checking
 	///@{
 
+	bool isDec(std::string_view inputString);
 	bool isHex(std::string_view inputString);
 
 	///@}
@@ -289,6 +290,47 @@ namespace crawlservpp::Helper::Strings {
 		strStr >> std::boolalpha >> result;
 
 		return result;
+	}
+
+	//! Checks whether a string contains only decimal digits and max. one dot (@c .).
+	/*!
+	 * \param inputString A view into the string to check for decimal digits.
+	 *
+	 * \returns True, if the string only contains hexadecimal digits (@c 0-@c 9),
+	 *   max. one dot (@c .) and no whitespaces. False otherwise.
+	 */
+	inline bool isDec(std::string_view inputString) {
+		bool hasDot{false};
+
+		for(const auto c : inputString) {
+			switch(c) {
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+				continue;
+
+			case '.':
+				if(hasDot) {
+					return false;
+				}
+
+				hasDot = true;
+
+				continue;
+
+			default:
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	//! Checks whether a string contains only hexadecimal digits.
