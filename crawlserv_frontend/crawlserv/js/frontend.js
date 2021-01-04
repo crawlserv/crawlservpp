@@ -2011,8 +2011,8 @@ jQuery(function($) {
 				"start" + module,
 				{
 					"website" : website,
-					"config": config,
-					"urllist": urllist
+					"config" : config,
+					"urllist" : urllist
 				},
 				false
 		);
@@ -2524,6 +2524,8 @@ jQuery(function($) {
 		
 	// CHANGE EVENT: action selected
 	$("input[name='action']").on("change", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = getFirstUrlList();
 		var dataType = $("#data-type-select").val();
 		var fileType = $("#file-type-select").val();
 		
@@ -2531,9 +2533,11 @@ jQuery(function($) {
 		
 		reload({
 			"m" : $(this).data("m"),
+			"website" : website,
+			"urllist" : urllist,
 			"action" : $(this).val(),
-			"data-type": dataType,
-			"file-type": fileType
+			"datatype": dataType,
+			"filetype": fileType
 		});
 		
 		return false;
@@ -2541,33 +2545,41 @@ jQuery(function($) {
 	
 	// CHANGE EVENT: data type selected
 	$("#data-type-select").on("change", function() {
-		var action = $("input[name='action']").val();
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = getFirstUrlList();
+		var action = $("input[name='action']:checked").val();
 		var fileType = $("#file-type-select").val();
 		
 		disableInputs();
 		
 		reload({
 			"m" : $(this).data("m"),
+			"website" : website,
+			"urllist" : urllist,
 			"action" : action,
-			"data-type": $(this).val(),
-			"file-type": fileType
+			"datatype": $(this).val(),
+			"filetype": fileType
 		});
 		
 		return false;
 	});
 	
 	// CHANGE EVENT: file type selected
-	$("#data-type-select").on("change", function() {
-		var action = $("input[name='action']").val();
+	$("#file-type-select").on("change", function() {
+		var website = parseInt($("#website-select").val(), 10);
+		var urllist = getFirstUrlList();
+		var action = $("input[name='action']:checked").val();
 		var dataType = $("#data-type-select").val();
 		
 		disableInputs();
 		
 		reload({
 			"m" : $(this).data("m"),
+			"website" : website,
+			"urllist" : urllist,
 			"action" : action,
-			"data-type": dataType,
-			"file-type": $(this).val()
+			"datatype": dataType,
+			"filetype": $(this).val()
 		});
 		
 		return false;
@@ -2643,6 +2655,9 @@ jQuery(function($) {
 						if(args["filetype"] == "text") {
 							props["ending"] += ".txt";
 						}
+						else if(args["filetype"] == "spreadsheet") {
+							props["ending"] += ".ods";
+						}
 						
 						if(args["compression"] == "gzip") {
 							props["ending"] += ".gz";
@@ -2650,13 +2665,21 @@ jQuery(function($) {
 						else if(args["compression"] == "zlib") {
 							props["ending"] += ".zlib";
 						}
+						else if(args["compression"] == "zip") {
+							props["ending"] += ".zip";
+						}
 					}
 				}
 				
-				// (website, source URL list, target URL list)
+				// (website, source URL list, target URL list, source table)
 				if($("#website-select").length) {
 					args["website"] = parseInt($("#website-select").val(), 10);
 					props["website-namespace"] = $("#website-select").find(":selected").data("namespace");
+				}
+				
+				if($("#urllist-select").length) {
+					args["urllist"] = parseInt($("#urllist-select").val(), 10);
+					props["urllist-namespace"] = $("#urllist-select").find(":selected").data("namespace");
 				}
 				
 				if($("#urllist-source").length) {
@@ -2666,6 +2689,10 @@ jQuery(function($) {
 				
 				if($("#urllist-target").length) {
 					args["urllist-target"] = parseInt($("#urllist-target").val(), 10);
+				}
+				
+				if($("#table-select").length) {
+					args["source"] = parseInt($("#table-select").val(), 10);
 				}
 				
 				// (URL list name and namespace)
@@ -2678,7 +2705,7 @@ jQuery(function($) {
 					props["urllist-namespace"] = args["urllist-namespace"];
 				}
 				
-				// (header options for text files)
+				// (header options for URL lists)
 				if($("#is-firstline-header").length) {
 					args["is-firstline-header"] = $("#is-firstline-header").prop("checked");
 				}
@@ -2689,6 +2716,11 @@ jQuery(function($) {
 				
 				if($("#firstline-header").length) {
 					args["firstline-header"] = $("#firstline-header").val();
+				}
+				
+				// (header option for data tables)
+				if($("#column-names").length) {
+					args["column-names"] = $("#column-names").prop("checked");
 				}
 				
 				if(action == "import") {
@@ -2761,9 +2793,9 @@ jQuery(function($) {
 								if(response["fail"]) {
 									alert(
 											"crawlserv++ responded with error:\n\n"
-											+ responseObj["text"]
+											+ response["text"]
 											+ "\n\ndebug: "
-											+ responseObj["debug"]
+											+ response["debug"]
 									);
 								}
 								else {
