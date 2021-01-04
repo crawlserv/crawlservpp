@@ -43,16 +43,18 @@ The following additional components are required to build crawlserv++ on your sy
 * [`gcc`](https://gcc.gnu.org/), version 7 or higher, or [`clang`](https://clang.llvm.org/), version 5 or higher – or any other modern C++ 17 compiler
 * a multi-threading library supported by `cmake` like `pthreads` (e.g. `libpthread-stubs0-dev` on Ubuntu)
 * a modern C++ Standard Library supporting C++ 17 (e.g. `libstdc++-7-dev`)
+
 * the [`Boost.Iostreams`](https://www.boost.org/doc/libs/1_70_0/libs/iostreams/doc/index.html) library (`libboost-iostreams-dev`)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
-* the [`curl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
-* the [`tidy-html5`](http://www.html-tidy.org/) library, version 5 or higher (`libtidy-dev`*)
-* the [`uriparser`](https://uriparser.github.io/) library, version 0.9.0 or higher (`liburiparser-dev`)
-* the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
-* the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
-* the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
-* the [`zlib`](https://www.zlib.net/) library (preinstalled on many Linux systems)
 * the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
+* the [`libcurl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
+* the [`libzip`](https://libzip.org/) library (`libzip-dev`)
+* the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
+* the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
+* the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
+* the [`tidy-html5`](http://www.html-tidy.org/) library, version 5 or higher (`libtidy-dev`*)
+* the [`uriparser`](https://uriparser.github.io/) library, version 0.9.0 or higher (`liburiparser-dev`*)
+* the [`zlib`](https://www.zlib.net/) library (preinstalled on many Linux systems)
 
 *&ast; Older Linux distributions may only have `libtidy-dev` v0.9 and `liburiparser-dev` v0.8.4 available. Install the current [versions](https://github.com/htacg/tidy-html5/releases) [manually](https://github.com/uriparser/uriparser), or add a newer repository, e.g. on Ubuntu via:*
 
