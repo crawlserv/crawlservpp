@@ -17,7 +17,7 @@ else()
 	message(WARNING "Multi-threading library not found.")
 endif()
 
-# find Boost.System and Boost.Iostreams
+# find Boost.Iostreams and Boost.System
 find_package(Boost REQUIRED COMPONENTS system iostreams QUIET)
 
 if(${Boost_FOUND} AND Boost_LIBRARIES)
@@ -47,11 +47,29 @@ else()
 	message("Using Boost libraries: ${Boost_LIBRARIES}") 
 endif()
 
-# find cURL
+# find GNU Aspell
+find_package(ASPELL QUIET)
+
+if(${ASPELL_FOUND} AND ASPELL_LIBRARIES)
+	message("GNU Aspell library found: \"${ASPELL_LIBRARIES}\"")
+else()
+	# find manually
+	unset(ASPELL_LIBRARIES)
+
+	find_library(ASPELL_LIBRARIES aspell PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+
+	if(ASPELL_LIBRARIES)
+		message("GNU Aspell library manually found: \"${ASPELL_LIBRARIES}\"")
+	else()
+		message(WARNING "GNU Aspell library not found.")
+	endif()
+endif()
+
+# find libcurl
 find_package(curl QUIET)
 
 if(${curl_FOUND} AND curl_LIBRARIES)
-	message("cURL ${curl_VERSION} library found: \"${curl_LIBRARIES}\"")
+	message("libcurl ${curl_VERSION} library found: \"${curl_LIBRARIES}\"")
 else()
 	# find manually
 	unset(curl_LIBRARIES)
@@ -59,9 +77,90 @@ else()
 	find_library(curl_LIBRARIES curl PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
 
 	if(curl_LIBRARIES)
-		message("cURL library manually found: \"${curl_LIBRARIES}\"")
+		message("libcurl manually found: \"${curl_LIBRARIES}\"")
 	else()
-		message(WARNING "cURL library not found.")
+		message(WARNING "libcurl not found.")
+	endif()
+endif()
+
+# find libzip
+find_package(libzip QUIET)
+
+if(${libzip_FOUND} AND libzip_LIBRARIES)
+	message("libzip found: \"${libzip_LIBRARIES}\"")
+else()
+# find manually
+	unset(libzip_LIBRARIES)
+
+	find_library(libzip_LIBRARIES NAMES libzip libzip5 zip PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+
+	if(libzip_LIBRARIES)
+		message("libzip manually found: \"${libzip_LIBRARIES}\"")
+	else()
+		message(WARNING "libzip not found.")
+	endif()
+endif()
+
+# find MySQL C++ Connector
+find_package(mysqlcppconn QUIET)
+
+if(${mysqlcppconn_FOUND} AND mysqlcppconn_INCLUDE AND mysqlcppconn_LIBRARIES)
+	message("MySQL Connector/C++ include directory found: \"${mysqlcppconn_INCLUDE}/\"")
+	message("MySQL Connector/C++ library found: \"${mysqlcppconn_LIBRARIES}\"")
+else()
+	# find manually
+	unset(mysqlcppconn_INCLUDE)
+	unset(mysqlcppconn_LIBRARIES)
+
+	find_path(mysqlcppconn_INCLUDE mysql_driver.h PATH_SUFFIXES mysql-cppconn-8/jdbc mysql-cppconn-8 mysqlcppconn/jdbc mysqlcppconn mysql-cppconn/jdbc mysql-cppconn cppcon/jdbc cppconn include REQUIRED)
+	find_library(mysqlcppconn_LIBRARIES mysqlcppconn PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+
+	if(mysqlcppconn_INCLUDE)
+		message("MySQL Connector/C++ include directory manually found: \"${mysqlcppconn_INCLUDE}/\"")
+	else()
+		message(WARNING "MySQL Connector/C++ include directory not found.")
+	endif()
+
+	if(mysqlcppconn_LIBRARIES)
+		message("MySQL Connector/C++ library manually found: \"${mysqlcppconn_LIBRARIES}\"")
+	else()
+		message(WARNING "MySQL Connector/C++ library not found.")
+	endif()
+endif()
+
+# find PCRE
+find_package(PCRE2 QUIET)
+
+if(${PCRE2_FOUND} AND PCRE2_LIBRARIES)
+	message("PCRE2 library found: \"${PCRE2_LIBRARIES}\"")
+else()
+	# find manually
+	unset(PCRE2_LIBRARIES)
+
+	find_library(PCRE2_LIBRARIES NAMES pcre2 pcre2-8 PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+
+	if(PCRE2_LIBRARIES)
+		message("PCRE2 library manually found: \"${PCRE2_LIBRARIES}\"")
+	else()
+		message(WARNING "PCRE2 library not found.")
+	endif()
+endif()
+
+# find pugixml
+find_package(pugixml QUIET)
+
+if(${pugixml_FOUND} AND pugixml_LIBRARIES)
+	message("pugixml library found: \"${pugixml_LIBRARIES}\"")
+else()
+	# find manually
+	unset(pugixml_LIBRARIES)
+
+	find_library(pugixml_LIBRARIES pugixml PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
+
+	if(pugixml_LIBRARIES)
+		message("pugixml library manually found: \"${pugixml_LIBRARIES}\"")
+	else()
+		message(WARNING "pugixml library not found.")
 	endif()
 endif()
 
@@ -110,69 +209,6 @@ else()
 	endif()
 endif()
 
-# find pugixml
-find_package(pugixml QUIET)
-
-if(${pugixml_FOUND} AND pugixml_LIBRARIES)
-	message("pugixml library found: \"${pugixml_LIBRARIES}\"")
-else()
-	# find manually
-	unset(pugixml_LIBRARIES)
-
-	find_library(pugixml_LIBRARIES pugixml PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
-
-	if(pugixml_LIBRARIES)
-		message("pugixml library manually found: \"${pugixml_LIBRARIES}\"")
-	else()
-		message(WARNING "pugixml library not found.")
-	endif()
-endif()
-
-# find PCRE
-find_package(PCRE2 QUIET)
-
-if(${PCRE2_FOUND} AND PCRE2_LIBRARIES)
-	message("PCRE2 library found: \"${PCRE2_LIBRARIES}\"")
-else()
-	# find manually
-	unset(PCRE2_LIBRARIES)
-
-	find_library(PCRE2_LIBRARIES NAMES pcre2 pcre2-8 PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
-
-	if(PCRE2_LIBRARIES)
-		message("PCRE2 library manually found: \"${PCRE2_LIBRARIES}\"")
-	else()
-		message(WARNING "PCRE2 library not found.")
-	endif()
-endif()
-
-# find MySQL C++ Connector
-find_package(mysqlcppconn QUIET)
-
-if(${mysqlcppconn_FOUND} AND mysqlcppconn_INCLUDE AND mysqlcppconn_LIBRARIES)
-	message("MySQL Connector/C++ include directory found: \"${mysqlcppconn_INCLUDE}/\"")
-	message("MySQL Connector/C++ library found: \"${mysqlcppconn_LIBRARIES}\"")
-else()
-	# find manually
-	unset(mysqlcppconn_INCLUDE)
-	unset(mysqlcppconn_LIBRARIES)
-
-	find_path(mysqlcppconn_INCLUDE mysql_driver.h PATH_SUFFIXES mysql-cppconn-8/jdbc mysql-cppconn-8 mysqlcppconn/jdbc mysqlcppconn mysql-cppconn/jdbc mysql-cppconn cppcon/jdbc cppconn include REQUIRED)
-	find_library(mysqlcppconn_LIBRARIES mysqlcppconn PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
-
-	if(mysqlcppconn_INCLUDE)
-		message("MySQL Connector/C++ include directory manually found: \"${mysqlcppconn_INCLUDE}/\"")
-	else()
-		message(WARNING "MySQL Connector/C++ include directory not found.")
-	endif()
-
-	if(mysqlcppconn_LIBRARIES)
-		message("MySQL Connector/C++ library manually found: \"${mysqlcppconn_LIBRARIES}\"")
-	else()
-		message(WARNING "MySQL Connector/C++ library not found.")
-	endif()
-endif()
-
 # find zlib
 find_package(ZLIB QUIET)
 
@@ -197,25 +233,6 @@ else()
 		message("zlib library manually found: \"${ZLIB_LIBRARIES}\"")
 	else()
 		message(WARNING "zlib library not found.")
-	endif()
-endif()
-
-# find GNU Aspell
-# 	NOTE: Might be removed in the near future.
-find_package(ASPELL QUIET)
-
-if(${ASPELL_FOUND} AND ASPELL_LIBRARIES)
-	message("GNU Aspell library found: \"${ASPELL_LIBRARIES}\"")
-else()
-	# find manually
-	unset(ASPELL_LIBRARIES)
-
-	find_library(ASPELL_LIBRARIES aspell PATH_SUFFIXES ${CMAKE_LIBRARY_ARCHITECTURE} lib64 lib REQUIRED)
-
-	if(ASPELL_LIBRARIES)
-		message("GNU Aspell library manually found: \"${ASPELL_LIBRARIES}\"")
-	else()
-		message(WARNING "GNU Aspell library not found.")
 	endif()
 endif()
 
@@ -279,23 +296,23 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${ZLIB_INCLUDE_DIRS})
 # set libraries
 target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(${PROJECT_NAME} stdc++fs)
+
+target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${curl_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${libzip_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${mysqlcppconn_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${PCRE2_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${pugixml_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${tidy_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${uriparser_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${pugixml_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${PCRE2_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${mysqlcppconn_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
-
-# NOTE: The following might be removed in the near future.
-target_link_libraries(${PROJECT_NAME} ${ASPELL_LIBRARIES})
 
 # set required library options
 target_compile_definitions(${PROJECT_NAME} PRIVATE MG_ENABLE_HTTP_STREAMING_MULTIPART)
 target_compile_definitions(${PROJECT_NAME} PRIVATE PCRE2_CODE_UNIT_WIDTH=8)
-target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_NO_SIZETYPEDEFINE)
 target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_HAS_STDSTRING)
+target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_NO_SIZETYPEDEFINE)
 target_compile_definitions(${PROJECT_NAME} PRIVATE ZLIB_CONST)
 
 # set optional library option
