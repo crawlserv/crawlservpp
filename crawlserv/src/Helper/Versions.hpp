@@ -47,6 +47,7 @@
 #include <pugixml.hpp>
 #include <tidy.h>
 #include <uriparser/UriBase.h>
+#include <zip.h>
 #include <zlib.h>
 
 #include <string>		// std::string, std::to_string
@@ -165,6 +166,9 @@ namespace crawlservpp::Helper::Versions {
 
 		// libcurl
 		result.emplace_back("libcurl", curl_version_info(CURLVERSION_NOW)->version);
+
+		// libzip
+		result.emplace_back("libzip", zip_libzip_version());
 
 		// mongoose
 		result.emplace_back("Mongoose", MG_VERSION);
