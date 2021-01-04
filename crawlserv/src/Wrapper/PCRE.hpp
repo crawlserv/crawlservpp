@@ -135,7 +135,7 @@ namespace crawlservpp::Wrapper {
 	//! Gets a const pointer to the underlying regular expression.
 	/*!
 	 * \returns A const pointer to the underlying regular expression
-	 *   or @c nullptr of none is set.
+	 *   or @c nullptr if none is set.
 	 */
 	inline const pcre2_code * PCRE::getc() const noexcept {
 		return this->ptr;
