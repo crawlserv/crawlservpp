@@ -33,12 +33,29 @@
 
 #include "../Compression/Zip.hpp"
 
-#include <string>	// std::string
+#include "../../Helper/Strings.hpp"
+
+#include <clocale>	// std::setlocale
+#include <cstdint>	// std::uint8_t
+#include <string>	// std::stod, std::string, std::to_string
 #include <utility>	// std::pair
 #include <vector>	// std::vector
 
 //! Namespace for importing and exporting OpenDocument spreadsheets.
 namespace crawlservpp::Data::ImportExport::OpenDocument {
+
+	/*
+	 * CONSTANTS
+	 */
+
+	//! The number of spaces before a OpenDocument XML cell element.
+	inline constexpr auto cellSpacing{5};
+
+	//! The number of lines used for a OpenDocument XML cell element and its content.
+	inline constexpr auto cellLines{3};
+
+	//! The number of additional characters for a OpenDocument XML cell element and its content.
+	inline constexpr auto cellConstChars{57};
 
 	/*
 	 * DECLARATION
@@ -59,7 +76,16 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 	///@name Import and Export
 	///@{
 
-	std::string exportSpreadsheet(const std::vector<NamedTable>& tables);
+	std::string exportSpreadsheet(
+			const std::vector<NamedTable>& tables,
+			bool firstRowBold
+	);
+
+	///@}
+	///@name Helper
+	///@{
+
+	std::string cell(std::uint8_t spacing, const std::string& raw, const std::string& style);
 
 	///@}
 
@@ -70,11 +96,15 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 	//! Exports tables as a OpenDocument spreadsheet.
 	/*!
 	 * \param tables Constant reference to
-	 *  a vector containing the tables,
-	 *  each consisting of a pair of its
-	 *  name and a vector of rows, each
-	 *  consisting of a vector of strings
-	 *  representing the values in the row.
+	 *   a vector containing the tables,
+	 *   each consisting of a pair of its
+	 *   name and a vector of rows, each
+	 *   consisting of a vector of strings
+	 *   representing the values in the row.
+	 * \param firstRowBold Specifies whether
+	 *   the first row in the tables should
+	 *   be formatted bold (to indicate
+	 *   column headings).
 	 *
 	 * \returns Copy of a string containing
 	 *   the content of the new OpenDocument
@@ -84,10 +114,8 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 	 *   and needs therefore be handled as
 	 *   binary data.
 	 */
-	std::string exportSpreadsheet(const std::vector<NamedTable>& tables) {
+	inline std::string exportSpreadsheet(const std::vector<NamedTable>& tables, bool firstRowBold) {
 		std::vector<StringString> fileContents;
-
-		// count number of columns
 
 		// add MIME type
 		fileContents.emplace_back("mimetype", "application/vnd.oasis.opendocument.spreadsheet");
@@ -110,8 +138,15 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 			"<office:document-content"
 			" xmlns:office=\"urn:oasis:names:tc:opendocument:xmlns:office:1.0\""
 			" xmlns:table=\"urn:oasis:names:tc:opendocument:xmlns:table:1.0\""
-			" xmlns:text=\"urn:oasis:names:tc:opendocument:xmlns:text:1.0\">\n"
-			" <office:automatic-styles></office:automatic-styles>\n"
+			" xmlns:text=\"urn:oasis:names:tc:opendocument:xmlns:text:1.0\""
+			" xmlns:style=\"urn:oasis:names:tc:opendocument:xmlns:style:1.0\""
+			" xmlns:fo=\"urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0\">"
+			" <office:automatic-styles>\n"
+			"  <style:style style:name=\"headings\" style:family=\"table-cell\">\n"
+			"   <style:text-properties fo:font-weight=\"bold\" style:font-weight-asian=\"bold\""
+			" style:font-weight-complex=\"bold\" />\n"
+			"  </style:style>\n"
+			" </office:automatic-styles>\n"
 			" <office:body>\n"
 			"  <office:spreadsheet>\n"
 		};
@@ -119,14 +154,21 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 		for(const auto& table : tables) {
 			content += "   <table:table table:name=\"" + table.first + "\">\n";
 
+			bool boldRow{firstRowBold};
+
 			for(const auto& row : table.second) {
+				std::string style;
+
+				if(boldRow) {
+					style = "table:style-name=\"headings\"";
+
+					boldRow = false;
+				}
 
 				content += "    <table:table-row>\n";
 
 				for(const auto& cell : row) {
-					content +=	"     <table:table-cell>\n"
-								"      <text:p>" + cell + "</text:p>\n"
-								"     </table:table-cell>\n";
+					content += OpenDocument::cell(cellSpacing, cell, style);
 				}
 
 				content += "    </table:table-row>\n";
@@ -142,6 +184,100 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 		fileContents.emplace_back("content.xml", content);
 
 		return Data::Compression::Zip::compress(fileContents);
+	}
+
+	//! Creates the XML code for a simple cell containing a value.
+	/*!
+	 * If the given raw data is numeric, the
+	 *  cell will contain a float.
+	 *
+	 * If the given raw data is a string, the
+	 *  special characters @c &'><" will be
+	 *  escaped.
+	 *
+	 * Newlines will be added at the end of
+	 *  elements for formatting purposes, and
+	 *  Sub-elements will be nested with one
+	 *  additional space.
+	 *
+	 * \param spacing The number of spaces to
+	 *   add before the cell.
+	 * \param raw The raw data contained in
+	 *   the cell.
+	 * \param style An optional style argument
+	 *   present in the cell, in the format
+	 *   @c table:style-name=\"...\".
+	 *
+	 * \returns A new string containing the
+	 *   OpenDocument XML code for the cell.
+	 */
+	inline std::string cell(std::uint8_t spacing, const std::string& raw, const std::string& style) {
+		const std::string spaces(spacing, ' ');
+
+		if(raw.empty()) {
+			return spaces + "<table:table-cell />\n";
+		}
+
+		std::string content{raw};
+		std::string attributes{};
+		double numericValue{};
+		bool isString{true};
+
+		if(!style.empty()) {
+			attributes.reserve(style.size() + 1);
+
+			attributes.push_back(' ');
+
+			attributes += style;
+		}
+
+		if(Helper::Strings::isDec(raw)) {
+			// try to convert to numeric value
+			const auto oldLocale{
+				std::setlocale(LC_NUMERIC, "C")
+			};
+
+			try {
+				numericValue = std::stod(raw);
+
+				isString = false;
+
+				attributes += " office:value-type=\"float\" office:value=\"";
+				attributes += std::to_string(numericValue);
+				attributes += "\"";
+			}
+			catch(const std::logic_error& /*unused*/) {}
+
+			// reset C locale
+			std::setlocale(LC_NUMERIC, oldLocale);
+		}
+
+		if(isString) {
+			// replace special characters
+			Helper::Strings::replaceAll(content, "&", "&amp;");
+			Helper::Strings::replaceAll(content, "'", "&apos;");
+			Helper::Strings::replaceAll(content, ">", "&gt;");
+			Helper::Strings::replaceAll(content, "<", "&lt;");
+			Helper::Strings::replaceAll(content, "\"", "&quot;");
+		}
+
+		std::string result{};
+
+		result.reserve(cellLines * spaces.size() + attributes.size() + content.size() + cellConstChars);
+
+		result = spaces;
+
+		result += "<table:table-cell";
+		result += attributes;
+		result += ">\n";
+		result += spaces;
+		result += "<text:p>";
+		result += content;
+		result += "</text:p>\n";
+		result += spaces;
+		result += "</table:table-cell>\n";
+
+		return result;
 	}
 
 } /* rawlservpp::Data::ImportExport::OpenDocument */
