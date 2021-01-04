@@ -20,15 +20,15 @@
  *
  * ---
  *
- * TokensOverTime.cpp
+ * TermsOverTime.cpp
  *
- * Count occurrences of specific tokens in a text corpus over time.
+ * Count occurrences of specific terms in a text corpus over time.
  *
  *  Created on: Aug 2, 2020
  *      Author: ans
  */
 
-#include "TokensOverTime.hpp"
+#include "TermsOverTime.hpp"
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
@@ -40,7 +40,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	/*!
 	 * \copydetails Module::Thread::Thread(Main::Database&, const ThreadOptions&, const ThreadStatus&)
 	 */
-	TokensOverTime::TokensOverTime(
+	TermsOverTime::TermsOverTime(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions,
 			const ThreadStatus& threadStatus
@@ -56,7 +56,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	/*!
 	 * \copydetails Module::Thread::Thread(Main::Database&, const ThreadOptions&)
 	 */
-	TokensOverTime::TokensOverTime(
+	TermsOverTime::TermsOverTime(
 			Main::Database& dbBase,
 			const ThreadOptions& threadOptions
 	) : Module::Analyzer::Thread(dbBase, threadOptions) {
@@ -72,8 +72,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * \returns A string view containing the
 		 *   name of the implemented algorithm.
 	 */
-	std::string_view TokensOverTime::getName() const {
-		return "TokensOverTime";
+	std::string_view TermsOverTime::getName() const {
+		return "TermsOverTime";
 	}
 
 	/*
@@ -86,7 +86,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   prepared SQL statements, nor the queries have
 	 *   been initialized yet.
 	 */
-	void TokensOverTime::onAlgoInitTarget() {
+	void TermsOverTime::onAlgoInitTarget() {
 		//TODO: initialize target table
 	}
 
@@ -96,7 +96,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   prepared SQL statements, and the queries have
 	 *   already been initialized.
 	 */
-	void TokensOverTime::onAlgoInit() {
+	void TermsOverTime::onAlgoInit() {
 		StatusSetter statusSetter(
 				"Initializing algorithm...",
 				1.F,
@@ -132,7 +132,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-	//! Counts the tokens in the text corpus.
+	//! Counts the terms in the text corpus.
 	/*!
 	 * One corpus will be processed in each tick.
 	 *
@@ -143,7 +143,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *
 	 * \todo Not implemented yet.
 	 */
-	void TokensOverTime::onAlgoTick() {
+	void TermsOverTime::onAlgoTick() {
 		if(this->currentCorpus < this->corpora.size()) {
 			// set status message and reset progress
 			std::string status{"occurrences"};
@@ -180,10 +180,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			//TODO count occurrences (-> private member function)
 
 			if(corpus.hasArticleMap()) {
-				// count tokens per article and date
+				// count terms per article and date
 			}
 			else {
-				// count tokens per date only
+				// count terms per date only
 			}
 		}
 		else {
@@ -197,29 +197,29 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	//! Does nothing.
-	void TokensOverTime::onAlgoPause() {}
+	void TermsOverTime::onAlgoPause() {}
 
 	//! Does nothing.
-	void TokensOverTime::onAlgoUnpause() {}
+	void TermsOverTime::onAlgoUnpause() {}
 
 	//! Does nothing.
-	void TokensOverTime::onAlgoClear() {}
+	void TermsOverTime::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS
 	 */
 
 	//! Parses a configuration option for the algorithm.
-	void TokensOverTime::parseAlgoOption() {
+	void TermsOverTime::parseAlgoOption() {
 		// algorithm options
-		this->category("tokens");
+		this->category("terms");
 
 		//TODO: add algo options
 		//this->option("[...]", this->algoConfig.[...]);
 	}
 
 	//! Does nothing.
-	void TokensOverTime::checkAlgoOptions() {
+	void TermsOverTime::checkAlgoOptions() {
 		/*
 		 * WARNING: The existence of sources cannot be checked here, because
 		 * 	the database has not been prepared yet. Check them in onAlgoInit() instead.
@@ -227,7 +227,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	//! Resets the configuration options for the algorithm.
-	void TokensOverTime::resetAlgo() {
+	void TermsOverTime::resetAlgo() {
 		this->algoConfig = {};
 	}
 

@@ -6,9 +6,13 @@
 			"algo-id": 40,
 			"config-cats": [ "tokenizer", "filter-date", "filter-query" ]
 		},
-		"Count Tokens over Time": {
+		"Count Words over Time": {
+			"algo-id": 44,
+			"config-cats": [ "tokenizer", "filter-date", "group-date", "filter-date", "filter-query" ]
+		},
+		"Count Terms over Time": {
 			"algo-id": 41,
-			"config-cats": [ "tokenizer", "tokens", "group-date", "filter-date", "filter-query" ]
+			"config-cats": [ "tokenizer", "terms", "group-date", "filter-date", "filter-query" ]
 		},
 		"Associations over Time": {
 			"algo-id": 42,

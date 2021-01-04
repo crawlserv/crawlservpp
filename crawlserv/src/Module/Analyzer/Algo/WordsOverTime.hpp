@@ -20,20 +20,21 @@
  *
  * ---
  *
- * TokensOverTime.hpp
+ * WordsOverTime.hpp
  *
- * Count tokens in a text corpus over time.
+ * Counts the occurrence of articles, sentences, and words in a corpus over time.
  *
- *  Created on: Aug 2, 2020
+ *  Created on: Jan 03, 2021
  *      Author: ans
  */
 
-#ifndef MODULE_ANALYZER_ALGO_TOKENSOVERTIME_HPP_
-#define MODULE_ANALYZER_ALGO_TOKENSOVERTIME_HPP_
+#ifndef MODULE_ANALYZER_ALGO_WORDSOVERTIME_HPP_
+#define MODULE_ANALYZER_ALGO_WORDSOVERTIME_HPP_
 
 #include "../Thread.hpp"
 
-#include "../../../Data/Corpus.hpp"
+#include "../../../Data/Data.hpp"
+#include "../../../Helper/DateTime.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
@@ -42,45 +43,64 @@
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint64_t
 #include <limits>			// std::numeric_limits
+#include <map>				// std::map
 #include <string>			// std::string
 #include <string_view>		// std::string_view
-#include <unordered_map>	// std::unordered_map
+#include <utility>			// std::pair
+#include <unordered_set>	// std::unordered_set
 #include <vector>			// std::vector
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	/*
+	 * CONSTANTS
+	 */
+
+	///@name Constants
+	///@{
+
+	//! Indicates after how many date groups the progress of the thread will be updated.
+	inline constexpr auto wordsUpdateProgressEvery{100};
+
+	//! The number of columns to write to the target table.
+	inline constexpr auto wordsNumberOfColumns{4};
+
+	//@}
+
+	/*
 	 * DECLARATION
 	 */
 
-	//! Algorithm counting tokens in a text corpus over time.
-	/*
-	 * \todo Not implemented yet.
-	 */
-	class TokensOverTime final : public Module::Analyzer::Thread {
-		// for convenience
-		using DataType = Data::Type;
-		using DataValue = Data::Value;
+	//! Counts the occurrence of articles, sentences, and words in a corpus over time.
+	class WordsOverTime final : public Module::Analyzer::Thread {
+		// structure for results
+		struct DateResults {
+			std::unordered_set<std::string> articles;
+			std::uint64_t sentences{};
+			std::uint64_t words{};
+		};
 
+		// for convenience
 		using Exception = Module::Analyzer::Thread::Exception;
 
+		//using QueryStruct = Struct::QueryStruct;
 		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 
-		using DateOccurrences = std::unordered_map<std::string, std::uint64_t>;
-		using DateArticlesOccurrences = std::unordered_map<std::string, DateOccurrences>;
+		using ResultMap = std::map<std::string, DateResults>;
+		using StringString = std::pair<std::string, std::string>;
 
 	public:
 		///@name Construction
 		///@{
 
-		TokensOverTime(
+		WordsOverTime(
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions,
 				const ThreadStatus& threadStatus
 		);
-		TokensOverTime(
+		WordsOverTime(
 				Main::Database& dbBase,
 				const ThreadOptions& threadOptions
 		);
@@ -113,16 +133,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		///@}
 
 	private:
-		// algorithm options
-		struct Entries {
-			//TODO add algo options
-		} algoConfig;
-
-		// corpora and counts
+		// algorithm state and results
 		std::size_t currentCorpus{};
-		std::vector<DateArticlesOccurrences> dateCounts;
+		std::map<std::string, DateResults> dateResults;
+
+		// algorithm functions
+		void addCurrent();
+		void saveCounts();
+
+		// internal helper functions
+		ResultMap::iterator addDateGroup(const std::string& group);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
 
-#endif /* MODULE_ANALYZER_ALGO_TOKENSOVERTIME_HPP_ */
+#endif /* MODULE_ANALYZER_ALGO_WORDSOVERTIME_HPP_ */

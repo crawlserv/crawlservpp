@@ -245,7 +245,8 @@ add_executable(${PROJECT_NAME}
 		src/Module/Analyzer/Algo/AssocOverTime.cpp
 		src/Module/Analyzer/Algo/CorpusGenerator.cpp
 		src/Module/Analyzer/Algo/SentimentOverTime.cpp
-		src/Module/Analyzer/Algo/TokensOverTime.cpp
+		src/Module/Analyzer/Algo/TermsOverTime.cpp
+		src/Module/Analyzer/Algo/WordsOverTime.cpp
 		src/Module/Analyzer/Database.cpp
 		src/Module/Analyzer/Thread.cpp
 		src/Module/Crawler/Database.cpp

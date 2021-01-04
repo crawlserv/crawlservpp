@@ -240,6 +240,7 @@ Analyzers are implemented by their own set of subclasses &mdash; algorithm class
 * **CorpusGenerator**: Creates a text corpus and collects statistical information about it.
 * **SentimentOverTime**: Analyzes the sentiment surrounding specific terms in a text corpus over time.
 * ~~**TokensOverTime**: Counts specific tokens in a text corpus over time.~~
+* **WordsOverTime**: Counts articles, sentences, and words over time.
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Main_1_1Database.html) class. Additionally, thread connections to the database (instances of [`Module::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Database.html) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Wrapper_1_1Database.html) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the [source code documentation](https://codedocs.xyz/crawlserv/crawlservpp/) of the command-and-control server for further details.
 
