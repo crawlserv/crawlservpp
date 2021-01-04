@@ -423,7 +423,7 @@ namespace crawlservpp::Wrapper {
 	 */
 
 	// copy error
-	void ZipArchive::copyError(const zip_error_t * from, zip_error_t& to) {
+	inline void ZipArchive::copyError(const zip_error_t * from, zip_error_t& to) {
 		zip_error_fini(&to);
 		zip_error_init(&to);
 
