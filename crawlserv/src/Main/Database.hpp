@@ -37,9 +37,9 @@
 #define MAIN_DATABASE_HPP_
 
 // optional debugging options
-//#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER		// enable database request counter for debugging purposes
-//#define MAIN_DATABASE_DEBUG_DEADLOCKS				// enable documentation of deadlocks by writing hashes ('#') to stdout
-#define MAIN_DATABASE_LOG_MOVING					// log the moving of websites from one data directory to another to stdout
+//#define MAIN_DATABASE_DEBUG_REQUEST_COUNTER // enable database request counter for debugging purposes
+//#define MAIN_DATABASE_DEBUG_DEADLOCKS		// enable documentation of deadlocks by writing hashes ('#') to stdout
+#define MAIN_DATABASE_LOG_MOVING			// log the moving of websites from one data directory to another to stdout
 
 #include "Exception.hpp"
 #include "Version.hpp"
@@ -81,7 +81,7 @@
 #include <cctype>		// ::tolower
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint64_t
+#include <cstdint>		// std::uint32_t, std::uint64_t
 #include <fstream>		// std::ifstream
 #include <functional>	// std::function
 #include <iostream>		// std::cout, std::endl, std::flush
@@ -468,12 +468,21 @@ namespace crawlservpp::Main {
 		[[nodiscard]] std::string getWebsiteNamespace(std::uint64_t websiteId);
 		[[nodiscard]] IdString getWebsiteNamespaceFromUrlList(std::uint64_t listId);
 		[[nodiscard]] IdString getWebsiteNamespaceFromConfig(std::uint64_t configId);
-		[[nodiscard]] IdString getWebsiteNamespaceFromTargetTable(const std::string& type, std::uint64_t tableId);
+		[[nodiscard]] IdString getWebsiteNamespaceFromTargetTable(
+				const std::string& type,
+				std::uint64_t tableId
+		);
 		[[nodiscard]] bool isWebsiteNamespace(const std::string& nameSpace);
 		[[nodiscard]] std::string duplicateWebsiteNamespace(const std::string& websiteNamespace);
 		[[nodiscard]] std::string getWebsiteDataDirectory(std::uint64_t websiteId);
-		[[nodiscard]] std::uint64_t getChangedUrlsByWebsiteUpdate(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
-		[[nodiscard]] std::uint64_t getLostUrlsByWebsiteUpdate(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
+		[[nodiscard]] std::uint64_t getChangedUrlsByWebsiteUpdate(
+				std::uint64_t websiteId,
+				const WebsiteProperties& websiteProperties
+		);
+		[[nodiscard]] std::uint64_t getLostUrlsByWebsiteUpdate(
+				std::uint64_t websiteId,
+				const WebsiteProperties& websiteProperties
+		);
 		void updateWebsite(std::uint64_t websiteId, const WebsiteProperties& websiteProperties);
 		void deleteWebsite(std::uint64_t websiteId);
 		std::uint64_t duplicateWebsite(std::uint64_t websiteId, const Queries& queries);
@@ -489,7 +498,10 @@ namespace crawlservpp::Main {
 		[[nodiscard]] std::queue<std::string> getUrls(std::uint64_t listId);
 		[[nodiscard]] std::queue<IdString> getUrlsWithIds(std::uint64_t listId);
 		[[nodiscard]] std::string getUrlListNamespace(std::uint64_t listId);
-		[[nodiscard]] IdString getUrlListNamespaceFromTargetTable(const std::string& type, std::uint64_t tableId);
+		[[nodiscard]] IdString getUrlListNamespaceFromTargetTable(
+				const std::string& type,
+				std::uint64_t tableId
+		);
 		[[nodiscard]] bool isUrlListNamespace(std::uint64_t websiteId, const std::string& nameSpace);
 		void updateUrlList(std::uint64_t listId, const UrlListProperties& listProperties);
 		void deleteUrlList(std::uint64_t listId);
@@ -527,13 +539,16 @@ namespace crawlservpp::Main {
 		///@{
 
 		std::uint64_t addOrUpdateTargetTable(const TargetTableProperties& properties);
-		[[nodiscard]] std::queue<IdString> getTargetTables(const std::string& type, std::uint64_t listId);
+		[[nodiscard]] std::queue<IdString> getTargetTables(
+				const std::string& type,
+				std::uint64_t listId
+		);
 		[[nodiscard]] std::uint64_t getTargetTableId(
 				const std::string& type,
 				std::uint64_t listId,
 				const std::string& tableName
 		);
-		[[nodiscard]] std::string getTargetTableName(const std::string& type, std::uint64_t tableId);
+		[[nodiscard]] std::string getTargetTableName(std::string_view type, std::uint64_t tableId);
 		void deleteTargetTable(const std::string& type, std::uint64_t tableId);
 
 		///@}
@@ -548,6 +563,12 @@ namespace crawlservpp::Main {
 		[[nodiscard]] bool isQuery(std::uint64_t websiteId, std::uint64_t queryId);
 		[[nodiscard]] bool isConfiguration(std::uint64_t configId);
 		[[nodiscard]] bool isConfiguration(std::uint64_t websiteId, std::uint64_t configId);
+		[[nodiscard]] bool isTargetTable(
+				std::string_view type,
+				std::uint64_t websiteId,
+				std::uint64_t urlListId,
+				std::uint64_t tableID
+		);
 		[[nodiscard]] bool checkDataDir(const std::string& dir);
 
 		///@}
@@ -563,8 +584,19 @@ namespace crawlservpp::Main {
 
 		[[nodiscard]] bool isTableEmpty(const std::string& tableName);
 		[[nodiscard]] bool isTableExists(const std::string& tableName);
-		[[nodiscard]] bool isColumnExists(const std::string& tableName, const std::string& columnName);
-		[[nodiscard]] std::string getColumnType(const std::string& tableName, const std::string& columnName);
+		[[nodiscard]] bool isColumnExists(
+				const std::string& tableName,
+				const std::string& columnName
+		);
+		[[nodiscard]] std::string getColumnType(
+				const std::string& tableName,
+				const std::string& columnName
+		);
+		void readTableAsStrings(
+				const std::string& tableName,
+				std::vector<std::vector<std::string>>& contentsTo,
+				bool includeColumnNames
+		);
 		void clearTable(std::string_view tableName);
 		void lockTables(std::queue<TableNameWriteAccess>& tableLocks);
 		void unlockTables();
@@ -765,7 +797,10 @@ namespace crawlservpp::Main {
 
 		[[nodiscard]] std::uint64_t getLastInsertedId();
 		void resetAutoIncrement(const std::string& tableName);
-		static void addDatabaseLock(const std::string& name, const IsRunningCallback& isRunningCallback);
+		static void addDatabaseLock(
+				const std::string& name,
+				const IsRunningCallback& isRunningCallback
+		);
 		static bool tryDatabaseLock(const std::string& name);
 		static void removeDatabaseLock(const std::string& name);
 		void checkDirectory(const std::string& dir);
@@ -778,7 +813,10 @@ namespace crawlservpp::Main {
 		void dropTable(const std::string& name);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
-		std::queue<std::string> cloneTable(const std::string& tableName, const std::string& destDir);
+		std::queue<std::string> cloneTable(
+				const std::string& tableName,
+				const std::string& destDir
+		);
 
 		///@}
 		///@name URL List Helper Functions

@@ -6457,10 +6457,9 @@ namespace crawlservpp::Main {
 
 	//! Gets the name of a target table from the database.
 	/*!
-	 * \param type Constant reference to a
-	 *   string containing the type of the
-	 *   target table for which to retrieve
-	 *   its name.
+	 * \param type String view containing
+	 *   the type of the target table for
+	 *   which to retrieve its name.
 	 * \param tableId The ID of the target
 	 *   table for which to retrieve its
 	 *   name.
@@ -6478,7 +6477,7 @@ namespace crawlservpp::Main {
 	 *   name of the target table from the
 	 *   database.
 	 */
-	std::string Database::getTargetTableName(const std::string& type, std::uint64_t tableId) {
+	std::string Database::getTargetTableName(std::string_view type, std::uint64_t tableId) {
 		std::string result;
 
 		// check arguments
@@ -6501,15 +6500,18 @@ namespace crawlservpp::Main {
 
 		try {
 			// prepare SQL statement
+			std::string sqlQuery{
+				"SELECT name"
+				" FROM `crawlserv_"
+			};
+
+			sqlQuery += type;
+			sqlQuery += "tables`"
+				" WHERE id = ?"
+				" LIMIT 1";
+
 			SqlPreparedStatementPtr sqlStatement{
-				this->connection->prepareStatement(
-						"SELECT name"
-						" FROM `crawlserv_"
-						+ type
-						+ "tables`"
-						" WHERE id = ?"
-						" LIMIT 1"
-				)
+				this->connection->prepareStatement(sqlQuery)
 			};
 
 			// execute SQL statement
@@ -7140,6 +7142,13 @@ namespace crawlservpp::Main {
 		bool result{false};
 
 		// check arguments
+		if(websiteId == 0) {
+			throw Database::Exception(
+					"Main::Database::isConfiguration():"
+					" No website ID specified"
+			);
+		}
+
 		if(configId == 0) {
 			throw Database::Exception(
 					"Main::Database::isConfiguration():"
@@ -7178,6 +7187,125 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Main::Database::isConfiguration", e);
+		}
+
+		return result;
+	}
+
+	//! Checks whether a target table ID is valid for a specific website and URL list.
+	/*!
+	 * \param type String view containing the
+	 *    type of the target table to be
+	 *    checked.
+	 * \param websiteId The ID of the website
+	 *   to which the target table should
+	 *   belong.
+	 * \param urlListId The ID of the URL list
+	 *   to which the target table should
+	 *   belong.
+	 * \param tableID The ID to be checked for
+	 *   in the database.
+	 *
+	 * \returns True, if a target table of the
+	 *   given type with the given ID exists
+	 *   in the database and belongs to the
+	 *   specified website and URL list.
+	 *   False otherwise.
+	 *
+	 * \throws Main::Database::Exception if no
+	 *   table type, website, URL list, or target
+	 *   table has been specified, i.e. the
+	 *   website ID, URL list ID, or the target
+	 *   table ID is zero, or the target table
+	 *   type is empty or contains invalid
+	 *   characters.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while checking the
+	 *   validity of the given target table ID
+	 *   in the database.
+	 */
+	bool Database::isTargetTable(
+			std::string_view type,
+			std::uint64_t websiteId,
+			std::uint64_t urlListId,
+			std::uint64_t tableId
+	) {
+		bool result{false};
+
+		// check arguments
+		if(websiteId == 0) {
+			throw Database::Exception(
+					"Main::Database::isTargetTable():"
+					" No website ID specified"
+			);
+		}
+
+		if(urlListId == 0) {
+			throw Database::Exception(
+					"Main::Database::isTargetTable():"
+					" No URL list ID specified"
+			);
+		}
+
+		if(tableId == 0) {
+			throw Database::Exception(
+					"Main::Database::isTargetTable():"
+					" No target table ID specified"
+			);
+		}
+
+		if(type.empty()) {
+			throw Database::Exception(
+					"Main::Database::isTargetTable():"
+					" No target table type specified"
+			);
+		}
+
+		if(!Helper::Strings::checkSQLName(type)) {
+			throw Database::Exception(
+					"Main::Database::isTargetTable():"
+					" Invalid target table type specified"
+			);
+		}
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			std::string queryString{
+				"SELECT EXISTS"
+				" ("
+					" SELECT *"
+					" FROM `crawlserv_"
+			};
+
+			queryString += type;
+			queryString += "tables`"
+					" WHERE website = ?"
+					" AND urllist = ?"
+					" AND id = ?"
+				" )"
+				" AS result";
+
+			// prepare SQL statement
+			SqlPreparedStatementPtr sqlStatement{
+				this->connection->prepareStatement(queryString)
+			};
+
+			// execute SQL statement
+			sqlStatement->setUInt64(sqlArg1, websiteId);
+			sqlStatement->setUInt64(sqlArg2, urlListId);
+			sqlStatement->setUInt64(sqlArg3, tableId);
+
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next()) {
+				result = sqlResultSet->getBoolean("result");
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Main::Database::isTargetTable", e);
 		}
 
 		return result;
@@ -7519,11 +7647,98 @@ namespace crawlservpp::Main {
 		return std::string(result, 0, result.find(' '));
 	}
 
+	//! Reads all contents of a table as strings.
+	/*!
+	 * \param tableName Constant reference to
+	 *   a string containing the name of the
+	 *   table in the database from which the
+	 *   type of the column will be retrieved.
+	 * \param contentsTo A reference to a
+	 *   vector of rows represented by vectors
+	 *   of strings to which to append the
+	 *   values of all retrieved cells.
+	 * \param includeColumnNames Specifies
+	 *   whether the column names will be
+	 *   included in the resulting table.
+	 *
+	 * \throws Main::Database::Exception if the
+	 *   table name is invalid, or a MySQL error
+	 *   occured while reading the table, e.g.
+	 *   if the specified table does not exist.
+	 */
+	void Database::readTableAsStrings(
+			const std::string& tableName,
+			std::vector<std::vector<std::string>>& contentsTo,
+			bool includeColumnNames
+	) {
+		if(!Helper::Strings::checkSQLName(tableName)) {
+			std::string exceptionString{
+				"Main::Database::readTableAsStrings():"
+				" Invalid SQL table name `"
+			};
+
+			exceptionString += tableName;
+			exceptionString += '`';
+
+			throw Exception(exceptionString);
+		}
+
+		// check connection
+		this->checkConnection();
+
+		// execute SQL query and get results
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement{this->connection->createStatement()};
+
+			// execute SQL statement
+			SqlResultSetPtr sqlResultSet{
+				Database::sqlExecuteQuery(
+						sqlStatement,
+						"SELECT * FROM `" + tableName + "`"
+				)
+			};
+
+			// get results
+			if(sqlResultSet) {
+				const auto numberOfColumns{
+					sqlResultSet->getMetaData()->getColumnCount()
+				};
+
+				if(includeColumnNames) {
+					std::vector<std::string> row;
+
+					for(std::uint32_t column{1}; column <= numberOfColumns; ++column) {
+						row.emplace_back(
+								sqlResultSet->getMetaData()->getColumnName(column)
+						);
+					}
+
+					contentsTo.emplace_back(row);
+				}
+
+				while(sqlResultSet->next()) {
+					std::vector<std::string> row;
+
+					for(std::uint32_t column{1}; column <= numberOfColumns; ++column) {
+						row.emplace_back(
+								sqlResultSet->getString(column)
+						);
+					}
+
+					contentsTo.emplace_back(row);
+				}
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Main::Database::readTableAsStrings", e);
+		}
+	}
+
 	//! Clears a table, removing all rows.
 	/*!
-	 * \param tableName View to a string
-	 *   containing the name of the table to be
-	 *   cleared.
+	 * \param tableName String view containing
+	 *   the name of the table to be cleared.
 	 *
 	 * \throws Main::Database::Exception if the
 	 *   table name is invalid, or a MySQL error
@@ -7533,7 +7748,10 @@ namespace crawlservpp::Main {
 	void Database::clearTable(std::string_view tableName) {
 		// check argument
 		if(!Helper::Strings::checkSQLName(tableName)) {
-			std::string exceptionString{"Invalid SQL table name: `"};
+			std::string exceptionString{
+				"Main::Database::clearTable():"
+				" Invalid SQL table name `"
+			};
 
 			exceptionString += tableName;
 			exceptionString += '`';
