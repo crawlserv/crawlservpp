@@ -85,7 +85,9 @@
 
 #include "../Data/Compression/Gzip.hpp"
 #include "../Data/Compression/Zlib.hpp"
+#include "../Data/Compression/Zip.hpp"
 #include "../Data/File.hpp"
+#include "../Data/ImportExport/OpenDocument.hpp"
 #include "../Data/ImportExport/Text.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
@@ -129,7 +131,7 @@
 #include <locale>		// std::locale
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <mutex>		// std::lock_guard, std::mutex
-#include <optional>		// std::nullopt
+#include <optional>		// std::nullopt, std::optional
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
@@ -274,13 +276,13 @@ namespace crawlservpp::Main {
 		///@name Getters
 		///@{
 
-		const std::string& getStatus() const;
-		std::int64_t getUpTime() const;
-		std::size_t getActiveThreads() const;
-		std::size_t getActiveWorkers() const;
+		[[nodiscard]] const std::string& getStatus() const;
+		[[nodiscard]] std::int64_t getUpTime() const;
+		[[nodiscard]] std::size_t getActiveThreads() const;
+		[[nodiscard]] std::size_t getActiveWorkers() const;
 
 		///@}
-		///@name Server Ticks
+		///@name Server Tick
 		///@{
 
 		bool tick();
@@ -342,16 +344,7 @@ namespace crawlservpp::Main {
 		// web server
 		WebServer webServer;
 
-		// run server command
-		std::string cmd(
-				ConnectionPtr connection,
-				const std::string& msgBody,
-				bool& threadStartedTo,
-				bool& fileDownloadTo
-		);
-		bool cmd(const std::string& name, ServerCommandResponse& response);
-
-		// set server status
+		// setter
 		void setStatus(const std::string& statusMsg);
 
 		// event handlers
@@ -363,66 +356,74 @@ namespace crawlservpp::Main {
 				void * data
 		);
 
-		// server commands used by Server::cmd(...) only
-		ServerCommandResponse cmdKill();
-		ServerCommandResponse cmdAllow();
-		ServerCommandResponse cmdDisallow();
+		// server commands
+		[[nodiscard]] std::string cmd(
+				ConnectionPtr connection,
+				const std::string& msgBody,
+				bool& threadStartedTo,
+				bool& fileDownloadTo
+		);
+		bool cmd(const std::string& name, ServerCommandResponse& response);
 
-		ServerCommandResponse cmdLog();
-		ServerCommandResponse cmdClearLogs();
+		[[nodiscard]] ServerCommandResponse cmdKill();
+		[[nodiscard]] ServerCommandResponse cmdAllow();
+		[[nodiscard]] ServerCommandResponse cmdDisallow();
 
-		ServerCommandResponse cmdStartCrawler();
-		ServerCommandResponse cmdPauseCrawler();
-		ServerCommandResponse cmdUnpauseCrawler();
-		ServerCommandResponse cmdStopCrawler();
+		[[nodiscard]] ServerCommandResponse cmdLog();
+		[[nodiscard]] ServerCommandResponse cmdClearLogs();
 
-		ServerCommandResponse cmdStartParser();
-		ServerCommandResponse cmdPauseParser();
-		ServerCommandResponse cmdUnpauseParser();
-		ServerCommandResponse cmdStopParser();
-		ServerCommandResponse cmdResetParsingStatus();
+		[[nodiscard]] ServerCommandResponse cmdStartCrawler();
+		[[nodiscard]] ServerCommandResponse cmdPauseCrawler();
+		[[nodiscard]] ServerCommandResponse cmdUnpauseCrawler();
+		[[nodiscard]] ServerCommandResponse cmdStopCrawler();
 
-		ServerCommandResponse cmdStartExtractor();
-		ServerCommandResponse cmdPauseExtractor();
-		ServerCommandResponse cmdUnpauseExtractor();
-		ServerCommandResponse cmdStopExtractor();
-		ServerCommandResponse cmdResetExtractingStatus();
+		[[nodiscard]] ServerCommandResponse cmdStartParser();
+		[[nodiscard]] ServerCommandResponse cmdPauseParser();
+		[[nodiscard]] ServerCommandResponse cmdUnpauseParser();
+		[[nodiscard]] ServerCommandResponse cmdStopParser();
+		[[nodiscard]] ServerCommandResponse cmdResetParsingStatus();
 
-		ServerCommandResponse cmdStartAnalyzer();
-		ServerCommandResponse cmdPauseAnalyzer();
-		ServerCommandResponse cmdUnpauseAnalyzer();
-		ServerCommandResponse cmdStopAnalyzer();
-		ServerCommandResponse cmdResetAnalyzingStatus();
+		[[nodiscard]] ServerCommandResponse cmdStartExtractor();
+		[[nodiscard]] ServerCommandResponse cmdPauseExtractor();
+		[[nodiscard]] ServerCommandResponse cmdUnpauseExtractor();
+		[[nodiscard]] ServerCommandResponse cmdStopExtractor();
+		[[nodiscard]] ServerCommandResponse cmdResetExtractingStatus();
 
-		ServerCommandResponse cmdPauseAll();
-		ServerCommandResponse cmdUnpauseAll();
+		[[nodiscard]] ServerCommandResponse cmdStartAnalyzer();
+		[[nodiscard]] ServerCommandResponse cmdPauseAnalyzer();
+		[[nodiscard]] ServerCommandResponse cmdUnpauseAnalyzer();
+		[[nodiscard]] ServerCommandResponse cmdStopAnalyzer();
+		[[nodiscard]] ServerCommandResponse cmdResetAnalyzingStatus();
 
-		ServerCommandResponse cmdAddWebsite();
-		ServerCommandResponse cmdUpdateWebsite();
-		ServerCommandResponse cmdDeleteWebsite();
-		ServerCommandResponse cmdDuplicateWebsite();
+		[[nodiscard]] ServerCommandResponse cmdPauseAll();
+		[[nodiscard]] ServerCommandResponse cmdUnpauseAll();
 
-		ServerCommandResponse cmdAddUrlList();
-		ServerCommandResponse cmdUpdateUrlList();
-		ServerCommandResponse cmdDeleteUrlList();
+		[[nodiscard]] ServerCommandResponse cmdAddWebsite();
+		[[nodiscard]] ServerCommandResponse cmdUpdateWebsite();
+		[[nodiscard]] ServerCommandResponse cmdDeleteWebsite();
+		[[nodiscard]] ServerCommandResponse cmdDuplicateWebsite();
 
-		ServerCommandResponse cmdAddQuery();
-		ServerCommandResponse cmdUpdateQuery();
-		ServerCommandResponse cmdMoveQuery();
-		ServerCommandResponse cmdDeleteQuery();
-		ServerCommandResponse cmdDuplicateQuery();
+		[[nodiscard]] ServerCommandResponse cmdAddUrlList();
+		[[nodiscard]] ServerCommandResponse cmdUpdateUrlList();
+		[[nodiscard]] ServerCommandResponse cmdDeleteUrlList();
 
-		ServerCommandResponse cmdAddConfig();
-		ServerCommandResponse cmdUpdateConfig();
-		ServerCommandResponse cmdDeleteConfig();
-		ServerCommandResponse cmdDuplicateConfig();
+		[[nodiscard]] ServerCommandResponse cmdAddQuery();
+		[[nodiscard]] ServerCommandResponse cmdUpdateQuery();
+		[[nodiscard]] ServerCommandResponse cmdMoveQuery();
+		[[nodiscard]] ServerCommandResponse cmdDeleteQuery();
+		[[nodiscard]] ServerCommandResponse cmdDuplicateQuery();
 
-		static ServerCommandResponse cmdListDicts();
-		static ServerCommandResponse cmdListMdls();
+		[[nodiscard]] ServerCommandResponse cmdAddConfig();
+		[[nodiscard]] ServerCommandResponse cmdUpdateConfig();
+		[[nodiscard]] ServerCommandResponse cmdDeleteConfig();
+		[[nodiscard]] ServerCommandResponse cmdDuplicateConfig();
 
-		ServerCommandResponse cmdWarp();
+		[[nodiscard]] static ServerCommandResponse cmdListDicts();
+		[[nodiscard]] static ServerCommandResponse cmdListMdls();
 
-		ServerCommandResponse cmdDownload();
+		[[nodiscard]] ServerCommandResponse cmdWarp();
+
+		[[nodiscard]] ServerCommandResponse cmdDownload();
 
 		void cmdImport(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 		void cmdMerge(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
@@ -432,7 +433,7 @@ namespace crawlservpp::Main {
 
 		void cmdTestQuery(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 
-		// private helper functions
+		// internal helper functions
 		bool getArgument(
 				const std::string& name,
 				std::string& out,
@@ -451,48 +452,173 @@ namespace crawlservpp::Main {
 				bool optional,
 				std::string& outError
 		);
-		static bool getArgument(
-				const rapidjson::Document& json,
-				const std::string& name,
-				std::string& out,
-				bool optional,
-				bool notEmpty,
-				std::string& outError
-		);
-		static bool getArgument(
-				const rapidjson::Document& json,
-				const std::string& name,
-				std::uint64_t& out,
-				std::string& outError
-		);
-		static bool getArgument(
-				const rapidjson::Document& json,
-				const std::string& name,
-				bool& out,
-				bool optional,
-				std::string& outError
-		);
-		static void correctDomain(std::string& inOut);
-		static bool workerBegin(
-				const std::string& message,
-				rapidjson::Document& json,
-				ServerCommandResponse& response
-		);
+
 		void workerEnd(
 				std::size_t threadIndex,
 				ConnectionPtr connection,
 				const std::string& message,
 				const ServerCommandResponse& response
 		);
-		static std::uint32_t getAlgoFromConfig(const rapidjson::Document& json);
-		static std::string generateReply(
+
+		// internal static helper functions
+		[[nodiscard]] static bool workerBegin(
+				const std::string& message,
+				rapidjson::Document& json,
+				ServerCommandResponse& response
+		);
+		void initWorkerDatabase(Module::Database& db);
+
+		static bool getArgument(
+				const rapidjson::Document& json,
+				const std::string& name,
+				std::string& out,
+				bool optional,
+				bool notEmpty,
+				std::string& outError
+		);
+		static bool getArgument(
+				const rapidjson::Document& json,
+				const std::string& name,
+				std::uint64_t& out,
+				std::string& outError
+		);
+		static bool getArgument(
+				const rapidjson::Document& json,
+				const std::string& name,
+				bool& out,
+				bool optional,
+				std::string& outError
+		);
+
+		static void correctDomain(std::string& inOut);
+
+		[[nodiscard]] static std::uint32_t getAlgoFromConfig(
+				const rapidjson::Document& json
+		);
+
+		[[nodiscard]] static std::string generateReply(
 				const ServerCommandResponse& response,
 				const std::string& msgBody
 		);
-		static std::string dateTimeTest(
+
+		[[nodiscard]] static std::string dateTimeTest(
 				const std::string& input,
 				const std::string& format,
 				const std::string& locale
+		);
+
+		static bool cmdExportGetArguments(
+				const rapidjson::Document& json,
+				std::string& dataTypeOut,
+				std::string& fileTypeOut,
+				std::string& compressionOut,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportRetrieveAndConvert(
+				const rapidjson::Document& json,
+				const std::string& dataType,
+				const std::string& fileType,
+				Module::Database& db,
+				std::string& contentTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportCompress(
+				const std::string& dataType,
+				const std::string& compression,
+				std::string contentInOut,
+				ServerCommandResponse& responseTo
+		);
+		static void cmdExportWrite(
+				const std::string& content,
+				ServerCommandResponse& responseTo
+		);
+		static void cmdExportLogSuccess(
+				Module::Database& db,
+				std::size_t size,
+				const std::string& timeString
+		);
+		static bool cmdExportRetrieveUrlList(
+				const rapidjson::Document& json,
+				Module::Database& db,
+				std::queue<std::string>& urlsTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportRetrieveTable(
+				std::string_view type,
+				const rapidjson::Document& json,
+				Module::Database& db,
+				std::string& nameTo,
+				std::vector<std::vector<std::string>>& contentTo,
+				bool& isColumnNamesTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportGetUrlListArguments(
+				const rapidjson::Document& json,
+				std::uint64_t& websiteTo,
+				std::uint64_t& urlListTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportGetTableArguments(
+				const rapidjson::Document& json,
+				std::uint64_t& websiteTo,
+				std::uint64_t& urlListTo,
+				std::uint64_t& sourceTo,
+				bool& isColumnNamesTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportCheckWebsiteUrlList(
+				Module::Database& db,
+				std::uint64_t websiteId,
+				std::uint64_t urlListId,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportCheckTargetTable(
+				Module::Database& db,
+				std::string_view dataType,
+				std::uint64_t websiteId,
+				std::uint64_t urlListId,
+				std::uint64_t tableId,
+				ServerCommandResponse& responseTo
+		);
+		static void cmdExportGetTableContent(
+				Module::Database& db,
+				std::string_view dataType,
+				std::uint64_t websiteId,
+				std::uint64_t urlListId,
+				std::uint64_t tableId,
+				std::string& nameTo,
+				std::vector<std::vector<std::string>>& contentTo,
+				bool isIncludeColumnNames
+		);
+		static void cmdExportLog(
+				Module::Database& db,
+				std::string_view entryType,
+				std::string_view entryTypes,
+				std::string_view listType,
+				std::uint64_t entryNum
+		);
+		static bool cmdExportUrlListAsText(
+				const rapidjson::Document& json,
+				std::queue<std::string>& data,
+				std::string& contentTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportUrlListAsSpreadsheet(
+				const rapidjson::Document& json,
+				std::queue<std::string>& data,
+				std::string& contentTo,
+				ServerCommandResponse& responseTo
+		);
+		static void cmdExportTableAsSpreadsheet(
+				const std::string& tableName,
+				const std::vector<std::vector<std::string>>& tableContent,
+				std::string& contentTo,
+				bool isColumnNames
+		);
+		static bool cmdExportGetFirstLineHeader(
+				const rapidjson::Document& json,
+				std::optional<std::string>& optHeaderTo,
+				ServerCommandResponse& responseTo
 		);
 	};
 

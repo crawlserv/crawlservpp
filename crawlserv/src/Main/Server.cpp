@@ -35,6 +35,10 @@
 
 namespace crawlservpp::Main {
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor setting server, database, and network settings.
 	/*!
 	 * \param serverSettings Constant reference
@@ -443,6 +447,10 @@ namespace crawlservpp::Main {
 		}
 	}
 
+	/*
+	 * GETTERS
+	 */
+
 	//! Gets the status of the server
 	/*!
 	 * \returns Reference to the string
@@ -528,6 +536,10 @@ namespace crawlservpp::Main {
 				true
 		);
 	}
+
+	/*
+	 * SERVER TICK
+	 */
 
 	//! Perform a server tick.
 	/*!
@@ -671,7 +683,182 @@ namespace crawlservpp::Main {
 		return this->running;
 	}
 
-	// perform a server command, throws Main::Exception
+	/*
+	 * SETTER (private)
+	 */
+
+	// set status of the server
+	void Server::setStatus(const std::string& statusMsg) {
+		this->status = statusMsg;
+	}
+
+	/*
+	 * EVENT HANDLERS (private)
+	 */
+
+	// handle accept event, throws Main::Exception
+	void Server::onAccept(ConnectionPtr connection) {
+		// check connection and get IP
+		if(connection == nullptr) {
+			throw Exception(
+					"Server::onAccept():"
+					" No connection specified"
+			);
+		}
+
+		const std::string ip{WebServer::getIP(connection)};
+
+		// check authorization
+		if(this->allowed != "*") {
+			if(this->allowed.find(ip) == std::string::npos) {
+				WebServer::close(connection, true);
+
+				if(this->offline) {
+					std::cout << "\nserver rejected client "
+							<< ip << "." << std::flush;
+				}
+				else {
+					try {
+						this->database.log("rejected client " + ip + ".");
+					}
+					catch(const DatabaseException& e) {
+						// try to re-connect once on database exception
+						try {
+							this->database.checkConnection();
+
+							this->database.log(
+									"re-connected to database after error: "
+									+ std::string(e.view())
+							);
+
+							this->database.log(
+									"rejected client "
+									+ ip
+									+ "."
+							);
+						}
+						catch(const DatabaseException& e) {
+							std::cout << "\nserver rejected client "
+									<< ip << "." << std::flush;
+
+							this->offline = true;
+						}
+					}
+				}
+			}
+			else {
+				if(this->offline) {
+					std::cout << "\nserver accepted client "
+							<< ip << "." << std::flush;
+				}
+				else {
+					try {
+						this->database.log(
+								"accepted client "
+								+ ip
+								+ "."
+						);
+					}
+					catch(const DatabaseException& e) {
+						// try to re-connect once on database exception
+						try {
+							this->database.checkConnection();
+
+							this->database.log(
+									"re-connected to database after error: "
+									+ std::string(e.view())
+							);
+							this->database.log(
+									"accepted client "
+									+ ip
+									+ "."
+							);
+						}
+						catch(const DatabaseException& e) {
+							std::cout << "\nserver rejected client "
+									+ ip
+									+ "." << std::flush;
+
+							this->offline = true;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// handle request event, throws Main::Exception
+	void Server::onRequest(
+			ConnectionPtr connection,
+			const std::string& method,
+			const std::string& body,
+			void * data
+	) {
+		// check connection and get IP
+		if(connection == nullptr) {
+			throw Exception(
+					"Server::onRequest(): No connection specified"
+			);
+		}
+
+		const std::string ip{WebServer::getIP(connection)};
+
+		// check authorization
+		if(this->allowed != "*") {
+			if(this->allowed.find(ip) == std::string::npos) {
+				this->database.log("Client " + ip + " rejected.");
+
+				WebServer::close(connection, true);
+			}
+		}
+
+		// check for GET request
+		if(method == "GET") {
+			this->webServer.send(
+					connection,
+					statusHttpCode,
+					statusHttpContentType,
+					this->getStatus()
+			);
+		}
+		// check for POST request
+		else if(method == "POST") {
+			// parse JSON
+			bool threadStarted{false};
+			bool fileDownload{false};
+
+			const std::string reply(
+					this->cmd(
+							connection,
+							body,
+							threadStarted,
+							fileDownload
+					)
+			);
+
+			// send reply, unless a thread has been started
+			if(fileDownload) {
+				this->webServer.sendFile(connection, reply, data);
+			}
+			else if(!threadStarted) {
+				this->webServer.send(
+						connection,
+						replyHttpCode,
+						replyHttpContentType,
+						reply
+				);
+			}
+		}
+		else if(method == "OPTIONS") {
+			this->webServer.send(connection, optionsHttpCode, "", "");
+		}
+	}
+
+	/*
+	 * SERVER COMMANDS (private)
+	 */
+
+	// run a server command, return reply, throws Main::Exception
 	std::string Server::cmd(
 			ConnectionPtr connection,
 			const std::string& msgBody,
@@ -894,7 +1081,7 @@ namespace crawlservpp::Main {
 		return Server::generateReply(response, msgBody);
 	}
 
-	// perform a basic server command, return whether such a command has been found, throws Main::Exception
+	// run a basic server command, return whether such a command has been found, throws Main::Exception
 	//  NOTE: Server::cmdJson and Server::cmdIp need to be set!
 	bool Server::cmd(const std::string& name, ServerCommandResponse& response) {
 		/*
@@ -962,169 +1149,6 @@ namespace crawlservpp::Main {
 		MAIN_SERVER_CMD("warp", this->cmdWarp);
 
 		return false;
-	}
-
-	// set status of the server
-	void Server::setStatus(const std::string& statusMsg) {
-		this->status = statusMsg;
-	}
-
-	// handle accept event, throws Main::Exception
-	void Server::onAccept(ConnectionPtr connection) {
-		// check connection and get IP
-		if(connection == nullptr) {
-			throw Exception(
-					"Server::onAccept():"
-					" No connection specified"
-			);
-		}
-
-		const std::string ip{WebServer::getIP(connection)};
-
-		// check authorization
-		if(this->allowed != "*") {
-			if(this->allowed.find(ip) == std::string::npos) {
-				WebServer::close(connection, true);
-
-				if(this->offline) {
-					std::cout << "\nserver rejected client "
-							<< ip << "." << std::flush;
-				}
-				else {
-					try {
-						this->database.log("rejected client " + ip + ".");
-					}
-					catch(const DatabaseException& e) {
-						// try to re-connect once on database exception
-						try {
-							this->database.checkConnection();
-
-							this->database.log(
-									"re-connected to database after error: "
-									+ std::string(e.view())
-							);
-
-							this->database.log(
-									"rejected client "
-									+ ip
-									+ "."
-							);
-						}
-						catch(const DatabaseException& e) {
-							std::cout << "\nserver rejected client "
-									<< ip << "." << std::flush;
-
-							this->offline = true;
-						}
-					}
-				}
-			}
-			else {
-				if(this->offline) {
-					std::cout << "\nserver accepted client "
-							<< ip << "." << std::flush;
-				}
-				else {
-					try {
-						this->database.log(
-								"accepted client "
-								+ ip
-								+ "."
-						);
-					}
-					catch(const DatabaseException& e) {
-						// try to re-connect once on database exception
-						try {
-							this->database.checkConnection();
-
-							this->database.log(
-									"re-connected to database after error: "
-									+ std::string(e.view())
-							);
-							this->database.log(
-									"accepted client "
-									+ ip
-									+ "."
-							);
-						}
-						catch(const DatabaseException& e) {
-							std::cout << "\nserver rejected client "
-									+ ip
-									+ "." << std::flush;
-
-							this->offline = true;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// handle request event, throws Main::Exception
-	void Server::onRequest(
-			ConnectionPtr connection,
-			const std::string& method,
-			const std::string& body,
-			void * data
-	) {
-		// check connection and get IP
-		if(connection == nullptr) {
-			throw Exception(
-					"Server::onRequest(): No connection specified"
-			);
-		}
-
-		const std::string ip{WebServer::getIP(connection)};
-
-		// check authorization
-		if(this->allowed != "*") {
-			if(this->allowed.find(ip) == std::string::npos) {
-				this->database.log("Client " + ip + " rejected.");
-
-				WebServer::close(connection, true);
-			}
-		}
-
-		// check for GET request
-		if(method == "GET") {
-			this->webServer.send(
-					connection,
-					statusHttpCode,
-					statusHttpContentType,
-					this->getStatus()
-			);
-		}
-		// check for POST request
-		else if(method == "POST") {
-			// parse JSON
-			bool threadStarted{false};
-			bool fileDownload{false};
-
-			const std::string reply(
-					this->cmd(
-							connection,
-							body,
-							threadStarted,
-							fileDownload
-					)
-			);
-
-			// send reply, unless a thread has been started
-			if(fileDownload) {
-				this->webServer.sendFile(connection, reply, data);
-			}
-			else if(!threadStarted) {
-				this->webServer.send(
-						connection,
-						replyHttpCode,
-						replyHttpContentType,
-						reply
-				);
-			}
-		}
-		else if(method == "OPTIONS") {
-			this->webServer.send(connection, optionsHttpCode, "", "");
-		}
 	}
 
 	// server command kill: kill the server
@@ -4095,10 +4119,7 @@ namespace crawlservpp::Main {
 								// create new database connection for worker thread
 								Module::Database db(dbSettingsCopy, "worker");
 
-								db.setSleepOnError(sleepOnSqlErrorS);
-
-								db.connect();
-								db.prepare();
+								Server::initWorkerDatabase(db);
 
 								// check website
 								if(!db.isWebsite(website)) {
@@ -4275,10 +4296,7 @@ namespace crawlservpp::Main {
 						// create new database connection for worker thread
 						Module::Database db(dbSettingsCopy, "worker");
 
-						db.setSleepOnError(sleepOnSqlErrorS);
-
-						db.connect();
-						db.prepare();
+						Server::initWorkerDatabase(db);
 
 						// check website and URL lists
 						if(!db.isWebsite(website)) {
@@ -4412,212 +4430,46 @@ namespace crawlservpp::Main {
 			std::string dataType;
 			std::string fileType;
 			std::string compression;
-			std::string error;
 
 			if(
-					!Server::getArgument(json, "datatype", dataType, false, true, error)
-					|| !Server::getArgument(json, "filetype", fileType, false, true, error)
-					|| !Server::getArgument(json, "compression", compression, false, true, error)
+					Server::cmdExportGetArguments(
+							json,
+							dataType,
+							fileType,
+							compression,
+							response
+					)
 			) {
-				response = ServerCommandResponse::failed(error);
-			}
-			else {
-				std::queue<std::string> urls;
 				std::string content;
 
 				// create new database connection for worker thread
 				Module::Database db(dbSettingsCopy, "worker");
 
-				db.setSleepOnError(sleepOnSqlErrorS);
-
-				db.connect();
-				db.prepare();
+				Server::initWorkerDatabase(db);
 
 				// start timer
 				Timer::Simple timer;
 
-				if(dataType == "urllist") {
-					// get arguments for exporting a URL list
-					std::uint64_t website{};
-					std::uint64_t source{};
-
-					if(
-							!Server::getArgument(json, "website", website, error)
-							|| !Server::getArgument(json, "urllist-source", source, error)
-					) {
-						response = ServerCommandResponse::failed(error);
-					}
-					else {
-						// check website and URL list
-						if(!db.isWebsite(website)) {
-							response = ServerCommandResponse::failed(
-									"Invalid website ID."
-							);
-						}
-						else if(!db.isUrlList(website, source)) {
-							response = ServerCommandResponse::failed(
-									"Invalid URL list ID."
-							);
-						}
-						else {
-							// get URLs
-							urls = db.getUrls(source);
-
-							// write to log
-							std::ostringstream logStrStr;
-
-							logStrStr << "exporting ";
-
-							switch(urls.size()) {
-							case 0:
-								logStrStr << "empty URL list";
-
-								break;
-
-							case 1:
-								logStrStr << "one URL";
-
-								break;
-
-							default:
-								logStrStr.imbue(std::locale(""));
-
-								logStrStr << urls.size() << " URLs";
-							}
-
-							logStrStr << "...";
-
-							db.log(0, logStrStr.str());
-						}
-					}
-				}
-				else {
-					response = ServerCommandResponse::failed(
-							"Unknown data type: '"
-							+ dataType
-							+ "'."
-					);
-				}
-
-				if(!response.fail) {
-					if(fileType == "text") {
-						bool writeHeader = false;
-
-						if(
-								!Server::getArgument(
-										json,
-										"write-firstline-header",
-										writeHeader,
-										false,
-										error
-								)
-						) {
-							response = ServerCommandResponse::failed(error);
-						}
-						else {
-							std::string header;
-
-							if(writeHeader) {
-								if(
-										!Server::getArgument(
-												json,
-												"firstline-header",
-												header,
-												false,
-												false,
-												error
-										)
-								) {
-									response = ServerCommandResponse::failed(error);
-								}
-							}
-
-							if(!response.fail && !urls.empty()) {
-								content = Data::ImportExport::Text::exportList(
-										urls,
-										writeHeader ? std::optional<std::string>{header} : std::nullopt,
-										true
-								);
-							}
-						}
-					}
-					else {
-						response = ServerCommandResponse::failed(
-								"Unknown file type: '"
-								+ fileType
-								+ "'."
-						);
-					}
-
-					if(!response.fail && compression != "none") {
-						if(compression == "gzip") {
-							content = Data::Compression::Gzip::compress(content);
-						}
-						else if(compression == "zlib") {
-							content = Data::Compression::Zlib::compress(content);
-						}
-						else {
-							response = ServerCommandResponse::failed(
-									"Unknown compression type: '"
-									+ compression
-									+ "'."
-							);
-						}
-					}
-
-					if(!response.fail) {
-						// generate file name
-						const std::string fileName(
-								Helper::Strings::generateRandom(
-										randFileNameLength
-								)
-						);
-
-						std::string fullFileName;
-
-						fullFileName.reserve(
-								cacheDir.length()
-								+ fileName.length()
-								+ 1 // for path seperator
-						);
-
-						fullFileName = cacheDir;
-
-						fullFileName += Helper::FileSystem::getPathSeparator();
-						fullFileName += fileName;
-
-						// write file
-						Data::File::write(fullFileName, content, true);
-
-						// return file name
-						response = ServerCommandResponse(fileName);
-
-						// write to log
-						std::ostringstream logStrStr;
-
-						logStrStr << "complete (generated ";
-
-						switch(content.size()) {
-						case 0:
-							logStrStr << "empty file";
-
-							break;
-
-						case 1:
-							logStrStr << "one byte";
-
-							break;
-
-						default:
-							logStrStr.imbue(std::locale(""));
-
-							logStrStr << content.size() << " bytes";
-						}
-
-						logStrStr << " after " << timer.tickStr() << ").";
-
-						db.log(0, logStrStr.str());
-					}
+				// retrieve data from the database and convert it for the file type
+				if(
+						Server::cmdExportRetrieveAndConvert(
+								json,
+								dataType,
+								fileType,
+								db,
+								content,
+								response
+						)
+						&& Server::cmdExportCompress(
+								dataType,
+								compression,
+								content,
+								response
+						)
+				) {
+					// write data to file and log success
+					Server::cmdExportWrite(content, response);
+					Server::cmdExportLogSuccess(db, content.size(), timer.tickStr());
 				}
 			}
 		}
@@ -4657,10 +4509,7 @@ namespace crawlservpp::Main {
 				// create new database connection for worker thread
 				Module::Database db(dbSettingsCopy, "worker");
 
-				db.setSleepOnError(sleepOnSqlErrorS);
-
-				db.connect();
-				db.prepare();
+				Server::initWorkerDatabase(db);
 
 				// check URL list
 				if(!db.isUrlList(urlList)) {
@@ -5688,7 +5537,11 @@ namespace crawlservpp::Main {
 		this->workerEnd(threadIndex, connection, message, response);
 	}
 
-	// private helper function: get command argument (string)
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
+	// get command argument (string)
 	bool Server::getArgument(
 			const std::string& name,
 			std::string& out,
@@ -5699,17 +5552,87 @@ namespace crawlservpp::Main {
 		return Server::getArgument(this->cmdJson, name, out, optional, notEmpty, outError);
 	}
 
-	// private helper function: get command argument (unsigned 64-bit integer)
+	// get command argument (unsigned 64-bit integer)
 	bool Server::getArgument(const std::string& name, std::uint64_t& out, std::string& outError) {
 		return Server::getArgument(this->cmdJson, name, out, outError);
 	}
 
-	// private helper function: get command argument (boolean value)
+	// get command argument (boolean value)
 	bool Server::getArgument(const std::string& name, bool& out, bool optional, std::string& outError) {
 		return Server::getArgument(this->cmdJson, name, out, optional, outError);
 	}
 
-	// private helper function: get command argument (string) from given JSON document
+	// end of worker thread
+	void Server::workerEnd(
+			std::size_t threadIndex,
+			ConnectionPtr connection,
+			const std::string& message,
+			const ServerCommandResponse& response
+	) {
+		// generate the reply
+		const std::string replyString(
+				Server::generateReply(
+						response,
+						message
+				)
+		);
+
+		// send the reply
+		this->webServer.send(
+				connection,
+				replyHttpCode,
+				replyHttpContentType,
+				replyString
+		);
+
+		// set thread status to not running
+		{
+			std::lock_guard<std::mutex> workersLocked{this->workersLock};
+
+			this->workersRunning.at(threadIndex) = false;
+		}
+	}
+
+	/*
+	 * INTERNAL STATIC HELPER FUNCTIONS (private)
+	 */
+
+	// begin of worker thread, returns whether (re-)parsing command JSON was successful
+	bool Server::workerBegin(
+			const std::string& message,
+			rapidjson::Document& json,
+			ServerCommandResponse& response
+	) {
+		// (re-)parse command JSON for the worker thread
+		try {
+			json = Helper::Json::parseRapid(message);
+
+			if(!json.IsObject()) {
+				response = ServerCommandResponse::failed(
+						"Parsed JSON is not an object."
+				);
+			}
+		}
+		catch(const JsonException& e) {
+			response = ServerCommandResponse::failed(
+					"Could not parse JSON: "
+					+ std::string(e.view())
+					+ "."
+			);
+		}
+
+		return !response.fail;
+	}
+
+	// create database connection for worker thread
+	void Server::initWorkerDatabase(Module::Database& db) {
+		db.setSleepOnError(sleepOnSqlErrorS);
+
+		db.connect();
+		db.prepare();
+	}
+
+	// get command argument (string) from given JSON document
 	bool Server::getArgument(
 					const rapidjson::Document& json,
 					const std::string& name,
@@ -5758,7 +5681,7 @@ namespace crawlservpp::Main {
 		return true;
 	}
 
-	// private helper function: get command argument (unsigned 64-bit integer) from given JSON document
+	// get command argument (unsigned 64-bit integer) from given JSON document
 	bool Server::getArgument(
 			const rapidjson::Document& json,
 			const std::string& name,
@@ -5788,7 +5711,7 @@ namespace crawlservpp::Main {
 		return true;
 	}
 
-	// private helper function: get command argument (boolean value) from given JSON document
+	// get command argument (boolean value) from given JSON document
 	bool Server::getArgument(
 			const rapidjson::Document& json,
 			const std::string& name,
@@ -5825,7 +5748,7 @@ namespace crawlservpp::Main {
 		return true;
 	}
 
-	// private helper function: remove protocol and trailing slash(es) from the given domain
+	// remove protocol and trailing slash(es) from the given domain
 	void Server::correctDomain(std::string& inOut) {
 		while(
 				inOut.length() >= httpString.length()
@@ -5846,65 +5769,7 @@ namespace crawlservpp::Main {
 		}
 	}
 
-	// private static helper function: begin of worker thread, returns whether (re-)parsing command JSON was successful
-	bool Server::workerBegin(
-			const std::string& message,
-			rapidjson::Document& json,
-			ServerCommandResponse& response
-	) {
-		// (re-)parse command JSON for the worker thread
-		try {
-			json = Helper::Json::parseRapid(message);
-
-			if(!json.IsObject()) {
-				response = ServerCommandResponse::failed(
-						"Parsed JSON is not an object."
-				);
-			}
-		}
-		catch(const JsonException& e) {
-			response = ServerCommandResponse::failed(
-					"Could not parse JSON: "
-					+ std::string(e.view())
-					+ "."
-			);
-		}
-
-		return !response.fail;
-	}
-
-	// private helper function: end of worker thread
-	void Server::workerEnd(
-			std::size_t threadIndex,
-			ConnectionPtr connection,
-			const std::string& message,
-			const ServerCommandResponse& response
-	) {
-		// generate the reply
-		const std::string replyString(
-				Server::generateReply(
-						response,
-						message
-				)
-		);
-
-		// send the reply
-		this->webServer.send(
-				connection,
-				replyHttpCode,
-				replyHttpContentType,
-				replyString
-		);
-
-		// set thread status to not running
-		{
-			std::lock_guard<std::mutex> workersLocked{this->workersLock};
-
-			this->workersRunning.at(threadIndex) = false;
-		}
-	}
-
-	// private static helper function: get algorithm ID from configuration JSON, throws Main::Exception
+	// get algorithm ID from configuration JSON, throws Main::Exception
 	std::uint32_t Server::getAlgoFromConfig(const rapidjson::Document& json) {
 		std::uint32_t result{};
 
@@ -5967,7 +5832,7 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	// private static helper function: generate server reply
+	// generate server reply
 	std::string Server::generateReply(
 			const ServerCommandResponse& response,
 			const std::string& msgBody
@@ -6001,7 +5866,7 @@ namespace crawlservpp::Main {
 		return std::string(replyBuffer.GetString(), replyBuffer.GetLength());
 	}
 
-	// private static helper function: test query result for date/time
+	// test query result for date/time
 	std::string Server::dateTimeTest(
 			const std::string& input,
 			const std::string& format,
@@ -6035,6 +5900,630 @@ namespace crawlservpp::Main {
 		result += "]";
 
 		return result;
+	}
+
+	// check and get command arguments for exporting
+	bool Server::cmdExportGetArguments(
+			const rapidjson::Document& json,
+			std::string& dataTypeOut,
+			std::string& fileTypeOut,
+			std::string& compressionOut,
+			ServerCommandResponse& responseTo
+	) {
+		std::string error;
+
+		if(
+				!Server::getArgument(json, "datatype", dataTypeOut, false, true, error)
+				|| !Server::getArgument(json, "filetype", fileTypeOut, false, true, error)
+				|| !Server::getArgument(json, "compression", compressionOut, false, true, error)
+		) {
+			responseTo = ServerCommandResponse::failed(error);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// retrieve data from database and convert it according to the specified file type
+	bool Server::cmdExportRetrieveAndConvert(
+			const rapidjson::Document& json,
+			const std::string& dataType,
+			const std::string& fileType,
+			Module::Database& db,
+			std::string& contentTo,
+			ServerCommandResponse& responseTo
+	) {
+		std::queue<std::string> urls;
+		std::string tableName;
+		std::vector<std::vector<std::string>> tableContent;
+		bool isColumnNames{true};
+
+		// get data according to its type
+		if(dataType == "urllist") {
+			if(!Server::cmdExportRetrieveUrlList(json, db, urls, responseTo)) {
+				return false;
+			}
+		}
+		else if(dataType == "analyzed") {
+			if(
+					!Server::cmdExportRetrieveTable(
+							dataType,
+							json,
+							db,
+							tableName,
+							tableContent,
+							isColumnNames,
+							responseTo
+					)
+			) {
+				return false;
+			}
+		}
+		else {
+			responseTo = ServerCommandResponse::failed(
+					"Unknown data type: '"
+					+ dataType
+					+ "'."
+			);
+
+			return false;
+		}
+
+		// create content according to file and data type
+		if(fileType == "text") {
+			if(dataType == "urllist") {
+				if(
+						!Server::cmdExportUrlListAsText(
+								json,
+								urls,
+								contentTo,
+								responseTo
+						)
+				) {
+					return false;
+				}
+			}
+			else {
+				responseTo = ServerCommandResponse::failed(
+						"Cannot export '"
+						+ dataType
+						+ "' as text file."
+				);
+
+				return false;
+			}
+		}
+		else if(fileType == "spreadsheet") {
+			if(dataType == "urllist") {
+				if(
+						!Server::cmdExportUrlListAsSpreadsheet(
+								json,
+								urls,
+								contentTo,
+								responseTo
+						)
+				) {
+					return false;
+				}
+			}
+			else if(dataType == "analyzed") {
+				Server::cmdExportTableAsSpreadsheet(
+						tableName,
+						tableContent,
+						contentTo,
+						isColumnNames
+				);
+			}
+			else {
+				responseTo = ServerCommandResponse::failed(
+						"Cannot export '"
+						+ dataType
+						+ "' as spreadsheet."
+				);
+
+				return false;
+			}
+		}
+		else {
+			responseTo = ServerCommandResponse::failed(
+					"Unknown file type: '"
+					+ fileType
+					+ "'."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// compress content for export
+	bool Server::cmdExportCompress(
+			const std::string& dataType,
+			const std::string& compression,
+			std::string contentInOut,
+			ServerCommandResponse& responseTo
+	) {
+		if(compression == "none") {
+			return true;
+		}
+
+		if(compression == "gzip") {
+			contentInOut = Data::Compression::Gzip::compress(contentInOut);
+		}
+		else if(compression == "zlib") {
+			contentInOut = Data::Compression::Zlib::compress(contentInOut);
+		}
+		else if(compression == "zip") {
+			std::vector<std::pair<std::string, std::string>> namedContents{
+				{ dataType, contentInOut }
+			};
+
+			contentInOut = Data::Compression::Zip::compress(namedContents);
+		}
+		else {
+			responseTo = ServerCommandResponse::failed(
+					"Unknown compression type: '"
+					+ compression
+					+ "'."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// write export data to file with random file name
+	void Server::cmdExportWrite(
+			const std::string& content,
+			ServerCommandResponse& responseTo
+	) {
+		// generate random file name
+		const std::string fileName(
+				Helper::Strings::generateRandom(
+						randFileNameLength
+				)
+		);
+
+		std::string fullFileName;
+
+		fullFileName.reserve(
+				cacheDir.length()
+				+ fileName.length()
+				+ 1 // for path seperator
+		);
+
+		fullFileName = cacheDir;
+
+		fullFileName += Helper::FileSystem::getPathSeparator();
+		fullFileName += fileName;
+
+		// write file
+		Data::File::write(fullFileName, content, true);
+
+		// return file name
+		responseTo = ServerCommandResponse(fileName);
+	}
+
+	// log successful export
+	void Server::cmdExportLogSuccess(
+			Module::Database& db,
+			std::size_t size,
+			const std::string& timeString
+	) {
+		// write to log
+		std::ostringstream logStrStr;
+
+		logStrStr << "complete (generated ";
+
+		switch(size) {
+		case 0:
+			logStrStr << "empty file";
+
+			break;
+
+		case 1:
+			logStrStr << "one byte";
+
+			break;
+
+		default:
+			logStrStr.imbue(std::locale(""));
+
+			logStrStr << size << " bytes";
+		}
+
+		logStrStr << " after " << timeString << ").";
+
+		db.log(0, logStrStr.str());
+	}
+
+	// retrieve URL list for export
+	bool Server::cmdExportRetrieveUrlList(
+			const rapidjson::Document& json,
+			Module::Database& db,
+			std::queue<std::string>& urlsTo,
+			ServerCommandResponse& responseTo
+	) {
+		std::uint64_t website{};
+		std::uint64_t urlList{};
+
+		if(
+				!Server::cmdExportGetUrlListArguments(
+						json,
+						website,
+						urlList,
+						responseTo
+				)
+		) {
+			return false;
+		}
+
+		if(
+				!Server::cmdExportCheckWebsiteUrlList(
+						db,
+						website,
+						urlList,
+						responseTo
+				)
+		) {
+			return false;
+		}
+
+		// get URLs
+		urlsTo = db.getUrls(urlList);
+
+		// write to log
+		Server::cmdExportLog(db, "URL", "URLs", "URL list", urlsTo.size());
+
+		return true;
+	}
+
+	// retrieve data from target table
+	bool Server::cmdExportRetrieveTable(
+			std::string_view type,
+			const rapidjson::Document& json,
+			Module::Database& db,
+			std::string& nameTo,
+			std::vector<std::vector<std::string>>& contentTo,
+			bool& isColumnNamesTo,
+			ServerCommandResponse& responseTo
+	) {
+		std::uint64_t website{};
+		std::uint64_t urlList{};
+		std::uint64_t tableId{};
+
+		if(
+				!Server::cmdExportGetTableArguments(
+						json,
+						website,
+						urlList,
+						tableId,
+						isColumnNamesTo,
+						responseTo
+				)
+		) {
+			return false;
+		}
+
+		if(
+				!Server::cmdExportCheckWebsiteUrlList(
+						db,
+						website,
+						urlList,
+						responseTo
+				)
+		) {
+			return false;
+		}
+
+		if(
+				!Server::cmdExportCheckTargetTable(
+						db,
+						type,
+						website,
+						urlList,
+						tableId,
+						responseTo
+				)
+		) {
+			return false;
+		}
+
+		// get content of table
+		Server::cmdExportGetTableContent(
+				db,
+				type,
+				website,
+				urlList,
+				tableId,
+				nameTo,
+				contentTo,
+				isColumnNamesTo
+		);
+
+		// write to log
+		Server::cmdExportLog(db, "row", "rows", "table", contentTo.size());
+
+		return true;
+	}
+
+	// get arguments for exporting a URL list
+	bool Server::cmdExportGetUrlListArguments(
+			const rapidjson::Document& json,
+			std::uint64_t& websiteTo,
+			std::uint64_t& urlListTo,
+			ServerCommandResponse& responseTo
+	) {
+		std::string error;
+
+		if(
+				!Server::getArgument(json, "website", websiteTo, error)
+				|| !Server::getArgument(json, "urllist-source", urlListTo, error)
+		) {
+			responseTo = ServerCommandResponse::failed(error);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// get arguments for exporting data from a table
+	bool Server::cmdExportGetTableArguments(
+			const rapidjson::Document& json,
+			std::uint64_t& websiteTo,
+			std::uint64_t& urlListTo,
+			std::uint64_t& tableTo,
+			bool& isColumnNamesTo,
+			ServerCommandResponse& responseTo
+	) {
+		std::string error;
+
+		if(
+				!Server::getArgument(json, "website", websiteTo, error)
+				|| !Server::getArgument(json, "urllist", urlListTo, error)
+				|| !Server::getArgument(json, "source", tableTo, error)
+				|| !Server::getArgument(json, "column-names", isColumnNamesTo, true, error)
+		) {
+			responseTo = ServerCommandResponse::failed(error);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// check the existence of a website and its URL list
+	bool Server::cmdExportCheckWebsiteUrlList(
+			Module::Database& db,
+			std::uint64_t websiteId,
+			std::uint64_t urlListId,
+			ServerCommandResponse& responseTo
+	) {
+		if(!db.isWebsite(websiteId)) {
+			responseTo = ServerCommandResponse::failed(
+					"Invalid website ID."
+			);
+
+			return false;
+		}
+
+		if(!db.isUrlList(websiteId, urlListId)) {
+			responseTo = ServerCommandResponse::failed(
+					"Invalid URL list ID."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// check the existence of a target table for the specified website and URL list
+	bool Server::cmdExportCheckTargetTable(
+			Module::Database& db,
+			std::string_view dataType,
+			std::uint64_t websiteId,
+			std::uint64_t urlListId,
+			std::uint64_t tableId,
+			ServerCommandResponse& responseTo
+	) {
+		if(!db.isTargetTable(dataType, websiteId, urlListId, tableId)) {
+			responseTo = ServerCommandResponse::failed(
+					"Invalid source table ID."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// get the content of a target table from the database
+	void Server::cmdExportGetTableContent(
+			Module::Database& db,
+			std::string_view dataType,
+			std::uint64_t websiteId,
+			std::uint64_t urlListId,
+			std::uint64_t tableId,
+			std::string& nameTo,
+			std::vector<std::vector<std::string>>& contentTo,
+			bool isIncludeColumnNames
+	) {
+		// create table name
+		nameTo = db.getTargetTableName(dataType, tableId);
+
+		std::string fullTableName{"crawlserv_"};
+
+		fullTableName += db.getWebsiteNamespace(websiteId);
+		fullTableName += "_";
+		fullTableName += db.getUrlListNamespace(urlListId);
+		fullTableName += "_analyzed_";
+		fullTableName += nameTo;
+
+		// get table columns and content
+		db.readTableAsStrings(fullTableName, contentTo, isIncludeColumnNames);
+	}
+
+	// log number of entries to export
+	void Server::cmdExportLog(
+			Module::Database& db,
+			std::string_view entryType,
+			std::string_view entryTypes,
+			std::string_view listType,
+			std::uint64_t entryNum
+	) {
+		std::ostringstream logStrStr;
+
+		logStrStr << "exporting ";
+
+		switch(entryNum) {
+		case 0:
+			logStrStr << "empty " << listType;
+
+			break;
+
+		case 1:
+			logStrStr << "one " << entryType;
+
+			break;
+
+		default:
+			logStrStr.imbue(std::locale(""));
+
+			logStrStr << entryNum << " " << entryTypes;
+		}
+
+		logStrStr << "...";
+
+		db.log(0, logStrStr.str());
+	}
+
+	// export URL list as plain text
+	bool Server::cmdExportUrlListAsText(
+			const rapidjson::Document& json,
+			std::queue<std::string>& data,
+			std::string& contentTo,
+			ServerCommandResponse& responseTo
+	) {
+		// get optional first-line header
+		std::optional<std::string> optHeader;
+
+		if(!Server::cmdExportGetFirstLineHeader(json, optHeader, responseTo)) {
+			return false;
+		}
+
+		// format data
+		contentTo = Data::ImportExport::Text::exportList(data, optHeader, true);
+
+		return true;
+	}
+
+	// export URL list as spreadsheet
+	bool Server::cmdExportUrlListAsSpreadsheet(
+			const rapidjson::Document& json,
+			std::queue<std::string>& data,
+			std::string& contentTo,
+			ServerCommandResponse& responseTo
+	) {
+		// get optional first-line header
+		std::optional<std::string> optHeader;
+
+		if(!Server::cmdExportGetFirstLineHeader(json, optHeader, responseTo)) {
+			return false;
+		}
+
+		// format data
+		Data::ImportExport::OpenDocument::NamedTable table;
+
+		table.first = "URLs";
+
+		if(optHeader) {
+			table.second.emplace_back(
+					std::vector<std::string>{*optHeader}
+			);
+		}
+
+		while(!data.empty()) {
+			table.second.emplace_back(
+					std::vector<std::string>{data.front()}
+			);
+
+			data.pop();
+		}
+
+		contentTo = Data::ImportExport::OpenDocument::exportSpreadsheet(
+				{ table },
+				optHeader.has_value()
+		);
+
+		return true;
+	}
+
+	// export table as spreadsheet
+	void Server::cmdExportTableAsSpreadsheet(
+			const std::string& tableName,
+			const std::vector<std::vector<std::string>>& tableContent,
+			std::string& contentTo,
+			bool isColumnNames
+	) {
+		contentTo = Data::ImportExport::OpenDocument::exportSpreadsheet(
+				{ { tableName, tableContent } },
+				isColumnNames
+		);
+	}
+
+	// get optional first-line header for exporting
+	bool Server::cmdExportGetFirstLineHeader(
+			const rapidjson::Document& json,
+			std::optional<std::string>& optHeaderTo,
+			ServerCommandResponse& responseTo
+	) {
+		bool writeHeader{false};
+		std::string error;
+
+		if(
+				!Server::getArgument(
+						json,
+						"write-firstline-header",
+						writeHeader,
+						false,
+						error
+				)
+		) {
+			responseTo = ServerCommandResponse::failed(error);
+
+			return false;
+		}
+
+		if(!writeHeader) {
+			// no header to write
+			return true;
+		}
+
+		std::string header;
+
+		if(
+				!Server::getArgument(
+						json,
+						"firstline-header",
+						header,
+						false,
+						false,
+						error
+				)
+		) {
+			responseTo = ServerCommandResponse::failed(error);
+
+			return false;
+		}
+
+		optHeaderTo = { header };
+
+		return true;
 	}
 
 } /* namespace crawlservpp::Main */
