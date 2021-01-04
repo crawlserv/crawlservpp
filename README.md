@@ -45,7 +45,7 @@ The following additional components are required to build crawlserv++ on your sy
 * a modern C++ Standard Library supporting C++ 17 (e.g. `libstdc++-7-dev`)
 * the [`Boost.Iostreams`](https://www.boost.org/doc/libs/1_70_0/libs/iostreams/doc/index.html) library (`libboost-iostreams-dev`)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
-* the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
+* the [GNU Aspell] library(http://aspell.net/) (`libaspell-dev`)
 * the [`libcurl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
 * the [`libzip`](https://libzip.org/) library (`libzip-dev`)
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
