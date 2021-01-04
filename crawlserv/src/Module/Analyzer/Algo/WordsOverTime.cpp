@@ -416,6 +416,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			this->database.insertCustomData(data);
 
+			// target table updated
+			this->database.updateTargetTable();
+
 			++statusCounter;
 			++resultCounter;
 
