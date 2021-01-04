@@ -36,31 +36,41 @@ require "include/helpers.php";
 
 require "config.php";
 
-if(isset($_POST["action"]))
+if(isset($_POST["action"])) {
     $action = $_POST["action"];
-else
+}
+else {
     $action = "import";
+}
 
-if(isset($_POST["datatype"]))
+if(isset($_POST["datatype"])) {
     $datatype = $_POST["datatype"];
-else
+}
+else {
     $datatype = "urllist";
+}
 
-if(isset($_POST["filetype"]))
+if(isset($_POST["filetype"])) {
     $filetype = $_POST["filetype"];
-else
+}
+else {
     $filetype = "text";
+}
 
-if(isset($_POST["compression"]))
+if(isset($_POST["compression"])) {
     $compression = $_POST["compression"];
-else
+}
+else {
     $compression = "none";
+}
 
-if(isset($_POST["website"]))
+if(isset($_POST["website"])) {
     $website = $_POST["website"];
+}
 
-if(isset($_POST["urllist"]))
+if(isset($_POST["urllist"])) {
     $urllist = $_POST["urllist"];
+}
 
 ?>
 
@@ -73,22 +83,25 @@ if(isset($_POST["urllist"]))
 
 <input type="radio" name="action" value="import" data-m="data" <?php
 
-if($action == "import")
+if($action == "import") {
     echo " checked";
+}
 
 ?> /> Import &emsp;
 
 <input type="radio" name="action" value="merge" data-m="data"<?php
 
-if($action == "merge")
+if($action == "merge") {
     echo " checked";
+}
 
 ?> /> Merge &emsp;
 
 <input type="radio" name="action" value="export" data-m="data"<?php
 
-if($action == "export")
+if($action == "export") {
     echo " checked";
+}
 
 ?> /> Export
 
@@ -103,10 +116,23 @@ if($action == "export")
 
 <option value="urllist" <?php 
 
-if($datatype == "urllist")
+if($datatype == "urllist") {
     echo " selected";
+}
 
 ?>>URL list</option>
+
+<?php 
+if($action == "export") {    
+    echo "<option value=\"analyzed\" ";
+
+    if($datatype == "analyzed") {
+        echo " selected";
+    }
+
+    echo ">Analyzed data</option>\n";
+}
+?>
 
 </select>
 
@@ -126,12 +152,25 @@ if($action != "merge") {
     
     echo "<select id=\"file-type-select\" class=\"entry-input\" data-m=\"$m\">\n";
     
-    echo "<option value=\"text\"";
+    if($datatype == "urllist") {
+        echo "<option value=\"text\"";
+        
+        if($filetype == "text") {
+            echo " selected";
+        }
+        
+        echo ">Text file (*.txt)</option>\n";
+    }
     
-    if($filetype == "text")
-        echo " selected";
-    
-    echo ">Text file</option>\n";
+    if($action != "import") {
+        echo "<option value=\"spreadsheet\"";
+        
+        if($filetype == "spreadsheet") {
+            echo " selected";
+        }
+        
+        echo ">OpenDocument spreadsheet (*.ods)</option>\n";
+    }
     
     echo "</select>";
     
@@ -145,20 +184,31 @@ if($action != "merge") {
     
     if($result) {
         while($row = $result->fetch_assoc()) {
-            if(strtolower($row["name"]) == "boost")
+            if(strtolower($row["name"]) == "boost") {
                 $boost_version = $row["version"];
-            else if(strtolower($row["name"]) == "zlib")
+            }
+            else if(strtolower($row["name"]) == "zlib") {
                 $zlib_version = $row["version"];
+            }
+            else if(strtolower($row["name"]) == "libzip") {
+                $libzip_version = $row["version"];
+            }
         }
     
         $result->close();
     }
     
-    if(!isset($boost_version))
+    if(!isset($boost_version)) {
         $boost_version = "[NOT FOUND]";
+    }
     
-    if(!isset($zlib_version))
+    if(!isset($zlib_version)) {
         $zlib_version = "[NOT FOUND]";
+    }
+    
+    if(!isset($libzip_version)) {
+        $libzip_version = "[NOT FOUND]";
+    }
     
     echo "<div class=\"entry-row\">\n";
     
@@ -168,24 +218,35 @@ if($action != "merge") {
     
     echo "<option value=\"none\"";
     
-    if($compression == "none")
+    if($compression == "none") {
         echo " selected";
+    }
     
     echo ">[none]</option>\n";
     
     echo "<option value=\"gzip\"";
     
-    if($compression == "gzip")
+    if($compression == "gzip") {
         echo " selected";
+    }
     
     echo ">gzip (Boost $boost_version)</option>\n";
     
     echo "<option value=\"zlib\"";
     
-    if($compression == "zlib")
+    if($compression == "zlib") {
         echo " selected";
+    }
         
-        echo ">zlib (zlib $zlib_version)</option>\n";
+    echo ">zlib (zlib $zlib_version)</option>\n";
+    
+    echo "<option value=\"zip\"";
+    
+    if($compression == "zip") {
+        echo " selected";
+    }
+    
+    echo ">zip (libzip $libzip_version)</option>\n";
     
     echo "</select>";
     
@@ -208,6 +269,11 @@ if($action != "import") {
         echo rowWebsiteSelect();
         echo rowUrlListSelect(false, false, false, true, "urllist-source");
     }
+    else if($datatype == "analyzed") {
+        echo rowWebsiteSelect();
+        echo rowUrlListSelect(false, false, false, false);
+        echo rowTableSelect($datatype);
+    }
     
     echo "</div>\n";
 }
@@ -219,8 +285,9 @@ if($action != "export") {
     echo "<div class=\"entry-row\"><b>Target</b></div>\n";
     
     if($datatype == "urllist") {
-        if($action != "merge")
+        if($action != "merge") {
             echo rowWebsiteSelect();
+        }
         
         echo rowUrlListSelect($action == "import", false, false, $action == "merge", "urllist-target");
             
@@ -275,7 +342,7 @@ if($action != "merge" || $datatype != "urllist") {
     if($action == "import") {
         // import options
         if($datatype == "urllist") {
-            if($filetype == "text") {
+            if($filetype == "text" ) {
                 // options for importing URL list from text file
                 echo "<div class=\"entry-row\">\n";
                 echo "<div class=\"entry-label\"></div>\n";
@@ -289,8 +356,8 @@ if($action != "merge" || $datatype != "urllist") {
     else if($action == "export") {
         // export options
         if($datatype == "urllist") {
-            if($filetype == "text") {
-                // options for exporting URL list to text file
+            if($filetype == "text" || $filetype == "spreadsheet") {
+                // options for exporting URL list to text file or spreadsheet
                 echo "<div class=\"entry-row\">\n";
                 echo "<div class=\"entry-label\"></div>\n";
                 echo "<div class=\"entry-input\">\n";
@@ -304,6 +371,18 @@ if($action != "merge" || $datatype != "urllist") {
                 echo "<div class=\"entry-input\">\n";
                 
                 echo "<input id=\"firstline-header\" type=\"text\" />\n";
+                
+                echo "</div>\n</div>\n";
+            }
+        }
+        else if($datatype == "analyzed") {
+            if($filetype == "text" || $filetype == "spreadsheet") {
+                // option for exporting analyzed datato text file or spreadsheet
+                echo "<div class=\"entry-row\">\n";
+                echo "<div class=\"entry-label\"></div>\n";
+                echo "<div class=\"entry-input\">\n";
+                
+                echo "<input id=\"column-names\" type=\"checkbox\" checked /> Include column names\n";
                 
                 echo "</div>\n</div>\n";
             }
