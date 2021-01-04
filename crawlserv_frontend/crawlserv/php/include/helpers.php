@@ -60,10 +60,12 @@ function rowWebsiteSelect(
     
     flush();
     
-    if($adddelete)
+    if($adddelete) {
         $class = "entry-x-input";
-    else
+    }
+    else {
         $class = "entry-input";
+    }
     
     $html = "<div class=\"entry-row\">\n";
     
@@ -72,40 +74,50 @@ function rowWebsiteSelect(
     
     $html .= "<select class=\"$class\" id=\"$select_id\"";
     
-    if(isset($m))
+    if(isset($m)) {
         $html .= " data-m=\"$m\"";
+    }
     
-    if(isset($mode))
+    if(isset($mode)) {
         $html .= " data-mode=\"$mode\"";
+    }
     
-    if(isset($tab))
+    if(isset($tab)) {
         $html .= " data-tab=\"$tab\"";
+    }
     
-    if(isset($module))
+    if(isset($module)) {
         $html .= " data-module=\"$module\"";
+    }
     
-    if(isset($action))
+    if(isset($action)) {
         $html .= " data-action=\"$action\"";
+    }
     
-    if(isset($datatype))
+    if(isset($datatype)) {
         $html .= " data-datatype=\"$datatype\"";
+    }
     
-    if(isset($filetype))
+    if(isset($filetype)) {
         $html .= " data-filetype=\"$filetype\"";
+    }
     
-    if(isset($compression))
+    if(isset($compression)) {
         $html .= " data-compression=\"$compression\"";
+    }
     
-    if($scrolldown)
+    if($scrolldown) {
         $html .= " data-scrolldown";
+    }
     
     $html .= ">\n";
     
     if($showglobal && !in_array(0, $filter, true)) {
         $html .= "<option value=\"0\"";
     
-        if(!$website)
+        if(!$website) {
             $html .= " selected";
+        }
         
         $html .= ">All websites [global]</option>\n";
     }
@@ -116,23 +128,26 @@ function rowWebsiteSelect(
             " ORDER BY name"
     );
 
-    if(!$result)
+    if(!$result) {
         die("ERROR: Could not websites from database.");
+    }
     
     $first = true;
     
     while($row = $result->fetch_assoc()) {
         $id = $row["id"];    
         
-        if(in_array($id, $filter, true))
+        if(in_array($id, $filter, true)) {
             continue;
+        }
         
         $name = $row["name"];
         $data_namespace = $row["namespace"];
         
         if($first) {
-            if(!isset($website))
+            if(!isset($website)) {
                 $website = $id;
+            }
                 
             $first = false;
         }
@@ -156,18 +171,21 @@ function rowWebsiteSelect(
     if($adddelete) {
         $html .= "<option value=\"0\"";
         
-        if(!$website)
+        if(!$website) {
             $html .= " selected";
+        }
         
         $html .= ">Add website</option>\n";
     }
-    else if(!isset($website))
+    else if(!isset($website)) {
         $html .= "<option disabled>No website available</option>\n";
+    }
     
     $html .= "</select>\n";
     
-    if($adddelete)
+    if($adddelete) {
         $html .= "<a id=\"website-delete\" href=\"#\" class=\"actionlink\"><span class=\"remove-entry\">X</span></a>";
+    }
     
     $html .= "</div>\n";
     $html .= "</div>\n";
@@ -188,10 +206,12 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
     
     flush();
     
-    if($delete)
+    if($delete) {
         $class = "entry-x-input";
-    else
+    }
+    else {
         $class = "entry-input";
+    }
     
     $html = "<div id=\"$id-div\" class=\"entry-row\">\n";
     
@@ -199,21 +219,25 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
     
     $html .= "<select class=\"$class\" id=\"$id\"";
     
-    if(isset($m))
+    if(isset($m)) {
         $html .= " data-m=\"$m\"";
+    }
         
-    if(isset($mode))
+    if(isset($mode)) {
         $html .= " data-mode=\"$mode\"";
+    }
             
-    if(isset($tab))
+    if(isset($tab)) {
         $html .= " data-tab=\"$tab\"";
+    }
                 
-    if($scrolldown)
+    if($scrolldown) {
         $html .= " data-scrolldown";
-    
+    }
         
-    if($noreload)
+    if($noreload) {
         $html .= " data-noreload";
+    }
                     
     $html .= ">\n";
     
@@ -224,8 +248,9 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
             " ORDER BY name"
     );
     
-    if(!$result)
+    if(!$result) {
         die("ERROR: Could not get URL lists from database.");
+    }
         
     if($result) {
         $first = true;
@@ -236,8 +261,9 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
             $ulNamespace = $row["namespace"];
             
             if($first) {
-                if(!isset($urllist))
+                if(!isset($urllist)) {
                     $urllist = $ulId;
+                }
                     
                 $first = false;
             }
@@ -260,18 +286,21 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
     if($add) {
         $html .= "<option value=\"0\"";
         
-        if(!$urllist)
+        if(!$urllist) {
             $html .= " selected";
+        }
         
         $html .= ">Add URL list</option>\n";
     }
-    else if(!isset($urllist))
+    else if(!isset($urllist)) {
         $html .= "<option disabled>No URL list available</option>\n";
+    }
         
     $html .= "</select>\n";
     
-    if($delete)
+    if($delete) {
         $html .= "<a id=\"urllist-delete\" href=\"#\" class=\"actionlink\" ><span class=\"remove-entry\">X</span></a>\n";
+    }
     
     $html .= "</div>\n";
     $html .= "</div>\n";
@@ -283,10 +312,12 @@ function rowUrlListSelect($add = false, $delete = false, $scrolldown = false, $n
 function rowConfigSelect($module, $adddelete = false, $noreload = false) {
     global $m, $mode, $dbConnection, $website, $config, $configName, $current;
     
-    if($adddelete)
+    if($adddelete) {
         $class = "entry-x-input";
-    else
+    }
+    else {
         $class = "entry-input";
+    }
     
     $html = "<div class=\"entry-row\">\n";
     
@@ -294,14 +325,17 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
     
     $html .= "<select id=\"config-select\" class=\"$class\"";
     
-    if(isset($m))
+    if(isset($m)) {
         $html .= " data-m=\"$m\"";
+    }
     
-    if(isset($mode))
+    if(isset($mode)) {
         $html .= " data-mode=\"$mode\"";
+    }
     
-    if($noreload)
+    if($noreload) {
         $html .= " data-noreload";
+    }
     
     $result = $dbConnection->query(
             "SELECT id, name".
@@ -313,8 +347,9 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
     
     $html .= ">\n";
     
-    if(!$result)
+    if(!$result) {
         die("ERROR: Could not get ".strtolower($module)."s from database.");
+    }
         
     $first = true;
         
@@ -323,58 +358,126 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
         $name = $row["name"];
         
         if($first) {
-            if(!isset($config))
+            if(!isset($config)) {
                 $config = $id;
+            }
                 
-                $first = false;
+            $first = false;
         }
         
         $html .= "<option value=\"".$id."\"";
         
-        if($id == $config)
+        if($id == $config) {
             $html .= " selected";
+        }
             
         $html .= ">$name</option>\n";
     }
         
     $result->close();
     
-    if(!isset($config))
+    if(!isset($config)) {
         $config = 0;
+    }
             
     if($config) {
         $result = $dbConnection->query("SELECT name, config FROM crawlserv_configs WHERE id=$config LIMIT 1");
         
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not get ".strtolower($module)." data.");
+        }
             
-            $row = $result->fetch_assoc();
+        $row = $result->fetch_assoc();
+        
+        $configName = $row["name"];
+        
+        if(!isset($current)) {
+            $current = $row["config"];
+        }
             
-            $configName = $row["name"];
-            
-            if(!isset($current))
-                $current = $row["config"];
-                
-                $result->close();
+        $result->close();
     }
-    else if(!isset($current))
+    else if(!isset($current)) {
         $current = '[]';
+    }
 
     if($adddelete) {
         $html .= "<option value=\"0\"";
                 
-        if(!$config)
+        if(!$config) {
             $html .= " selected";
+        }
                     
         $html .= ">Add ".strtolower($module)."</option>\n";
     }
-    else if(!isset($config))
+    else if(!isset($config)) {
         $html .= "<option disabled>No ".strtolower($module)." available</option>\n";
+    }
     
     $html .= "</select>\n";
     
     if($adddelete) {
         $html .= "<a id=\"config-delete\" href=\"#\" class=\"actionlink\" data-m=\"$m\">";
+        $html .= "<span class=\"remove-entry\">X</span>";
+        $html .= "</a>";
+    }
+    
+    $html .= "</div>\n";
+    $html .= "</div>\n";
+    
+    return $html;
+}
+
+// render row with result table selection (for specific type of results)
+function rowTableSelect($type, $delete = false) {
+    global $m, $dbConnection, $website, $urllist;
+    
+    if($delete) {
+        $class = "entry-x-input";
+    }
+    else {
+        $class = "entry-input";
+    }
+    
+    $html = "<div class=\"entry-row\">\n";
+    
+    $html .= "<div class=\"entry-label\">Table:</div><div class=\"$class\">\n";
+    
+    $html .= "<select id=\"table-select\" class=\"$class\"";
+    
+    $result = $dbConnection->query(
+            "SELECT id, name, updated".
+            " FROM crawlserv_".$type."tables".
+            " WHERE website=$website".
+            " AND urllist=$urllist".
+            " ORDER BY name, updated DESC"
+    );
+    
+    $html .= ">\n";
+    
+    if(!$result) {
+        die("ERROR: Could not get $type data from database.");
+    }
+    
+    if($result->num_rows == 0) {
+        $html .= "<option disabled>No $type data available</option>\n";
+    }
+    else {    
+        while($row = $result->fetch_assoc()) {
+            $id = $row["id"];
+            $name = $row["name"];
+            $updated = $row["updated"];
+            
+            $html .= "<option value=\"".$id."\">$name – last updated on ".$updated.")</option>\n";
+        }
+    }
+    
+    $result->close();
+
+    $html .= "</select>\n";
+    
+    if($delete) {
+        $html .= "<a id=\"table-delete\" href=\"#\" class=\"actionlink\" data-m=\"$m\">";
         $html .= "<span class=\"remove-entry\">X</span>";
         $html .= "</a>";
     }
@@ -397,13 +500,15 @@ function scriptLocales() {
     
     $result = $dbConnection->query("SELECT name FROM crawlserv_locales ORDER BY name");
     
-    if(!$result)
+    if(!$result) {
         die("ERROR: Could not get locales from database.");
+    }
         
     $locales = "";
         
-    while($row = $result->fetch_assoc())
+    while($row = $result->fetch_assoc()) {
         $locales .= " \"".$row["name"]."\",";
+    }
             
     $locales = substr($locales, 0, -1);
     
@@ -433,10 +538,11 @@ function scriptModule() {
                 " ORDER BY name"
         );
                 
-        if(!$result)
+        if(!$result) {
             die("ERROR: Could not get queries from database.");
+        }
                     
-        while($row = $result->fetch_assoc())
+        while($row = $result->fetch_assoc()) {
             $script .= " { \"id\": "
                     .$row["id"]
                     .", \"name\": "
@@ -452,6 +558,7 @@ function scriptModule() {
                     .", \"resultsubsets\": "
                     .($row["resultsubsets"] ? "true" : "false")
                     ." },\n";
+        }
                                                 
         $result->close();
                                                 
@@ -467,8 +574,9 @@ function scriptModule() {
                     " LIMIT 1"
             );
             
-            if(!$result)
+            if(!$result) {
                 die("ERROR: Could not get current configuration from database");
+            }
                 
             $row = $result->fetch_assoc();
                 
@@ -476,8 +584,9 @@ function scriptModule() {
                 
             $result->close();
         }
-        else
+        else {
             $script .= " []";
+        }
                                                     
         $script .= ";\n";
     }
@@ -506,10 +615,12 @@ function time_elapsed_string($datetime) {
     );
     
     foreach($string as $k => &$v) {
-        if ($diff->$k)
+        if($diff->$k) {
             $v = $diff->$k . $v;
-            else
-                unset($string[$k]);
+        }
+        else {
+            unset($string[$k]);
+        }
     }
     
     $string = array_slice($string, 0, 1);
@@ -540,8 +651,9 @@ function setting_to_bytes($setting)
     
     $setting = (string) $setting;
     
-    if(!($len = strlen($setting)))
+    if(!($len = strlen($setting))) {
         return NULL;
+    }
     
     $last = strtolower($setting[$len - 1]);
     $numeric = (int) $setting;
