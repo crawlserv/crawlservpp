@@ -262,7 +262,8 @@ namespace crawlservpp::Wrapper {
 	 * \param other The regular expression to move from.
 	 *
 	 * \returns A reference to the instance containing
-	 *   the regular expression after moving (i.e. *this).
+	 *   the regular expression after moving
+	 *   (i.e. @c *this).
 	 *
 	 * \sa valid
 	 */
