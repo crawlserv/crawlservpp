@@ -99,10 +99,18 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Destructor clearing the underlying buffer if necessary.
 	inline TidyBuffer::~TidyBuffer() {
 		this->clear();
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Gets a pointer to the underlying buffer.
 	/*!
@@ -188,6 +196,10 @@ namespace crawlservpp::Wrapper {
 		return this->buffer.bp == nullptr || this->buffer.size == 0;
 	}
 
+	/*
+	 * CLEANUP
+	 */
+
 	//! Frees the underlying buffer.
 	/*!
 	 * The buffer will be invalid and valid() will return false afterwards.
@@ -199,6 +211,10 @@ namespace crawlservpp::Wrapper {
 			tidyBufFree(&(this->buffer)); // (also sets buffer structure to zeroes)
 		}
 	}
+
+	/*
+	 * COPY AND MOVE
+	 */
 
 	//! Copy constructor.
 	/*!

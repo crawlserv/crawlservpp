@@ -121,6 +121,10 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor initializing the @c libcurl API locally and globally, if necessary.
 	/*!
 	 * \throws std::runtime_error if
@@ -196,6 +200,10 @@ namespace crawlservpp::Wrapper {
 		}
 	}
 
+	/*
+	 * GETTERS
+	 */
+
 	//! Gets a pointer to the underlying @c libcurl handle.
 	/*!
 	 * \returns A pointer to the underlying @c
@@ -227,6 +235,10 @@ namespace crawlservpp::Wrapper {
 	inline bool Curl::valid() const noexcept {
 		return this->ptr != nullptr;
 	}
+
+	/*
+	 * INITIALIZATION AND CLEANUP
+	 */
 
 	//! Initializes the underlying @c libcurl handle.
 	/*!
@@ -268,6 +280,10 @@ namespace crawlservpp::Wrapper {
 			this->ptr = nullptr;
 		}
 	}
+
+	/*
+	 * COPY AND MOVE
+	 */
 
 	//! Move constructor.
 	/*!

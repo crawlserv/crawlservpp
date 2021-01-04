@@ -127,6 +127,10 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor preparing a MySQL statement for the given connection and SQL query.
 	/*!
 	 * \param setConnection A pointer to the MySQL connection to use.
@@ -144,6 +148,10 @@ namespace crawlservpp::Wrapper {
 	inline PreparedSqlStatement::~PreparedSqlStatement() {
 		this->clear();
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Gets a reference to the prepared MySQL statement.
 	/*!
@@ -167,6 +175,10 @@ namespace crawlservpp::Wrapper {
 	inline bool PreparedSqlStatement::valid() const noexcept {
 		return this->ptr.operator bool();
 	}
+
+	/*
+	 * LIFETIME
+	 */
 
 	//! Prepares the MySQL statement.
 	/*!
@@ -219,6 +231,10 @@ namespace crawlservpp::Wrapper {
 
 		this->prepare();
 	}
+
+	/*
+	 * COPY AND MOVE
+	 */
 
 	//! Move constructor.
 	/*!

@@ -103,6 +103,10 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor setting the underlying regular expression.
 	/*!
 	 * \param setPtr The pointer to a regular expression match to be used
@@ -116,6 +120,10 @@ namespace crawlservpp::Wrapper {
 	inline PCREMatch::~PCREMatch() {
 		this->clear();
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Gets a pointer to the underlying regular expression match.
 	/*!
@@ -142,6 +150,10 @@ namespace crawlservpp::Wrapper {
 		return this->ptr != nullptr;
 	}
 
+	/*
+	 * CLEANUP
+	 */
+
 	//! Clears the underlying regular expression match if necessary.
 	inline void PCREMatch::clear() noexcept {
 		if(this->ptr != nullptr) {
@@ -150,6 +162,10 @@ namespace crawlservpp::Wrapper {
 			this->ptr = nullptr;
 		}
 	}
+
+	/*
+	 * COPY AND MOVE
+	 */
 
 	//! Move constructor.
 	/*!

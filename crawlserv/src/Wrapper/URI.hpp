@@ -108,6 +108,10 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Destructor freeing the %URI if necessary.
 	/*!
 	 * Has no effect if no %URI has been created.
@@ -115,6 +119,10 @@ namespace crawlservpp::Wrapper {
 	inline URI::~URI() {
 		this->clear();
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Gets a pointer to the underlying %URI structure.
 	/*!
@@ -140,6 +148,10 @@ namespace crawlservpp::Wrapper {
 	inline bool URI::valid() const noexcept {
 		return this->ptr.operator bool();
 	}
+
+	/*
+	 * CREATION AND CLEANUP
+	 */
 
 	//! Creates a new and empty %URI.
 	/*!

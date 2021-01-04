@@ -116,10 +116,18 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Destructor resetting the list if necessary.
 	inline CurlList::~CurlList() {
 		this->clear();
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Gets a pointer to the underlying list.
 	/*!
@@ -190,6 +198,10 @@ namespace crawlservpp::Wrapper {
 
 		return true;
 	}
+
+	/*
+	 * MANIPULATION AND CLEANUP
+	 */
 
 	//! Appends another list to the list.
 	/*!
@@ -266,6 +278,10 @@ namespace crawlservpp::Wrapper {
 
 		this->ptr = nullptr;
 	}
+
+	/*
+	 * COPY AND MOVE
+	 */
 
 	//! Copy constructor.
 	/*!

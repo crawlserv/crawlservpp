@@ -104,10 +104,18 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Destructor clearing the underlying query list if necessary.
 	inline URIQueryList::~URIQueryList() {
 		this->clear();
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Gets a pointer to the underlying query list.
 	/*!
@@ -156,6 +164,10 @@ namespace crawlservpp::Wrapper {
 			this->ptr = nullptr;
 		}
 	}
+
+	/*
+	 * COPY AND MOVE
+	 */
 
 	//! Move constructor.
 	/*!

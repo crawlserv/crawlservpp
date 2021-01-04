@@ -107,6 +107,10 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor setting the underlying pointer.
 	/*!
 	 * \param regExPtr The address to which the underlying pointer should be set.
@@ -122,6 +126,10 @@ namespace crawlservpp::Wrapper {
 	inline PCRE::~PCRE() {
 		this->clear();
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Gets a pointer to the underlying regular expression.
 	/*!
@@ -152,6 +160,10 @@ namespace crawlservpp::Wrapper {
 		return this->ptr != nullptr;
 	}
 
+	/*
+	 * SETTER
+	 */
+
 	//! Sets a PERL-compatibe regular expression.
 	/*!
 	 * If another expression is already managed by the class,
@@ -167,6 +179,10 @@ namespace crawlservpp::Wrapper {
 
 		this->ptr = regExPtr;
 	}
+
+	/*
+	 * CLEANUP
+	 */
 
 	//! Clears the underlying regular expression if necessary.
 	/*!
@@ -185,6 +201,10 @@ namespace crawlservpp::Wrapper {
 			this->ptr = nullptr;
 		}
 	}
+
+	/*
+	 * COPY AND MOVE
+	 */
 
 	//! Copy constructor.
 	/*!

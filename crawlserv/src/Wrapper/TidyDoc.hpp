@@ -146,6 +146,10 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor creating an empty tidy-html5 document.
 	/*!
 	 * Also sets the internal error buffer of
@@ -165,6 +169,10 @@ namespace crawlservpp::Wrapper {
 	inline TidyDoc::~TidyDoc() {
 		tidyRelease(this->doc);
 	}
+
+	/*
+	 * GETTER
+	 */
 
 	//! Gets the processed text from the tidy-html5 document.
 	/*!
@@ -238,6 +246,10 @@ namespace crawlservpp::Wrapper {
 
 		return std::string();
 	}
+
+	/*
+	 * SETTERS
+	 */
 
 	//! Sets a boolean option.
 	/*!
@@ -373,6 +385,10 @@ namespace crawlservpp::Wrapper {
 			);
 		}
 	}
+
+	/*
+	 * PARSING AND CLEANUP
+	 */
 
 	//! Parses the given markup.
 	/*!

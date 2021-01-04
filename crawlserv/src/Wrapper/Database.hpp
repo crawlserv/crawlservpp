@@ -250,13 +250,13 @@ namespace crawlservpp::Wrapper {
 		void compressTable(const std::string& tableName);
 
 		///@}
-		///@name URL List Helper Functions
+		///@name URL List Helper Function
 		///@{
 
 		void setUrlListCaseSensitive(std::uint64_t listId, bool isCaseSensitive);
 
 		///@}
-		///@name Exception Helper Functions
+		///@name Exception Helper Function
 		///@{
 
 		static void sqlException(const std::string& function, const sql::SQLException& e);
@@ -276,12 +276,20 @@ namespace crawlservpp::Wrapper {
 	 * IMPLEMENTATION
 	 */
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor setting the database connection.
 	/*!
 	 * \param dbThread Reference to the database
 	 *   connection used by the thread.
 	 */
 	inline Database::Database(Module::Database& dbThread) : database(dbThread) {}
+
+	/*
+	 * SETTERS
+	 */
 
 	//! \copydoc Module::Database::setLogging
 	inline void Database::setLogging(std::uint8_t level, std::uint8_t min, std::uint8_t verbose) {
@@ -298,6 +306,10 @@ namespace crawlservpp::Wrapper {
 		this->database.setTimeOut(milliseconds);
 	}
 
+	/*
+	 * LOGGING
+	 */
+
 	//! \copydoc Module::Database::log(std::uint8_t, const std::string&)
 	inline void Database::log(std::uint8_t level, const std::string& logEntry) {
 		this->database.log(level, logEntry);
@@ -308,20 +320,36 @@ namespace crawlservpp::Wrapper {
 		this->database.log(level, logEntries);
 	}
 
+	/*
+	 * WEBSITES
+	 */
+
 	//! \copydoc Main::Database::getWebsiteDomain
 	inline std::string Database::getWebsiteDomain(std::uint64_t websiteId) {
 		return this->database.getWebsiteDomain(websiteId);
 	}
+
+	/*
+	 * QUERIES
+	 */
 
 	//! \copydoc Main::Database::getQueryProperties
 	inline void Database::getQueryProperties(std::uint64_t queryId, QueryProperties& queryPropertiesTo) {
 		this->database.getQueryProperties(queryId, queryPropertiesTo);
 	}
 
+	/*
+	 * CONFIGURATIONS
+	 */
+
 	//! \copydoc Main::Database::getConfiguration
 	inline std::string Database::getConfiguration(std::uint64_t configId) {
 		return this->database.getConfiguration(configId);
 	}
+
+	/*
+	 * TARGET TABLES
+	 */
 
 	//! \copydoc Main::Database::addOrUpdateTargetTable
 	inline std::uint64_t Database::addOrUpdateTargetTable(const TargetTableProperties& properties) {
@@ -352,6 +380,10 @@ namespace crawlservpp::Wrapper {
 		this->database.deleteTargetTable(type, tableId);
 	}
 
+	/*
+	 * LOCKING
+	 */
+
 	//! \copydoc Main::Database::beginNoLock
 	inline void Database::beginNoLock() {
 		this->database.beginNoLock();
@@ -361,6 +393,10 @@ namespace crawlservpp::Wrapper {
 	inline void Database::endNoLock() {
 		this->database.endNoLock();
 	}
+
+	/*
+	 * TABLES
+	 */
 
 	//! \copydoc Main::Database::isTableEmpty
 	inline bool Database::isTableEmpty(const std::string& tableName) {
@@ -386,6 +422,10 @@ namespace crawlservpp::Wrapper {
 	inline void Database::clearTable(std::string_view tableName) {
 		this->database.clearTable(tableName);
 	}
+
+	/*
+	 * CUSTOM DATA
+	 */
 
 	//! \copydoc Main::Database::getCustomData(Data::GetValue&)
 	inline void Database::getCustomData(Data::GetValue& data) {
@@ -447,10 +487,18 @@ namespace crawlservpp::Wrapper {
 		this->database.updateCustomData(data);
 	}
 
+	/*
+	 * REQUEST COUNTER
+	 */
+
 	//! \copydoc Main::Database::getRequestCounter
 	inline std::uint64_t Database::getRequestCounter() {
 		return Main::Database::getRequestCounter();
 	}
+
+	/*
+	 * GETTERS
+	 */
 
 	//! Gets the options of the module.
 	/*!
@@ -507,10 +555,18 @@ namespace crawlservpp::Wrapper {
 		return this->database.getMaxAllowedPacketSize();
 	}
 
+	/*
+	 * VALIDATION
+	 */
+
 	//! \copydoc Main::Database::checkConnection
 	inline void Database::checkConnection() {
 		this->database.checkConnection();
 	}
+
+	/*
+	 * HELPER FUNCTIONS FOR PREPARED SQL STATEMENTS
+	 */
 
 	//! \copydoc Main::Database::reserveForPreparedStatements
 	inline void Database::reserveForPreparedStatements(std::size_t n) {
@@ -531,6 +587,10 @@ namespace crawlservpp::Wrapper {
 	inline sql::PreparedStatement& Database::getPreparedStatement(std::size_t id) {
 		return this->database.getPreparedStatement(id);
 	}
+
+	/*
+	 * DATABASE HELPER FUNCTIONS
+	 */
 
 	//! \copydoc Main::Database::getLastInsertedId
 	inline std::uint64_t Database::getLastInsertedId() {
@@ -572,10 +632,18 @@ namespace crawlservpp::Wrapper {
 		this->database.compressTable(tableName);
 	}
 
+	/*
+	 * URL LIST HELPER FUNCTION
+	 */
+
 	//! \copydoc Main::Database::setUrlListCaseSensitive
 	inline void Database::setUrlListCaseSensitive(std::uint64_t listId, bool isCaseSensitive) {
 		this->database.setUrlListCaseSensitive(listId, isCaseSensitive);
 	}
+
+	/*
+	 * EXCEPTION HELPER FUNCTION
+	 */
 
 	//! \copydoc Main::Database::sqlException
 	inline void Database::sqlException(const std::string& function, const sql::SQLException& e) {
@@ -596,6 +664,10 @@ namespace crawlservpp::Wrapper {
 	inline bool Database::sqlExecute(sql::PreparedStatement& sqlPreparedStatement) {
 		return Main::Database::sqlExecute(sqlPreparedStatement);
 	}
+
+	/*
+	 * HELPER FUNCTIONS FOR EXECUTING SQL QUERIES
+	 */
 
 	//! Executes a prepared SQL statement and returns the resulting set.
 	/*!
