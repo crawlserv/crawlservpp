@@ -659,3 +659,19 @@ function enumQueries(result) {
 function disableImportExport() {
 	$("#firstline-header").prop("disabled", !$("#write-firstline-header").prop("checked"));
 }
+
+function getFirstUrlList() {
+	if($("#urllist-select").length) {
+		return parseInt($("#urllist-select").val(), 10);
+	}
+	
+	if($("#urllist-source").length) {
+		return parseInt($("#urllist-source").val(), 10);
+	}
+	
+	if($("#urllist-target").length) {
+		return parseInt($("#urllist-target").val(), 10);
+	}
+	
+	return 0;
+}
