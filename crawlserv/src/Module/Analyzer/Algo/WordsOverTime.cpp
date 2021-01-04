@@ -251,12 +251,28 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			return;
 		}
 
+		const auto firstDatePos{dateMap[0].pos};
 		ResultMap::iterator dateIt;
 		std::string currentDateGroup;
 		std::size_t articleIndex{};
 		std::size_t sentenceIndex{};
 		std::size_t statusCounter{};
 		std::size_t resultCounter{};
+
+		// skip articles and sentences without (i.e. before first) date
+		while(
+				articleIndex < articleMap.size()
+				&& articleMap[articleIndex].pos < firstDatePos
+		) {
+			++articleIndex;
+		}
+
+		while(
+				sentenceIndex < sentenceMap.size()
+				&& sentenceMap[sentenceIndex].first < firstDatePos
+		) {
+			++sentenceIndex;
+		}
 
 		for(const auto& date : dateMap) {
 			// switch date group if necessary
