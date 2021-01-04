@@ -43,7 +43,6 @@ The following additional components are required to build crawlserv++ on your sy
 * [`gcc`](https://gcc.gnu.org/), version 7 or higher, or [`clang`](https://clang.llvm.org/), version 5 or higher – or any other modern C++ 17 compiler
 * a multi-threading library supported by `cmake` like `pthreads` (e.g. `libpthread-stubs0-dev` on Ubuntu)
 * a modern C++ Standard Library supporting C++ 17 (e.g. `libstdc++-7-dev`)
-
 * the [`Boost.Iostreams`](https://www.boost.org/doc/libs/1_70_0/libs/iostreams/doc/index.html) library (`libboost-iostreams-dev`)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
 * the [GNU Aspell library](http://aspell.net/) (`libaspell-dev`)
@@ -260,6 +259,7 @@ The following third-party libraries are used by the command-and-control server:
 * [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html) (included in `crawlserv/src/_extern/date`)
 * [jsoncons](https://github.com/danielaparker/jsoncons/) (included in `crawlserv/src/_extern/jsoncons`)
 * [libcurl](https://curl.haxx.se/libcurl/)
+* [libzip](https://libzip.org/)
 * [Mongoose Embedded Web Server](https://github.com/cesanta/mongoose) (included in `crawlserv/src/_extern/mongoose`)
 * [MySQL Connector/C++ 8.0](https://dev.mysql.com/doc/connector-cpp/8.0/en/)
 * [PCRE2](https://www.pcre.org/)
