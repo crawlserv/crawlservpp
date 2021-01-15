@@ -6183,6 +6183,15 @@ namespace crawlservpp::Main {
 									::tolower
 							);
 
+							// remove size from retrieved data type if no size has been specified
+							if(columnType.find_first_of('(') == std::string::npos) {
+								const auto bracketPos{targetType.find_first_of('(')};
+
+								if(bracketPos != std::string::npos) {
+									targetType = targetType.substr(0, bracketPos);
+								}
+							}
+
 							if(columnType != targetType) {
 								std::string exceptionString{
 									"Main::Database::addTargetTable():"
@@ -7541,13 +7550,13 @@ namespace crawlservpp::Main {
 			// prepare SQL statement
 			SqlPreparedStatementPtr sqlStatement{
 				this->connection->prepareStatement(
-						"SELECT COUNT(*)"
-						" AS result"
+						"SELECT EXISTS("
+						" SELECT 1"
 						" FROM INFORMATION_SCHEMA.COLUMNS"
 						" WHERE TABLE_SCHEMA LIKE ?"
 						" AND TABLE_NAME LIKE ?"
 						" AND COLUMN_NAME LIKE ?"
-						" LIMIT 1"
+						") AS result"
 				)
 			};
 
