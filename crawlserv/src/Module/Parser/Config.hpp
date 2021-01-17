@@ -263,7 +263,7 @@ namespace crawlservpp::Module::Parser {
 			 */
 			std::vector<std::uint8_t> parsingFieldSources;
 
-			//! Specifies whether to remove line breaks and unnecessary spaces when parsing the field with the same array index.
+			//! Specifies whether to remove line breaks and unnecessary whitespaces when parsing the field with the same array index.
 			std::vector<bool> parsingFieldTidyTexts;
 
 			//! Specifies whether to write a warning to the log if the field with the same array index is empty.

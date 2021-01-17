@@ -260,7 +260,7 @@
 			"item-type": "bool",
 			"default": [],
 			"label": "Field results as tidied text:",
-			"description": "Remove line breaks and unnecessary spaces when parsing the field with the same array index.",
+			"description": "Remove line breaks and unnecessary whitespaces when parsing the field with the same array index.",
 			"simple": true,
 			"position": 11
 		},

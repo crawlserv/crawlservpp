@@ -701,7 +701,7 @@ namespace crawlservpp::Module::Extractor {
 			 */
 			std::vector<std::uint64_t> extractingFieldQueries;
 
-			//! Specifies whether to remove line breaks and unnecessary spaces when extracting the field with the same array index.
+			//! Specifies whether to remove line breaks and unnecessary whitespaces when extracting the field with the same array index.
 			/*!
 			 * \sa extractingFieldNames
 			 */
@@ -910,7 +910,7 @@ namespace crawlservpp::Module::Extractor {
 			//! Name of the table to save linked data to.
 			std::string linkedTargetTable;
 
-			//! Specifies whether to remove line breaks and unnecessary spaces when extracting the linked field with the same array index.
+			//! Specifies whether to remove line breaks and unnecessary whitespaces when extracting the linked field with the same array index.
 			/*!
 			 * \sa linkedFieldNames
 			 */
