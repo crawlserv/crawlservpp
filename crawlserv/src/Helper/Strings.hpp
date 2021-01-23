@@ -34,7 +34,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include <algorithm>	// std::equal, std::find_if, std::mismatch, std::remove_if,
-						// std::replace, std::sort, std::transform, std::unique
+						// std::sort, std::transform, std::unique
 #include <array>		// std::array
 #include <cctype>		// std::isspace, std::tolower
 #include <cstddef>		// std::size_t
@@ -79,6 +79,7 @@ namespace crawlservpp::Helper::Strings {
 		"\u2029"sv, // paragraph separator
 		"\u202f"sv, // narrow no-break space
 		"\u205f"sv, // medium mathematical space
+		"\u2060"sv,	// word joiner
 		"\u3000"sv, // ideographic space
 	};
 
@@ -1010,12 +1011,30 @@ namespace crawlservpp::Helper::Strings {
 			replaceAll(stringToTidy, whitespace, " ");
 		}
 
+		// remove zero-width no-break spaces
+		replaceAll(stringToTidy, "\ufeff"sv, "");
+
 		// replace special ASCII characters with spaces
-		std::replace(stringToTidy.begin(), stringToTidy.end(), '\t', ' '); // horizontal tab
-		std::replace(stringToTidy.begin(), stringToTidy.end(), '\n', ' '); // line feed
-		std::replace(stringToTidy.begin(), stringToTidy.end(), '\v', ' '); // vertical tab
-		std::replace(stringToTidy.begin(), stringToTidy.end(), '\f', ' '); // form feed
-		std::replace(stringToTidy.begin(), stringToTidy.end(), '\r', ' '); // carriage return
+		std::transform(
+				stringToTidy.begin(),
+				stringToTidy.end(),
+				stringToTidy.begin(),
+				[](const auto c) {
+					switch(c) {
+					case '\t':
+					case '\n':
+					case '\v':
+					case '\f':
+					case '\r':
+					case '\b':
+					case '\0':
+						return ' ';
+
+					default:
+						return c;
+					}
+				}
+		);
 
 		// replace double spaces
 		while(stringToTidy.find("  ") != std::string::npos) {
