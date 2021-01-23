@@ -31,6 +31,7 @@
 #ifndef STRUCT_SERVERSETTINGS_HPP_
 #define STRUCT_SERVERSETTINGS_HPP_
 
+#include <cstdint>	// std::uint16_t
 #include <string>	// std::string
 
 namespace crawlservpp::Struct {
@@ -58,6 +59,9 @@ namespace crawlservpp::Struct {
 
 		//! Indicates whether the deletion of data is allowed using the frontend, i.e. server commands.
 		bool dataDeletable{false};
+
+		//! Number of seconds to wait if a MySQL error occures before retrying and possibly terminating the thread.
+		std::uint16_t sleepOnSqlErrorS{60};
 
 		///@}
 	};
