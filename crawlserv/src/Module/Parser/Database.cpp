@@ -472,6 +472,7 @@ namespace crawlservpp::Module::Parser {
 				" USE INDEX(url)"
 				" WHERE url = ?"
 				" AND crawltime < ?"
+				" AND content <> ''"
 				" ORDER BY crawltime DESC"
 				" LIMIT 1",
 				this->ps.getLatestContent
