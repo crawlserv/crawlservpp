@@ -109,8 +109,8 @@ namespace crawlservpp::Module::Extractor {
 	//! Default time to wait before checking for new URLs when all URLs have been processed, in milliseconds.
 	inline constexpr std::uint64_t defaultSleepIdleMs{5000};
 
-	//! Default time to wait before last try to re-connect to mySQL server, in seconds.
-	inline constexpr std::uint64_t defaultSleepMySqlS{20};
+	//! Default time to wait before last try to re-connect to MySQL server, in seconds.
+	inline constexpr std::uint64_t defaultSleepMySqlS{60};
 
 	//! Default name of the paging variable.
 	/*!

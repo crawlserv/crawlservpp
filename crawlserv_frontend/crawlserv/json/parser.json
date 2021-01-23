@@ -94,9 +94,9 @@
 		},
 		"sleep.mysql": {
 			"type": "number",
-			"default": 10,
+			"default": 60,
 			"min": 1,
-			"description": "Time (in s) to wait before last try to re-connect to MySQL server.",
+			"description": "Time (in s) to wait before last try to re-connect to the MySQL server.",
 			"simple": false
 		},
 		"target.table": {

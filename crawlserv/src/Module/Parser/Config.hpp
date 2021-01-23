@@ -80,7 +80,7 @@ namespace crawlservpp::Module::Parser {
 	inline constexpr std::uint64_t defaultSleepIdleMs{5000};
 
 	//! Default time to wait before last try to re-connect to MySQL server, in seconds.
-	inline constexpr std::uint64_t defaultSleepMySqlS{20};
+	inline constexpr std::uint64_t defaultSleepMySqlS{60};
 
 	///@}
 

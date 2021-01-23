@@ -72,8 +72,8 @@ namespace crawlservpp::Module::Analyzer {
 	//! Verbose logging is enabled.
 	inline constexpr std::uint8_t generalLoggingVerbose{3};
 
-	//! Default time (in s) to wait before last try to re-connect to mySQL server.
-	inline constexpr std::uint64_t defaultSleepMySqlS{20};
+	//! Default time (in s) to wait before last try to re-connect to MySQL server.
+	inline constexpr std::uint64_t defaultSleepMySqlS{60};
 
 	//! Default time (in ms) to wait each tick when finished.
 	inline constexpr std::uint64_t defaultSleepWhenFinishedMs{5000};
