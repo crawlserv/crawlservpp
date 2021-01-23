@@ -33,6 +33,8 @@
 
 #include "Exception.hpp"
 
+#include <boost/lexical_cast.hpp>
+
 #include <algorithm>	// std::find_if, std::transform
 #include <cctype>		// ::tolower
 #include <fstream>		// std::ifstream
@@ -61,16 +63,64 @@ namespace crawlservpp::Main {
 		explicit ConfigFile(const std::string& name);
 
 		///@}
-		///@name Getter
+		///@name Getters
 		///@{
 
-		[[nodiscard]] std::string getValue(const std::string& name) const;
+		bool getValue(const std::string& name, std::string& to) const;
+
+		//! Gets the converted value of a configuration entry.
+		/*!
+		 * \param name Constant reference to a string
+		 *   containing the name of the configuration
+		 *   entry to be retrieved.
+		 * \param to Reference to a variable to which
+		 *   the converted value of the entry should
+		 *   be written. Will not be changed, if the
+		 *   given configuration entry does not
+		 *   exist or its value is empty.
+		 *
+		 * \return True, if the given configuration
+		 *   entry exists and is not empty.
+		 *   False otherwise.
+		 *
+		 * \throws ConfigFile::Exception, if the
+		 *   conversion of the configuration entry
+		 *   value failed.
+		 */
+		template<typename T> bool getValue(const std::string& name, T& to) const {
+			std::string result;
+
+			if(this->getValue(name, result) && !result.empty()) {
+				try {
+					to = boost::lexical_cast<T>(result);
+
+					return true;
+				}
+				catch(const boost::bad_lexical_cast& e) {
+					throw Exception(
+							this->fileName + ":"
+							" Could not convert config file entry \"" + name + "\""
+							" (=\"" + result + "\")"
+							" to " + typeid(T).name()
+					);
+				}
+			}
+
+			return false;
+		}
 
 		///@}
 
+		//! Class for configuration file exceptions.
+		MAIN_EXCEPTION_CLASS();
+
 	protected:
-		//! Vector containing the configuration entries as pairs of strings.
+		// configuration entries
 		std::vector<std::pair<std::string, std::string>> entries;
+
+	private:
+		// file name
+		std::string fileName;
 	};
 
 	/*
@@ -86,7 +136,7 @@ namespace crawlservpp::Main {
 	 * \throws Main::Exception if the configuration
 	 *   file could not be opened for reading.
 	 */
-	inline ConfigFile::ConfigFile(const std::string& name) {
+	inline ConfigFile::ConfigFile(const std::string& name) : fileName(name) {
 		std::ifstream fileStream(name);
 		std::string line;
 
@@ -119,17 +169,21 @@ namespace crawlservpp::Main {
 		}
 	}
 
-	//! Gets the value of a configuration entry.
+	//! Gets the string value of a configuration entry.
 	/*!
 	 * \param name Constant reference to a string
 	 *   containing the name of the configuration
 	 *   entry to be retrieved.
+	 * \param to Reference to a string to which
+	 *   the value of the entry should be
+	 *   written. Will not be changed, if the
+	 *   given configuration entry does not
+	 *   exist.
 	 *
-	 * \returns The value of the given configuration
-	 *   entry or an empty string, if the entry
-	 *   does not exist.
+	 * \return True, if the given configuration
+	 *   entry exists. False otherwise.
 	 */
-	inline std::string ConfigFile::getValue(const std::string& name) const {
+	inline bool ConfigFile::getValue(const std::string& name, std::string& to) const {
 		std::string nameCopy(name);
 
 		std::transform(nameCopy.begin(), nameCopy.end(), nameCopy.begin(), ::tolower);
@@ -145,10 +199,12 @@ namespace crawlservpp::Main {
 		};
 
 		if(valueIt != this->entries.cend()) {
-			return valueIt->second;
+			to = valueIt->second;
+
+			return true;
 		}
 
-		return "";
+		return false;
 	}
 
 } /* namespace crawlservpp::Main */
