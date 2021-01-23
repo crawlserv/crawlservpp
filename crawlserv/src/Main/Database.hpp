@@ -160,6 +160,7 @@ namespace crawlservpp::Main {
 	//! Time (in ms) to sleep on SQL deadlock.
 	inline constexpr auto sleepOnDeadLockMs{250};
 
+	//! Maximum number of columns in all associated tables associated with an URL list.
 	inline constexpr auto maxColumnsUrlList{6};
 
 	//! Number fo arguments needed for adding one URL.
