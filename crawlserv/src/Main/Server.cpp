@@ -89,8 +89,8 @@ namespace crawlservpp::Main {
 			Helper::FileSystem::createDirectoryIfNotExists(dbSettings.debugDir);
 		}
 
-		// set database option
-		this->database.setSleepOnError(sleepOnSqlErrorS);
+		// set database option (for server only)
+		this->database.setSleepOnError(serverSettings.sleepOnSqlErrorS);
 
 		// connect to database and initialize it
 		this->database.connect();
@@ -5626,7 +5626,7 @@ namespace crawlservpp::Main {
 
 	// create database connection for worker thread
 	void Server::initWorkerDatabase(Module::Database& db) {
-		db.setSleepOnError(sleepOnSqlErrorS);
+		db.setSleepOnError(this->settings.sleepOnSqlErrorS);
 
 		db.connect();
 		db.prepare();

@@ -166,9 +166,6 @@ namespace crawlservpp::Main {
 	//! The name of the (sub-)directory for language models.
 	inline constexpr auto mdlDir{"mdl"sv};
 
-	//! The number of seconds for the server to sleep when a MySQL error occured.
-	inline constexpr auto sleepOnSqlErrorS{5};
-
 	//! The timeout in milliseconds for the polling of the web server.
 	inline constexpr auto webServerPollTimeOutMs{1000};
 
