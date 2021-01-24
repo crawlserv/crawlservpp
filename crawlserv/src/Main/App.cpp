@@ -228,66 +228,67 @@ namespace crawlservpp::Main {
 					<< dbSettings.port
 					<< pwPrompt4;
 
-		char input{};
-		bool inputLoop{true};
 		bool inputCancel{false};
 
-		do {
-			switch(input = Helper::Portability::getch()) {
-			case '\r':
-				// ignore carriage return
-				break;
-
-			case '\n':
-				// ENTER: end input loop
-				std::cout << std::string(dbSettings.password.length(), '\b');
-				std::cout << doneMsg;
-
-				if(dbSettings.password.length() > doneMsg.length()) {
-					std::cout << std::string(dbSettings.password.length() - doneMsg.length(), ' ');
-				}
-
-				std::cout << std::flush;
-
-				inputLoop = false;
-
-				break;
-
-			case '\b':
-			case inputBackspace:
-				// BACKSPACE/DELETE: delete last character from password (if it exists)
-				if(!dbSettings.password.empty()) {
-					dbSettings.password.pop_back();
-
-					std::cout << "\b \b" << std::flush;
-				}
-
-				break;
-
-			case inputEof:
-			case inputEtx:
-			case inputEsc:
-				// CTRL+C, ESCAPE -> cancel and end input loop
-				std::cout << "[CANCELLED]";
-
-				inputCancel = true;
-				inputLoop = false;
-
-				break;
-
-			default:
-				// add other characters to password
-				dbSettings.password.push_back(input);
-
-				std::cout << '*' << std::flush;
-			}
-
-		}
-		while(inputLoop && this->running.load());
+		while(this->inputLoop(dbSettings, inputCancel)) {}
 
 		std::cout << std::endl;
 
 		return !inputCancel;
+	}
+
+	// helper function: process a character from user input
+	bool App::inputLoop(DatabaseSettings& dbSettings, bool& inputCancelTo) {
+		// get next character from user input
+		char input{Helper::Portability::getch()};
+
+		switch(input) {
+		case '\r':
+			// ignore carriage return
+			break;
+
+		case '\n':
+			// ENTER: end input loop
+			std::cout << std::string(dbSettings.password.length(), '\b');
+			std::cout << doneMsg;
+
+			if(dbSettings.password.length() > doneMsg.length()) {
+				std::cout << std::string(dbSettings.password.length() - doneMsg.length(), ' ');
+			}
+
+			std::cout << std::flush;
+
+			return false;
+
+		case '\b':
+		case inputBackspace:
+			// BACKSPACE/DELETE: delete last character from password (if it exists)
+			if(!dbSettings.password.empty()) {
+				dbSettings.password.pop_back();
+
+				std::cout << "\b \b" << std::flush;
+			}
+
+			break;
+
+		case inputEof:
+		case inputEtx:
+		case inputEsc:
+			// CTRL+C, ESCAPE -> cancel and end input loop
+			std::cout << "[CANCELLED]";
+
+			inputCancelTo = true;
+
+			return false;
+
+		default:
+			// add other characters to password
+			dbSettings.password.push_back(input);
+
+			std::cout << '*' << std::flush;
+		}
+
+		return this->running.load();
 	}
 
 	// static helper function: show version (and library versions if necessary)
@@ -309,7 +310,7 @@ namespace crawlservpp::Main {
 
 	// static helper function: check number of command line arguments, throws Main::Exception
 	inline void App::checkArgumentNumber(const int args) {
-		if(args != 2) {
+		if(args != argsRequired) {
 			throw Exception(descUsage);
 		}
 	}
@@ -325,123 +326,30 @@ namespace crawlservpp::Main {
 		const ConfigFile configFile(fileName);
 
 		// set database settings
-		dbSettings.host = configFile.getValue("db_host");
+		configFile.getValue("db_host", dbSettings.host);
+		configFile.getValue("db_port", dbSettings.port);
+		configFile.getValue("db_user", dbSettings.user);
+		configFile.getValue("db_name", dbSettings.name);
+		configFile.getValue("db_host", dbSettings.host);
+		configFile.getValue("db_port", dbSettings.port);
+		configFile.getValue("db_user", dbSettings.user);
+		configFile.getValue("db_name", dbSettings.name);
+		configFile.getValue("db_debug_logging", dbSettings.debugLogging);
 
-		try {
-			dbSettings.port = boost::lexical_cast<std::uint16_t>(configFile.getValue("db_port"));
-		}
-		catch(const boost::bad_lexical_cast& e) {
-			throw Exception(
-							fileName + ":"
-							" Could not convert config file entry \"db_port\""
-							" (=\"" + configFile.getValue("db_port") + "\") to numeric value"
-			);
-		}
+		configFile.getValue("server_client_compress", dbSettings.compression);
 
-		dbSettings.user = configFile.getValue("db_user");
-		dbSettings.name = configFile.getValue("db_name");
+		configFile.getValue("server_port", serverSettings.port);
+		configFile.getValue("server_allow", serverSettings.allowedClients);
+		configFile.getValue("server_cors_origins", serverSettings.corsOrigins);
+		configFile.getValue("server_mysql_timeout_s", serverSettings.sleepOnSqlErrorS);
+		configFile.getValue("server_logs_deletable", serverSettings.logsDeletable);
+		configFile.getValue("server_data_deletable", serverSettings.dataDeletable);
 
-		if(!configFile.getValue("db_debug_logging").empty()) {
-			try {
-				dbSettings.debugLogging = boost::lexical_cast<bool>(configFile.getValue("db_debug_logging"));
-			}
-			catch(const boost::bad_lexical_cast& e) {
-				throw Exception(
-						fileName + ":"
-						" Could not convert config file entry \"db_debug_logging\""
-						" (=\"" + configFile.getValue("db_debug_logging") + "\")"
-						" to boolean value"
-				);
-			}
-		}
-		else {
-			dbSettings.debugLogging = false;
-		}
+		configFile.getValue("network_default_proxy", networkSettings.defaultProxy);
 
-		// set server settings
-		if(!configFile.getValue("server_client_compress").empty()) {
-			try {
-				dbSettings.compression = boost::lexical_cast<bool>(configFile.getValue("server_client_compress"));
-			}
-			catch(const boost::bad_lexical_cast& e) {
-				throw Exception(
-						fileName + ":"
-						" Could not convert config file entry"
-						" \"server_client_compress\" (=\"" + configFile.getValue("server_client_compress") + "\")"
-						" to boolean value"
-				);
-			}
-		}
-
-		serverSettings.port = configFile.getValue("server_port");
-		serverSettings.allowedClients = configFile.getValue("server_allow");
-
-		if(!configFile.getValue("server_cors_origins").empty()) {
-			serverSettings.corsOrigins = configFile.getValue("server_cors_origins");
-		}
-
-		if(!configFile.getValue("server_logs_deletable").empty()) {
-			try {
-				serverSettings.logsDeletable = boost::lexical_cast<bool>(
-						configFile.getValue(
-								"server_logs_deletable"
-						)
-				);
-			}
-			catch(const boost::bad_lexical_cast& e) {
-				throw Exception(
-						fileName + ":"
-						" Could not convert config file entry \"server_logs_deletable\""
-						" (=\""	+ configFile.getValue("server_logs_deletable") + "\")"
-						" to boolean value"
-				);
-			}
-		}
-		else {
-			serverSettings.logsDeletable = false;
-		}
-
-		if(!configFile.getValue("server_data_deletable").empty()) {
-			try {
-				serverSettings.dataDeletable = boost::lexical_cast<bool>(
-						configFile.getValue(
-								"server_data_deletable"
-						)
-				);
-			}
-			catch(const boost::bad_lexical_cast& e) {
-				throw Exception(
-						fileName + ":"
-						" Could not convert config file entry \"server_data_deletable\""
-						" (=\"" + configFile.getValue("server_data_deletable") + "\")"
-						" to boolean value"
-				);
-			}
-		}
-		else {
-			serverSettings.dataDeletable = false;
-		}
-
-		networkSettings.defaultProxy = configFile.getValue("network_default_proxy");
-		networkSettings.torControlServer = configFile.getValue("network_tor_control_server");
-
-		if(!networkSettings.torControlServer.empty()) {
-			try {
-				networkSettings.torControlPort = boost::lexical_cast<std::uint16_t>(
-						configFile.getValue(
-								"network_tor_control_port"
-						)
-				);
-			}
-			catch(const boost::bad_lexical_cast& e) {
-				throw Exception(
-								fileName + ":"
-								" Could not convert config file entry \"network_tor_control_port\""
-								" (=\"" + configFile.getValue("network_tor_control_port") + "\") to numeric value"
-				);
-			}
-
-			networkSettings.torControlPassword = configFile.getValue("network_tor_control_password");
+		if(configFile.getValue("network_tor_control_server", networkSettings.torControlServer)) {
+			configFile.getValue("network_tor_control_port", networkSettings.torControlPort);
+			configFile.getValue("network_tor_control_password", networkSettings.torControlPassword);
 		}
 	}
 

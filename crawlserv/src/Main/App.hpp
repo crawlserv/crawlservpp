@@ -45,15 +45,12 @@
 #include "../Struct/NetworkSettings.hpp"
 #include "../Struct/ServerSettings.hpp"
 
-#include <boost/lexical_cast.hpp>
-
 #include <atomic>		// std::atomic
 #include <csignal>		// sigaction, sigemptyset/signal, SIGINT, SIGTERM, std::sig_atomic_t
-#include <cstdint>		// std::uint16_t
 #include <exception>	// std::exception
 #include <iostream>		// std::cout, std::endl, std::flush
 #include <memory>		// std::make_unique, std::unique_ptr
-#include <string>		// std::string, std::to_string
+#include <string>		// std::string
 #include <string_view>	// std::string_view_literals
 #include <vector>		// std::vector
 
@@ -68,6 +65,9 @@ namespace crawlservpp::Main {
 
 	///@name Constants
 	///@{
+
+	//! Number of arguments required by the application.
+	inline constexpr auto argsRequired{2};
 
 	//! First part of the password prompt.
 	inline constexpr auto pwPrompt1{"Enter password for "sv};
@@ -201,8 +201,9 @@ namespace crawlservpp::Main {
 		std::unique_ptr<Server> server;
 		bool showVersionsOnly{false};
 
-		// helper function
+		// helper functions
 		bool getPassword(DatabaseSettings& dbSettings);
+		bool inputLoop(DatabaseSettings& dbSettings, bool& isCancelTo);
 
 		// static helper functions
 		static void outputHeader(bool showLibraryVersions);
