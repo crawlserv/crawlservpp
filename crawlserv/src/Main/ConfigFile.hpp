@@ -33,6 +33,7 @@
 
 #include "Exception.hpp"
 
+#include <boost/core/typeinfo.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <algorithm>	// std::find_if, std::transform
@@ -101,7 +102,7 @@ namespace crawlservpp::Main {
 							this->fileName + ":"
 							" Could not convert config file entry \"" + name + "\""
 							" (=\"" + result + "\")"
-							" to " + typeid(T).name()
+							" to " + boost::core::demangled_name(typeid(T))
 					);
 				}
 			}
