@@ -467,6 +467,7 @@ namespace crawlservpp::Main {
 		std::uint64_t addWebsite(const WebsiteProperties& websiteProperties);
 		[[nodiscard]] std::string getWebsiteDomain(std::uint64_t id);
 		[[nodiscard]] std::string getWebsiteNamespace(std::uint64_t websiteId);
+		[[nodiscard]] std::uint64_t getWebsiteFromUrlList(std::uint64_t listId);
 		[[nodiscard]] IdString getWebsiteNamespaceFromUrlList(std::uint64_t listId);
 		[[nodiscard]] IdString getWebsiteNamespaceFromConfig(std::uint64_t configId);
 		[[nodiscard]] IdString getWebsiteNamespaceFromTargetTable(

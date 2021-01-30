@@ -1738,33 +1738,31 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
-	//! Gets the ID and the namespace of the website associated with a URL list from the database.
+	//! Gets the ID of the website associated with a URL list from the database.
 	/*!
 	 * \param listId The ID of the URL list
-	 *   for which the ID and namespace of
-	 *   the associated website will be
-	 *   retrieved from the database.
+	 *   for which the ID of the associated
+	 *   website will be retrieved from the
+	 *   database.
 	 *
-	 * \returns A pair containing the ID and
-	 *   the namespace of the website associated
+	 * \returns The ID of the website associated
 	 *   with the given URL list.
 	 *
-	 * \throws Main::Database::Exception if no URL
+	 *  \throws Main::Database::Exception if no URL
 	 *   list has been specified, i.e. the URL
 	 *   list ID is zero.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while retrieving the
-	 *   ID and namespace of the website
-	 *   associated with the given URL list from
-	 *   the database.
+	 *   ID of the website associated with the
+	 *   given URL list from the database.
 	 */
-	Database::IdString Database::getWebsiteNamespaceFromUrlList(std::uint64_t listId) {
+	std::uint64_t Database::getWebsiteFromUrlList(std::uint64_t listId) {
 		std::uint64_t websiteId{};
 
 		// check argument
 		if(listId == 0) {
 			throw Database::Exception(
-					"Main::Database::getWebsiteNamespaceFromUrlList():"
+					"Main::Database::getWebsiteFromUrlList():"
 					" No URL list ID specified"
 			);
 		}
@@ -1794,8 +1792,36 @@ namespace crawlservpp::Main {
 			}
 		}
 		catch(const sql::SQLException &e) {
-			Database::sqlException("Main::Database::getWebsiteNamespaceFromUrlList", e);
+			Database::sqlException("Main::Database::getWebsiteFromUrlList", e);
 		}
+
+		return websiteId;
+	}
+
+	//! Gets the ID and the namespace of the website associated with a URL list from the database.
+	/*!
+	 * \param listId The ID of the URL list
+	 *   for which the ID and namespace of
+	 *   the associated website will be
+	 *   retrieved from the database.
+	 *
+	 * \returns A pair containing the ID and
+	 *   the namespace of the website associated
+	 *   with the given URL list.
+	 *
+	 * \throws Main::Database::Exception if no URL
+	 *   list has been specified, i.e. the URL
+	 *   list ID is zero.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while retrieving the
+	 *   ID and namespace of the website
+	 *   associated with the given URL list from
+	 *   the database.
+	 */
+	Database::IdString Database::getWebsiteNamespaceFromUrlList(std::uint64_t listId) {
+		const auto websiteId{
+			this->getWebsiteFromUrlList(listId)
+		};
 
 		return IdString(websiteId, this->getWebsiteNamespace(websiteId));
 	}
@@ -10779,6 +10805,8 @@ namespace crawlservpp::Main {
 					"DROP TABLE `crawlserv_tmp`"
 			);
 
+			std::cout << "\n" << result << std::flush;
+
 			// replace table name and add new data directory
 			const auto pos{result.find("` ") + 2};
 
@@ -10790,6 +10818,8 @@ namespace crawlservpp::Main {
 			result += " DATA DIRECTORY='";
 			result += destDir;
 			result += "'";
+
+			std::cout << "\n" << result << std::flush;
 
 			// create new table
 			Database::sqlExecute(sqlStatement, result);
