@@ -3364,9 +3364,16 @@ namespace crawlservpp::Main {
 
 		std::cout	<< "\n\nMOVING website "
 					<< websiteProperties.name
-					<< " to '"
-					<< websiteProperties.dir
-					<< "'..."
+					<< " to ";
+
+		if(!websiteProperties.dir.empty()) {
+			std::cout	<< "'" << websiteProperties.dir << "'";
+		}
+		else {
+			std::cout << "default directory";
+		}
+
+		std::cout	<< "..."
 					<< std::flush;
 #endif
 		// create table list
@@ -10805,24 +10812,32 @@ namespace crawlservpp::Main {
 					"DROP TABLE `crawlserv_tmp`"
 			);
 
-			std::cout << "\n" << result << std::flush;
-
 			// replace table name and add new data directory
-			const auto pos{result.find("` ") + 2};
+			const auto pos{result.find("` ")};
 
-			result = "CREATE TABLE `";
+			if(pos == std::string::npos) {
+				throw Database::Exception(
+						"Main::Database::cloneTable():"
+						" Could not parse table information for `"
+						+ tableName
+						+ "`"
+				);
+			}
 
-			result += tableName;
-			result += "_tmp` ";
-			result += result.substr(pos);
-			result += " DATA DIRECTORY='";
-			result += destDir;
-			result += "'";
+			std::string query{"CREATE TABLE `"};
 
-			std::cout << "\n" << result << std::flush;
+			query += tableName;
+			query += "_tmp` ";
+			query += result.substr(pos + 2);
+
+			if(!destDir.empty()) {
+				query += " DATA DIRECTORY='";
+				query += destDir;
+				query += "'";
+			}
 
 			// create new table
-			Database::sqlExecute(sqlStatement, result);
+			Database::sqlExecute(sqlStatement, query);
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Main::Database::cloneTable", e);
