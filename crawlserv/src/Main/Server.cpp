@@ -1311,38 +1311,24 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed(error);
 		}
 
-		const ThreadOptions options{"crawler", website, urlList, config};
-
 		// check arguments
-		if(!(this->database.isWebsite(options.website))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!Server::checkWebsite(this->database, website, response)) {
+			return response;
 		}
 
-		if(!(this->database.isUrlList(options.website, options.urlList))) {
-			return ServerCommandResponse::failed(
-					"URL list #"
-					+ std::to_string(options.urlList)
-					+ " for website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
+		if(!Server::checkUrlList(this->database, website, urlList, response)) {
+			return response;
 		}
 
-		if(!(this->database.isConfiguration(options.website, options.config))) {
-			return ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(options.config)
-					+ " for website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
+		if(!(this->checkConfig(website, urlList, response))) {
+			return response;
 		}
 
 #ifndef MAIN_SERVER_DEBUG_NOCRAWLERS
+		const ThreadOptions options{"crawler", website, urlList, config};
+
 		// create crawler
 		this->crawlers.push_back(
 				std::make_unique<Module::Crawler::Thread>(
@@ -1514,38 +1500,20 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed(error);
 		}
 
-		const ThreadOptions options{"parser", website, urlList, config};
-
 		// check arguments
-		if(!(this->database.isWebsite(options.website))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
-		}
+		ServerCommandResponse response;
 
-		if(!(this->database.isUrlList(options.website, options.urlList))) {
-			return ServerCommandResponse::failed(
-					"URL list #"
-					+ std::to_string(options.urlList)
-					+ " for website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
-		}
-
-		if(!(this->database.isConfiguration(options.website, options.config))) {
-			return ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(options.config)
-					+ " for website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
+		if(
+				!Server::checkWebsite(this->database, website, response)
+				|| !Server::checkUrlList(this->database, website, urlList, response)
+				|| !(this->checkConfig(website, config, response))
+		) {
+			return response;
 		}
 
 #ifndef MAIN_SERVER_DEBUG_NOPARSERS
+		const ThreadOptions options{"parser", website, urlList, config};
+
 		// create parser
 		this->parsers.push_back(
 				std::make_unique<Module::Parser::Thread>(
@@ -1739,38 +1707,20 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed(error);
 		}
 
-		const ThreadOptions options{"extractor", website, urlList, config};
-
 		// check arguments
-		if(!(this->database.isWebsite(options.website))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
-		}
+		ServerCommandResponse response;
 
-		if(!(this->database.isUrlList(options.website, options.urlList))) {
-			return ServerCommandResponse::failed(
-					"URL list #"
-					+ std::to_string(options.urlList)
-					+ " for website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
-		}
-
-		if(!(this->database.isConfiguration(options.website, options.config))) {
-			return ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(options.config)
-					+ " for website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
+		if(
+				!Server::checkWebsite(this->database, website, response)
+				|| !Server::checkUrlList(this->database, website, urlList, response)
+				|| !(this->checkConfig(website, config, response))
+		) {
+			return response;
 		}
 
 #ifndef MAIN_SERVER_DEBUG_NOEXTRACTORS
+		const ThreadOptions options{"extractor", website, urlList, config};
+
 		// create extractor
 		this->extractors.push_back(
 				std::make_unique<Module::Extractor::Thread>(
@@ -1852,7 +1802,8 @@ namespace crawlservpp::Main {
 		}
 
 		// find extractor
-		auto it{std::find_if(this->extractors.cbegin(), this->extractors.cend(),
+		auto it{
+			std::find_if(this->extractors.cbegin(), this->extractors.cend(),
 					[&id](const auto& p) {
 						return p->Module::Thread::getId() == id;
 					}
@@ -1965,40 +1916,20 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed(error);
 		}
 
-		const ThreadOptions options{"analyzer", website, urlList, config};
-
 		// check arguments
-		if(!(this->database.isWebsite(options.website))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
-		}
+		ServerCommandResponse response;
 
-		if(!(this->database.isUrlList(options.website, options.urlList))) {
-			return ServerCommandResponse::failed(
-					"URL list #"
-					+ std::to_string(options.urlList)
-					+ " for website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
-		}
-
-		if(!(this->database.isConfiguration(options.website, options.config))) {
-			return ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(options.config)
-					+ " for website #"
-					+ std::to_string(options.website)
-					+ " not found."
-			);
+		if(
+				!Server::checkWebsite(this->database, website, response)
+				|| !Server::checkUrlList(this->database, website, urlList, response)
+				|| !(this->checkConfig(website, config, response))
+		) {
+			return response;
 		}
 
 		// get analyzer configuration
 		const std::string analyzerConfig{
-				this->database.getConfiguration(options.config)
+				this->database.getConfiguration(config)
 		};
 
 		// check configuration JSON
@@ -2031,6 +1962,8 @@ namespace crawlservpp::Main {
 		}
 
 #ifndef MAIN_SERVER_DEBUG_NOANALYZERS
+		const ThreadOptions options{"analyzer", website, urlList, config};
+
 		// try to create algorithm thread
 		this->analyzers.push_back(
 				Module::Analyzer::Algo::initAlgo(
@@ -2605,18 +2538,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check namespace name
-		if(nameSpace.length() < minNameSpaceLength) {
-			return ServerCommandResponse::failed(
-					"Website namespace has to be at least "
-					+ std::string(minNameSpaceLengthString)
-					+ " characters long."
-			);
-		}
+		ServerCommandResponse response;
 
-		if(!(Helper::Strings::checkSQLName(nameSpace))) {
-			return ServerCommandResponse::failed(
-					"Invalid character(s) in website namespace."
-			);
+		if(!Server::checkNameSpace(nameSpace, response)) {
+			return response;
 		}
 
 		// correct and check domain name if necessary
@@ -2629,45 +2554,13 @@ namespace crawlservpp::Main {
 		}
 
 		// check website
-		if(!(this->database.isWebsite(id))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		if(!Server::checkWebsite(this->database, id, response)) {
+			return response;
 		}
 
 		// check whether any thread is using the website
-		if(std::find_if(this->crawlers.cbegin(), this->crawlers.cend(), [&id](const auto& p) {
-			return p->getWebsite() == id;
-		}) != this->crawlers.cend()) {
-			return ServerCommandResponse::failed(
-					"Website cannot be changed while crawler is active."
-			);
-		}
-
-		if(std::find_if(this->parsers.cbegin(), this->parsers.cend(), [&id](const auto& p) {
-			return p->getWebsite() == id;
-		}) != this->parsers.cend()) {
-			return ServerCommandResponse::failed(
-					"Website cannot be changed while parser is active."
-			);
-		}
-
-		if(std::find_if(this->extractors.cbegin(), this->extractors.cend(), [&id](const auto& p) {
-			return p->getWebsite() == id;
-		}) != this->extractors.cend()) {
-			return ServerCommandResponse::failed(
-					"Website cannot be changed while extractor is active."
-			);
-		}
-
-		if(std::find_if(this->analyzers.cbegin(), this->analyzers.cend(), [&id](const auto& p) {
-			return p->getWebsite() == id;
-		}) != this->analyzers.cend()) {
-			return ServerCommandResponse::failed(
-					"Website cannot be changed while analyzer is active."
-			);
+		if(this->isWebsiteInUse(id, response)) {
+			return response;
 		}
 
 		// check for domain and directory change
@@ -2822,45 +2715,15 @@ namespace crawlservpp::Main {
 		}
 
 		// check website
-		if(!(this->database.isWebsite(id))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!Server::checkWebsite(this->database, id, response)) {
+			return response;
 		}
 
 		// check whether any thread is using the website
-		if(std::find_if(this->crawlers.cbegin(), this->crawlers.cend(), [&id](const auto& p) {
-			return p->getWebsite() == id;
-		}) != this->crawlers.cend()) {
-			return ServerCommandResponse::failed(
-					"Website cannot be deleted while crawler is active."
-			);
-		}
-
-		if(std::find_if(this->parsers.cbegin(), this->parsers.cend(), [&id](const auto& p) {
-			return p->getWebsite() == id;
-		}) != this->parsers.cend()) {
-			return ServerCommandResponse::failed(
-					"Website cannot be deleted while parser is active."
-			);
-		}
-
-		if(std::find_if(this->extractors.cbegin(), this->extractors.cend(), [&id](const auto& p) {
-			return p->getWebsite() == id;
-		}) != this->extractors.cend()) {
-			return ServerCommandResponse::failed(
-					"Website cannot be deleted while extractor is active."
-			);
-		}
-
-		if(std::find_if(this->analyzers.cbegin(), this->analyzers.cend(), [&id](const auto& p) {
-			return p->getWebsite() == id;
-		}) != this->analyzers.cend()) {
-			return ServerCommandResponse::failed(
-					"Website cannot be deleted while analyzer is active."
-			);
+		if(this->isWebsiteInUse(id, response)) {
+			return response;
 		}
 
 		// deletewebsite needs to be confirmed
@@ -3015,12 +2878,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check website
-		if(!(this->database.isWebsite(id))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!Server::checkWebsite(this->database, id, response)) {
+			return response;
 		}
 
 		// duplicate website configuration
@@ -3052,33 +2913,15 @@ namespace crawlservpp::Main {
 		}
 
 		// check namespace name
-		if(nameSpace.length() < minNameSpaceLength) {
-			return ServerCommandResponse::failed(
-					"Website namespace has to be at least "
-					+ std::string(minNameSpaceLengthString)
-					+ " characters long."
-			);
-		}
+		ServerCommandResponse response;
 
-		if(!(Helper::Strings::checkSQLName(nameSpace))) {
-			return ServerCommandResponse::failed(
-					"Invalid character(s) in namespace of URL list."
-			);
-		}
-
-		if(nameSpace == "config") {
-			return ServerCommandResponse::failed(
-					"Namespace of URL list cannot be 'config'."
-			);
+		if(!Server::checkNameSpace(nameSpace, response)) {
+			return response;
 		}
 
 		// check website
-		if(!(this->database.isWebsite(website))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(website)
-					+ " not found."
-			);
+		if(!Server::checkWebsite(this->database, website, response)) {
+			return response;
 		}
 
 		// add URL list to database
@@ -3129,45 +2972,14 @@ namespace crawlservpp::Main {
 		}
 
 		// check URL list
-		if(!(this->database.isUrlList(id))) {
-			return ServerCommandResponse::failed(
-					"URL list #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!Server::checkUrlList(this->database, id, response)) {
+			return response;
 		}
 
-		// check whether any thread is using the URL list
-		if(std::find_if(this->crawlers.cbegin(), this->crawlers.cend(), [&id](const auto& p) {
-			return p->getUrlList() == id;
-		}) != this->crawlers.cend()) {
-			return ServerCommandResponse::failed(
-					"URL list cannot be changed while crawler is active."
-			);
-		}
-
-		if(std::find_if(this->parsers.cbegin(), this->parsers.cend(), [&id](const auto& p) {
-			return p->getUrlList() == id;
-		}) != this->parsers.cend()) {
-			return ServerCommandResponse::failed(
-					"URL list cannot be changed while parser is active."
-			);
-		}
-
-		if(std::find_if(this->extractors.cbegin(), this->extractors.cend(), [&id](const auto& p) {
-			return p->getUrlList() == id;
-		}) != this->extractors.cend()) {
-			return ServerCommandResponse::failed(
-					"URL list cannot be changed while extractor is active."
-			);
-		}
-
-		if(std::find_if(this->analyzers.cbegin(), this->analyzers.cend(), [&id](const auto& p) {
-			return p->getUrlList() == id;
-		}) != this->analyzers.cend()) {
-			return ServerCommandResponse::failed(
-					"URL list cannot be changed while analyzer is active."
-			);
+		if(this->isUrlListInUse(id, response)) {
+			return response;
 		}
 
 		// update URL list in database
@@ -3191,46 +3003,16 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed(error);
 		}
 
+		ServerCommandResponse response;
+
 		// check URL list
-		if(!(this->database.isUrlList(id))) {
-			ServerCommandResponse::failed(
-					"URL list #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		if(!Server::checkUrlList(this->database, id, response)) {
+			return response;
 		}
 
 		// check whether any thread is using the URL list
-		if(std::find_if(this->crawlers.cbegin(), this->crawlers.cend(), [&id](const auto& p) {
-			return p->getUrlList() == id;
-		}) != this->crawlers.cend()) {
-			return ServerCommandResponse::failed(
-					"URL list cannot be deleted while crawler is active."
-			);
-		}
-
-		if(std::find_if(this->parsers.cbegin(), this->parsers.cend(), [&id](const auto& p) {
-			return p->getUrlList() == id;
-		}) != this->parsers.cend()) {
-			return ServerCommandResponse::failed(
-					"URL list cannot be deleted while parser is active."
-			);
-		}
-
-		if(std::find_if(this->extractors.cbegin(), this->extractors.cend(), [&id](const auto& p) {
-			return p->getUrlList() == id;
-		}) != this->extractors.cend()) {
-				return ServerCommandResponse::failed(
-						"URL list cannot be deleted while extractor is active."
-				);
-		}
-
-		if(std::find_if(this->analyzers.cbegin(), this->analyzers.cend(), [&id](const auto& p) {
-			return p->getUrlList() == id;
-		}) != this->analyzers.cend()) {
-			return ServerCommandResponse::failed(
-					"URL list cannot be deleted while analyzer is active."
-			);
+		if(this->isUrlListInUse(id, response)) {
+			return response;
 		}
 
 		// deleteurllist needs to be confirmed
@@ -3313,12 +3095,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check website
-		if(website > 0 && !(this->database.isWebsite(website))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(website)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(website > 0 && !Server::checkWebsite(this->database, website, response)) {
+			return response;
 		}
 
 		// add query to database
@@ -3397,12 +3177,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check query
-		if(!(this->database.isQuery(id))) {
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!Server::checkQuery(this->database, id, response)) {
+			return response;
 		}
 
 		// update query in database
@@ -3496,22 +3274,14 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed(error);
 		}
 
-		// check query
-		if(!(this->database.isQuery(id))) {
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(id)
-					+ " not found."
-			);
-		}
+		// check arguments
+		ServerCommandResponse response;
 
-		// check website
-		if(!(this->database.isWebsite(to))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		if(
+				Server::checkQuery(this->database, id, response)
+				|| (to > 0 && !Server::checkWebsite(this->database, to, response))
+		) {
+			return response;
 		}
 
 		// move query needs to be confirmed
@@ -3543,12 +3313,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check query
-		if(!(this->database.isQuery(id))) {
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!Server::checkQuery(this->database, id, response)) {
+			return response;
 		}
 
 		// deletequery needs to be confirmed
@@ -3575,12 +3343,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check query
-		if(!(this->database.isQuery(id))) {
-			return ServerCommandResponse::failed(
-					"Query #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!Server::checkQuery(this->database, id, response)) {
+			return response;
 		}
 
 		// duplicate query
@@ -3644,12 +3410,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check website
-		if(!(this->database.isWebsite(website))) {
-			return ServerCommandResponse::failed(
-					"Website #"
-					+ std::to_string(website)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!Server::checkWebsite(this->database, website, response)) {
+			return response;
 		}
 
 		// add configuration to database
@@ -3700,12 +3464,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check configuration
-		if(!(this->database.isConfiguration(id))) {
-			return ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!(this->checkConfig(id, response))) {
+			return response;
 		}
 
 		// update configuration in database
@@ -3792,12 +3554,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check configuration
-		if(!(this->database.isConfiguration(id))) {
-			ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!(this->checkConfig(id, response))) {
+			return response;
 		}
 
 		// deleteconfig needs to be confirmed
@@ -3824,12 +3584,10 @@ namespace crawlservpp::Main {
 		}
 
 		// check configuration
-		if(!(this->database.isConfiguration(id))) {
-			return ServerCommandResponse::failed(
-					"Configuration #"
-					+ std::to_string(id)
-					+ " not found."
-			);
+		ServerCommandResponse response;
+
+		if(!(this->checkConfig(id, response))) {
+			return response;
 		}
 
 		// duplicate configuration
@@ -4122,19 +3880,10 @@ namespace crawlservpp::Main {
 								Server::initWorkerDatabase(db);
 
 								// check website
-								if(!db.isWebsite(website)) {
-									response = ServerCommandResponse::failed(
-											"Invalid website ID."
-									);
-								}
-								else {
+								if(Server::checkWebsite(db, website, response)) {
 									// check URL list
 									if(target > 0) {
-										if(!db.isUrlList(website, target)) {
-											response = ServerCommandResponse::failed(
-													"Invalid target URL list ID."
-											);
-										}
+										Server::checkUrlList(db, website, target, response);
 									}
 									else {
 										// get arguments for URL list creation
@@ -4299,22 +4048,11 @@ namespace crawlservpp::Main {
 						Server::initWorkerDatabase(db);
 
 						// check website and URL lists
-						if(!db.isWebsite(website)) {
-							response = ServerCommandResponse::failed(
-									"Invalid website ID."
-							);
-						}
-						else if(!db.isUrlList(website, source)) {
-							response = ServerCommandResponse::failed(
-									"Invalid ID of source URL list."
-							);
-						}
-						else if(!db.isUrlList(website, target)) {
-							response = ServerCommandResponse::failed(
-									"Invalid ID of target URL list."
-							);
-						}
-						else {
+						if(
+								Server::checkWebsite(db, website, response)
+								&& Server::checkUrlList(db, website, source, response)
+								&& Server::checkUrlList(db, website, target, response)
+						) {
 							// start timer
 							Timer::Simple timer;
 
@@ -4497,158 +4235,38 @@ namespace crawlservpp::Main {
 			// get arguments
 			std::uint64_t urlList{};
 			std::uint64_t query{};
-			std::string error;
 
 			if(
-					!Server::getArgument(json, "urllist", urlList, error)
-					|| !Server::getArgument(json, "query", query, error)
+					Server::cmdDeleteUrlsGetArguments(
+							json,
+							urlList,
+							query,
+							response
+					)
 			) {
-				response = ServerCommandResponse::failed(error);
-			}
-			else {
 				// create new database connection for worker thread
 				Module::Database db(dbSettingsCopy, "worker");
 
 				Server::initWorkerDatabase(db);
 
-				// check URL list
-				if(!db.isUrlList(urlList)) {
-					response = ServerCommandResponse::failed(
-							"URL list #"
-							+ std::to_string(urlList)
-							+ " not found."
-					);
-				}
+				// check arguments
+				std::uint64_t website{};
+				std::string regEx;
+				std::queue<std::uint64_t> toDelete;
 
-				if(!response.fail) {
-					// get website from URL list
-					const auto website{
-						db.getWebsiteNamespaceFromUrlList(urlList)
-					};
-
-					if(website.first == 0) {
-						response = ServerCommandResponse::failed(
-								"Could not get website for URL list #"
-								+ std::to_string(urlList)
-								+ "."
-						);
-					}
-					else if(!db.isQuery(query)) {
-						response = ServerCommandResponse::failed(
-								"Query #"
-								+ std::to_string(query)
-								+ " not found."
-						);
-					}
-					else if(!db.isQuery(website.first, query)) {
-						response = ServerCommandResponse::failed(
-								"Query #"
-								+ std::to_string(query)
-								+ " is not valid for website #"
-								+ std::to_string(website.first)
-								+ "."
-						);
+				if(
+						Server::checkUrlList(db, urlList, response)
+						&& Server::cmdDeleteUrlsGetWebsite(db, urlList, website, response)
+						&& Server::checkQuery(db, website, query, response)
+						&& Server::cmdDeleteUrlsGetQuery(db, query, regEx, response)
+						&& Server::cmdDeleteUrlsGetUrls(db, urlList, regEx, toDelete, response)
+				) {
+					// deleteurls needs to be confirmed
+					if(json.HasMember("confirmed")) {
+						response = Server::cmdDeleteUrlsDelete(db, urlList, toDelete);
 					}
 					else {
-						// get query properties
-						QueryProperties properties{};
-
-						db.getQueryProperties(query, properties);
-
-						// check query type (must be RegEx)
-						if(properties.type != "regex") {
-							response = ServerCommandResponse::failed(
-									"Query #"
-									+ std::to_string(query)
-									+ " has invalid type (must be RegEx)."
-							);
-						}
-						// check query result type (must be boolean)
-						else if(!properties.resultBool) {
-							response  = ServerCommandResponse::failed(
-									"Query #"
-									+ std::to_string(query)
-									+ " has invalid result type (must be boolean)."
-							);
-						}
-						else {
-							std::queue<std::uint64_t> toDelete;
-
-							try {
-								// create RegEx query
-								const Query::RegEx query(
-										properties.text,
-										true,
-										false
-								);
-
-								// get URLs from URL list
-								auto urls{db.getUrlsWithIds(urlList)};
-
-								// perform query on each URL in the URL list to identify which URLs to delete
-								while(!urls.empty()) {
-									if(query.getBool(urls.front().second)) {
-										toDelete.push(urls.front().first);
-									}
-
-									urls.pop();
-								}
-							}
-							catch(const RegExException& e) {
-								response = ServerCommandResponse::failed(
-										"RegEx error: "
-										+ std::string(e.view())
-								);
-							}
-
-							// check for URLs matching the query
-							if(toDelete.empty()) {
-								response = ServerCommandResponse(
-										"The query did not match any URLs in the URL list."
-								);
-							}
-							// deleteurls needs to be confirmed
-							else if(json.HasMember("confirmed")) {
-								// delete URLS
-								const auto numDeleted{db.deleteUrls(urlList, toDelete)};
-
-								// return number of deleted URLs
-								if(numDeleted == 1) {
-									response = ServerCommandResponse("One URL has been deleted.");
-								}
-								else {
-									std::ostringstream responseStrStr;
-
-									responseStrStr.imbue(std::locale(""));
-
-									responseStrStr << numDeleted << " URLs have been deleted.";
-
-									response = ServerCommandResponse(responseStrStr.str());
-								}
-							}
-							else {
-								// return number of URLs to be deleted when confirmed
-								if(toDelete.size() == 1) {
-									response = ServerCommandResponse::toBeConfirmed(
-											"Do you really want to delete one URL?"
-											"\n!!! All associated data will be lost !!!"
-									);
-								}
-								else {
-									std::ostringstream responseStrStr;
-
-									responseStrStr.imbue(std::locale(""));
-
-									responseStrStr	<< "Do you really want to delete "
-													<< toDelete.size()
-													<< " URLs?\n!!! All associated data will be lost !!!";
-
-									response = ServerCommandResponse::toBeConfirmed(
-											responseStrStr.str()
-									);
-								}
-							}
-						}
+						response = Server::cmdDeleteUrlsConfirm(toDelete.size());
 					}
 				}
 			}
@@ -5541,6 +5159,184 @@ namespace crawlservpp::Main {
 	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
 
+	// check whether the given website is being used by a thread
+	bool Server::isWebsiteInUse(std::uint64_t website, ServerCommandResponse& responseTo) {
+		if(
+				std::find_if(
+						this->crawlers.cbegin(),
+						this->crawlers.cend(),
+						[&website](const auto& p) {
+							return p->getWebsite() == website;
+						}
+				) != this->crawlers.cend()
+		) {
+			responseTo = ServerCommandResponse::failed(
+					"Website cannot be changed while crawler is active."
+			);
+
+			return true;
+		}
+
+		if(
+				std::find_if(
+						this->parsers.cbegin(),
+						this->parsers.cend(),
+						[&website](const auto& p) {
+							return p->getWebsite() == website;
+						}
+				) != this->parsers.cend()
+		) {
+			responseTo = ServerCommandResponse::failed(
+					"Website cannot be changed while parser is active."
+			);
+
+			return true;
+		}
+
+		if(
+				std::find_if(
+						this->extractors.cbegin(),
+						this->extractors.cend(),
+						[&website](const auto& p) {
+							return p->getWebsite() == website;
+						}
+				) != this->extractors.cend()
+		) {
+			responseTo = ServerCommandResponse::failed(
+					"Website cannot be changed while extractor is active."
+			);
+
+			return true;
+		}
+
+		if(
+				std::find_if(
+						this->analyzers.cbegin(),
+						this->analyzers.cend(),
+						[&website](const auto& p) {
+							return p->getWebsite() == website;
+						}
+				) != this->analyzers.cend()
+		) {
+			responseTo = ServerCommandResponse::failed(
+					"Website cannot be changed while analyzer is active."
+			);
+
+			return true;
+		}
+
+		return false;
+	}
+
+	// check whether the given URL list is being used by a thread
+	bool Server::isUrlListInUse(std::uint64_t urlList, ServerCommandResponse& responseTo) {
+		// check whether any thread is using the URL list
+		if(
+				std::find_if(
+						this->crawlers.cbegin(),
+						this->crawlers.cend(),
+						[&urlList](const auto& p) {
+							return p->getUrlList() == urlList;
+						}
+				) != this->crawlers.cend()
+		) {
+			responseTo = ServerCommandResponse::failed(
+					"URL list cannot be changed while crawler is active."
+			);
+
+			return true;
+		}
+
+		if(
+				std::find_if(
+						this->parsers.cbegin(),
+						this->parsers.cend(),
+						[&urlList](const auto& p) {
+							return p->getUrlList() == urlList;
+						}
+				) != this->parsers.cend()
+		) {
+			responseTo = ServerCommandResponse::failed(
+					"URL list cannot be changed while parser is active."
+			);
+
+			return true;
+		}
+
+		if(
+				std::find_if(
+						this->extractors.cbegin(),
+						this->extractors.cend(),
+						[&urlList](const auto& p) {
+							return p->getUrlList() == urlList;
+						}
+				) != this->extractors.cend()
+		) {
+			responseTo = ServerCommandResponse::failed(
+					"URL list cannot be changed while extractor is active."
+			);
+
+			return true;
+		}
+
+		if(
+				std::find_if(
+						this->analyzers.cbegin(),
+						this->analyzers.cend(),
+						[&urlList](const auto& p) {
+							return p->getUrlList() == urlList;
+						}
+				) != this->analyzers.cend()
+		) {
+			responseTo = ServerCommandResponse::failed(
+					"URL list cannot be changed while analyzer is active."
+			);
+
+			return true;
+		}
+
+		return false; /* URL list not in use */
+	}
+
+	// check configuration
+	bool Server::checkConfig(
+			std::uint64_t config,
+			ServerCommandResponse& responseTo
+	) {
+		if(!(this->database.isConfiguration(config))) {
+			responseTo = ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(config)
+					+ " not found."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// check configuration for given website
+	bool Server::checkConfig(
+			std::uint64_t website,
+			std::uint64_t config,
+			ServerCommandResponse& responseTo
+	) {
+		if(!(this->database.isConfiguration(website, config))) {
+			responseTo = ServerCommandResponse::failed(
+					"Configuration #"
+					+ std::to_string(config)
+					+ " for website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
 	// get command argument (string)
 	bool Server::getArgument(
 			const std::string& name,
@@ -5593,6 +5389,14 @@ namespace crawlservpp::Main {
 		}
 	}
 
+	// create database connection for worker thread
+	void Server::initWorkerDatabase(Module::Database& db) {
+		db.setSleepOnError(this->settings.sleepOnSqlErrorS);
+
+		db.connect();
+		db.prepare();
+	}
+
 	/*
 	 * INTERNAL STATIC HELPER FUNCTIONS (private)
 	 */
@@ -5622,14 +5426,6 @@ namespace crawlservpp::Main {
 		}
 
 		return !response.fail;
-	}
-
-	// create database connection for worker thread
-	void Server::initWorkerDatabase(Module::Database& db) {
-		db.setSleepOnError(this->settings.sleepOnSqlErrorS);
-
-		db.connect();
-		db.prepare();
 	}
 
 	// get command argument (string) from given JSON document
@@ -5769,6 +5565,40 @@ namespace crawlservpp::Main {
 		}
 	}
 
+	// check name of website namespace
+	bool Server::checkNameSpace(
+			const std::string& name,
+			ServerCommandResponse& responseTo
+	) {
+		if(name.length() < minNameSpaceLength) {
+			responseTo = ServerCommandResponse::failed(
+					"Website namespace has to be at least "
+					+ std::string(minNameSpaceLengthString)
+					+ " characters long."
+			);
+
+			return false;
+		}
+
+		if(!(Helper::Strings::checkSQLName(name))) {
+			responseTo = ServerCommandResponse::failed(
+					"Invalid character(s) in namespace of URL list."
+			);
+
+			return false;
+		}
+
+		if(name == "config") {
+			responseTo = ServerCommandResponse::failed(
+					"Namespace of URL list cannot be 'config'."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
 	// get algorithm ID from configuration JSON, throws Main::Exception
 	std::uint32_t Server::getAlgoFromConfig(const rapidjson::Document& json) {
 		std::uint32_t result{};
@@ -5905,17 +5735,17 @@ namespace crawlservpp::Main {
 	// check and get command arguments for exporting
 	bool Server::cmdExportGetArguments(
 			const rapidjson::Document& json,
-			std::string& dataTypeOut,
-			std::string& fileTypeOut,
-			std::string& compressionOut,
+			std::string& dataTypeTo,
+			std::string& fileTypeTo,
+			std::string& compressionTo,
 			ServerCommandResponse& responseTo
 	) {
 		std::string error;
 
 		if(
-				!Server::getArgument(json, "datatype", dataTypeOut, false, true, error)
-				|| !Server::getArgument(json, "filetype", fileTypeOut, false, true, error)
-				|| !Server::getArgument(json, "compression", compressionOut, false, true, error)
+				!Server::getArgument(json, "datatype", dataTypeTo, false, true, error)
+				|| !Server::getArgument(json, "filetype", fileTypeTo, false, true, error)
+				|| !Server::getArgument(json, "compression", compressionTo, false, true, error)
 		) {
 			responseTo = ServerCommandResponse::failed(error);
 
@@ -6303,19 +6133,10 @@ namespace crawlservpp::Main {
 			std::uint64_t urlListId,
 			ServerCommandResponse& responseTo
 	) {
-		if(!db.isWebsite(websiteId)) {
-			responseTo = ServerCommandResponse::failed(
-					"Invalid website ID."
-			);
-
-			return false;
-		}
-
-		if(!db.isUrlList(websiteId, urlListId)) {
-			responseTo = ServerCommandResponse::failed(
-					"Invalid URL list ID."
-			);
-
+		if(
+				!Server::checkWebsite(db, websiteId, responseTo)
+				|| !Server::checkUrlList(db, websiteId, urlListId, responseTo)
+		) {
 			return false;
 		}
 
@@ -6524,6 +6345,176 @@ namespace crawlservpp::Main {
 		optHeaderTo = { header };
 
 		return true;
+	}
+
+	// check and get command arguments for deleting URLs
+	bool Server::cmdDeleteUrlsGetArguments(
+			const rapidjson::Document& json,
+			std::uint64_t& urlListTo,
+			std::uint64_t& queryTo,
+			ServerCommandResponse& responseTo
+	) {
+		std::string error;
+
+		if(
+				!Server::getArgument(json, "urllist", urlListTo, error)
+				|| !Server::getArgument(json, "query", queryTo, error)
+		) {
+			responseTo = ServerCommandResponse::failed(error);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// get and check website for deleting URLs
+	bool Server::cmdDeleteUrlsGetWebsite(
+		Module::Database& db,
+		std::uint64_t urlList,
+		std::uint64_t& websiteTo,
+		ServerCommandResponse& responseTo
+	) {
+		websiteTo = db.getWebsiteFromUrlList(urlList);
+
+		if(websiteTo == 0) {
+			responseTo = ServerCommandResponse::failed(
+					"Could not get website for URL list #"
+					+ std::to_string(urlList)
+					+ "."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// get and check query for deleting URLs
+	bool Server::cmdDeleteUrlsGetQuery(
+			Module::Database& db,
+			std::uint64_t query,
+			std::string& regExTo,
+			ServerCommandResponse& responseTo
+	) {
+		QueryProperties properties;
+
+		db.getQueryProperties(query, properties);
+
+		// check query type (must be RegEx)
+		if(properties.type != "regex") {
+			responseTo = ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(query)
+					+ " has invalid type (must be RegEx)."
+			);
+
+			return false;
+		}
+
+		// check query result type (must be boolean)
+		if(!properties.resultBool) {
+			responseTo = ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(query)
+					+ " has invalid result type (must be boolean)."
+			);
+
+			return false;
+		}
+
+		regExTo = properties.text;
+
+		return true;
+	}
+
+	// use RegEx query to get URLs to be deleted from URL list
+	bool Server::cmdDeleteUrlsGetUrls(
+			Module::Database& db,
+			std::uint64_t urlList,
+			const std::string& regEx,
+			std::queue<std::uint64_t>& toDeleteTo,
+			ServerCommandResponse& responseTo
+	) {
+		try {
+			// create RegEx query
+			const Query::RegEx query(regEx, true, false);
+
+			// get URLs from URL list
+			auto urls{db.getUrlsWithIds(urlList)};
+
+			// perform query on each URL in the URL list to identify which URLs to delete
+			while(!urls.empty()) {
+				if(query.getBool(urls.front().second)) {
+					toDeleteTo.push(urls.front().first);
+				}
+
+				urls.pop();
+			}
+		}
+		catch(const RegExException& e) {
+			responseTo = ServerCommandResponse::failed(
+					"RegEx error: "
+					+ std::string(e.view())
+			);
+
+			return false;
+		}
+
+		// check for URLs matching the query
+		if(toDeleteTo.empty()) {
+			responseTo = ServerCommandResponse(
+					"The query did not match any URLs in the URL list."
+			);
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// delete URLs from URL list
+	Struct::ServerCommandResponse Server::cmdDeleteUrlsDelete(
+			Module::Database& db,
+			std::uint64_t urlList,
+			std::queue<std::uint64_t>& toDelete
+	) {
+		// delete URLs
+		const auto numDeleted{db.deleteUrls(urlList, toDelete)};
+
+		// return number of deleted URLs
+		if(numDeleted == 1) {
+			return ServerCommandResponse("One URL has been deleted.");
+		}
+
+		std::ostringstream responseStrStr;
+
+		responseStrStr.imbue(std::locale(""));
+
+		responseStrStr << numDeleted << " URLs have been deleted.";
+
+		return ServerCommandResponse(responseStrStr.str());
+	}
+
+	// confirm deleting URLs from URL list
+	Struct::ServerCommandResponse Server::cmdDeleteUrlsConfirm(std::size_t number) {
+		// return number of URLs to be deleted when confirmed
+		if(number == 1) {
+			return ServerCommandResponse::toBeConfirmed(
+					"Do you really want to delete one URL?"
+					"\n!!! All associated data will be lost !!!"
+			);
+		}
+
+		std::ostringstream responseStrStr;
+
+		responseStrStr.imbue(std::locale(""));
+
+		responseStrStr	<< "Do you really want to delete "
+						<< number
+						<< " URLs?\n!!! All associated data will be lost !!!";
+
+		return ServerCommandResponse::toBeConfirmed(responseStrStr.str());
 	}
 
 } /* namespace crawlservpp::Main */

@@ -431,6 +431,11 @@ namespace crawlservpp::Main {
 		void cmdTestQuery(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 
 		// internal helper functions
+		bool isWebsiteInUse(std::uint64_t website, ServerCommandResponse& responseTo);
+		bool isUrlListInUse(std::uint64_t urlList, ServerCommandResponse& responseTo);
+		bool checkConfig(std::uint64_t config, ServerCommandResponse& responseTo);
+		bool checkConfig(std::uint64_t website, std::uint64_t config, ServerCommandResponse& responseTo);
+
 		bool getArgument(
 				const std::string& name,
 				std::string& out,
@@ -457,13 +462,14 @@ namespace crawlservpp::Main {
 				const ServerCommandResponse& response
 		);
 
+		void initWorkerDatabase(Module::Database& db);
+
 		// internal static helper functions
 		[[nodiscard]] static bool workerBegin(
 				const std::string& message,
 				rapidjson::Document& json,
 				ServerCommandResponse& response
 		);
-		void initWorkerDatabase(Module::Database& db);
 
 		static bool getArgument(
 				const rapidjson::Document& json,
@@ -489,6 +495,11 @@ namespace crawlservpp::Main {
 
 		static void correctDomain(std::string& inOut);
 
+		[[nodiscard]] static bool checkNameSpace(
+				const std::string& name,
+				ServerCommandResponse& responseTo
+		);
+
 		[[nodiscard]] static std::uint32_t getAlgoFromConfig(
 				const rapidjson::Document& json
 		);
@@ -506,9 +517,9 @@ namespace crawlservpp::Main {
 
 		static bool cmdExportGetArguments(
 				const rapidjson::Document& json,
-				std::string& dataTypeOut,
-				std::string& fileTypeOut,
-				std::string& compressionOut,
+				std::string& dataTypeTo,
+				std::string& fileTypeTo,
+				std::string& compressionTo,
 				ServerCommandResponse& responseTo
 		);
 		static bool cmdExportRetrieveAndConvert(
@@ -617,6 +628,134 @@ namespace crawlservpp::Main {
 				std::optional<std::string>& optHeaderTo,
 				ServerCommandResponse& responseTo
 		);
+		static bool cmdDeleteUrlsGetArguments(
+				const rapidjson::Document& json,
+				std::uint64_t& urlListTo,
+				std::uint64_t& queryTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdDeleteUrlsGetWebsite(
+				Module::Database& db,
+				std::uint64_t urlList,
+				std::uint64_t& websiteTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdDeleteUrlsGetQuery(
+				Module::Database& db,
+				std::uint64_t queryId,
+				std::string& propertiesTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdDeleteUrlsGetUrls(
+				Module::Database& db,
+				std::uint64_t urlList,
+				const std::string& regEx,
+				std::queue<std::uint64_t>& toDeleteTo,
+				ServerCommandResponse& responseTo
+		);
+		static ServerCommandResponse cmdDeleteUrlsDelete(
+				Module::Database& db,
+				std::uint64_t urlList,
+				std::queue<std::uint64_t>& toDelete
+		);
+		static ServerCommandResponse cmdDeleteUrlsConfirm(std::size_t number);
+
+		// static template helper functions using different kinds of database connections
+		template<typename DB> static bool checkWebsite(
+				DB& db,
+				std::uint64_t website,
+				ServerCommandResponse& responseTo
+		) {
+			if(db.isWebsite(website)) {
+				return true;
+			}
+
+			responseTo = ServerCommandResponse::failed(
+					"Website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
+
+			return false;
+		}
+
+		template<typename DB> static bool checkUrlList(
+				DB& db,
+				std::uint64_t urlList,
+				ServerCommandResponse& responseTo
+		) {
+			if(db.isUrlList(urlList)) {
+				return true;
+			}
+
+			responseTo = ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(urlList)
+					+ " not found."
+			);
+
+			return false;
+		}
+
+		template<typename DB> static bool checkUrlList(
+				DB& db,
+				std::uint64_t website,
+				std::uint64_t urlList,
+				ServerCommandResponse& responseTo
+		) {
+			if(db.isUrlList(website, urlList)) {
+				return true;
+			}
+
+			responseTo = ServerCommandResponse::failed(
+					"URL list #"
+					+ std::to_string(urlList)
+					+ " for website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
+
+			return false;
+		}
+
+		template<typename DB> static bool checkQuery(
+				DB& db,
+				std::uint64_t queryId,
+				ServerCommandResponse& responseTo
+		) {
+			if(db.isQuery(queryId)) {
+				return true;
+			}
+
+			responseTo = ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(queryId)
+					+ " not found."
+			);
+
+			return false;
+		}
+
+		template<typename DB> static bool checkQuery(
+				DB& db,
+				std::uint64_t website,
+				std::uint64_t queryId,
+				ServerCommandResponse& responseTo
+		) {
+			if(db.isQuery(website, queryId)) {
+				return true;
+			}
+
+			responseTo = ServerCommandResponse::failed(
+					"Query #"
+					+ std::to_string(queryId)
+					+ " for website #"
+					+ std::to_string(website)
+					+ " not found."
+			);
+
+			return false;
+		}
 	};
 
 } /* namespace crawlservpp::Main */
