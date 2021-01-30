@@ -746,7 +746,7 @@ jQuery(function($) {
 					"namespace" : $("#website-namespace").val(),
 					"crossdomain": $("#website-crossdomain").prop("checked"),
 					"domain" : $("#website-crossdomain").prop("checked") ? undefined : $("#website-domain").val(),
-					"dir" : $("#website-dir").val()
+					"dir" : $("#website-externaldir").prop("checked") ? $("#website-dir").val() : undefined
 				},
 				true,
 				{
