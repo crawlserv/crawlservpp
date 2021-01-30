@@ -72,6 +72,7 @@ namespace crawlservpp::Wrapper {
 	public:
 		///@name Construction and Destruction
 		///@{
+
 		TidyDoc();
 		virtual ~TidyDoc();
 
