@@ -5634,7 +5634,13 @@ namespace crawlservpp::Main {
 			};
 
 			// execute SQL statement
-			sqlStatement->setUInt64(sqlArg1, toWebsiteId);
+			if(toWebsiteId == 0) {
+				sqlStatement->setNull(sqlArg1, 0);
+			}
+			else {
+				sqlStatement->setUInt64(sqlArg1, toWebsiteId);
+			}
+
 			sqlStatement->setUInt64(sqlArg2, queryId);
 
 			Database::sqlExecute(sqlStatement);
