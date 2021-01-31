@@ -257,7 +257,15 @@ echo $trigger;
 
 ?>" value="<?php 
 
-if($query) echo html($queryName); 
+if($query) {
+	if(!isset($queryName)) {
+		echo "\"/><span class=\"error\">Could not get the name of the query!";
+		echo "</span></div></div></div></div></div></div></body></html>";
+		exit;
+	}
+	
+	echo html($queryName); 
+}
 
 ?>" />
 
