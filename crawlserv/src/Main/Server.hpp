@@ -125,7 +125,7 @@
 #include <algorithm>	// std::count, std::count_if, std::find_if, std::remove_if
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint32_t, std::uint64_t
+#include <cstdint>		// std::uint16_t, std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
 #include <iostream>		// std::cout, std::flush
 #include <locale>		// std::locale
@@ -430,9 +430,33 @@ namespace crawlservpp::Main {
 
 		void cmdTestQuery(ConnectionPtr connection, std::size_t threadIndex, const std::string& message);
 
+		// server initialization
+		static void initCacheDir();
+		static void initCookiesDir();
+		static void initDebuggingDir(bool isEnabled, std::string_view directory);
+		void initDatabase(std::uint16_t sleepOnSqlErrorS);
+		void initCallbacks();
+		void initWebServer(const std::string& port, const std::string& corsOrigins);
+		void initThreads();
+		void initStartLogging();
+
+		// server cleanup
+		void clearModuleThreads();
+		void clearWorkerThreads();
+		void clearLogShutdown();
+
+		// server tick
+		void tickPollWebServer();
+		void tickRemoveFinishedModuleThreads();
+		void tickRemoveFinishedWorkerThreads();
+		void tickReconnectIfOffline();
+
 		// internal helper functions
-		bool isWebsiteInUse(std::uint64_t website, ServerCommandResponse& responseTo);
-		bool isUrlListInUse(std::uint64_t urlList, ServerCommandResponse& responseTo);
+		void continueParserThread(const ThreadDatabaseEntry& entry);
+		void continueAnalyzerThread(const ThreadDatabaseEntry& entry);
+		static std::string getIp(const ConnectionPtr connection, std::string_view function);
+		bool isWebsiteInUse(std::uint64_t website, ServerCommandResponse& responseTo) const;
+		bool isUrlListInUse(std::uint64_t urlList, ServerCommandResponse& responseTo) const;
 		bool checkConfig(std::uint64_t config, ServerCommandResponse& responseTo);
 		bool checkConfig(std::uint64_t website, std::uint64_t config, ServerCommandResponse& responseTo);
 
@@ -660,7 +684,101 @@ namespace crawlservpp::Main {
 		);
 		static ServerCommandResponse cmdDeleteUrlsConfirm(std::size_t number);
 
-		// static template helper functions using different kinds of database connections
+		// static template helper functions for different kinds of threats
+		template<typename T> static void interruptModuleThreads(
+				std::vector<std::unique_ptr<T>>& threads
+		) {
+			for(auto& thread : threads) {
+				thread->Module::Thread::interrupt();
+			}
+		}
+
+		template<typename T> static void waitForModuleThreads(
+				std::vector<std::unique_ptr<T>>& threads,
+				std::string_view moduleName,
+				std::queue<std::string>& logEntriesTo
+		) {
+			for(auto& thread : threads) {
+				if(thread) {
+					// save the ID of the thread before ending it
+					const auto id{thread->getId()};
+
+					// wait for thread
+					thread->Module::Thread::end();
+
+					// log interruption
+					std::string logString{moduleName};
+
+					logString += " #";
+					logString += std::to_string(id);
+					logString += " interrupted.";
+
+					logEntriesTo.emplace(logString);
+				}
+			}
+
+			threads.clear();
+		}
+
+		template<typename T> static std::size_t countModuleThreads(
+				const std::vector<std::unique_ptr<T>>& threads
+		) {
+			return std::count_if(
+					threads.cbegin(),
+					threads.cend(),
+					[](const auto& thread) {
+							return thread->isRunning();
+					}
+			);
+		}
+
+		template<typename T> static void removeFinishedModuleThreads(
+				std::vector<std::unique_ptr<T>>& threads
+		) {
+			threads.erase(
+					std::remove_if(
+							threads.begin(),
+							threads.end(),
+							[](auto& crawler) {
+								if(crawler->isShutdown() && crawler->isFinished()) {
+									crawler->Module::Thread::end();
+
+									return true;
+								}
+
+								return false;
+							}
+					),
+					threads.end()
+			);
+		}
+
+		template<typename T> void continueModuleThread( /* (for analyzer and extractor only) */
+				const Database::ThreadDatabaseEntry& entry,
+				std::vector<std::unique_ptr<T>>& to
+		) {
+			to.push_back(
+					std::make_unique<T>(
+							this->database,
+							cookieDir,
+							entry.options,
+							this->netSettings,
+							entry.status
+					)
+			);
+
+			to.back()->Module::Thread::start();
+
+			// write to log
+			this->database.log(
+					entry.options.module
+					+ " #"
+					+ std::to_string(entry.status.id)
+					+ " continued."
+			);
+		}
+
+		// static template helper functions for different kinds of database connections
 		template<typename DB> static bool checkWebsite(
 				DB& db,
 				std::uint64_t website,

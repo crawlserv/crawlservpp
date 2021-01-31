@@ -73,378 +73,24 @@ namespace crawlservpp::Main {
 			  allowed(serverSettings.allowedClients),
 			  webServer(cacheDir) {
 
-		// clear or create cache directory
-		if(Helper::FileSystem::isValidDirectory(cacheDir)) {
-			Helper::FileSystem::clearDirectory(cacheDir);
-		}
-		else {
-			Helper::FileSystem::createDirectory(cacheDir);
-		}
+		// initialize directories
+		Server::initCacheDir();
+		Server::initCookiesDir();
+		Server::initDebuggingDir(dbSettings.debugLogging, dbSettings.debugDir);
 
-		// create cookies directory if it does not exist
-		Helper::FileSystem::createDirectoryIfNotExists(cookieDir);
-
-		// create and save debug directory if needed
-		if(dbSettings.debugLogging) {
-			Helper::FileSystem::createDirectoryIfNotExists(dbSettings.debugDir);
-		}
-
-		// set database option (for server only)
-		this->database.setSleepOnError(serverSettings.sleepOnSqlErrorS);
-
-		// connect to database and initialize it
-		this->database.connect();
-		this->database.initializeSql();
-		this->database.prepare();
-		this->database.update();
-
-		// change state to online
-		this->offline = false;
-
-		// set callbacks (suppressing wrong error messages by Eclipse IDE)
-		this->webServer.setAcceptCallback([this](ConnectionPtr connectionPtr) {
-			return this->onAccept(connectionPtr);
-		});
-
-		this->webServer.setRequestCallback(
-				[this](
-						ConnectionPtr connection,
-						const std::string& method,
-						const std::string& body,
-						void * data
-				) {
-					return this->onRequest(connection, method, body, data);
-				}
-		);
-
-		// initialize mongoose embedded web server, bind it to port and set CORS string
-		this->webServer.initHTTP(serverSettings.port);
-
-		this->webServer.setCORS(serverSettings.corsOrigins);
-
-		// set initial status
-		this->setStatus("crawlserv++ is ready");
-
-		// load threads from database
-		for(const auto& thread : this->database.getThreads()) {
-			if(thread.options.module == "crawler") {
-#ifndef MAIN_SERVER_DEBUG_NOCRAWLERS
-				// load crawler thread
-				this->crawlers.push_back(
-						std::make_unique<Module::Crawler::Thread>(
-								this->database,
-								cookieDir,
-								thread.options,
-								this->netSettings,
-								thread.status
-						)
-				);
-
-				this->crawlers.back()->Module::Thread::start();
-
-				// write to log
-				this->database.log(
-						"crawler #"
-						+ std::to_string(thread.status.id)
-						+ " continued."
-				);
-#endif
-			}
-			else if(thread.options.module == "parser") {
-#ifndef MAIN_SERVER_DEBUG_NOPARSERS
-				// load parser thread
-				this->parsers.push_back(
-						std::make_unique<Module::Parser::Thread>(
-								this->database,
-								thread.options,
-								thread.status
-						)
-				);
-
-				this->parsers.back()->Module::Thread::start();
-
-				// write to log
-				this->database.log(
-						"parser #"
-						+ std::to_string(thread.status.id)
-						+ " continued."
-				);
-#endif
-			}
-#ifndef MAIN_SERVER_DEBUG_NOEXTRACTORS
-			else if(thread.options.module == "extractor") {
-				this->extractors.push_back(
-						std::make_unique<Module::Extractor::Thread>(
-								this->database,
-								cookieDir,
-								thread.options,
-								this->netSettings,
-								thread.status
-						)
-				);
-
-				this->extractors.back()->Module::Thread::start();
-
-				// write to log
-				this->database.log(
-						"extractor #"
-						+ std::to_string(thread.status.id)
-						+ " continued."
-				);
-#endif
-			}
-			else if(thread.options.module == "analyzer") {
-#ifndef MAIN_SERVER_DEBUG_NOANALYZERS
-				// get JSON
-				const std::string config(
-						this->database.getConfiguration(
-								thread.options.config
-						)
-				);
-
-				// parse JSON
-				rapidjson::Document configJson;
-
-				try {
-					configJson = Helper::Json::parseRapid(config);
-				}
-				catch(const JsonException& e) {
-					throw Exception(
-							"Could not parse configuration: "
-							+ std::string(e.view())
-					);
-				}
-
-				if(!configJson.IsArray()) {
-					throw Exception(
-							"Parsed configuration JSON is not an array."
-					);
-				}
-
-				// try to add algorithm according to parsed algorithm ID
-				this->analyzers.push_back(
-						Module::Analyzer::Algo::initAlgo(
-								AlgoThreadProperties(
-										Server::getAlgoFromConfig(configJson),
-										thread.options,
-										thread.status,
-										this->database
-								)
-						)
-				);
-
-				if(!(this->analyzers.back())) {
-					this->analyzers.pop_back();
-
-					this->database.log(
-							"[WARNING] Unknown algorithm ignored"
-							" when loading threads."
-					);
-
-					continue;
-				}
-
-				// start algorithm (and get its ID)
-				this->analyzers.back()->Module::Thread::start();
-
-				// write to log
-				this->database.log(
-						"analyzer #"
-						+ std::to_string(thread.status.id)
-						+ " continued."
-				);
-#endif
-			}
-			else {
-				throw Exception(
-						"Unknown thread module '"
-						+ thread.options.module
-						+ "'"
-				);
-			}
-		}
-
-		// save start time for up-time calculation
-		this->uptimeStart = std::chrono::steady_clock::now();
-
-		// start logging
-		this->database.log(
-				"successfully started and connected to database [MySQL v"
-				+ this->database.getMysqlVersion()
-				+ "; datadir='"
-				+ this->database.getDataDir()
-				+ "'; maxAllowedPacketSize="
-				+ std::to_string(this->database.getMaxAllowedPacketSize())
-				+ "; connection_id="
-				+ std::to_string(this->database.getConnectionId())
-				+ "]."
-		);
+		// initialize server
+		this->initDatabase(serverSettings.sleepOnSqlErrorS);
+		this->initCallbacks();
+		this->initWebServer(serverSettings.port, serverSettings.corsOrigins);
+		this->initThreads();
+		this->initStartLogging();
 	}
 
 	//! Destructor interrupting and waiting for all threads.
 	Server::~Server() {
-		// interrupt module threads
-		for(auto& crawler : this->crawlers) {
-			crawler->Module::Thread::interrupt();
-		}
-
-		for(auto& parser : this->parsers) {
-			parser->Module::Thread::interrupt();
-		}
-
-		for(auto& extractor : this->extractors) {
-			extractor->Module::Thread::interrupt();
-		}
-
-		for(auto& analyzer : this->analyzers) {
-			analyzer->Module::Thread::interrupt();
-		}
-
-		// wait for module threads
-		for(auto& crawler : this->crawlers) {
-			if(crawler) {
-				// save the ID of the thread before ending it
-				const auto id{crawler->getId()};
-
-				// wait for thread
-				crawler->Module::Thread::end();
-
-				// log interruption
-				const std::string logString(
-						"crawler #"
-						+ std::to_string(id)
-						+ " interrupted."
-				);
-
-				try {
-					this->database.log(logString);
-				}
-				catch(const DatabaseException& e) {
-					std::cout	<< '\n'
-								<< logString
-								<< "\nCould not write to log: "
-								<< e.view()
-								<< std::flush;
-				}
-			}
-		}
-
-		this->crawlers.clear();
-
-		for(auto& parser : this->parsers) {
-			if(parser) {
-				// save the ID of the thread before ending it
-				const auto id{parser->getId()};
-
-				// wait for thread
-				parser->Module::Thread::end();
-
-				// log interruption
-				const std::string logString(
-						"parser #"
-						+ std::to_string(id)
-						+ " interrupted."
-				);
-
-				try {
-					this->database.log(logString);
-				}
-				catch(const DatabaseException& e) {
-					std::cout	<< '\n'
-								<< logString
-								<< "\nCould not write to log: "
-								<< e.view()
-								<< std::flush;
-				}
-			}
-		}
-
-		this->parsers.clear();
-
-		for(auto& extractor : this->extractors) {
-			if(extractor) {
-				// save the ID of the thread before ending it
-				const auto id{extractor->getId()};
-
-				// wait for thread
-				extractor->Module::Thread::end();
-
-				// log interruption
-				const std::string logString(
-						"extractor #"
-						+ std::to_string(id)
-						+ " interrupted."
-				);
-
-				try {
-					this->database.log(logString);
-				}
-				catch(const DatabaseException& e) {
-					std::cout	<< '\n'
-								<< logString
-								<< "\nCould not write to log: "
-								<< e.view()
-								<< std::flush;
-				}
-			}
-		}
-
-		this->extractors.clear();
-
-		for(auto& analyzer : this->analyzers) {
-			if(analyzer) {
-				// save the ID of the thread before ending it
-				const auto id{analyzer->getId()};
-
-				// wait for thread
-				analyzer->Module::Thread::end();
-
-				// log interruption
-				const std::string logString(
-						"analyzer #"
-						+ std::to_string(id)
-						+ " interrupted."
-				);
-
-				try {
-					this->database.log(logString);
-				}
-				catch(const DatabaseException& e) {
-					std::cout	<< '\n'
-								<< logString
-								<< "\nCould not write to log: "
-								<< e.view()
-								<< std::flush;
-				}
-			}
-		}
-
-		this->analyzers.clear();
-
-		// wait for worker threads
-		for(auto& worker : this->workers) {
-			if(worker.joinable()) {
-				worker.join();
-			}
-		}
-
-		this->workers.clear();
-
-		// log shutdown message with server up-time
-		try {
-			this->database.log("shuts down after up-time of "
-					+ Helper::DateTime::secondsToString(this->getUpTime()) + ".");
-		}
-		catch(const DatabaseException& e) {
-			std::cout << "server shuts down after up-time of"
-					<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
-					<< "\nCould not write to log: " << e.view() << std::flush;
-		}
-		catch(...) {
-			std::cout << "server shuts down after up-time of"
-					<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
-					<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
-		}
+		this->clearModuleThreads();
+		this->clearWorkerThreads();
+		this->clearLogShutdown();
 	}
 
 	/*
@@ -483,41 +129,11 @@ namespace crawlservpp::Main {
 	std::size_t Server::getActiveThreads() const {
 		std::size_t result{};
 
-		// count active crawlers
-		result += std::count_if(
-				this->crawlers.cbegin(),
-				this->crawlers.cend(),
-				[](const auto& thread) {
-						return thread->isRunning();
-				}
-		);
-
-		// count active parsers
-		result += std::count_if(
-				this->parsers.cbegin(),
-				this->parsers.cend(),
-				[](const auto& thread) {
-						return thread->isRunning();
-				}
-		);
-
-		// count active extractors
-		result += std::count_if(
-				this->extractors.cbegin(),
-				this->extractors.cend(),
-				[](const auto& thread) {
-						return thread->isRunning();
-				}
-		);
-
-		// count active analyzers
-		result += std::count_if(
-				this->analyzers.cbegin(),
-				this->analyzers.cend(),
-				[](const auto& thread) {
-						return thread->isRunning();
-				}
-		);
+		// count active module threads
+		result += Server::countModuleThreads(this->crawlers);
+		result += Server::countModuleThreads(this->parsers);
+		result += Server::countModuleThreads(this->extractors);
+		result += Server::countModuleThreads(this->analyzers);
 
 		return result;
 	}
@@ -555,130 +171,10 @@ namespace crawlservpp::Main {
 	 *   running. False otherwise.
 	 */
 	bool Server::tick() {
-		// poll web server
-		try {
-			this->webServer.poll(webServerPollTimeOutMs);
-		}
-		catch(const DatabaseException& e) {
-			// try to re-connect once on database exception
-			try {
-				this->database.checkConnection();
-				this->database.log(
-						"re-connected to database after error: "
-						+ std::string(e.view())
-				);
-			}
-			catch(const DatabaseException& e) {
-				// database is offline
-				this->offline = true;
-			}
-		}
-
-		// remove module threads if they have been successfully shut down
-		this->crawlers.erase(
-				std::remove_if(
-						this->crawlers.begin(),
-						this->crawlers.end(),
-						[](auto& crawler) {
-							if(crawler->isShutdown() && crawler->isFinished()) {
-								crawler->Module::Thread::end();
-
-								return true;
-							}
-
-							return false;
-						}
-				),
-				this->crawlers.end()
-		);
-
-		this->parsers.erase(
-				std::remove_if(
-						this->parsers.begin(),
-						this->parsers.end(),
-						[](auto& parser) {
-							if(parser->isShutdown() && parser->isFinished()) {
-								parser->Module::Thread::end();
-
-								return true;
-							}
-
-							return false;
-						}
-				),
-				this->parsers.end()
-		);
-
-		this->extractors.erase(
-				std::remove_if(
-						this->extractors.begin(),
-						this->extractors.end(),
-						[](auto& extractor) {
-							if(extractor->isShutdown() && extractor->isFinished()) {
-								extractor->Module::Thread::end();
-
-								return true;
-							}
-
-							return false;
-						}
-				),
-				this->extractors.end()
-		);
-
-		this->analyzers.erase(
-				std::remove_if(
-						this->analyzers.begin(),
-						this->analyzers.end(),
-						[](auto& analyzer) {
-							if(analyzer->isShutdown() && analyzer->isFinished()) {
-								analyzer->Module::Thread::end();
-
-								return true;
-							}
-
-							return false;
-						}
-				),
-				this->analyzers.end()
-		);
-
-		// check whether worker threads were terminated
-		if(!(this->workers.empty())) {
-			std::lock_guard<std::mutex> workersLocked{this->workersLock};
-			bool erased{false};
-
-			for(std::size_t i{}; i < this->workers.size(); ++i) {
-				if(erased) {
-					--i;
-
-					erased = false;
-				}
-
-				auto& worker{this->workers[i]};
-
-				if(!(this->workersRunning[i])) {
-					if(worker.joinable()) {
-						worker.join();
-					}
-
-					this->workers.erase(this->workers.begin() + i);
-					this->workersRunning.erase(this->workersRunning.begin() + i);
-
-					erased = true;
-				}
-			}
-		}
-
-		// try to re-connect to database if it is offline
-		if(this->offline) {
-			try {
-				this->database.checkConnection();
-
-				this->offline = false;
-			}
-			catch(const DatabaseException &e) {}
-		}
+		this->tickPollWebServer();
+		this->tickRemoveFinishedModuleThreads();
+		this->tickRemoveFinishedWorkerThreads();
+		this->tickReconnectIfOffline();
 
 		return this->running;
 	}
@@ -698,15 +194,7 @@ namespace crawlservpp::Main {
 
 	// handle accept event, throws Main::Exception
 	void Server::onAccept(ConnectionPtr connection) {
-		// check connection and get IP
-		if(connection == nullptr) {
-			throw Exception(
-					"Server::onAccept():"
-					" No connection specified"
-			);
-		}
-
-		const std::string ip{WebServer::getIP(connection)};
+		const std::string ip{Server::getIp(connection, "onAccept")};
 
 		// check authorization
 		if(this->allowed != "*") {
@@ -794,14 +282,7 @@ namespace crawlservpp::Main {
 			const std::string& body,
 			void * data
 	) {
-		// check connection and get IP
-		if(connection == nullptr) {
-			throw Exception(
-					"Server::onRequest(): No connection specified"
-			);
-		}
-
-		const std::string ip{WebServer::getIP(connection)};
+		const std::string ip{Server::getIp(connection, "onRequest")};
 
 		// check authorization
 		if(this->allowed != "*") {
@@ -878,14 +359,7 @@ namespace crawlservpp::Main {
 			);
 		}
 		else {
-			// check connection and get IP
-			if(connection == nullptr) {
-				throw Exception(
-						"Server::cmd(): No connection specified"
-				);
-			}
-
-			this->cmdIp = WebServer::getIP(connection);
+			this->cmdIp = Server::getIp(connection, "cmd");
 
 			// parse JSON
 			try {
@@ -1317,7 +791,7 @@ namespace crawlservpp::Main {
 		if(
 				!Server::checkWebsite(this->database, website, response)
 				|| !Server::checkUrlList(this->database, website, urlList, response)
-				|| !(this->checkConfig(website, urlList, response))
+				|| !(this->checkConfig(website, config, response))
 		) {
 			return response;
 		}
@@ -5148,11 +4622,374 @@ namespace crawlservpp::Main {
 	}
 
 	/*
+	 * SERVER INITIALIZATION (private)
+	 */
+
+	// clear or delete cache directory
+	void Server::initCacheDir() {
+		if(Helper::FileSystem::isValidDirectory(cacheDir)) {
+			Helper::FileSystem::clearDirectory(cacheDir);
+		}
+		else {
+			Helper::FileSystem::createDirectory(cacheDir);
+		}
+	}
+
+	// create cookies directory if it does not exist
+	void Server::initCookiesDir() {
+		Helper::FileSystem::createDirectoryIfNotExists(cookieDir);
+	}
+
+	// create and save debug directory if needed
+	void Server::initDebuggingDir(bool isEnabled, std::string_view directory) {
+		if(isEnabled) {
+			Helper::FileSystem::createDirectoryIfNotExists(directory);
+		}
+	}
+
+	// initialize database connection for the server
+	void Server::initDatabase(std::uint16_t sleepOnSqlErrorS) {
+		// set database option (for server only)
+		this->database.setSleepOnError(sleepOnSqlErrorS);
+
+		// connect to database and initialize it
+		this->database.connect();
+		this->database.initializeSql();
+		this->database.prepare();
+		this->database.update();
+
+		// change state to online
+		this->offline = false;
+	}
+
+	// set callbacks
+	void Server::initCallbacks() {
+		this->webServer.setAcceptCallback([this](ConnectionPtr connectionPtr) {
+			return this->onAccept(connectionPtr);
+		});
+
+		this->webServer.setRequestCallback(
+				[this](
+						ConnectionPtr connection,
+						const std::string& method,
+						const std::string& body,
+						void * data
+				) {
+					return this->onRequest(connection, method, body, data);
+				}
+		);
+	}
+
+	// initialize mongoose embedded web server, bind it to port and set CORS string
+	void Server::initWebServer(const std::string& port, const std::string& corsOrigins) {
+		this->webServer.initHTTP(port);
+
+		this->webServer.setCORS(corsOrigins);
+
+		// set initial status
+		this->setStatus("crawlserv++ is ready");
+	}
+
+	// load threads from database
+	void Server::initThreads() {
+		for(const auto& thread : this->database.getThreads()) {
+			if(thread.options.module == "crawler") {
+#ifndef MAIN_SERVER_DEBUG_NOCRAWLERS
+				// continue crawler thread
+				this->continueModuleThread(thread, this->crawlers);
+#endif
+			}
+			else if(thread.options.module == "parser") {
+#ifndef MAIN_SERVER_DEBUG_NOPARSERS
+				// continue parser thread
+				this->continueParserThread(thread);
+#endif
+			}
+#ifndef MAIN_SERVER_DEBUG_NOEXTRACTORS
+			else if(thread.options.module == "extractor") {
+				// continue extractor thread
+				this->continueModuleThread(thread, this->extractors);
+#endif
+			}
+			else if(thread.options.module == "analyzer") {
+#ifndef MAIN_SERVER_DEBUG_NOANALYZERS
+				// continue analyzer thread
+				this->continueAnalyzerThread(thread);
+#endif
+			}
+			else {
+				throw Exception(
+						"Unknown thread module '"
+						+ thread.options.module
+						+ "'"
+				);
+			}
+		}
+	}
+
+	// start logging
+	void Server::initStartLogging() {
+		this->database.log(
+				"successfully started and connected to database [MySQL v"
+				+ this->database.getMysqlVersion()
+				+ "; datadir='"
+				+ this->database.getDataDir()
+				+ "'; maxAllowedPacketSize="
+				+ std::to_string(this->database.getMaxAllowedPacketSize())
+				+ "; connection_id="
+				+ std::to_string(this->database.getConnectionId())
+				+ "]."
+		);
+
+		// save start time for up-time calculation
+		this->uptimeStart = std::chrono::steady_clock::now();
+	}
+
+	/*
+	 * SERVER CLEANUP (private)
+	 */
+
+	// interrupt, wait for and clear module threads
+	void Server::clearModuleThreads() {
+		// interrupt module threads
+		Server::interruptModuleThreads(this->crawlers);
+		Server::interruptModuleThreads(this->parsers);
+		Server::interruptModuleThreads(this->extractors);
+		Server::interruptModuleThreads(this->analyzers);
+
+		// wait for (and clear) module threads
+		std::queue<std::string> logEntries;
+
+		Server::waitForModuleThreads(this->crawlers, "crawler", logEntries);
+		Server::waitForModuleThreads(this->parsers, "parser", logEntries);
+		Server::waitForModuleThreads(this->extractors, "extrator", logEntries);
+		Server::waitForModuleThreads(this->analyzers, "analyzer", logEntries);
+
+		// write final log entries for module threads
+		while(!logEntries.empty()) {
+			try {
+				this->database.log(logEntries.front());
+			}
+			catch(const DatabaseException& e) {
+				std::cout	<< '\n'
+							<< logEntries.front()
+							<< "\nCould not write to log: "
+							<< e.view()
+							<< std::flush;
+			}
+
+			logEntries.pop();
+		}
+	}
+
+	// wait for and clear worker threads
+	void Server::clearWorkerThreads() {
+		for(auto& worker : this->workers) {
+			if(worker.joinable()) {
+				worker.join();
+			}
+		}
+
+		this->workers.clear();
+	}
+
+	// log final shutdown message, including server up-time
+	void Server::clearLogShutdown() {
+		try {
+			this->database.log("shuts down after up-time of "
+					+ Helper::DateTime::secondsToString(this->getUpTime()) + ".");
+		}
+		catch(const DatabaseException& e) {
+			std::cout << "server shuts down after up-time of"
+					<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
+					<< "\nCould not write to log: " << e.view() << std::flush;
+		}
+		catch(...) {
+			std::cout << "server shuts down after up-time of"
+					<< Helper::DateTime::secondsToString(this->getUpTime()) << "."
+					<< "\nERROR: Unknown exception in Server::~Server()" << std::flush;
+		}
+	}
+
+	/*
+	 * SERVER TICK (private)
+	 */
+
+	// poll web server
+	void Server::tickPollWebServer() {
+		try {
+			this->webServer.poll(webServerPollTimeOutMs);
+		}
+		catch(const DatabaseException& e) {
+			// try to re-connect once on database exception
+			try {
+				this->database.checkConnection();
+				this->database.log(
+						"re-connected to database after error: "
+						+ std::string(e.view())
+				);
+			}
+			catch(const DatabaseException& e) {
+				// database is offline
+				this->offline = true;
+			}
+		}
+	}
+
+	// remove module threads if they have been successfully shut down
+	void Server::tickRemoveFinishedModuleThreads() {
+		Server::removeFinishedModuleThreads(this->crawlers);
+		Server::removeFinishedModuleThreads(this->parsers);
+		Server::removeFinishedModuleThreads(this->extractors);
+		Server::removeFinishedModuleThreads(this->analyzers);
+	}
+
+	// check whether worker threads were terminated
+	void Server::tickRemoveFinishedWorkerThreads() {
+		if(!(this->workers.empty())) {
+			std::lock_guard<std::mutex> workersLocked{this->workersLock};
+			bool erased{false};
+
+			for(std::size_t i{}; i < this->workers.size(); ++i) {
+				if(erased) {
+					--i;
+
+					erased = false;
+				}
+
+				auto& worker{this->workers[i]};
+
+				if(!(this->workersRunning[i])) {
+					if(worker.joinable()) {
+						worker.join();
+					}
+
+					this->workers.erase(this->workers.begin() + i);
+					this->workersRunning.erase(this->workersRunning.begin() + i);
+
+					erased = true;
+				}
+			}
+		}
+	}
+
+	// try to re-connect to database if it is offline
+	void Server::tickReconnectIfOffline() {
+		if(this->offline) {
+			try {
+				this->database.checkConnection();
+
+				this->offline = false;
+			}
+			catch(const DatabaseException &e) {}
+		}
+	}
+
+	/*
 	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
 
+	// continue a parser thread
+	void Server::continueParserThread(const ThreadDatabaseEntry &entry) {
+		this->parsers.push_back(
+				std::make_unique<Module::Parser::Thread>(
+						this->database,
+						entry.options,
+						entry.status
+				)
+		);
+
+		this->parsers.back()->Module::Thread::start();
+
+		// write to log
+		this->database.log(
+				"parser #"
+				+ std::to_string(entry.status.id)
+				+ " continued."
+		);
+	}
+
+	// continue an analyzer thread
+	void Server::continueAnalyzerThread(const ThreadDatabaseEntry &entry) {
+		// get JSON
+		const std::string config(
+				this->database.getConfiguration(
+						entry.options.config
+				)
+		);
+
+		// parse JSON
+		rapidjson::Document configJson;
+
+		try {
+			configJson = Helper::Json::parseRapid(config);
+		}
+		catch(const JsonException& e) {
+			throw Exception(
+					"Could not parse configuration: "
+					+ std::string(e.view())
+			);
+		}
+
+		if(!configJson.IsArray()) {
+			throw Exception(
+					"Parsed configuration JSON is not an array."
+			);
+		}
+
+		// try to add algorithm according to parsed algorithm ID
+		this->analyzers.push_back(
+				Module::Analyzer::Algo::initAlgo(
+						AlgoThreadProperties(
+								Server::getAlgoFromConfig(configJson),
+								entry.options,
+								entry.status,
+								this->database
+						)
+				)
+		);
+
+		if(!(this->analyzers.back())) {
+			this->analyzers.pop_back();
+
+			this->database.log(
+					"[WARNING] Unknown algorithm for analyzer #"
+					+ std::to_string(entry.status.id)
+					+ " ignored when loading threads."
+			);
+
+			return;
+		}
+
+		// start algorithm (and get its ID)
+		this->analyzers.back()->Module::Thread::start();
+
+		// write to log
+		this->database.log(
+				"analyzer #"
+				+ std::to_string(entry.status.id)
+				+ " continued."
+		);
+	}
+
+	// check whether the server is connected and get the IP address of the connection
+	std::string Server::getIp(const ConnectionPtr connection, std::string_view function) {
+		if(connection == nullptr) {
+			std::string exceptionString{
+				"Server::"
+			};
+
+			exceptionString += function;
+			exceptionString += "(): No connection specified";
+
+			throw Exception(exceptionString);
+		}
+
+		return WebServer::getIP(connection);
+	}
+
 	// check whether the given website is being used by a thread
-	bool Server::isWebsiteInUse(std::uint64_t website, ServerCommandResponse& responseTo) {
+	bool Server::isWebsiteInUse(std::uint64_t website, ServerCommandResponse& responseTo) const {
 		if(
 				std::find_if(
 						this->crawlers.cbegin(),
@@ -5221,7 +5058,7 @@ namespace crawlservpp::Main {
 	}
 
 	// check whether the given URL list is being used by a thread
-	bool Server::isUrlListInUse(std::uint64_t urlList, ServerCommandResponse& responseTo) {
+	bool Server::isUrlListInUse(std::uint64_t urlList, ServerCommandResponse& responseTo) const {
 		// check whether any thread is using the URL list
 		if(
 				std::find_if(
