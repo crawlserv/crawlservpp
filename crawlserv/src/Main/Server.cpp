@@ -1314,15 +1314,11 @@ namespace crawlservpp::Main {
 		// check arguments
 		ServerCommandResponse response;
 
-		if(!Server::checkWebsite(this->database, website, response)) {
-			return response;
-		}
-
-		if(!Server::checkUrlList(this->database, website, urlList, response)) {
-			return response;
-		}
-
-		if(!(this->checkConfig(website, urlList, response))) {
+		if(
+				!Server::checkWebsite(this->database, website, response)
+				|| !Server::checkUrlList(this->database, website, urlList, response)
+				|| !(this->checkConfig(website, urlList, response))
+		) {
 			return response;
 		}
 
@@ -2553,13 +2549,11 @@ namespace crawlservpp::Main {
 			}
 		}
 
-		// check website
-		if(!Server::checkWebsite(this->database, id, response)) {
-			return response;
-		}
-
-		// check whether any thread is using the website
-		if(this->isWebsiteInUse(id, response)) {
+		// check website or whether any thread is using it
+		if(
+				!Server::checkWebsite(this->database, id, response)
+				|| this->isWebsiteInUse(id, response)
+		) {
 			return response;
 		}
 
@@ -2714,15 +2708,13 @@ namespace crawlservpp::Main {
 			return ServerCommandResponse::failed(error);
 		}
 
-		// check website
+		// check website or whether any thread is using it
 		ServerCommandResponse response;
 
-		if(!Server::checkWebsite(this->database, id, response)) {
-			return response;
-		}
-
-		// check whether any thread is using the website
-		if(this->isWebsiteInUse(id, response)) {
+		if(
+				!Server::checkWebsite(this->database, id, response)
+				|| this->isWebsiteInUse(id, response)
+		) {
 			return response;
 		}
 
@@ -3278,7 +3270,7 @@ namespace crawlservpp::Main {
 		ServerCommandResponse response;
 
 		if(
-				Server::checkQuery(this->database, id, response)
+				!Server::checkQuery(this->database, id, response)
 				|| (to > 0 && !Server::checkWebsite(this->database, to, response))
 		) {
 			return response;
@@ -5981,34 +5973,24 @@ namespace crawlservpp::Main {
 		std::uint64_t urlList{};
 
 		if(
-				!Server::cmdExportGetUrlListArguments(
+				Server::cmdExportGetUrlListArguments(
 						json,
 						website,
 						urlList,
 						responseTo
 				)
+				&& Server::cmdExportCheckWebsiteUrlList(db, website, urlList, responseTo)
 		) {
-			return false;
+			// get URLs
+			urlsTo = db.getUrls(urlList);
+
+			// write to log
+			Server::cmdExportLog(db, "URL", "URLs", "URL list", urlsTo.size());
+
+			return true;
 		}
 
-		if(
-				!Server::cmdExportCheckWebsiteUrlList(
-						db,
-						website,
-						urlList,
-						responseTo
-				)
-		) {
-			return false;
-		}
-
-		// get URLs
-		urlsTo = db.getUrls(urlList);
-
-		// write to log
-		Server::cmdExportLog(db, "URL", "URLs", "URL list", urlsTo.size());
-
-		return true;
+		return false;
 	}
 
 	// retrieve data from target table
@@ -6026,7 +6008,7 @@ namespace crawlservpp::Main {
 		std::uint64_t tableId{};
 
 		if(
-				!Server::cmdExportGetTableArguments(
+				Server::cmdExportGetTableArguments(
 						json,
 						website,
 						urlList,
@@ -6034,23 +6016,13 @@ namespace crawlservpp::Main {
 						isColumnNamesTo,
 						responseTo
 				)
-		) {
-			return false;
-		}
-
-		if(
-				!Server::cmdExportCheckWebsiteUrlList(
+				&& Server::cmdExportCheckWebsiteUrlList(
 						db,
 						website,
 						urlList,
 						responseTo
 				)
-		) {
-			return false;
-		}
-
-		if(
-				!Server::cmdExportCheckTargetTable(
+				&& Server::cmdExportCheckTargetTable(
 						db,
 						type,
 						website,
@@ -6059,25 +6031,25 @@ namespace crawlservpp::Main {
 						responseTo
 				)
 		) {
-			return false;
+			// get content of table
+			Server::cmdExportGetTableContent(
+					db,
+					type,
+					website,
+					urlList,
+					tableId,
+					nameTo,
+					contentTo,
+					isColumnNamesTo
+			);
+
+			// write to log
+			Server::cmdExportLog(db, "row", "rows", "table", contentTo.size());
+
+			return true;
 		}
 
-		// get content of table
-		Server::cmdExportGetTableContent(
-				db,
-				type,
-				website,
-				urlList,
-				tableId,
-				nameTo,
-				contentTo,
-				isColumnNamesTo
-		);
-
-		// write to log
-		Server::cmdExportLog(db, "row", "rows", "table", contentTo.size());
-
-		return true;
+		return false;
 	}
 
 	// get arguments for exporting a URL list
@@ -6090,15 +6062,15 @@ namespace crawlservpp::Main {
 		std::string error;
 
 		if(
-				!Server::getArgument(json, "website", websiteTo, error)
-				|| !Server::getArgument(json, "urllist-source", urlListTo, error)
+				Server::getArgument(json, "website", websiteTo, error)
+				&& Server::getArgument(json, "urllist-source", urlListTo, error)
 		) {
-			responseTo = ServerCommandResponse::failed(error);
-
-			return false;
+			return true;
 		}
 
-		return true;
+		responseTo = ServerCommandResponse::failed(error);
+
+		return false;
 	}
 
 	// get arguments for exporting data from a table
@@ -6113,34 +6085,27 @@ namespace crawlservpp::Main {
 		std::string error;
 
 		if(
-				!Server::getArgument(json, "website", websiteTo, error)
-				|| !Server::getArgument(json, "urllist", urlListTo, error)
-				|| !Server::getArgument(json, "source", tableTo, error)
-				|| !Server::getArgument(json, "column-names", isColumnNamesTo, true, error)
+				Server::getArgument(json, "website", websiteTo, error)
+				&& Server::getArgument(json, "urllist", urlListTo, error)
+				&& Server::getArgument(json, "source", tableTo, error)
+				&& Server::getArgument(json, "column-names", isColumnNamesTo, true, error)
 		) {
-			responseTo = ServerCommandResponse::failed(error);
-
-			return false;
+			return true;
 		}
 
-		return true;
+		responseTo = ServerCommandResponse::failed(error);
+
+		return false;
 	}
 
-	// check the existence of a website and its URL list
 	bool Server::cmdExportCheckWebsiteUrlList(
 			Module::Database& db,
 			std::uint64_t websiteId,
 			std::uint64_t urlListId,
 			ServerCommandResponse& responseTo
 	) {
-		if(
-				!Server::checkWebsite(db, websiteId, responseTo)
-				|| !Server::checkUrlList(db, websiteId, urlListId, responseTo)
-		) {
-			return false;
-		}
-
-		return true;
+		return Server::checkWebsite(db, websiteId, responseTo)
+			&& Server::checkUrlList(db, websiteId, urlListId, responseTo);
 	}
 
 	// check the existence of a target table for the specified website and URL list
@@ -6152,15 +6117,15 @@ namespace crawlservpp::Main {
 			std::uint64_t tableId,
 			ServerCommandResponse& responseTo
 	) {
-		if(!db.isTargetTable(dataType, websiteId, urlListId, tableId)) {
-			responseTo = ServerCommandResponse::failed(
-					"Invalid source table ID."
-			);
-
-			return false;
+		if(db.isTargetTable(dataType, websiteId, urlListId, tableId)) {
+			return true;
 		}
 
-		return true;
+		responseTo = ServerCommandResponse::failed(
+				"Invalid source table ID."
+		);
+
+		return false;
 	}
 
 	// get the content of a target table from the database
@@ -6357,15 +6322,15 @@ namespace crawlservpp::Main {
 		std::string error;
 
 		if(
-				!Server::getArgument(json, "urllist", urlListTo, error)
-				|| !Server::getArgument(json, "query", queryTo, error)
+				Server::getArgument(json, "urllist", urlListTo, error)
+				&& Server::getArgument(json, "query", queryTo, error)
 		) {
-			responseTo = ServerCommandResponse::failed(error);
-
-			return false;
+			return true;
 		}
 
-		return true;
+		responseTo = ServerCommandResponse::failed(error);
+
+		return false;
 	}
 
 	// get and check website for deleting URLs
@@ -6377,17 +6342,17 @@ namespace crawlservpp::Main {
 	) {
 		websiteTo = db.getWebsiteFromUrlList(urlList);
 
-		if(websiteTo == 0) {
-			responseTo = ServerCommandResponse::failed(
-					"Could not get website for URL list #"
-					+ std::to_string(urlList)
-					+ "."
-			);
-
-			return false;
+		if(websiteTo > 0) {
+			return true;
 		}
 
-		return true;
+		responseTo = ServerCommandResponse::failed(
+				"Could not get website for URL list #"
+				+ std::to_string(urlList)
+				+ "."
+		);
+
+		return false;
 	}
 
 	// get and check query for deleting URLs
