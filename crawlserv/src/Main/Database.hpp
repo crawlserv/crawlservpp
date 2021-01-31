@@ -383,7 +383,7 @@ namespace crawlservpp::Main {
 		using TableColumn = Struct::TableColumn;
 		using TableProperties = Struct::TableProperties;
 		using TargetTableProperties = Struct::TargetTableProperties;
-		using ThreadDatabaseEntry = Struct::ThreadDatabaseEntry ;
+		using ThreadDatabaseEntry = Struct::ThreadDatabaseEntry;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 		using UrlListProperties = Struct::UrlListProperties;
