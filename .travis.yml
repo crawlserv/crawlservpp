@@ -87,7 +87,6 @@ matrix:
      - MATRIX_EVAL="CC=clang-9 && CXX=clang++-9"
    before_install:
      - eval "${MATRIX_EVAL}"
-     - sudo apt-get install -y libzip-dev
      - echo "deb http://cz.archive.ubuntu.com/ubuntu focal main universe" | sudo tee -a  /etc/apt/sources.list
      - sudo add-apt-repository ppa:ondrej/php -y
      - sudo apt-get update -q
@@ -105,6 +104,7 @@ matrix:
      - sudo apt-get install -y libpugixml-dev
      - sudo apt-get install -y libtidy-dev
      - sudo apt-get install -y liburiparser-dev
+     - sudo apt-get install -y libzip-dev=1.5.1-0ubuntu1
 
  - name: "clang8"
    os: linux
@@ -113,7 +113,6 @@ matrix:
      - MATRIX_EVAL="CC=clang-8 && CXX=clang++-8"
    before_install:
      - eval "${MATRIX_EVAL}"
-     - sudo apt-get install -y libzip-dev
      - echo "deb http://cz.archive.ubuntu.com/ubuntu focal main universe" | sudo tee -a  /etc/apt/sources.list
      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
      - sudo add-apt-repository ppa:ondrej/php -y
@@ -132,6 +131,7 @@ matrix:
      - sudo apt-get install -y libpugixml-dev
      - sudo apt-get install -y libtidy-dev
      - sudo apt-get install -y liburiparser-dev
+     - sudo apt-get install -y libzip-dev=1.5.1-0ubuntu1
 
  - name: "clang7"
    os: linux
@@ -140,7 +140,6 @@ matrix:
      - MATRIX_EVAL="CC=clang && CXX=clang++"
    before_install:
      - eval "${MATRIX_EVAL}"
-     - sudo apt-get install -y libzip-dev
      - echo "deb http://cz.archive.ubuntu.com/ubuntu focal main universe" | sudo tee -a  /etc/apt/sources.list
      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
      - sudo add-apt-repository ppa:ondrej/php -y
@@ -158,6 +157,7 @@ matrix:
      - sudo apt-get install -y libpugixml-dev
      - sudo apt-get install -y libtidy-dev
      - sudo apt-get install -y liburiparser-dev
+     - sudo apt-get install -y libzip-dev=1.5.1-0ubuntu1
      
  - name: "clang6"
    os: linux
@@ -166,7 +166,6 @@ matrix:
      - MATRIX_EVAL="CC=clang-6.0 && CXX=clang++-6.0"
    before_install:
      - eval "${MATRIX_EVAL}"
-     - sudo apt-get install -y libzip-dev
      - echo "deb http://cz.archive.ubuntu.com/ubuntu focal main universe" | sudo tee -a  /etc/apt/sources.list
      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
      - sudo add-apt-repository ppa:ondrej/php -y
@@ -185,6 +184,7 @@ matrix:
      - sudo apt-get install -y libpugixml-dev
      - sudo apt-get install -y libtidy-dev
      - sudo apt-get install -y liburiparser-dev
+     - sudo apt-get install -y libzip-dev=1.5.1-0ubuntu1
      
  - name: "clang5"
    os: linux
@@ -193,7 +193,6 @@ matrix:
      - MATRIX_EVAL="CC=clang-5.0 && CXX=clang++-5.0"
    before_install:
      - eval "${MATRIX_EVAL}"
-     - sudo apt-get install -y libzip-dev
      - echo "deb http://cz.archive.ubuntu.com/ubuntu focal main universe" | sudo tee -a  /etc/apt/sources.list
      - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
      - sudo add-apt-repository ppa:ondrej/php -y
@@ -212,6 +211,7 @@ matrix:
      - sudo apt-get install -y libpugixml-dev
      - sudo apt-get install -y libtidy-dev
      - sudo apt-get install -y liburiparser-dev
+     - sudo apt-get install -y libzip-dev=1.5.1-0ubuntu1
 
 script:
 - cd crawlserv
