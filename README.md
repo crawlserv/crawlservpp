@@ -45,7 +45,8 @@ The following additional components are required to build crawlserv++ on your sy
 * a modern C++ Standard Library supporting C++ 17 (e.g. `libstdc++-7-dev`)
 * the [`Boost.Iostreams`](https://www.boost.org/doc/libs/1_70_0/libs/iostreams/doc/index.html) library (`libboost-iostreams-dev`)
 * the [`Boost.System`](https://www.boost.org/doc/libs/1_69_0/libs/system/doc/html/system.html) library (`libboost-system-dev`)
-* the [GNU Aspell] library(http://aspell.net/) (`libaspell-dev`)
+* the [Eigen](https://eigen.tuxfamily.org/) library (`libeigen-dev`)
+* the [GNU Aspell](http://aspell.net/) library (`libaspell-dev`)
 * the [`libcurl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
 * the [`libzip`](https://libzip.org/) library (`libzip-dev`)
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
@@ -240,7 +241,8 @@ Analyzers are implemented by their own set of subclasses &mdash; algorithm class
 * **AssocOverTime**: Counts co-occurrences between a specific term and different categories in a text corpus over time.
 * **CorpusGenerator**: Creates a text corpus and collects statistical information about it.
 * **SentimentOverTime**: Analyzes the sentiment surrounding specific terms in a text corpus over time.
-* ~~**TokensOverTime**: Counts specific tokens in a text corpus over time.~~
+* ~~**TermsOverTime**: Counts specific tokens in a text corpus over time.~~
+* **TopicModeller**: Generates topics from the documents in a corpus and classifies these documents.
 * **WordsOverTime**: Counts articles, sentences, and words over time.
 
 The server and each thread have their own connections to the database. These connections are handled by inheritance from the [`Main::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Main_1_1Database.html) class. Additionally, thread connections to the database (instances of [`Module::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Module_1_1Database.html) as child class of `Main::Database`) are wrapped through the [`Wrapper::Database`](https://codedocs.xyz/crawlserv/crawlservpp/classcrawlservpp_1_1Wrapper_1_1Database.html) class to protect the threads (i.e. their programmers) from accidentally using the server connection to the database and thus compromising thread-safety. See the [source code documentation](https://codedocs.xyz/crawlserv/crawlservpp/) of the command-and-control server for further details.
@@ -254,18 +256,22 @@ Algorithms need to be specifically optimized for multi-threading. Otherwise, mul
 The following third-party libraries are used by the command-and-control server:
 
 * [Asio C++ Library](http://think-async.com/Asio/) (included in `crawlserv/src/_extern/asio`)
-* [Boost C++ Libraries](https://www.boost.org/) (`Boost.Iostreams`, `Boost.Strings` and `Boost.System`)
+* [Boost C++ Libraries](https://www.boost.org/) (`Boost.Core`, `Boost.Iostreams`, `Boost.LexicalCast` and `Boost.Strings`)
+* [Eigen](https://eigen.tuxfamily.org/) (`libeigen-dev`)
+* [EigenRand](https://github.com/bab2min/EigenRand) (included in `crawlserv/src/_extern/EigenRand`)
 * [GNU Aspell](http://aspell.net/)
 * [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html) (included in `crawlserv/src/_extern/date`)
 * [jsoncons](https://github.com/danielaparker/jsoncons/) (included in `crawlserv/src/_extern/jsoncons`)
 * [libcurl](https://curl.haxx.se/libcurl/)
 * [libzip](https://libzip.org/)
+* [Mapbox Variant](https://github.com/mapbox/variant) (included in `crawlserv/src/_extern/variant`)
 * [Mongoose Embedded Web Server](https://github.com/cesanta/mongoose) (included in `crawlserv/src/_extern/mongoose`)
 * [MySQL Connector/C++ 8.0](https://dev.mysql.com/doc/connector-cpp/8.0/en/)
 * [PCRE2](https://www.pcre.org/)
 * [porter2_stemmer](https://github.com/smassung/porter2_stemmer)  (included in `crawlserv/src/_extern/porter2_stemmer`)
 * [pugixml](https://github.com/zeux/pugixml)
 * [RapidJSON](https://github.com/Tencent/rapidjson) (included in `crawlserv/src/_extern/rapidjson`)
+* tomoto, the underlying C++ API of [tomotopy](https://github.com/bab2min/tomotopy) (included in `crawlserv/src/_extern/tomotopy`)
 * [tidy-html5](http://www.html-tidy.org/)
 * [uriparser](https://github.com/uriparser/uriparser)
 * [UTF8-CPP](http://utfcpp.sourceforge.net/) (included in `crawlserv/src/_extern/utf8`)
