@@ -1,0 +1,41 @@
+{
+	"label": "Topics",
+	"open": true,
+	
+	"isLda": {
+		"type": "bool",
+		"default": false,
+		"label": "Fixed number of topics (use LDA)",
+		"description": "If enabled, the LDA (instead of the HDP) algorithm will be used, and the number of topics will remain unchanged.",
+		"simple": true,
+		"position": 2
+	},
+	"k": {
+		"type": "number",
+		"min": 2,
+		"max": 32767,
+		"default": 2,
+		"label": "Initial number of topics:",
+		"description": "The (initial) number of topics. Will be changed according to the data if the HDP (and not the LDA) algorithm is used.",
+		"simple": true,
+		"position": 1
+	},
+	"table": {
+		"type": "string",
+		"default": "",
+		"label": "Topic table:",
+		"description": "The name of the table into which the most common words for each topic and their probability will be written to.",
+		"simple": true,
+		"position": 3
+	},
+	"table.n": {
+		"type": "number",
+		"min": 1,
+		"max": 32767,
+		"default": 5,
+		"label": "Number of topic words:",
+		"description": "The number of most-common words for each detected topic that will be written to the topic table.",
+		"simple": true,
+		"position": 4
+	}
+}

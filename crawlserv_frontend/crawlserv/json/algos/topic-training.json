@@ -1,0 +1,72 @@
+{
+	"label": "Training",
+	"open": true,
+	
+	"burn.in": {
+		"type": "number",
+		"min": 0,
+		"default": 100,
+		"label": "Burn-in:",
+		"description": "The number of iterations that will be skipped (\"burnt in\") before training.",
+		"simple": true,
+		"position": 1
+	},
+	"idf": {
+		"type": "bool",
+		"default": false,
+		"label": "Use tf-idf term weighting",
+		"description": "If enabled, terms will be weighted according to their term frequency–inverse document frequency (tf-idf).",
+		"simple": true,
+		"position": 6
+	},
+	"iterations": {
+		"type": "number",
+		"min": 1,
+		"default": 100,
+		"label": "Iterations:",
+		"description": "The number of training iterations that will be performed.",
+		"simple": true,
+		"position": 2
+	},
+	"iterations.at.once": {
+		"type": "number",
+		"min": 1,
+		"default": 10,
+		"description": "The number of iterations performed at once.",
+		"simple": false
+	},
+	"min.cf": {
+		"type": "number",
+		"min": 1,
+		"default": 1,
+		"label": "Min. word frequency:",
+		"description": "The minimum total occurrence of a word to be part of the training data.",
+		"simple": true,
+		"position": 3
+	},
+	"min.df": {
+		"type": "number",
+		"min": 1,
+		"default": 1,
+		"label": "Min. document frequency:",
+		"description": "The minimum number of documents in which a word needs to occur to be part of the training data.",
+		"simple": true,
+		"position": 4
+	},
+	"remove.top.n": {
+		"type": "number",
+		"min": 0,
+		"default": 0,
+		"label": "Remove top N words:",
+		"description": "The number of most common words to be considered stop words and removed from the training data.",
+		"simple": true,
+		"position": 5
+	},
+	"threads": {
+		"type": "number",
+		"min": 0,
+		"default": 0,
+		"description": "The number of worker threads to be used, or zero for automated multi-threading.",
+		"simple": false
+	}
+}

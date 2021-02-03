@@ -1,0 +1,60 @@
+{
+	"label": "Model",
+	"open": true,
+	
+	"alpha": {
+		"type": "number",
+		"default": 0.1,
+		"label": "𝛼:",
+		"description": "The initial hyperparameter for the Dirichlet distribution for document–table.",
+		"simple": true,
+		"position": 4
+	},
+	"eta": {
+		"type": "number",
+		"default": 0.1,
+		"label": "𝜂:",
+		"description": "The initial hyperparameter for the Dirichlet distribution for topic–word.",
+		"simple": true,
+		"position": 5
+	},
+	"gamma": {
+		"type": "number",
+		"default": 0.1,
+		"label": "𝛾 (HDP ony):",
+		"description": "The initial concentration coefficient of the Dirichlet Process for table–topic. Ignored, if LDA is used.",
+		"simple": true,
+		"position": 6
+	},
+	"load": {
+		"type": "mdl",
+		"label": "Load from:",
+		"description": "Name of the file to load the topic model from. Training will be skipped if a model is selected.",
+		"simple": true,
+		"position": 1
+	},
+	"optimize.every": {
+		"type": "number",
+		"min": 0,
+		"default": 10,
+		"label": "Optimize every:",
+		"description": "The optimization interval for the model parameters, in iterations.",
+		"simple": true,
+		"position": 7
+	},
+	"save": {
+		"type": "string",
+		"default": "",
+		"label": "Save to:",
+		"description": "Name of the file to write the topic model to after training. An empty string will be ignored.",
+		"simple": true,
+		"position": 2
+	},
+	"seed": {
+		"type": "number",
+		"min": 0,
+		"default": 0,
+		"label": "Custom seed:",
+		"description": "Custom seed to be used for random number generation. If zero, a randomized seed will be used."
+	}
+}
