@@ -754,7 +754,7 @@ namespace crawlservpp::Main {
 		}
 
 		template<typename T> void continueModuleThread( /* (for analyzer and extractor only) */
-				const Database::ThreadDatabaseEntry& entry,
+				const ThreadDatabaseEntry& entry,
 				std::vector<std::unique_ptr<T>>& to
 		) {
 			to.push_back(
