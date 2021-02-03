@@ -31,6 +31,7 @@
 #ifndef HELPER_VERSIONS_HPP_
 #define HELPER_VERSIONS_HPP_
 
+#include "../Helper/FileSystem.hpp"
 #include "../Helper/Portability/mysqlcppconn.h"
 
 #include "../_extern/asio/asio/include/asio/version.hpp"
@@ -43,6 +44,9 @@
 #include <boost/version.hpp>
 #include <cppconn/driver.h>
 #include <curl/curl.h>
+#include <Eigen/Core>
+#include <EigenRand/EigenRand>
+#include <mapbox/variant.hpp>
 #include <pcre2.h>
 #include <pugixml.hpp>
 #include <tidy.h>
@@ -50,13 +54,17 @@
 #include <zip.h>
 #include <zlib.h>
 
-#include <string>		// std::string, std::to_string
-#include <string_view>	// std::string_view
+#include <array>		// std::array
+#include <fstream>		// std::ifstream
+#include <string>		// std::getline, std::string, std::to_string
+#include <string_view>	// std::string_view, std::string_view_literals
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
 //! Namespace for functions getting the versions of the different libraries used by the application.
 namespace crawlservpp::Helper::Versions {
+
+	using std::string_view_literals::operator""sv;
 
 	/*
 	 * CONSTANTS
@@ -92,6 +100,21 @@ namespace crawlservpp::Helper::Versions {
 	//! Divisor to retrieve the minor version of the pugixml library.
 	inline constexpr auto pugixmlMinor{10};
 
+	//! The path from where to read the version of the tomoto library from.
+	inline constexpr std::array tomotoVersionFile{
+		"src"sv,
+		"_extern"sv,
+		"tomotopy"sv,
+		"tomotopy"sv,
+		"_version.py"sv
+	};
+
+	//! The beginning of the line containing the version of the tomoto library.
+	inline constexpr auto tomotoVersionBegin{"__version__ = '"sv};
+
+	//! The end of the line containing the version of the tomoto library.
+	inline constexpr auto tomotoVersionEnd{"'"sv};
+
 	//! The version of the @c UTF8-CPP library.
 	/*!
 	 * \warning Hard-coded version information
@@ -113,6 +136,7 @@ namespace crawlservpp::Helper::Versions {
 
 	std::vector<StringString> getLibraryVersions();
 	std::string getLibraryVersionsStr(const std::string& indent);
+	std::string getTomotoVersion();
 
 	///@}
 
@@ -148,6 +172,26 @@ namespace crawlservpp::Helper::Versions {
 				+ std::to_string(BOOST_VERSION % boostPatch)
 		);
 
+		// Eigen
+		result.emplace_back(
+				"Eigen",
+				std::to_string(EIGEN_WORLD_VERSION)
+				+ '.'
+				+ std::to_string(EIGEN_MAJOR_VERSION)
+				+ '.'
+				+ std::to_string(EIGEN_MINOR_VERSION)
+		);
+
+		// EigenRand
+		result.emplace_back(
+				"EigenRand",
+				std::to_string(EIGENRAND_WORLD_VERSION)
+					+ '.'
+					+ std::to_string(EIGENRAND_MAJOR_VERSION)
+					+ '.'
+					+ std::to_string(EIGENRAND_MINOR_VERSION)
+		);
+
 		// GNU Aspell
 		result.emplace_back("GNU Aspell", aspell_version_string());
 
@@ -169,6 +213,16 @@ namespace crawlservpp::Helper::Versions {
 
 		// libzip
 		result.emplace_back("libzip", zip_libzip_version());
+
+		// Mapbox Variant
+		result.emplace_back(
+				"Mapbox Variant",
+				std::to_string(VARIANT_MAJOR_VERSION)
+				+ '.'
+				+ std::to_string(VARIANT_MINOR_VERSION)
+				+ '.'
+				+ std::to_string(VARIANT_PATCH_VERSION)
+		);
 
 		// mongoose
 		result.emplace_back("Mongoose", MG_VERSION);
@@ -210,6 +264,9 @@ namespace crawlservpp::Helper::Versions {
 
 		// RapidJSON
 		result.emplace_back("RapidJSON", RAPIDJSON_VERSION_STRING);
+
+		// tomoto
+		result.emplace_back("tomoto", getTomotoVersion());
 
 		// tidy-html5
 		result.emplace_back("tidy-html5", tidyLibraryVersion());
@@ -270,6 +327,55 @@ namespace crawlservpp::Helper::Versions {
 		}
 
 		return result;
+	}
+
+	//! Gets the version of the \c tomoto library if available.
+	/*!
+	 * \returns The version of the \c tomoto library
+	 *   as string, or \c <unknown> if not available.
+	 */
+	inline std::string getTomotoVersion() {
+		const char pathSeparator{Helper::FileSystem::getPathSeparator()};
+		std::string pathToFile;
+		std::string version;
+
+		for(const auto& pathElement : tomotoVersionFile) {
+			pathToFile += pathElement;
+			pathToFile += pathSeparator;
+		}
+
+		if(!pathToFile.empty()) {
+			pathToFile.pop_back();
+		}
+
+		std::ifstream in(pathToFile);
+
+		if(in.is_open()) {
+			std::string line;
+
+			while(std::getline(in, line)) {
+				if(line.substr(0, tomotoVersionBegin.size()) == tomotoVersionBegin) {
+					const auto end{
+						line.find(tomotoVersionEnd, tomotoVersionBegin.size())
+					};
+
+					if(end != std::string::npos) {
+						version = line.substr(
+								tomotoVersionBegin.size(),
+								end - tomotoVersionBegin.size()
+						);
+					}
+				}
+			}
+
+			in.close();
+		}
+
+		if(version.empty()) {
+			return "<unknown>";
+		}
+
+		return version;
 	}
 
 } /* namespace crawlservpp::Helper::Versions */
