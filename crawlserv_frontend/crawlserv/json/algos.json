@@ -21,6 +21,10 @@
 		"Sentiment over Time": {
 			"algo-id": 43,
 			"config-cats": [ "tokenizer", "sentiment", "group-date", "filter-date", "filter-query" ]
+		},
+		"Topic Modelling": {
+			"algo-id": 44,
+			"config-cats": [ "tokenizer", "topic", "topic-training", "topic-model", "filter-date", "filter-query" ]
 		}
 	},
 	"Network Analyses": {
