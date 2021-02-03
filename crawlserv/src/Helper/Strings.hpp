@@ -859,7 +859,6 @@ namespace crawlservpp::Helper::Strings {
 		return result;
 	}
 
-	// sort vector of strings and remove duplicates (NOTE: Only ASCII supported!)
 	//! Sorts the given vector of strings and removes duplicates.
 	/*!
 	 * \note Only ASCII characters are supported when sorting the string.
