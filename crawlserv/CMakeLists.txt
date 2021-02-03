@@ -47,6 +47,24 @@ else()
 	message("Using Boost libraries: ${Boost_LIBRARIES}") 
 endif()
 
+# find Eigen
+find_package(Eigen3 QUIET)
+
+if(${EIGEN3_FOUND} AND EIGEN3_INCLUDE_DIR)
+	message("Eigen v${EIGEN3_VERSION_STRING} include directory found: \"${EIGEN3_INCLUDE_DIR}\"")
+else()
+	# find manually
+	unset(EIGEN3_INCLUDE_DIR)
+	
+	find_path(EIGEN3_INCLUDE_DIR Eigen/Core PATH_SUFFIXES eigen eigen3 include REQUIRED)
+	
+	if(EIGEN3_INCLUDE_DIR)
+		message("Eigen include directory manually found: \"${EIGEN3_INCLUDE_DIR}\"")
+	else()
+		message(WARNING "Eigen include directory not found.")
+	endif()
+endif()
+
 # find GNU Aspell
 find_package(ASPELL QUIET)
 
@@ -241,10 +259,20 @@ set(asio_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/asio/asio/include")
 
 message("asio include directory set to: \"${asio_INCLUDE}\".")
 
+# set include directory for EigenRand to sub-directory of source code
+set(EigenRand_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/EigenRand")
+
+message("EigenRand include directory set to: \"${EigenRand_INCLUDE}\".")
+
 # set include directory for jsoncons to sub-directory of source code
 set(jsoncons_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/jsoncons/include")
 
 message("jsoncons include directory set to: \"${jsoncons_INCLUDE}\".")
+
+# set include directory for Mapbox Variant to sub-directory of source code
+set(mapboxvariant_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/variant/include")
+
+message("Mapbox Variant include directory set to: \"${mapboxvariant_INCLUDE}\".")
 
 # set include directory for porter2_stemmer to sub-directory of source code
 set(porter2_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/src/_extern/porter2_stemmer")
@@ -287,7 +315,10 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 # set include directories
 target_include_directories(${PROJECT_NAME} PRIVATE ${asio_INCLUDE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${EIGEN3_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${EigenRand_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${jsoncons_INCLUDE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${mapboxvariant_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${porter2_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${mysqlcppconn_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${tidy_INCLUDE})
@@ -394,4 +425,3 @@ endif()
 #endif()
 
 message("Run \"make\" from build directory to build.")
-
