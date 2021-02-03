@@ -20,6 +20,7 @@ matrix:
      - sudo apt-get install -y libboost-iostreams-dev
      - sudo apt-get install -y libboost-system-dev
      - sudo apt-get install -y libcurl4-openssl-dev
+     - sudo apt-get install -y libeigen3-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libpugixml-dev
@@ -45,6 +46,7 @@ matrix:
      - sudo apt-get install -y libboost-iostreams-dev
      - sudo apt-get install -y libboost-system-dev
      - sudo apt-get install -y libcurl4-openssl-dev
+     - sudo apt-get install -y libeigen3-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libpugixml-dev
@@ -70,6 +72,7 @@ matrix:
      - sudo apt-get install -y libboost-iostreams-dev
      - sudo apt-get install -y libboost-system-dev
      - sudo apt-get install -y libcurl4-openssl-dev
+     - sudo apt-get install -y libeigen3-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libpugixml-dev
@@ -95,6 +98,7 @@ matrix:
      - sudo apt-get install -y libboost-iostreams-dev
      - sudo apt-get install -y libboost-system-dev
      - sudo apt-get install -y libcurl4-openssl-dev
+     - sudo apt-get install -y libeigen3-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libpugixml-dev
@@ -121,6 +125,7 @@ matrix:
      - sudo apt-get install -y libboost-iostreams-dev
      - sudo apt-get install -y libboost-system-dev
      - sudo apt-get install -y libcurl4-openssl-dev
+     - sudo apt-get install -y libeigen3-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libpugixml-dev
@@ -146,6 +151,7 @@ matrix:
      - sudo apt-get install -y libboost-iostreams-dev
      - sudo apt-get install -y libboost-system-dev
      - sudo apt-get install -y libcurl4-openssl-dev
+     - sudo apt-get install -y libeigen3-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libpugixml-dev
@@ -172,6 +178,7 @@ matrix:
      - sudo apt-get install -y libboost-iostreams-dev
      - sudo apt-get install -y libboost-system-dev
      - sudo apt-get install -y libcurl4-openssl-dev
+     - sudo apt-get install -y libeigen3-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libpugixml-dev
@@ -198,6 +205,7 @@ matrix:
      - sudo apt-get install -y libboost-iostreams-dev
      - sudo apt-get install -y libboost-system-dev
      - sudo apt-get install -y libcurl4-openssl-dev
+     - sudo apt-get install -y libeigen3-dev
      - sudo apt-get install -y libmysqlcppconn-dev
      - sudo apt-get install -y libpcre2-dev
      - sudo apt-get install -y libpugixml-dev
