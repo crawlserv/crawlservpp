@@ -8,7 +8,15 @@
 		"label": "𝛼:",
 		"description": "The initial hyperparameter for the Dirichlet distribution for document–table.",
 		"simple": true,
-		"position": 4
+		"position": 5
+	},
+	"continue": {
+		"type": "bool",
+		"default": false,
+		"label": "Continue training",
+		"description": "The corpus will be used to continue training on the model. NOTE: The model needs to include all previous training data.",
+		"simple": true,
+		"position": 2
 	},
 	"eta": {
 		"type": "number",
@@ -16,7 +24,7 @@
 		"label": "𝜂:",
 		"description": "The initial hyperparameter for the Dirichlet distribution for topic–word.",
 		"simple": true,
-		"position": 5
+		"position": 6
 	},
 	"gamma": {
 		"type": "number",
@@ -24,7 +32,7 @@
 		"label": "𝛾 (HDP ony):",
 		"description": "The initial concentration coefficient of the Dirichlet Process for table–topic. Ignored, if LDA is used.",
 		"simple": true,
-		"position": 6
+		"position": 7
 	},
 	"load": {
 		"type": "mdl",
@@ -40,7 +48,7 @@
 		"label": "Optimize every:",
 		"description": "The optimization interval for the model parameters, in iterations.",
 		"simple": true,
-		"position": 7
+		"position": 8
 	},
 	"save": {
 		"type": "string",
@@ -48,7 +56,15 @@
 		"label": "Save to:",
 		"description": "Name of the file to write the topic model to after training. An empty string will be ignored.",
 		"simple": true,
-		"position": 2
+		"position": 3
+	},
+	"save.full": {
+		"type": "bool",
+		"default": false,
+		"label": "Save full training data",
+		"description": "Saves all data with the model so that training can be continued later. NOTE: File size might be rather large.",
+		"simple": true,
+		"position": 4
 	},
 	"seed": {
 		"type": "number",
