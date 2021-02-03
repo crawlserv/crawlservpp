@@ -19,3 +19,12 @@
 [submodule "crawlserv/src/_extern/porter2_stemmer"]
 	path = crawlserv/src/_extern/porter2_stemmer
 	url = https://github.com/smassung/porter2_stemmer
+[submodule "crawlserv/src/_extern/EigenRand"]
+	path = crawlserv/src/_extern/EigenRand
+	url = https://github.com/bab2min/EigenRand
+[submodule "crawlserv/src/_extern/variant"]
+	path = crawlserv/src/_extern/variant
+	url = https://github.com/mapbox/variant
+[submodule "crawlserv/src/_extern/tomotopy"]
+	path = crawlserv/src/_extern/tomotopy
+	url = https://github.com/bab2min/tomotopy
