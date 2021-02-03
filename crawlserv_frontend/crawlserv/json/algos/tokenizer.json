@@ -32,7 +32,7 @@
 		"item-type": "mdl",
 		"default": [],
 		"label": "Sentence Models:",
-		"description": "Model for the sentence manipulator with the same array index. Empty strings will be ignored.",
+		"description": "Model for the sentence manipulator with the same array index.",
 		"simple": true,
 		"position": 2
 	},
@@ -58,7 +58,7 @@
 		"item-type": "dict",
 		"default": [],
 		"label": "Dictionaries:",
-		"description": "Dictionary for the word manipulator with the same array index. Empty strings will be ignored.",
+		"description": "Dictionary for the word manipulator with the same array index.",
 		"simple": true,
 		"position": 4
 	},
