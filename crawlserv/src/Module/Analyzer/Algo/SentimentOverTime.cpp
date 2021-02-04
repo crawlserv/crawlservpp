@@ -850,6 +850,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		return result;
 	}
 
+	/*
+	 * INTERNAL STATIC HELPER FUNCTIONS (private)
+	 */
+
 	// select first or empty date or article, return whether first has been selected
 	bool SentimentOverTime::selectFirst(
 			const TextMap& map,

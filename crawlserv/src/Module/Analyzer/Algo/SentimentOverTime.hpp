@@ -250,7 +250,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				const std::string& article
 		);
 
-		// static internal helper functions
+		// internal static helper functions
 		static bool selectFirst(
 				const TextMap& map,
 				std::size_t& numberTo

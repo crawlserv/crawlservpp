@@ -4418,7 +4418,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	/*
-	 * STATIC INTERNAL HELPER FUNCTION (private)
+	 * INTERNAL STATIC HELPER FUNCTION (private)
 	 */
 
 	// parse memento reply, get mementos and link to next page if one exists

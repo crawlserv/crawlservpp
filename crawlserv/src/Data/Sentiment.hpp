@@ -420,7 +420,7 @@ namespace crawlservpp::Data {
 		static SentimentScores scoreValence(const std::vector<float>& sentiments, const WORDS& /*words*/);
 		void leastCheck(float& valence, const WORDS& wordsLower, std::size_t index) const;
 
-		// static internal helper functions
+		// internal static helper functions
 		[[nodiscard]] static std::vector<std::string> toLower(const WORDS& words);
 		[[nodiscard]] static bool isNegated(const std::string& wordLower);
 		[[nodiscard]] static bool isNegated(const WORDS& wordsLower);
@@ -811,7 +811,7 @@ namespace crawlservpp::Data {
 	}
 
 	/*
-	 * STATIC INTERNAL HELPER FUNCTIONS (private)
+	 * INTERNAL STATIC HELPER FUNCTIONS (private)
 	 */
 
 	// Create lower-case copies of given words

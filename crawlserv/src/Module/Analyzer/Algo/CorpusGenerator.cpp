@@ -364,7 +364,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void CorpusGenerator::resetAlgo() {}
 
 	/*
-	 * STATIC INTERNAL HELPER FUNCTION (private)
+	 * INTERNAL STATIC HELPER FUNCTION (private)
 	 */
 
 	bool CorpusGenerator::isSentenceEmpty(

@@ -133,7 +133,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// status message saved in-class
 		std::string status;
 
-		// static internal helper function
+		// internal static helper function
 		static bool isSentenceEmpty(
 				const std::pair<std::size_t, std::size_t>& sentence,
 				const std::vector<std::string>& tokens

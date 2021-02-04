@@ -422,7 +422,7 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingUnsetCustom(bool unsetCookies, bool unsetHeaders);
 		void crawlingClearMementoCache();
 
-		// static internal helper function for memento crawling
+		// internal static helper function
 		static std::string parseMementos(
 				std::string mementoContent,
 				std::queue<std::string>& warningsTo,
