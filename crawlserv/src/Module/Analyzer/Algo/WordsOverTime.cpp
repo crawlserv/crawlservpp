@@ -60,10 +60,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				threadOptions,
 				threadStatus
 			) {
-		/*
-		 * TODO: [OPTIONAL] disallow pausing while initializing
-		 */
-		//this->disallowPausing(); // disallow pausing while initializing
+		this->disallowPausing(); // disallow pausing while initializing
 	}
 
 	//! Starts a new algorithm run.
