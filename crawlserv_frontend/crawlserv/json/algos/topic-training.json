@@ -65,8 +65,8 @@
 	"threads": {
 		"type": "number",
 		"min": 0,
-		"default": 0,
-		"description": "The number of worker threads to be used, or zero for automated multi-threading.",
+		"default": 1,
+		"description": "The number of worker threads to be used, or zero for automated multi-threading. WARNING: If multithreading is used, the training process might not be reproducible even with the same seed.",
 		"simple": false
 	}
 }
