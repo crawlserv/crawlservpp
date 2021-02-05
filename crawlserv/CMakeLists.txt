@@ -291,6 +291,7 @@ add_executable(${PROJECT_NAME}
 		src/Module/Analyzer/Algo/CorpusGenerator.cpp
 		src/Module/Analyzer/Algo/SentimentOverTime.cpp
 		src/Module/Analyzer/Algo/TermsOverTime.cpp
+		src/Module/Analyzer/Algo/TopicModelling.cpp
 		src/Module/Analyzer/Algo/WordsOverTime.cpp
 		src/Module/Analyzer/Database.cpp
 		src/Module/Analyzer/Thread.cpp
@@ -381,6 +382,11 @@ else()
 		target_compile_options(${PROJECT_NAME} PRIVATE -g0)
 		target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 	endif()
+endif()
+
+# set Eclipse-specific temporary compiler option (see https://bugs.eclipse.org/bugs/show_bug.cgi?id=500798)
+if(CMAKE_ECLIPSE_VERSION)
+	target_compile_options(${PROJECT_NAME} PRIVATE -ftemplate-backtrace-limit=0)
 endif()
 
 # setup clang-tidy
