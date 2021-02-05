@@ -34,7 +34,7 @@
 		"max": 32767,
 		"default": 5,
 		"label": "Number of topic words:",
-		"description": "The number of most-common words for each detected topic that will be written to the topic table.",
+		"description": "The number of most-probable words for each detected topic that will be written to the topic table.",
 		"simple": true,
 		"position": 4
 	}
