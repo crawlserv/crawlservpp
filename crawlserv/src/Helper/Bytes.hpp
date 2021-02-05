@@ -614,9 +614,6 @@ namespace crawlservpp::Helper::Bytes {
 		case '\a':
 			return "\\a";
 
-		case '\e':
-			return "\\e";
-
 		case '\f':
 			return "\\f";
 
