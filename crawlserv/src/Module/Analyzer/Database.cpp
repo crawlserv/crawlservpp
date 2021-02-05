@@ -180,7 +180,7 @@ namespace crawlservpp::Module::Analyzer {
 		this->targetTableFull += "_analyzed_";
 		this->targetTableFull += this->targetTableName;
 
-		// create table properties for target table
+		// create table properties for the target table
 		CustomTableProperties propertiesTarget(
 				"analyzed",
 				this->getOptions().websiteId,
