@@ -86,7 +86,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Returns the name of the algorithm.
 	/*!
 	 * \returns A string view containing the
-		 *   name of the implemented algorithm.
+	 *   name of the implemented algorithm.
 	 */
 	std::string_view Empty::getName() const {
 		// TODO: Insert the name of the algorithm.
