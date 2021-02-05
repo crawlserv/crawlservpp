@@ -172,7 +172,7 @@ namespace crawlservpp::Module::Analyzer {
 			);
 		}
 
-		// create target table name
+		// create the name of the target table
 		this->targetTableFull = "crawlserv_";
 		this->targetTableFull += this->getOptions().websiteNamespace;
 		this->targetTableFull += "_";
@@ -180,7 +180,7 @@ namespace crawlservpp::Module::Analyzer {
 		this->targetTableFull += "_analyzed_";
 		this->targetTableFull += this->targetTableName;
 
-		// create table properties for the target table
+		// create the properties of the target table
 		CustomTableProperties propertiesTarget(
 				"analyzed",
 				this->getOptions().websiteId,
@@ -210,7 +210,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 		}
 
-		// add or update target table
+		// add or update the target table
 		this->targetTableId = this->addOrUpdateTargetTable(propertiesTarget);
 
 		if(clear) {
