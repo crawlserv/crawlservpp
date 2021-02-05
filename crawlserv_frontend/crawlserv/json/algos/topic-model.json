@@ -18,6 +18,12 @@
 		"simple": true,
 		"position": 2
 	},
+	"conversion.threshold": {
+		"type": "number",
+		"default": 0,
+		"description": "The thresholds for topics to be included when converting a HDP to a LDA model.",
+		"simple": false
+	},
 	"eta": {
 		"type": "number",
 		"default": 0.01,
@@ -72,6 +78,15 @@
 		"max": 4294967295,
 		"default": 0,
 		"label": "Custom seed:",
-		"description": "Custom seed to be used for random number generation. If zero, a randomized seed will be used."
+		"description": "Custom seed to be used for random number generation. If zero, a randomized seed will be used.",
+		"simple": false
+	},
+	"workers": {
+		"type": "number",
+		"min": 0,
+		"max": 65535,
+		"default": 0,
+		"description": "Number of worker threads for infering the topics of previously unseen documents, or zero for automated multi-threading.",
+		"simple": false
 	}
 }
