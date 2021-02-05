@@ -69,6 +69,7 @@
 	"seed": {
 		"type": "number",
 		"min": 0,
+		"max": 4294967295,
 		"default": 0,
 		"label": "Custom seed:",
 		"description": "Custom seed to be used for random number generation. If zero, a randomized seed will be used."
