@@ -228,6 +228,8 @@ protected:
 		void option(const std::string& name, std::vector<std::uint32_t>& target);
 		void option(const std::string& name, std::uint64_t& target);
 		void option(const std::string& name, std::vector<std::uint64_t>& target);
+		void option(const std::string& name, float& target);
+		void option(const std::string& name, std::vector<float>& target);
 
 		//NOLINTNEXTLINE(fuchsia-default-arguments-declarations)
 		void option(const std::string& name, std::string &target, StringParsingOption opt = Default);
@@ -1993,6 +1995,146 @@ protected:
 								"Value in '"
 								+ this->currentItem.str()
 								+ "' ignored because of wrong type (not unsigned 64-bit integer)."
+						);
+					}
+				}
+			}
+		}
+		else {
+			this->logQueue(
+					"'"
+					+ this->currentItem.str()
+					+ "' ignored because of wrong type (not array)."
+			);
+		}
+
+		// current item is finished
+		this->finished = true;
+	}
+
+	//! Checks for a configuration option of type floating-point number.
+	/*!
+	 * Ignores the option and adds a
+	 *  warning to the warnings queue, if
+	 *  the requested type does not match
+	 *  the data type in the configuration
+	 *  JSON.
+	 *
+	 * \param name Constant reference to a
+	 *   string containing the name of the
+	 *   option to check for.
+	 * \param target Reference to a variable
+	 *   into which the value of the
+	 *   configuration entry will be written
+	 *   if it is encountered.
+	 *
+	 * \throws Module::Config::Exception if
+	 *   no category has been set.
+	 *
+	 * \sa category
+	 */
+	inline void Config::option(const std::string& name, float& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug) {
+			this->list.emplace_back(this->categoryString + "." + name);
+		}
+#endif
+
+		// check parsing state
+		if(!(this->setCategory)) {
+			throw Exception("Module::Config::option(): No category has been set");
+		}
+
+		if(this->finished || !(this->currentCategory)) {
+			return;
+		}
+
+		// compare current configuration item with defined option
+		if(this->currentItem.name != name) {
+			return;
+		}
+
+		// check value type
+		if(this->currentItem.value->IsFloat()) {
+			target = this->currentItem.value->GetFloat();
+		}
+		else if(this->currentItem.value->IsNull()) {
+			target = 0.F;
+		}
+		else {
+			this->logQueue(
+					"'"
+					+ this->currentItem.str()
+					+ "' ignored because of wrong type (not floating-point number)."
+			);
+		}
+
+		// current item is parsed
+		this->finished = true;
+	}
+
+	//! Checks for a configuration option of type array of floating-point numbers.
+	/*!
+	 * Ignores the option and adds a
+	 *  warning to the warnings queue, if
+	 *  the requested type does not match
+	 *  the data type in the configuration
+	 *  JSON.
+	 *
+	 * \param name Constant reference to a
+	 *   string containing the name of the
+	 *   option to check for.
+	 * \param target Reference to a vector
+	 *   into which the value of the
+	 *   configuration entry will be stored
+	 *   if it is encountered.
+	 *
+	 * \throws Module::Config::Exception if
+	 *   no category has been set.
+	 *
+	 * \sa category
+	 */
+	inline void Config::option(const std::string& name, std::vector<float>& target) {
+#ifdef MODULE_CONFIG_DEBUG
+		if(this->debug) {
+			this->list.emplace_back(this->categoryString + "." + name);
+		}
+#endif
+
+		// check parsing state
+		if(!(this->setCategory)) {
+			throw Exception("Module::Config::option(): No category has been set");
+		}
+
+		if(this->finished || !(this->currentCategory)) {
+			return;
+		}
+
+		// compare current configuration item with defined option
+		if(this->currentItem.name != name) {
+			return;
+		}
+
+		// check value type
+		if(this->currentItem.value->IsArray()) {
+			// clear target and reserve memory
+			target.clear();
+
+			target.reserve(this->currentItem.value->Size());
+
+			// check and copy array items
+			for(const auto& item : this->currentItem.value->GetArray()) {
+				if(item.IsFloat()) {
+					target.push_back(item.GetFloat());
+				}
+				else {
+					target.push_back(0);
+
+					if(!item.IsNull()) {
+						this->logQueue(
+								"Value in '"
+								+ this->currentItem.str()
+								+ "' ignored because of wrong type (not floating-point number)."
 						);
 					}
 				}
