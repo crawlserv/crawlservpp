@@ -31,6 +31,11 @@
 #ifndef MAIN_VERSION_HPP_
 #define MAIN_VERSION_HPP_
 
+#define CRAWLSERVPP_VERSION_MAJOR 0
+#define CRAWLSERVPP_VERSION_MINOR 0
+#define CRAWLSERVPP_VERSION_RELEASE 1
+#define CRAWLSERVPP_VERSION_SUFFIX "alpha"
+
 #include <string>		// std::string, std::to_string
 #include <string_view>	// std::string_view_literals
 
@@ -47,16 +52,16 @@ namespace crawlservpp::Main::Version {
 	///@{
 
 	//! Major version of the application.
-	inline constexpr auto crawlservVersionMajor{0};
+	inline constexpr auto crawlservVersionMajor{CRAWLSERVPP_VERSION_MAJOR};
 
 	//! Minor version of the application
-	inline constexpr auto crawlservVersionMinor{0};
+	inline constexpr auto crawlservVersionMinor{CRAWLSERVPP_VERSION_MINOR};
 
 	//! Current release (i.e. patch) version of the application.
-	inline constexpr auto crawlservVersionRelease{1};
+	inline constexpr auto crawlservVersionRelease{CRAWLSERVPP_VERSION_RELEASE};
 
 	//! Version suffix of the application.
-	inline constexpr auto crawlservVersionSuffix{"alpha"sv};
+	inline constexpr std::string_view crawlservVersionSuffix{CRAWLSERVPP_VERSION_SUFFIX};
 
 	///@}
 
