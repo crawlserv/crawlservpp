@@ -20,7 +20,7 @@
 	},
 	"eta": {
 		"type": "number",
-		"default": 0.1,
+		"default": 0.01,
 		"label": "𝜂:",
 		"description": "The initial hyperparameter for the Dirichlet distribution for topic–word.",
 		"simple": true,
