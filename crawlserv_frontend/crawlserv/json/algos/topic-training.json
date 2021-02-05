@@ -22,6 +22,7 @@
 	"iterations": {
 		"type": "number",
 		"min": 1,
+		"max": 65535,
 		"default": 100,
 		"label": "Iterations:",
 		"description": "The number of training iterations that will be performed.",
@@ -31,6 +32,7 @@
 	"iterations.at.once": {
 		"type": "number",
 		"min": 1,
+		"max": 65535,
 		"default": 10,
 		"description": "The number of iterations performed at once.",
 		"simple": false
@@ -38,6 +40,7 @@
 	"min.cf": {
 		"type": "number",
 		"min": 1,
+		"max": 65535,
 		"default": 1,
 		"label": "Min. word frequency:",
 		"description": "The minimum total occurrence of a word to be part of the training data.",
@@ -47,6 +50,7 @@
 	"min.df": {
 		"type": "number",
 		"min": 1,
+		"max": 65535,
 		"default": 1,
 		"label": "Min. document frequency:",
 		"description": "The minimum number of documents in which a word needs to occur to be part of the training data.",
@@ -56,6 +60,7 @@
 	"remove.top.n": {
 		"type": "number",
 		"min": 0,
+		"max": 65535,
 		"default": 0,
 		"label": "Remove top N words:",
 		"description": "The number of most common words to be considered stop words and removed from the training data.",
@@ -65,6 +70,7 @@
 	"threads": {
 		"type": "number",
 		"min": 0,
+		"max": 65535,
 		"default": 1,
 		"description": "The number of worker threads to be used, or zero for automated multi-threading. WARNING: If multithreading is used, the training process might not be reproducible even with the same seed.",
 		"simple": false
