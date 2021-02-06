@@ -146,9 +146,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		};
 
 		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
-			if(this->addCorpus(index, statusSetter)) {
-				++corpora;
+			if(!(this->addCorpus(index, statusSetter))) {
+				continue;
 			}
+
+			++corpora;
 
 			if(statusSetter.change("Creating corpus statistics...")) {
 				const auto& corpus{this->corpora.back()};
@@ -371,7 +373,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			const std::pair<std::size_t, std::size_t>& sentence,
 			const std::vector<std::string>& tokens
 	) {
-		for(std::size_t index{sentence.first}; index < sentence.first + sentence.second; ++index) {
+		for(std::size_t index{sentence.first}; index < TextMapEntry::end(sentence); ++index) {
 			if(!tokens.at(index).empty()) {
 				return false;
 			}
