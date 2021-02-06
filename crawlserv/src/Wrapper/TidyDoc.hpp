@@ -33,10 +33,9 @@
 
 #include "TidyBuffer.hpp"
 
+#include "../Helper/SilentInclude/tidy.h"
 #include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
-
-#include <tidy.h>
 
 #include <queue>	// std::queue
 #include <string>	// std::string, std::to_string

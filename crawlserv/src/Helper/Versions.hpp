@@ -33,6 +33,8 @@
 
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Portability/mysqlcppconn.h"
+#include "../Helper/SilentInclude/EigenRand.h"
+#include "../Helper/SilentInclude/tidy.h"
 
 #include "../_extern/asio/asio/include/asio/version.hpp"
 #include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
@@ -45,11 +47,9 @@
 #include <cppconn/driver.h>
 #include <curl/curl.h>
 #include <Eigen/Core>
-#include <EigenRand/EigenRand>
 #include <mapbox/variant.hpp>
 #include <pcre2.h>
 #include <pugixml.hpp>
-#include <tidy.h>
 #include <uriparser/UriBase.h>
 #include <zip.h>
 #include <zlib.h>

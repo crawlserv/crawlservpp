@@ -60,12 +60,10 @@
 #include "PickleDict.hpp"
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/SilentInclude/tomoto.h"
 #include "../Helper/Versions.hpp"
 #include "../Main/Exception.hpp"
 #include "../Struct/TopicModelInfo.hpp"
-
-#include "../_extern/tomotopy/src/TopicModel/HDPModel.hpp"
-#include "../_extern/tomotopy/src/TopicModel/LDAModel.hpp"
 
 #include <algorithm>		// std::accumulate, std::find_if, std::max, std::min, std::remove_if
 #include <array>			// std::array
@@ -354,10 +352,7 @@ namespace crawlservpp::Data {
 
 		// internal helper functions
 		void initModel(bool& isHdpTo, bool& isIdfTo);
-		[[nodiscard]] std::string dictLookUp(
-				tomoto::Vid wordId,
-				const std::string& function
-		) const;
+		[[nodiscard]] std::string dictLookUp(tomoto::Vid wordId) const;
 
 		void checkModel(
 				const std::string& function,
@@ -956,10 +951,7 @@ namespace crawlservpp::Data {
 		words.reserve(n);
 
 		for(const auto& wordId : wordIds) {
-			words.emplace_back(
-					this->dictLookUp(wordId.first, "getTopicTopNWords"),
-					wordId.second
-			);
+			words.emplace_back(this->dictLookUp(wordId.first), wordId.second);
 		}
 
 		return words;
@@ -1704,10 +1696,7 @@ namespace crawlservpp::Data {
 	}
 
 	// look up word ID in dictionary
-	inline std::string TopicModel::dictLookUp(
-			tomoto::Vid wordId,
-			const std::string& function
-	) const {
+	inline std::string TopicModel::dictLookUp(tomoto::Vid wordId) const {
 		bool isHdp{false};
 		bool isIdf{false};
 
