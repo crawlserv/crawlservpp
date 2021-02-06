@@ -1909,7 +1909,7 @@ namespace crawlservpp::Module::Analyzer {
 				++done;
 			}
 
-			if(!statusSetter.change("Processing corpus...")) {
+			if(!statusSetter.change("Preprocessing corpus...")) {
 				return false;
 			}
 
@@ -1973,7 +1973,7 @@ namespace crawlservpp::Module::Analyzer {
 				}
 			}
 
-			statusSetter.change("Processing corpus...");
+			statusSetter.change("Preprocessing corpus...");
 
 			return corpusRef.tokenize(
 					sentenceManipulators,
