@@ -216,6 +216,7 @@ namespace crawlservpp::Data {
 				std::vector<std::string>& dateTimes,
 				bool deleteInputData
 		);
+		void createEmptyTokenized();
 		void combineContinuous(
 				std::vector<std::string>& chunks,
 				std::vector<TextMap>& articleMaps,
@@ -230,6 +231,12 @@ namespace crawlservpp::Data {
 				std::vector<SentenceMap>& sentenceMaps,
 				bool deleteInputData
 		);
+
+		///@}
+		///@name Manipulation
+		///@{
+
+		void setTokenBytes(std::size_t bytes);
 
 		///@}
 		///@name Copying
@@ -976,6 +983,13 @@ namespace crawlservpp::Data {
 		}
 	}
 
+	//! Creates an empty corpus that is handled as if it were tokenized.
+	inline void Corpus::createEmptyTokenized() {
+		this->clear();
+
+		this->tokenized = true;
+	}
+
 	//! Creates continuous text corpus by combining previously separated chunks, as well as their article and date maps.
 	/*!
 	 * Performs consistency checks of the provided
@@ -1563,6 +1577,24 @@ namespace crawlservpp::Data {
 
 		// if necessary, check the consistency of the newly combined corpus
 		this->checkTokenized();
+	}
+
+	/*
+	 * MANIPULATION
+	 */
+
+	//! Sets the number of bytes contained in the tokenized corpus.
+	/*!
+	 * \param bytes The total number of bytes contained
+	 *   in the tokens of the corpus.
+	 *
+	 * \warning Should only be used after the tokens have been
+	 *   changed manually.
+	 *
+	 * \sa getTokens
+	 */
+	inline void Corpus::setTokenBytes(std::size_t bytes) {
+		this->tokenBytes = bytes;
 	}
 
 	/*
