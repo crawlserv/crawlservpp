@@ -33,7 +33,7 @@
 
 #include <cstddef>	// std::size_t
 #include <string>	// std::string
-#include <utility>	// std::swap
+#include <utility>	// std::pair, std::swap
 #include <vector>	// std::vector
 
 namespace crawlservpp::Struct {
@@ -128,6 +128,32 @@ namespace crawlservpp::Struct {
 			this->length = 0;
 
 			std::string().swap(this->value);
+		}
+
+		///@}
+		///@name Static Helper Function
+		///@{
+
+		//! Gets the end of a text map entry.
+		/*!
+		 * \param entry Constant reference to the
+		 *   text map entry to get the end of.
+		 *
+		 * \returns The end of the given entry.
+		 */
+		static std::size_t end(const TextMapEntry& entry) {
+			return entry.pos + entry.length;
+		}
+
+		//! Gets the end of a sentence map entry.
+		/*!
+		 * \param entry Constant reference to the
+		 *   sentence map entry to get the end of.
+		 *
+		 * \returns The end of the given entry.
+		 */
+		static std::size_t end(const std::pair<std::size_t, std::size_t>& entry) {
+			return entry.first + entry.second;
 		}
 
 		///@}
