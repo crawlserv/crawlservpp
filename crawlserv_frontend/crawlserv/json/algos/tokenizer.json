@@ -2,6 +2,14 @@
 	"label": "Corpus Tokenization",
 	"open": true,
 
+	"remove.old": {
+		"type": "bool",
+		"default": false,
+		"label": "Remove out-of-date corpora",
+		"description": "Remove all corpora from the same source, if the underlying data has changed.",
+		"simple": true,
+		"position": 6
+	},
 	"savepoints": {
 		"type": "array",
 		"item-type": "number",

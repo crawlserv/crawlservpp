@@ -152,14 +152,14 @@ namespace crawlservpp::Module::Analyzer {
 			//! Level of logging activity.
 			std::uint8_t generalLogging{generalLoggingDefault};
 
-			//! Table name to save analyzed data to.
-			std::string generalTargetTable;
-
 			//! Time (in s) to wait before last try to re-connect to mySQL server.
 			std::uint64_t generalSleepMySql{defaultSleepMySqlS};
 
 			//! Time (in ms) to wait each tick when finished.
 			std::uint64_t generalSleepWhenFinished{defaultSleepWhenFinishedMs};
+
+			//! Table name to save analyzed data to.
+			std::string generalTargetTable;
 
 			///@}
 			///@name Group by Date
@@ -203,6 +203,9 @@ namespace crawlservpp::Module::Analyzer {
 			///@}
 			///@name Corpus Tokenization
 			///@{
+
+			//! Remove out-of-date corpora.
+			bool tokenizerRemoveOld{false};
 
 			//! Steps after which the corpus will be stored in the database.
 			/*!
@@ -360,6 +363,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		// corpus tokenization options
 		this->category("tokenizer");
+		this->option("remove.old", this->config.tokenizerRemoveOld);
 		this->option("savepoints", this->config.tokenizerSavePoints);
 		this->option("sentence.manipulators", this->config.tokenizerSentenceManipulators);
 		this->option("sentence models", this->config.tokenizerSentenceModels);
