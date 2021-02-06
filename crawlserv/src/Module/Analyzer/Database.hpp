@@ -240,6 +240,7 @@ namespace crawlservpp::Module::Analyzer {
 				const std::string& filterDateTo,
 				Data::Corpus& corpusTo,
 				std::size_t& sourcesTo,
+				bool removeOld,
 				StatusSetter& statusSetter
 		);
 
@@ -330,6 +331,10 @@ namespace crawlservpp::Module::Analyzer {
 				CorpusProperties& properties,
 				Data::Corpus& corpusTo,
 				std::size_t& sourcesTo,
+				StatusSetter& statusSetter
+		);
+		void corpusRemove(
+				const CorpusProperties& properties,
 				StatusSetter& statusSetter
 		);
 		[[nodiscard]] std::string corpusFindSavePoint(
