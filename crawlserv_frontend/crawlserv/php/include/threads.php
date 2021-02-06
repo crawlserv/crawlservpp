@@ -30,6 +30,10 @@
 
 <?php
 
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 $db_init = true;
 
 require "../../config.php";
@@ -242,6 +246,10 @@ if($num > 0) {
                 " FROM `crawlserv_".$website."_".$urllist."`".
                 " WHERE id > ".$row["last"]
         );
+        
+        if($result2 == NULL) {
+            http_response_code(503);
+        }
         
         $row2 = $result2->fetch_assoc();
         
