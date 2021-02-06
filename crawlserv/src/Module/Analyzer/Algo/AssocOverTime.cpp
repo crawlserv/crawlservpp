@@ -595,7 +595,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// go through all articles of the current date
 		while(
 				this->articleIndex < articleMap.size()
-				&& articleMap[this->articleIndex].pos < date.pos + date.length
+				&& articleMap[this->articleIndex].pos < TextMapEntry::end(date)
 		) {
 			// add article if still necessary, and save its iterator
 			const auto articleIt{

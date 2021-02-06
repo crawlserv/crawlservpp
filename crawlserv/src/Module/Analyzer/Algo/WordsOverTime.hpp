@@ -37,6 +37,7 @@
 #include "../../../Helper/DateTime.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/StatusSetter.hpp"
+#include "../../../Struct/TextMap.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
@@ -85,6 +86,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		//using QueryStruct = Struct::QueryStruct;
 		using StatusSetter = Struct::StatusSetter;
+		using TextMapEntry = Struct::TextMapEntry;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 

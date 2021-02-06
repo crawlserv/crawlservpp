@@ -659,7 +659,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			const std::string& article
 	) {
 		std::queue<std::string> warnings;
-		auto end{sentence.first + sentence.second};
+		auto end{TextMapEntry::end(sentence)};
 		bool toAnalyze{true};
 		float sentiment{};
 		bool meetsThreshold{false};
@@ -730,7 +730,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			const std::pair<std::size_t, std::size_t>& sentence,
 			const std::vector<std::string>& tokens
 	) {
-		const auto end{sentence.first + sentence.second};
+		const auto end{TextMapEntry::end(sentence)};
 		std::vector<std::string> words;
 
 		words.reserve(sentence.second);
@@ -800,9 +800,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				continue;
 			}
 
-			const auto articleEnd{
-				articleIt->pos + articleIt->length
-			};
+			const auto articleEnd{TextMapEntry::end(*articleIt)};
 
 			// find first sentence of article
 			auto sentenceIt{
@@ -811,7 +809,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						sentenceMap.cend(),
 						[&articleIt, &articleEnd](const auto& sentence) {
 							return sentence.first >= articleIt->pos
-									&& sentence.first + sentence.second <= articleEnd;
+									&& TextMapEntry::end(sentence) <= articleEnd;
 						}
 				)
 			};
@@ -823,7 +821,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			// go through all sentences of article
 			while(
 					sentenceIt != sentenceMap.cend()
-					&& sentenceIt->first + sentenceIt->second <= articleEnd
+					&& TextMapEntry::end(*sentenceIt) <= articleEnd
 			) {
 				float sentiment{this->getSentenceScore(*sentenceIt, tokens)};
 
@@ -884,14 +882,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		bool changed{false};
 
 		if(numberFromTo > 0) {
-			currentEnd = map[numberFromTo - 1].pos + map[numberFromTo - 1].length;
+			currentEnd = TextMapEntry::end(map[numberFromTo - 1]);
 		}
 
 		while(sentenceBegin >= currentEnd && map.size() > numberFromTo) {
 			++numberFromTo;
 			changed = true;
 
-			currentEnd = map[numberFromTo - 1].pos + map[numberFromTo - 1].length;
+			currentEnd = TextMapEntry::end(map[numberFromTo - 1]);
 		}
 
 		if(sentenceBegin >= currentEnd && currentEnd > 0) {

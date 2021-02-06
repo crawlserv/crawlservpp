@@ -287,7 +287,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 
 			// do not count empty tokens (and articles/sentences consisting of empty tokens)!
-			const auto end{date.pos + date.length};
+			const auto end{TextMapEntry::end(date)};
 			std::size_t articleEnd{false};
 			std::size_t sentenceEnd{false};
 			bool articleContent{false};
@@ -302,7 +302,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						articleContent = false;
 					}
 
-					articleEnd = articleMap[articleIndex].pos + articleMap[articleIndex].length;
+					articleEnd = TextMapEntry::end(articleMap[articleIndex]);
 
 					++articleIndex;
 				}
@@ -326,7 +326,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						sentenceContent = false;
 					}
 
-					sentenceEnd = sentenceMap[sentenceIndex].first + sentenceMap[sentenceIndex].second;
+					sentenceEnd = TextMapEntry::end(sentenceMap[sentenceIndex]);
 
 					++sentenceIndex;
 				}
