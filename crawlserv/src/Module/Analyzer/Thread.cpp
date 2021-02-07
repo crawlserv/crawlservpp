@@ -420,6 +420,23 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	/*
+	 * CLEANUP FUNCTIONS (protected)
+	 */
+
+	//! Clean up all corpora and free their memory.
+	void Thread::cleanUpCorpora() {
+		std::vector<Corpus>{}.swap(this->corpora);
+	}
+
+	//! Clean up all queries and free their memory.
+	void Thread::cleanUpQueries() {
+		std::vector<QueryStruct>{}.swap(this->queryFilterQueries);
+
+		this->deleteQueries();
+		this->clearQueries();
+	}
+
+	/*
 	 * INITIALIZATION FUNCTIONS (private)
 	 */
 
@@ -520,23 +537,6 @@ namespace crawlservpp::Module::Analyzer {
 
 			warnings.pop();
 		}
-	}
-
-	/*
-	 * CLEANUP FUNCTION (private)
-	 */
-
-	// clean up corpora
-	void Thread::cleanUpCorpora() {
-		std::vector<Corpus>{}.swap(this->corpora);
-	}
-
-	// clean up queries
-	void Thread::cleanUpQueries() {
-		std::vector<QueryStruct>{}.swap(this->queryFilterQueries);
-
-		this->deleteQueries();
-		this->clearQueries();
 	}
 
 	/*
