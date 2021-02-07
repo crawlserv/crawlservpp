@@ -9,7 +9,7 @@
 		"max": 65535,
 		"default": [0],
 		"label": "Savepoints",
-		"description": "Steps after which the corpus will be stored in the database. Zero means the unmanipulated corpus will be saved, then the numbering starts with the sentence manipulators, and continues with the word manipulators.",
+		"description": "Steps after which the corpus will be stored in the database. Zero means the unmanipulated corpus will be saved, then the numbering starts with the sentence manipulators, and continues with the word manipulators. NOTE: Savepoints will be ignored, if a suitable savepoint has been found beyond them.",
 		"simple": true,
 		"position": 5 
 	},

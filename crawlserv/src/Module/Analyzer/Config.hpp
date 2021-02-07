@@ -210,6 +210,10 @@ namespace crawlservpp::Module::Analyzer {
 			 *  stored. After that, the numbering starts
 			 *  with the sentence manipulators, and
 			 *  continues with the word manipulators.
+			 *
+			 * \note Savepoints will be ignored, if a
+			 *   suitable savepoint has been found beyond
+			 *   them.
 			 */
 			std::vector<std::uint16_t> tokenizerSavePoints{};
 
