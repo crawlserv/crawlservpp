@@ -204,9 +204,6 @@ namespace crawlservpp::Module::Analyzer {
 			///@name Corpus Tokenization
 			///@{
 
-			//! Remove out-of-date corpora.
-			bool tokenizerRemoveOld{false};
-
 			//! Steps after which the corpus will be stored in the database.
 			/*!
 			 * If zero, the unmanipulated corpus will be
@@ -363,7 +360,6 @@ namespace crawlservpp::Module::Analyzer {
 
 		// corpus tokenization options
 		this->category("tokenizer");
-		this->option("remove.old", this->config.tokenizerRemoveOld);
 		this->option("savepoints", this->config.tokenizerSavePoints);
 		this->option("sentence.manipulators", this->config.tokenizerSentenceManipulators);
 		this->option("sentence models", this->config.tokenizerSentenceModels);
