@@ -21,7 +21,7 @@
 	"conversion.threshold": {
 		"type": "number",
 		"default": 0,
-		"description": "The thresholds for topics to be included when converting a HDP to a LDA model.",
+		"description": "The threshold for topics to be included when converting a HDP to a LDA model.",
 		"simple": false
 	},
 	"eta": {
