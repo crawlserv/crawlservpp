@@ -316,7 +316,7 @@ namespace crawlservpp::Module::Analyzer {
 					this->ps.getCorpusInfo
 			);
 
-			this->log(verbose, "prepares getCorpus() [2/5...");
+			this->log(verbose, "prepares getCorpus() [2/5]...");
 
 			this->addPreparedStatement(
 					"SELECT EXISTS("
@@ -1440,10 +1440,6 @@ namespace crawlservpp::Module::Analyzer {
 					<< ".";
 
 		this->log(this->getLoggingMin(), logStrStr.str());
-
-		if(this->isRunning()) {
-			return;
-		}
 	}
 
 	// loads a corpus from the database
@@ -1852,6 +1848,10 @@ namespace crawlservpp::Module::Analyzer {
 		std::string savePointName;
 		std::size_t done{};
 
+		if(!statusSetter.change("Preprocessing corpus...")) {
+			return false;
+		}
+
 		for(const auto savePoint : properties.savePoints) {
 			if(savePoint == 0) {
 				continue;
@@ -1907,10 +1907,6 @@ namespace crawlservpp::Module::Analyzer {
 				}
 
 				++done;
-			}
-
-			if(!statusSetter.change("Preprocessing corpus...")) {
-				return false;
 			}
 
 			if(!corpusRef.tokenize(
