@@ -74,7 +74,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * NOTE: choose a distinct prefix to avoid name conflicts with other algorithms
 	 * 			(or use a namespace)
 	 */
-	//inline constexpr auto ...{...};
+//	inline constexpr auto ...{...};
 
 	//@}
 
@@ -99,12 +99,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 		using Exception = Module::Analyzer::Thread::Exception;
 
-		//using QueryStruct = Struct::QueryStruct;
+//		using QueryStruct = Struct::QueryStruct;
 		using StatusSetter = Struct::StatusSetter;
 		using ThreadOptions = Struct::ThreadOptions;
 		using ThreadStatus = Struct::ThreadStatus;
 
-		//using StringString = std::pair<std::string, std::string>;
+//		using StringString = std::pair<std::string, std::string>;
 
 	public:
 		///@name Construction
@@ -167,10 +167,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 
 		// algorithm state
-		//bool firstTick{true};
 		/*
 		 * TODO: add additional private member variables here
 		 */
+		//		bool firstTick{true};
 
 		// algorithm functions
 		/*
@@ -180,9 +180,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// query functions
 		/*
 		 * TODO: decide whether queries are needed
-		void initQueries() override;
-		void deleteQueries() override;
-		*/
+		 */
+//		void initQueries() override;
+//		void deleteQueries() override;
 
 		// internal helper functions
 		/*

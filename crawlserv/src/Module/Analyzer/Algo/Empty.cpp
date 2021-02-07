@@ -63,7 +63,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: [OPTIONAL] disallow pausing while initializing
 		 */
-		//this->disallowPausing(); // disallow pausing while initializing
+//		this->disallowPausing(); // disallow pausing while initializing
 	}
 
 	//! Starts a new algorithm run.
@@ -76,7 +76,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: [OPTIONAL] disallow pausing while initializing
 		 */
-		//this->disallowPausing(); // disallow pausing while initializing
+//		this->disallowPausing(); // disallow pausing while initializing
 	}
 
 	/*
@@ -89,7 +89,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   name of the implemented algorithm.
 	 */
 	std::string_view Empty::getName() const {
-		// TODO: Insert the name of the algorithm.
+		/*
+		 * TODO: Insert the name of the algorithm.
+		 */
 		return "Empty";
 	}
 
@@ -109,25 +111,22 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 
 		// set target fields
-		/*
-		std::vector<StringString> fields;
-
-		fields.reserve(...);
-
-		fields.emplace_back("[NAME]", "[TYPE]");
-		...
-		*/
+//		std::vector<StringString> fields;
+//
+//		fields.reserve(...);
+//
+//		fields.emplace_back("[NAME]", "[TYPE]");
+//		...
 
 		/*
 		 * TODO: [OPTIONAL] initialize target table
 		 */
 
 		// initialize target table
-		/*
-		this->database.setTargetFields(fields);
+//		this->database.setTargetFields(fields);
+//
+//		this->database.initTargetTable(...);
 
-		this->database.initTargetTable(...);
-		*/
 	}
 
 	//! Initializes the algorithm and processes its input.
@@ -158,28 +157,24 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 
 		// check your sources
-		/*
-		this->log(generalLoggingVerbose, "checks sources...");
-
-		this->checkCorpusSources(statusSetter);
-		*/
+//		this->log(generalLoggingVerbose, "checks sources...");
+//
+//		this->checkCorpusSources(statusSetter);
 
 		/*
 		 * TODO: [OPTIONAL] get text corpus, filtered by date
 		 */
 
 		// request text corpus
-		/*
-		this->log(generalLoggingDefault, "gets text corpus...");
-
-		std::size_t corpora{};
-
-		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
-			if(this->addCorpus(index, statusSetter)) {
-				++corpora;
-			}
-		}
-		*/
+//		this->log(generalLoggingDefault, "gets text corpus...");
+//
+//		std::size_t corpora{};
+//
+//		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
+//			if(this->addCorpus(index, statusSetter)) {
+//				++corpora;
+//			}
+//		}
 
 		/*
 		 * TODO: initialize algorithm
@@ -202,11 +197,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: [OPTIONAL] set new status
 		 */
-		/*if(this->firstTick) {
-			this->setStatusMessage("...");
-
-			this->firstTick = false;
-		}*/
+//		if(this->firstTick) {
+//		    /* first tick first status */
+//			this->setStatusMessage("...");
+//
+//			this->firstTick = false;
+//		}
 
 		/*
 		 * TODO: algorithm tick
@@ -215,34 +211,30 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: [OPTIONAL] insert data into target table
 		 */
-		/*
-		Data::InsertFieldsMixed data;
-
-		data.columns_types_values.reserve(...);
-
-		data.table = this->getTargetTableName();
-
-		data.columns_types_values.emplace_back(
-				"analyzed__" + ...,
-				Data::Type::...,
-				Data::Value(...)
-		);
-
-		...
-
-		this->database.insertCustomData(data);
-
-		this->database.updateTargetTable();
-		*/
+//		Data::InsertFieldsMixed data;
+//
+//		data.columns_types_values.reserve(...);
+//
+//		data.table = this->getTargetTableName();
+//
+//		data.columns_types_values.emplace_back(
+//				"analyzed__" + ...,
+//				Data::Type::...,
+//				Data::Value(...)
+//		);
+//
+//		...
+//
+//		this->database.insertCustomData(data);
+//
+//		this->database.updateTargetTable();
 
 		/*
 		 * TODO: [OPTIONAL] update progress
 		 */
 
-		/*
 		//  update progress
-		this->setProgress(static_cast<float>(this->getLast()) / [TOTAL]);
-		*/
+//		this->setProgress(static_cast<float>(this->getLast()) / [TOTAL]);
 	}
 
 	/*
@@ -284,10 +276,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: add configuration categories and options
 		 */
+
 		// algorithm options
-		//this->category(..);
-		//this->option(name, member variable);
-		//...
+//		this->category(..);
+//		this->option(name, member variable);
+//		...
 	}
 
 	/*
