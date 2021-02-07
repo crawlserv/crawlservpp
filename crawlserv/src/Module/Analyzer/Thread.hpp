@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -50,21 +50,31 @@
 #include "../../Timer/Simple.hpp"
 
 #include <cstddef>		// std::size_t
-#include <functional>	// std::bind
 #include <locale>		// std::locale
+#include <map>			// std::map
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
 #include <stdexcept>	// std::logic_error
 #include <string>		// std::string
 #include <string_view>	// std::string_view
-#include <tuple>		// std::tuple
+#include <utility>		// std::swap
 #include <vector>		// std::vector
 
 namespace crawlservpp::Module::Analyzer {
 
+	///@name Constants
+	///@{
+
+	//! The number of tokens after which the status will be updated when combining corpora.
+	constexpr auto combineUpdateStatusEvery{100000};
+
+	///@}
+
 	//! Abstract class providing thread functionality to algorithm (child) classes.
 	class Thread : public Module::Thread, public Query::Container, protected Config {
 		// for convenience
+		using Corpus = Data::Corpus;
+
 		using CorpusProperties = Struct::CorpusProperties;
 		using QueryProperties = Struct::QueryProperties;
 		using QueryStruct = Struct::QueryStruct;
@@ -97,7 +107,7 @@ namespace crawlservpp::Module::Analyzer {
 		///@{
 
 		//! Vector of corpora for the analyzer thread.
-		std::vector<Data::Corpus> corpora;
+		std::vector<Corpus> corpora;
 
 		///@}
 		///@name Getter
@@ -206,6 +216,7 @@ namespace crawlservpp::Module::Analyzer {
 		[[nodiscard]] std::string getTargetTableName() const;
 		bool addCorpus(std::size_t index, StatusSetter& statusSetter);
 		void checkCorpusSources(StatusSetter& statusSetter);
+		void combineCorpora(StatusSetter& statusSetter);
 
 		///@}
 
@@ -230,7 +241,8 @@ namespace crawlservpp::Module::Analyzer {
 		void setUpAlgorithm();
 		void logWarnings(std::queue<std::string>& warnings);
 
-		// cleanup function
+		// cleanup functions
+		void cleanUpCorpora();
 		void cleanUpQueries();
 
 		// internal helper function

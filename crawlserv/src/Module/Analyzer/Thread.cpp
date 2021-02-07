@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -128,7 +128,8 @@ namespace crawlservpp::Module::Analyzer {
 		// clear algorithm
 		this->onAlgoClear();
 
-		// clean up queries
+		// clean up corpora and queries
+		this->cleanUpCorpora();
 		this->cleanUpQueries();
 	}
 
@@ -388,6 +389,36 @@ namespace crawlservpp::Module::Analyzer {
 		);
 	}
 
+	//! Combines all added corpora into one, concatenating articles with the same ID.
+	/*!
+	 * The corpus needs to be tokenized and
+	 *  needs to contain a sentence map that
+	 *  covers its whole content.
+	 *
+	 * Afterwards, only one corpus will remain
+	 *  in the class, but it will contain the
+	 *  contents of all other corpora.
+	 *
+	 * \param statusSetter Reference to a
+	 *   Struct::StatusSetter to be used for
+	 *   updating the status while combining
+	 *   the sources.
+	 *
+	 * \throws Thread::Exception if one of the
+	 *   corpora is not tokenized and non-empty,
+	 *   or if one of the sentence maps is
+	 *   incoherent, i.e. has gaps.
+	 */
+	void Thread::combineCorpora(StatusSetter& statusSetter) {
+		std::vector<Corpus> combined;
+
+		combined.emplace_back(this->corpora, this->config.generalCorpusChecks, statusSetter);
+
+		if(statusSetter.isRunning()) {
+			std::swap(this->corpora, combined);
+		}
+	}
+
 	/*
 	 * INITIALIZATION FUNCTIONS (private)
 	 */
@@ -495,9 +526,14 @@ namespace crawlservpp::Module::Analyzer {
 	 * CLEANUP FUNCTION (private)
 	 */
 
+	// clean up corpora
+	void Thread::cleanUpCorpora() {
+		std::vector<Corpus>{}.swap(this->corpora);
+	}
+
 	// clean up queries
 	void Thread::cleanUpQueries() {
-		this->queryFilterQueries.clear();
+		std::vector<QueryStruct>{}.swap(this->queryFilterQueries);
 
 		this->deleteQueries();
 		this->clearQueries();
