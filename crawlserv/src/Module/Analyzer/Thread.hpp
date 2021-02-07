@@ -219,6 +219,13 @@ namespace crawlservpp::Module::Analyzer {
 		void combineCorpora(StatusSetter& statusSetter);
 
 		///@}
+		///@name Helper Functions for Clean-up
+		///@{
+
+		void cleanUpCorpora();
+		void cleanUpQueries();
+
+		///@}
 
 		//! Class for analyzer exceptions to be used by algorithms.
 		MAIN_EXCEPTION_CLASS();
@@ -240,10 +247,6 @@ namespace crawlservpp::Module::Analyzer {
 		void setUpQueries();
 		void setUpAlgorithm();
 		void logWarnings(std::queue<std::string>& warnings);
-
-		// cleanup functions
-		void cleanUpCorpora();
-		void cleanUpQueries();
 
 		// internal helper function
 		std::size_t filterCorpusByQuery(StatusSetter& statusSetter);
