@@ -167,6 +167,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 
 		// algorithm state
+		//bool firstTick{true};
 		/*
 		 * TODO: add additional private member variables here
 		 */

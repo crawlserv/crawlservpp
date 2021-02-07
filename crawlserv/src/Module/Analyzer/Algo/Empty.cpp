@@ -200,6 +200,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void Empty::onAlgoTick() {
 		/*
+		 * TODO: [OPTIONAL] set new status
+		 */
+		/*if(this->firstTick) {
+			this->setStatusMessage("...");
+
+			this->firstTick = false;
+		}*/
+
+		/*
 		 * TODO: algorithm tick
 		 */
 
