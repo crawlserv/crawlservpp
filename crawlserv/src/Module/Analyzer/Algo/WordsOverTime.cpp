@@ -20,31 +20,20 @@
  *
  * ---
  *
- * Empty.cpp
+ * WordsOverTime.cpp
  *
- * Empty template class for adding new algorithms to the application.
- *  Duplicate this (and the header) file to implement a new algorithm,
- *  then add it to 'All.cpp' in the same directory.
+ * Counts the occurrence of articles, sentences, and words in a corpus over time.
  *
- * TODO: change name, date and description of the file
- *
- *  Created on: Jul 23, 2020
+ *  Created on: Jan 03, 2021
  *      Author: ans
  */
 
-/*
- * TODO: change name of the header file
- */
 #include "WordsOverTime.hpp"
 
 namespace crawlservpp::Module::Analyzer::Algo {
 
 	/*
 	 * CONSTRUCTION
-	 */
-
-	/*
-	 * TODO: change names of the constructors
 	 */
 
 	//! Continues a previously interrupted algorithm run.
