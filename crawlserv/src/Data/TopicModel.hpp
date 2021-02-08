@@ -334,6 +334,7 @@ namespace crawlservpp::Data {
 		std::vector<std::string> docNames;
 
 		// state
+		bool hasDocs{false};
 		bool isPrepared{false};
 
 		// settings
@@ -1386,6 +1387,10 @@ namespace crawlservpp::Data {
 						numTokens
 				)
 		);
+
+		if(!(this->hasDocs)) {
+			this->hasDocs = numTokens > 0;
+		}
 	}
 
 	//! Starts training without performing any iteration.
@@ -1605,6 +1610,7 @@ namespace crawlservpp::Data {
 
 		std::vector<std::string>{}.swap(this->docNames);
 
+		this->hasDocs = false;
 		this->isPrepared = false;
 
 		this->fixedNumberOfTopics = 0;
@@ -1714,30 +1720,42 @@ namespace crawlservpp::Data {
 			bool& isHdpTo,
 			bool& isIdfTo
 	) const {
-		if(this->hdpModel) {
-			isHdpTo = true;
-			isIdfTo = false;
+		if(this->hasDocs) {
+			if(this->hdpModel) {
+				isHdpTo = true;
+				isIdfTo = false;
+
+				return;
+			}
+
+			if(this->hdpModelIdf) {
+				isHdpTo = true;
+				isIdfTo = true;
+
+				return;
+			}
+
+			if(this->ldaModel) {
+				isHdpTo = false;
+				isIdfTo = false;
+
+				return;
+			}
+
+			if(this->ldaModelIdf) {
+				isHdpTo = false;
+				isIdfTo = true;
+
+				return;
+			}
 		}
-		else if(this->hdpModelIdf) {
-			isHdpTo = true;
-			isIdfTo = true;
-		}
-		else if(this->ldaModel) {
-			isHdpTo = false;
-			isIdfTo = false;
-		}
-		else if(this->ldaModelIdf) {
-			isHdpTo = false;
-			isIdfTo = true;
-		}
-		else {
-			throw Exception(
-					"TopicModel::"
-					+ function
-					+	"(): No documents have been added"
-						" or the model has already been cleared"
-			);
-		}
+
+		throw Exception(
+				"TopicModel::"
+				+ function
+				+	"(): No documents have been added"
+					" or the model has already been cleared"
+		);
 	}
 
 	// check whether model has not been initialized
@@ -1903,6 +1921,8 @@ namespace crawlservpp::Data {
 
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		DATA_TOPICMODEL_RETRIEVE(iterations, isHdp, isIdf, getGlobalStep);
+
+		this->hasDocs = true;
 
 		if(iterations > 0) {
 			this->isPrepared = true;
