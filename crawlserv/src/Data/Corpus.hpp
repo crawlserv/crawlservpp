@@ -2913,7 +2913,7 @@ namespace crawlservpp::Data {
 			++statusCounter;
 
 			if(statusCounter == filterUpdateEvery) {
-				if(!statusSetter.update(static_cast<float>(total) / articleCounter)) {
+				if(!statusSetter.update(static_cast<float>(articleCounter) / total, true)) {
 					return 0;
 				}
 
