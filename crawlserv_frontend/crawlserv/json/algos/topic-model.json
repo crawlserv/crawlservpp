@@ -42,6 +42,7 @@
 	},
 	"load": {
 		"type": "mdl",
+		"default": "",
 		"label": "Load from:",
 		"description": "Name of the file to load the topic model from. Training will be skipped if a model is selected.",
 		"simple": true,
