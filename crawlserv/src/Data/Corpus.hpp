@@ -203,6 +203,10 @@ namespace crawlservpp::Data {
 		[[nodiscard]] std::string get(std::size_t index) const;
 		[[nodiscard]] std::string get(const std::string& id) const;
 		[[nodiscard]] std::string getDate(const std::string& date) const;
+		[[nodiscard]] std::vector<std::string> getTokenized(std::size_t index) const;
+		[[nodiscard]] std::vector<std::string> getTokenized(const std::string& id) const;
+		[[nodiscard]] std::vector<std::string> getDateTokenized(const std::string& date) const;
+		[[nodiscard]] std::vector<std::vector<std::string>> getArticles() const;
 
 		[[nodiscard]] std::size_t size() const;
 		[[nodiscard]] bool empty() const;
@@ -445,10 +449,20 @@ namespace crawlservpp::Data {
 
 		static std::string mergingStatus(std::size_t number, std::size_t total);
 
-		// internal static helper functions for exception handling
-		static std::string exceptionGetNoArticleMap(std::size_t article);
-		static std::string exceptionArticleOutOfBounds(std::size_t article, std::size_t size);
-		static std::string exceptionDateLength(std::size_t length);
+		// internal static helper functions for exception throwing
+		static std::string exceptionGetNoArticleMap(
+				std::string_view function,
+				std::size_t article
+		);
+		static std::string exceptionArticleOutOfBounds(
+				std::string_view function,
+				std::size_t article,
+				std::size_t size
+		);
+		static std::string exceptionDateLength(
+				std::string_view function,
+				std::size_t length
+		);
 		static std::string exceptionArticleMapStart(
 				std::string_view function,
 				std::string_view expected,
@@ -830,7 +844,7 @@ namespace crawlservpp::Data {
 	 *   text corpus with the given index.
 	 *
 	 * \throws Corpus::Exception if the article
-	 *   map of the corpus is empty or the given
+	 *   map of the corpus is empty, the given
 	 *   index is out of bounds (larger than the
 	 *   article map), or if the corpus has
 	 *   already been tokenized.
@@ -844,23 +858,29 @@ namespace crawlservpp::Data {
 		}
 
 		if(this->articleMap.empty()) {
-			throw Exception(Corpus::exceptionGetNoArticleMap(index));
+			throw Exception(
+					Corpus::exceptionGetNoArticleMap(
+							"get",
+							index
+					)
+			);
 		}
 
 		if(index >= this->articleMap.size()) {
 			throw Exception(
 					Corpus::exceptionArticleOutOfBounds(
+							"get",
 							index,
 							this->articleMap.size()
 					)
 			);
 		}
 
-		const auto& article{this->articleMap.at(index)};
+		const auto& articleEntry{this->articleMap.at(index)};
 
 		return this->corpus.substr(
-				article.pos,
-				article.length
+				articleEntry.pos,
+				articleEntry.length
 		);
 	}
 
@@ -920,16 +940,16 @@ namespace crawlservpp::Data {
 	//! Gets all articles at the specified date from a continous text corpus.
 	/*!
 	 * \param date A constant reference to a string
-	 *   containing the date of the article to be
+	 *   containing the date of the articles to be
 	 *   retrieved, as specified in the date map
 	 *   of the text corpus. The string should have
 	 *   the format @c YYYY-MM-DD.
 	 *
-	 * \returns a copy of all concatenated articles at
+	 * \returns A copy of all concatenated articles at
 	 *   the given date, or an empty string if no
 	 *   articles have been found at this date.
 	 *
-	 * \throws Corpus::Exception if the date given
+	 * \throws Corpus::Exception if the given date
 	 *   has an invalid length, or if the corpus has
 	 *   already been tokenized.
 	 */
@@ -944,7 +964,12 @@ namespace crawlservpp::Data {
 
 		// check argument
 		if(date.length() != dateLength) {
-			throw Exception(Corpus::exceptionDateLength(date.length()));
+			throw Exception(
+					Corpus::exceptionDateLength(
+							"getDate",
+							date.length()
+					)
+			);
 		}
 
 		const auto& dateEntry{
@@ -965,6 +990,223 @@ namespace crawlservpp::Data {
 				dateEntry->pos,
 				dateEntry->length
 		);
+	}
+
+	//! Gets the article with the specified index from a tokenized text corpus.
+	/*!
+	 * \param index The index of the article in
+	 *   the article map of the text corpus,
+	 *   starting with zero.
+	 *
+	 * \returns A vector containing copies of the
+	 *   tokens of the article inside the text
+	 *   corpus with the given index.
+	 *
+	 * \throws Corpus::Exception if the article
+	 *   map of the corpus is empty, the given
+	 *   index is out of bounds (larger than the
+	 *   article map), or if the corpus has
+	 *   not been tokenized.
+	 */
+	inline std::vector<std::string> Corpus::getTokenized(std::size_t index) const {
+		if(!(this->tokenized)) {
+			throw Exception(
+					"Corpus::getTokenized():"
+					" The corpus has not been tokenized"
+			);
+		}
+
+		if(this->articleMap.empty()) {
+			throw Exception(
+					Corpus::exceptionGetNoArticleMap(
+							"getTokenized",
+							index
+					)
+			);
+		}
+
+		if(index >= this->articleMap.size()) {
+			throw Exception(
+					Corpus::exceptionArticleOutOfBounds(
+							"getTokenized",
+							index,
+							this->articleMap.size()
+					)
+			);
+		}
+
+		const auto& articleEntry{this->articleMap.at(index)};
+		const auto articleEnd{articleEntry.pos + articleEntry.length};
+
+		std::vector<std::string> copy;
+
+		copy.reserve(articleEntry.length);
+
+		for(auto tokenIndex{articleEntry.pos}; tokenIndex < articleEnd; ++tokenIndex) {
+			copy.emplace_back(this->tokens[tokenIndex]);
+		}
+
+		return copy;
+	}
+
+	//! Gets the article with the specified ID from a tokenized corpus.
+	/*!
+	 * \param id A constant reference to a string
+	 *   containing the ID of the article to be
+	 *   retrieved, as specified in the article map
+	 *   of the text corpus.
+	 *
+	 * \returns A vector containing copies of the
+	 *   tokens of the article with the given ID,
+	 *   or an empty vector if an article with this
+	 *   ID does not exist.
+	 *
+	 * \throws Corpus::Exception if no ID has
+	 *   been specified, i.e. \p id references
+	 *   an empty string, or if the corpus has
+	 *   not been tokenized.
+	 */
+	inline std::vector<std::string> Corpus::getTokenized(const std::string& id) const {
+		// check corpus
+		if(!(this->tokenized)) {
+			throw Exception(
+					"Corpus::getTokenized():"
+					" The corpus has not been tokenized"
+			);
+		}
+
+		// check argument
+		if(id.empty()) {
+			throw Exception(
+					"Corpus::getTokenized():"
+					" No ID has been specified"
+			);
+		}
+
+		const auto& articleEntry{
+			std::find_if(
+					this->articleMap.cbegin(),
+					this->articleMap.cend(),
+					[&id](const auto& entry) {
+						return entry.value == id;
+					}
+			)
+		};
+
+		if(articleEntry == this->articleMap.cend()) {
+			return std::vector<std::string>();
+		}
+
+		std::vector<std::string> copy;
+
+		copy.reserve(articleEntry->length);
+
+		const auto articleEnd{articleEntry->pos + articleEntry->length};
+
+		for(auto tokenIndex{articleEntry->pos}; tokenIndex < articleEnd; ++tokenIndex) {
+			copy.emplace_back(this->tokens[tokenIndex]);
+		}
+
+		return copy;
+	}
+
+	//! Gets all articles at the specified date from a tokenized text corpus.
+	/*!
+	 * \param date A constant reference to a string
+	 *   containing the date of the articles to be
+	 *   retrieved, as specified in the date map
+	 *   of the text corpus. The string should have
+	 *   the format @c YYYY-MM-DD.
+	 *
+	 * \returns A vector containing copies of all
+	 *   tokens of the articles at the given date,
+	 *   or an empty vector if no articles have been
+	 *   found at this date.
+	 *
+	 * \throws Corpus::Exception if the given date
+	 *   has an invalid length, or if the corpus has
+	 *   not been tokenized.
+	 */
+	inline std::vector<std::string> Corpus::getDateTokenized(const std::string& date) const {
+		// check corpus
+		if(!(this->tokenized)) {
+			throw Exception(
+					"Corpus::getDateTokenized():"
+					" The corpus has not been tokenized."
+			);
+		}
+
+		// check argument
+		if(date.length() != dateLength) {
+			throw Exception(
+					Corpus::exceptionDateLength(
+							"getDateTokenized",
+							date.length()
+					)
+			);
+		}
+
+		const auto& dateEntry{
+			std::find_if(
+					this->dateMap.cbegin(),
+					this->dateMap.cend(),
+					[&date](const auto& entry) {
+						return entry.value == date;
+					}
+			)
+		};
+
+		if(dateEntry == this->dateMap.cend()) {
+			return std::vector<std::string>();
+		}
+
+		const auto dateEnd{dateEntry->pos + dateEntry->length};
+
+		std::vector<std::string> copy;
+
+		copy.reserve(dateEntry->length);
+
+		for(auto tokenIndex{dateEntry->pos}; tokenIndex < dateEnd; ++tokenIndex) {
+			copy.emplace_back(this->tokens[tokenIndex]);
+		}
+
+		return copy;
+	}
+
+	//! Gets the tokens of all articles from a tokenized corpus.
+	/*!
+	 * \returns A vector containing all articles, each
+	 *   represented by a vector containing copies of
+	 *   their tokens.
+	 *
+	 * \throws Corpus::Exception if the corpus has not
+	 *   been tokenized.
+	 */
+	inline std::vector<std::vector<std::string>> Corpus::getArticles() const {
+		if(!(this->tokenized)) {
+			throw Exception(
+					"Corpus::getArticles():"
+					" The corpus has not been tokenized"
+			);
+		}
+
+		std::vector<std::vector<std::string>> copy;
+
+		copy.reserve(this->articleMap.size());
+
+		for(const auto& article : this->articleMap) {
+			copy.emplace_back();
+
+			copy.back().reserve(article.length);
+
+			const auto articleEnd{article.pos + article.length};
+
+			for(auto tokenIndex{article.pos}; tokenIndex < articleEnd; ++tokenIndex) {
+				copy.back().emplace_back(this->tokens[tokenIndex]);
+			}
+		}
+
+		return copy;
 	}
 
 	//! Gets the size of the text corpus, in bytes.
@@ -4567,12 +4809,17 @@ namespace crawlservpp::Data {
 	 */
 
 	// exception when trying to get an article: article map is empty
-	inline std::string Corpus::exceptionGetNoArticleMap(std::size_t article) {
+	inline std::string Corpus::exceptionGetNoArticleMap(
+			std::string_view function,
+			std::size_t article
+	) {
 		std::ostringstream exception;
 
 		Corpus::locale(exception);
 
-		exception << "Corpus::get(): Article #";
+		exception << "Corpus::";
+		exception << function;
+		exception << "(): Article #";
 		exception << article;
 		exception << " requested, but the article map is empty";
 
@@ -4580,12 +4827,18 @@ namespace crawlservpp::Data {
 	}
 
 	// exception when trying to get an article: article is out of the article map's bounds
-	inline std::string Corpus::exceptionArticleOutOfBounds(std::size_t article, std::size_t size) {
+	inline std::string Corpus::exceptionArticleOutOfBounds(
+			std::string_view function,
+			std::size_t article,
+			std::size_t size
+	) {
 		std::ostringstream exception;
 
 		Corpus::locale(exception);
 
-		exception << "Corpus::get(): The specified article index (#";
+		exception << "Corpus::";
+		exception << function;
+		exception << "(): The specified article index (#";
 		exception << article;
 		exception << ") is out of bounds [#0;#";
 		exception << size - 1;
@@ -4595,12 +4848,17 @@ namespace crawlservpp::Data {
 	}
 
 	// exception when trying to get a date: invalid date length
-	inline std::string Corpus::exceptionDateLength(std::size_t length) {
+	inline std::string Corpus::exceptionDateLength(
+			std::string_view function,
+			std::size_t length
+	) {
 		std::ostringstream exception;
 
 		Corpus::locale(exception);
 
-		exception << "Corpus::getDate(): Invalid length of date (";
+		exception << "Corpus::";
+		exception << function;
+		exception << "(): Invalid length of date (";
 		exception << length;
 		exception << " instead of ";
 		exception << dateLength;
