@@ -180,9 +180,9 @@ namespace crawlservpp::Helper::Bytes {
 	 *   numbers. False otherwise.
 	 */
 	inline bool isFloatBigEndian() noexcept {
-		const float floatNumber{-1.0};
+		const auto minusOne{-1.F};
 
-		return *(reinterpret_cast<const std::uint8_t *>(&floatNumber)) > 0;
+		return *(reinterpret_cast<const std::uint8_t *>(&minusOne)) > 0;
 	}
 
 	/*
