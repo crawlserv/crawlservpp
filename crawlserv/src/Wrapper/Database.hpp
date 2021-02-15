@@ -140,6 +140,7 @@ namespace crawlservpp::Wrapper {
 				const std::string& tableName
 		);
 		[[nodiscard]] std::string getTargetTableName(const std::string& type, std::uint64_t tableId);
+		void addTargetColumn(const std::string& tableName, const TableColumn& column);
 		void deleteTargetTable(const std::string& type, std::uint64_t tableId);
 
 		///@}
@@ -157,7 +158,6 @@ namespace crawlservpp::Wrapper {
 		[[nodiscard]] bool isTableExists(const std::string& tableName);
 		[[nodiscard]] bool isColumnExists(const std::string& tableName, const std::string& columnName);
 		[[nodiscard]] std::string getColumnType(const std::string& tableName, const std::string& columnName);
-		void addColumn(const std::string& tableName, const TableColumn& column);
 		void clearTable(std::string_view tableName);
 
 		///@}
@@ -246,6 +246,7 @@ namespace crawlservpp::Wrapper {
 		static bool tryDatabaseLock(const std::string& name);
 		static void removeDatabaseLock(const std::string& name);
 		void createTable(const TableProperties& properties);
+		void addColumn(const std::string& tableName, const TableColumn& column);
 		void dropTable(const std::string& tableName);
 		void compressTable(const std::string& tableName);
 
@@ -375,6 +376,26 @@ namespace crawlservpp::Wrapper {
 		return this->database.getTargetTableName(type, tableId);
 	}
 
+	//! Adds a column to the target table, if it does not exist already.
+	/*!
+	 * Does nothing if the column already
+	 *  exists.
+	 *
+	 * \param column Constant reference to a
+	 *   structure containing the properties
+	 *   of the column to be added to the
+	 *   table.
+	 *
+	 * \warning The data type of the column
+	 *   will not be validated if the column
+	 *   already exists.
+	 */
+	inline void Database::addTargetColumn(const std::string& tableName, const TableColumn& column) {
+		if(!(this->isColumnExists(tableName, "analyzed__" + column.name))) {
+			this->addColumn(tableName, column);
+		}
+	}
+
 	//! \copydoc Main::Database::deleteTargetTable
 	inline void Database::deleteTargetTable(const std::string& type, std::uint64_t tableId) {
 		this->database.deleteTargetTable(type, tableId);
@@ -416,11 +437,6 @@ namespace crawlservpp::Wrapper {
 	//! \copydoc Main::Database::getColumnType
 	inline std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
 		return this->database.getColumnType(tableName, columnName);
-	}
-
-	//! \copydoc Main::Database::addColumn
-	inline void Database::addColumn(const std::string& tableName, const TableColumn& column) {
-		this->database.addColumn(tableName, column);
 	}
 
 	//! \copydoc Main::Database::clearTable
@@ -620,6 +636,11 @@ namespace crawlservpp::Wrapper {
 	//! \copydoc Main::Database::createTable
 	inline void Database::createTable(const TableProperties& properties) {
 		this->database.createTable(properties);
+	}
+
+	//! \copydoc Main::Database::addColumn
+	inline void Database::addColumn(const std::string& tableName, const TableColumn& column) {
+		this->database.addColumn(tableName, column);
 	}
 
 	//! \copydoc Main::Database::dropTable
