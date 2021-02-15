@@ -3155,7 +3155,7 @@ namespace crawlservpp::Data {
 			++statusCounter;
 
 			if(statusCounter == filterUpdateEvery) {
-				if(!statusSetter.update(static_cast<float>(articleCounter) / total, true)) {
+				if(!statusSetter.update(articleCounter, total, true)) {
 					return 0;
 				}
 
@@ -3740,11 +3740,7 @@ namespace crawlservpp::Data {
 				++statusCounter;
 
 				if(statusCounter == tokenizeUpdateEvery) {
-					if(!statusSetter.update(
-							static_cast<float>(sentenceCounter)
-							/ static_cast<float>(this->sentenceMap.size()),
-							true
-					)) {
+					if(!statusSetter.update(sentenceCounter, this->sentenceMap.size(), true)) {
 						return false;
 					}
 
@@ -4060,11 +4056,13 @@ namespace crawlservpp::Data {
 				++statusCounter;
 
 				if(statusCounter == tokenizeUpdateEvery) {
-					if(!statusSetter.update(
-							static_cast<float>(pos + 1)
-							/ static_cast<float>(this->corpus.size() + corpusTrimmed),
-							true
-					)) {
+					if(
+							!statusSetter.update(
+									pos + 1,
+									this->corpus.size() + corpusTrimmed,
+									true
+							)
+					) {
 						return false;
 					}
 
@@ -4464,11 +4462,7 @@ namespace crawlservpp::Data {
 			++statusCounter;
 
 			if(statusCounter == mergeUpdateEvery) {
-				if(!statusSetter.update(
-						static_cast<float>(sentenceCounter)
-						/ static_cast<float>(from.sentenceMap.size()),
-						true
-				)) {
+				if(!statusSetter.update(sentenceCounter, from.sentenceMap.size(), true)) {
 					return false;
 				}
 

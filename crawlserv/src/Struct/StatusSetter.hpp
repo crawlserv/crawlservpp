@@ -209,6 +209,24 @@ namespace crawlservpp::Struct {
 			return this->callbackIsRunning();
 		}
 
+		//! Calculates the current percentage and updates the status accordingly.
+		/*!
+		 * \param done The number of processed units.
+		 * \param total The total number of units to
+		 *   be processed.
+		 * \param precise If set to true, the
+		 *   progress will be added to the status
+		 *   with higher precision.
+		 *
+		 * \returns True, if the thread is supposed
+		 *   to continue running. False, otherwise.
+		 *
+		 * \sa precisionProgress
+		 */
+		bool update(std::size_t done, std::size_t total, bool precise) const { //NOLINT(modernize-use-nodiscard)
+			return this->update(static_cast<float>(done) / total, precise);
+		}
+
 		//! Checks whether the thread is still supposed to run
 		/*!
 		 * \returns True, if the thread is supposed
