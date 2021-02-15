@@ -306,6 +306,7 @@ add_executable(${PROJECT_NAME}
 		src/Wrapper/Curl.cpp
 		src/_extern/mongoose/mongoose.c
 		src/_extern/porter2_stemmer/porter2_stemmer.cpp
+		src/_extern/tomotopy/src/Labeling/FoRelevance.cpp
 		src/_extern/wapiti/wapiti.cpp
 )
 

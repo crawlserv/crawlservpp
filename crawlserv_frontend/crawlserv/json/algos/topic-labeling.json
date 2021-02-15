@@ -1,0 +1,95 @@
+{
+	"label": "Labeling",
+	"open": false,
+	
+	"lamda": {
+		"type": "number",
+		"default": 0.2,
+		"description": "Empirically set parameter for calculating the maximum marginal relevance of labels. Should be 0.2 according to the original paper, although it's set to 0.1 in the Python implementation.",
+		"simple": true,
+		"position": 8
+	},
+	"max.candidates": {
+		"type": "number",
+		"min": 1,
+		"default": 10000,
+		"label": "Max. no. of candidates:",
+		"description": "The maximum number of label candidates to be extracted from the training data.",
+		"simple": true,
+		"position": 6
+	},
+	"max.len": {
+		"type": "number",
+		"min": 1,
+		"max": 255,
+		"default": 5,
+		"label": "Max. length (in words):",
+		"description": "The maximum length of topic labels, in words.",
+		"simple": true,
+		"position": 5
+	},
+	"min.cf": {
+		"type": "number",
+		"min": 1,
+		"max": 65535,
+		"default": 1,
+		"label": "Min. label frequency:",
+		"description": "The minimum total occurrence of a collocation to be used as a topic label.",
+		"simple": true,
+		"position": 2
+	},
+	"min.df": {
+		"type": "number",
+		"min": 1,
+		"max": 65535,
+		"default": 1,
+		"label": "Min. document frequency:",
+		"description": "The minimum number of documents in which a collocation needs to occur to be used as a topic label.",
+		"simple": true,
+		"position": 3
+	},
+	"min.len": {
+		"type": "number",
+		"min": 1,
+		"max": 255,
+		"default": 2,
+		"label": "Min. length (in words):",
+		"description": "The minimum length of topic labels, in words. If set to one, single words will be included in possible labels, although they are excluded in counting the maximum number of candidates.",
+		"simple": true,
+		"position": 4
+	},
+	"mu": {
+		"type": "number",
+		"default": 0.25,
+		"label": "μ:",
+		"description": "A discriminative coefficient. Candidates with a high score on a specific topic and with a low score on other topics get a higher final score when this value is larger.",
+		"simple": true,
+		"position": 9
+	},
+	"num": {
+		"type": "number",
+		"min": 0,
+		"default": 0,
+		"label": "Number of topic labels:",
+		"description": "The number of labels to be automatically generated for each topic. If set to zero, automated topic labeling is deactivated.",
+		"simple": true,
+		"position": 1
+	},
+	"smoothing": {
+		"type": "number",
+		"default": 0.01,
+		"label": "Smoothing:",
+		"description": "A small value greater than zero for Laplace smoothing.",
+		"simple": true,
+		"position": 7
+	},
+	"window.size": {
+		"type": "number",
+		"min": 0,
+		"default": 0,
+		"label": "Window size:",
+		"description": "The size of the sliding window for calculating co-occurrence. If zero, the whole document is used. Should be between 50 and 100 for long documents.",
+		"simple": true,
+		"position": 10
+	}
+}

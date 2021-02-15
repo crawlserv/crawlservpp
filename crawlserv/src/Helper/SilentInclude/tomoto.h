@@ -35,6 +35,8 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wreorder"
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -55,6 +57,7 @@
 
 #endif
 
+#include "../../_extern/tomotopy/src/Labeling/FoRelevance.h"
 #include "../../_extern/tomotopy/src/TopicModel/HDPModel.hpp"
 #include "../../_extern/tomotopy/src/TopicModel/LDAModel.hpp"
 
