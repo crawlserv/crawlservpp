@@ -157,6 +157,7 @@ namespace crawlservpp::Wrapper {
 		[[nodiscard]] bool isTableExists(const std::string& tableName);
 		[[nodiscard]] bool isColumnExists(const std::string& tableName, const std::string& columnName);
 		[[nodiscard]] std::string getColumnType(const std::string& tableName, const std::string& columnName);
+		void addColumn(const std::string& tableName, const TableColumn& column);
 		void clearTable(std::string_view tableName);
 
 		///@}
@@ -246,7 +247,6 @@ namespace crawlservpp::Wrapper {
 		static void removeDatabaseLock(const std::string& name);
 		void createTable(const TableProperties& properties);
 		void dropTable(const std::string& tableName);
-		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
 
 		///@}
@@ -416,6 +416,11 @@ namespace crawlservpp::Wrapper {
 	//! \copydoc Main::Database::getColumnType
 	inline std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
 		return this->database.getColumnType(tableName, columnName);
+	}
+
+	//! \copydoc Main::Database::addColumn
+	inline void Database::addColumn(const std::string& tableName, const TableColumn& column) {
+		this->database.addColumn(tableName, column);
 	}
 
 	//! \copydoc Main::Database::clearTable
@@ -620,11 +625,6 @@ namespace crawlservpp::Wrapper {
 	//! \copydoc Main::Database::dropTable
 	inline void Database::dropTable(const std::string& tableName) {
 		this->database.dropTable(tableName);
-	}
-
-	//! \copydoc Main::Database::addColumn
-	inline void Database::addColumn(const std::string& tableName, const TableColumn& column) {
-		this->database.addColumn(tableName, column);
 	}
 
 	//! \copydoc Main::Database::compressTable
