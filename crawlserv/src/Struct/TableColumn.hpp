@@ -92,12 +92,12 @@ namespace crawlservpp::Struct {
 				const std::string& setType,
 				const std::string& setReferenceTable,
 				const std::string& setReferenceColumn,
-				bool setIndexed)
-		: name(setName),
-		  type(setType),
-		  referenceTable(setReferenceTable),
-		  referenceColumn(setReferenceColumn),
-		  indexed(setIndexed) {}
+				bool setIndexed
+		) :	name(setName),
+			type(setType),
+			referenceTable(setReferenceTable),
+			referenceColumn(setReferenceColumn),
+			indexed(setIndexed) {}
 
 		//! Constructor setting properties of an unindexed table column.
 		/*!
