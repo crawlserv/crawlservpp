@@ -43,12 +43,18 @@
  *
  * If you use the LDA topic modelling algorithm, please cite:
  *
- *  Blei, D.M., Ng, A.Y., & Jordan, M.I. (2003). Latent dirichlet
+ *  Blei, D. M., Ng, A. Y., & Jordan, M. I. (2003). Latent dirichlet
  *   allocation. Journal of machine Learning research, 3(Jan), 993–1022.
  *
  *  Newman, D., Asuncion, A., Smyth, P., & Welling, M. (2009). Distributed
  *   algorithms for topic models. Journal of Machine Learning Research,
  *   10 (Aug), 1801–1828.
+ *
+ * If you use automated topic labeling, please cite:
+ *
+ *  Mei, Q., Shen, X., & Zhai, C. (2007). Automatic labeling of multinomial
+ *   topic models. In Proceedings of the 13th ACM SIGKDD International
+ *   Conference on Knowledge Discovery and Data Mining, 490–499.
  *
  *  Created on: Feb 2, 2021
  *      Author: ans
@@ -72,6 +78,7 @@
 #include <cstdlib>			// std::size_t
 #include <fstream>			// std::ifstream, std::ofstream
 #include <ios>				// std::ios
+#include <limits>			// std::numeric_limits
 #include <memory>			// std::make_unique, std::unique_ptr
 #include <random>			// std::random_device
 #include <string>			// std::string, std::to_string
@@ -235,6 +242,9 @@ namespace crawlservpp::Data {
 		using HDPModelIDF = tomoto::HDPModel<tomoto::TermWeight::idf, tomoto::RandGen>;
 		using LDAModel = tomoto::LDAModel<tomoto::TermWeight::one, tomoto::RandGen>;
 		using LDAModelIDF = tomoto::LDAModel<tomoto::TermWeight::idf, tomoto::RandGen>;
+		using PMIExtractor = tomoto::label::PMIExtractor;
+		using FoRelevance = tomoto::label::FoRelevance;
+
 	public:
 		///@name Getters
 		///@{
@@ -250,6 +260,7 @@ namespace crawlservpp::Data {
 		[[nodiscard]] std::size_t getRandomNumberGenerationSeed() const;
 		[[nodiscard]] std::string_view getModelName() const;
 		[[nodiscard]] std::string_view getTermWeighting() const;
+		[[nodiscard]] std::size_t getDocumentId(const std::string& name) const;
 		[[nodiscard]] std::vector<std::string> getRemovedWords() const;
 		[[nodiscard]] std::size_t getNumberOfTopics() const;
 		[[nodiscard]] std::vector<std::size_t> getTopics() const;
@@ -257,6 +268,10 @@ namespace crawlservpp::Data {
 		[[nodiscard]] double getLogLikelihoodPerWord() const;
 		[[nodiscard]] double getWordEntropy() const;
 		[[nodiscard]] std::vector<std::pair<std::string, float>> getTopicTopNWords(
+				std::size_t topic,
+				std::size_t n
+		) const;
+		[[nodiscard]] std::vector<std::pair<std::string, float>> getTopicTopNLabels(
 				std::size_t topic,
 				std::size_t n
 		) const;
@@ -288,6 +303,17 @@ namespace crawlservpp::Data {
 		);
 		void setParameterOptimizationInterval(std::size_t interval);
 		void setRandomNumberGenerationSeed(std::size_t newSeed);
+		void setLabelingOptions(
+				bool activate,
+				std::size_t minCf,
+				std::size_t minDf,
+				std::size_t minLength,
+				std::size_t maxLength,
+				std::size_t maxCandidates,
+				float smoothing,
+				float mu,
+				std::size_t windowSize
+		);
 
 		///@}
 		///@name Topic Modelling
@@ -304,6 +330,7 @@ namespace crawlservpp::Data {
 				std::size_t iterations,
 				std::size_t threads
 		);
+		void label(std::size_t threads);
 
 		///@}
 		///@name Load and Save
@@ -336,6 +363,7 @@ namespace crawlservpp::Data {
 		// state
 		bool hasDocs{false};
 		bool isPrepared{false};
+		std::size_t workersUsed{};
 
 		// settings
 		std::size_t fixedNumberOfTopics{};
@@ -350,6 +378,18 @@ namespace crawlservpp::Data {
 		std::size_t removeTopNWords{};
 		std::size_t optimizationInterval{defaultOptimizationInterval};
 		std::string trainedWithVersion{};
+
+		// labeling
+		std::unique_ptr<FoRelevance> labeler;
+		bool isLabeling{false};
+		std::size_t labelingMinCf{};
+		std::size_t labelingMinDf{};
+		std::size_t labelingMinLength{};
+		std::size_t labelingMaxLength{};
+		std::size_t labelingMaxCandidates{};
+		float labelingSmoothing{};
+		float labelingMu{};
+		std::size_t labelingWindowSize{};
 
 		// internal helper functions
 		void initModel(bool& isHdpTo, bool& isIdfTo);
@@ -398,6 +438,8 @@ namespace crawlservpp::Data {
 				bool isIdf,
 				std::vector<std::uint8_t>& dataTo
 		) const;
+
+		const tomoto::ITopicModel& getModelInterface(bool isHdf, bool isIdf) const;
 
 		// internal static helper functions (definitions only)
 		static tomoto::RawDoc createDocument(
@@ -551,7 +593,7 @@ namespace crawlservpp::Data {
 	 * \returns Constant reference to a vector of strings
 	 *   containing the complete dictionary of the model.
 	 *
-	 *  \throws TopicModel::Exception if no documents
+	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
 	 *   cleared, or the model has not been trained yet.
 	 */
@@ -703,6 +745,41 @@ namespace crawlservpp::Data {
 		this->checkModel("getTermWeighting", isHdp, isIdf);
 
 		return TopicModel::termWeightToString(isIdf);
+	}
+
+	//! Gets the ID of the document with the specified name.
+	/*!
+	 * \param name The name of the document.
+	 *
+	 * \returns The ID of the document with the specified
+	 *   name.
+	 *
+	 * \throws TopicModel::Exception if no documents
+	 *   have been added, the topic modeller has been
+	 *   cleared, or no document with the specified
+	 *   name has been added to the model.
+	 */
+	inline std::size_t TopicModel::getDocumentId(const std::string& name) const {
+		bool isHdp{false};
+		bool isIdf{false};
+
+		this->checkModel("getDocumentId", isHdp, isIdf);
+
+		std::size_t id{};
+
+		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+		DATA_TOPICMODEL_RETRIEVE(id, isHdp, isIdf, getDocIdByUid, name);
+
+		if(id == std::numeric_limits<std::size_t>::max()) {
+			throw Exception(
+					"getDocumentId():"
+					" No document named '"
+					+ name
+					+ "' has been added to the model"
+			);
+		}
+
+		return id;
 	}
 
 	//! Gets the most common (i.e. stop) words that have been removed.
@@ -958,6 +1035,42 @@ namespace crawlservpp::Data {
 		return words;
 	}
 
+	//! Gets the top \c N labels for the specified topic.
+	/*!
+	 * \param topic The ID of the topic.
+	 * \param n The number of labels to retrieve
+	 *   from the topic, i.e. \c N.
+	 *
+	 * \returns A vector containing pairs of the top
+	 *   \c N labels of the specified topic and their
+	 *   probabiities, sorted by the latter.
+	 *
+	 * \throws TopicModel::Exception if no documents
+	 *   have been added, the topic modeller has been
+	 *   cleared, the model has not been trained yet,
+	 *   or automated topic labelling has not been
+	 *   activated.
+	 */
+	inline std::vector<std::pair<std::string, float>> TopicModel::getTopicTopNLabels(
+			std::size_t topic,
+			std::size_t n
+	) const {
+		bool isHdp{false};
+		bool isIdf{false};
+
+		this->checkModel("getTopicTopNLabels", isHdp, isIdf);
+		this->checkTrained("getTopicTopNLabels");
+
+		if(!(this->labeler)) {
+			throw Exception(
+					"getTopicTopNLabels():"
+					" Automated topic labelling has not been activated"
+			);
+		}
+
+		return this->labeler->getLabels(topic, n);
+	}
+
 	//! Gets the topic distribution for a specific document seen during training.
 	/*!
 	 * \param documentId The ID of the document, i.e. its
@@ -1070,7 +1183,7 @@ namespace crawlservpp::Data {
 				infer,
 				docPtrs,
 				maxIterations,
-				-1.F,
+				-1.F, /* currently not used */
 				numberOfWorkers,
 				tomoto::ParallelScheme::default_,
 				false
@@ -1173,7 +1286,7 @@ namespace crawlservpp::Data {
 	 *   using the HDP algorithm to determine the number
 	 *   of topics from the data.
 	 *
-	 *  \throws TopicModel::Exception if the model has
+	 * \throws TopicModel::Exception if the model has
 	 *   already been initialized.
 	 */
 	inline void TopicModel::setFixedNumberOfTopics(std::size_t k) {
@@ -1190,7 +1303,7 @@ namespace crawlservpp::Data {
 	 * \param idf If true, IDF term weighting is used.
 	 *   If false, every term is weighted the same.
 	 *
-	 *  \throws TopicModel::Exception if the model has
+	 * \throws TopicModel::Exception if the model has
 	 *   already been initialized.
 	 */
 	inline void TopicModel::setUseIdf(bool idf) {
@@ -1329,6 +1442,51 @@ namespace crawlservpp::Data {
 		this->seed = newSeed;
 	}
 
+	//! Sets the options for automated topic labeling.
+	/*!
+	 * Re-labels the topics if they have already been
+	 *  labeled.
+	 *
+	 * \param activate Sets whether to activate automated
+	 *   topic labeling.
+	 * \param maxCandidates Sets the maximum number of
+	 *   label candidates to extract from the topics.
+	 * \param smoothing A small value greater than zero
+	 *   for Laplace smoothing.
+	 * \param mu A discriminative coefficient. Candidates
+	 *   with a high score on a specific topic and with
+	 *   a low score on other topics get a higher final
+	 *   score when this value is larger.
+	 *
+	 * \sa label
+	 */
+	inline void TopicModel::setLabelingOptions(
+			bool activate,
+			std::size_t minCf,
+			std::size_t minDf,
+			std::size_t minLength,
+			std::size_t maxLength,
+			std::size_t maxCandidates,
+			float smoothing,
+			float mu,
+			std::uint64_t windowSize
+	) {
+		this->isLabeling = activate;
+		this->labelingMinCf = minCf;
+		this->labelingMinDf = minDf;
+		this->labelingMinLength = minLength;
+		this->labelingMaxLength = maxLength;
+		this->labelingMaxCandidates = maxCandidates;
+		this->labelingSmoothing = smoothing;
+		this->labelingMu = mu;
+		this->labelingWindowSize = windowSize;
+
+		// re-label if necessary
+		if(this->labeler) {
+			this->label(this->workersUsed);
+		}
+	}
+
 	/*
 	 * TOPIC MODELLING
 	 */
@@ -1353,9 +1511,6 @@ namespace crawlservpp::Data {
 	 * \note It is recommended to stem (or lemmatize)
 	 *   the words in the document before adding it to
 	 *   the model.
-	 *
-	 * \throws TopicModel::Exception if the model has
-	 *   already been trained.
 	 */
 	inline void TopicModel::addDocument(
 		const std::string& name,
@@ -1438,6 +1593,73 @@ namespace crawlservpp::Data {
 		this->checkModel("train", isHdp, isIdf);
 		this->prepareModel(isHdp, isIdf);
 		this->trainModel(isHdp, isIdf, iterations, threads);
+	}
+
+	//! Labels the resulting topics.
+	/*!
+	 * Does nothing, except clearing any existing
+	 *  labeling, if labeling has not been activated
+	 *  or has been deactivated.
+	 *
+	 * \param threads Number of threads. One for single
+	 *   threading. Zero for guessing the number of
+	 *   concurrent threads supported by the hardware.
+	 *
+	 * \throws TopicModel::Exception if no documents
+	 *   have been added, the topic modeller has been
+	 *   cleared, the model has not been trained yet,
+	 *   or the file cannot be read.
+	 *
+	 * \sa setLabelingOptions
+	 */
+	inline void TopicModel::label(std::size_t threads) {
+		if(!(this->isLabeling)) {
+			this->labeler.release();
+
+			return;
+		}
+
+		bool isHdp{false};
+		bool isIdf{false};
+
+		this->checkModel("label", isHdp, isIdf);
+		this->checkTrained("label");
+
+		this->workersUsed = threads;
+
+		// extract topic label candidates
+		PMIExtractor extractor(
+				this->labelingMinCf,
+				this->labelingMinDf,
+				this->labelingMinLength,
+				this->labelingMaxLength,
+				this->labelingMaxCandidates
+		);
+
+		const auto& modelInterface{
+			this->getModelInterface(isHdp, isIdf)
+		};
+
+		const auto candidates{
+			extractor.extract(&modelInterface)
+		};
+
+		// create labeler
+		constexpr auto LAMBDA{0.2F};
+
+		this->labeler = std::make_unique<FoRelevance>(
+				&modelInterface,
+				candidates.begin(),
+				candidates.end(),
+				this->labelingMinDf,
+				this->labelingSmoothing,
+				LAMBDA, /* not used yet */
+				this->labelingMu,
+				this->labelingWindowSize == 0  ?
+					std::numeric_limits<std::size_t>::max()
+					: this->labelingWindowSize,
+				threads
+		);
 	}
 
 	/*
@@ -1625,6 +1847,18 @@ namespace crawlservpp::Data {
 		this->optimizationInterval = defaultOptimizationInterval;
 
 		this->trainedWithVersion.clear();
+
+		this->labeler.release();
+
+		this->isLabeling = false;
+		this->labelingMinCf = 0;
+		this->labelingMinDf = 0;
+		this->labelingMinLength = 0;
+		this->labelingMaxLength = 0;
+		this->labelingMaxCandidates = 0;
+		this->labelingSmoothing = 0.F;
+		this->labelingMu = 0.F;
+		this->labelingWindowSize = 0;
 	}
 
 	/*
@@ -1969,6 +2203,23 @@ namespace crawlservpp::Data {
 
 		// write dictionary as Python pickle data
 		dict.writeTo(dataTo);
+	}
+
+	// get constant reference to the interface of the currently active topic model
+	inline const tomoto::ITopicModel& TopicModel::getModelInterface(bool isHdp, bool isIdf) const {
+		if(isHdp) {
+			if(isIdf) {
+				return *(this->hdpModelIdf);
+			}
+
+			return *(this->hdpModel);
+		}
+
+		if(isIdf) {
+			return *(this->ldaModelIdf);
+		}
+
+		return *(this->ldaModel);
 	}
 
 	// create document for underlying API
