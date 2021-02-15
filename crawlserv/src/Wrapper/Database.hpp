@@ -391,7 +391,7 @@ namespace crawlservpp::Wrapper {
 	 *   already exists.
 	 */
 	inline void Database::addTargetColumn(const std::string& tableName, const TableColumn& column) {
-		if(!(this->isColumnExists(tableName, "analyzed__" + column.name))) {
+		if(!(this->isColumnExists(tableName, column.name))) {
 			this->addColumn(tableName, column);
 		}
 	}
