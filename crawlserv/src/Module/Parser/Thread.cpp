@@ -212,7 +212,7 @@ namespace crawlservpp::Module::Parser {
 
 			if(this->idDist > 0) {
 				// cache progress = (current ID - first ID) / (last ID - first ID)
-				const float cacheProgress{
+				const auto cacheProgress{
 					static_cast<float>(
 							this->urls.front().first
 							- this->idFirst)
