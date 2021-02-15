@@ -38,6 +38,21 @@
  *   algorithms for topic models. Journal of Machine Learning Research,
  *   10 (Aug), 1801–1828.
  *
+ * If you use the LDA topic modelling algorithm, please cite:
+ *
+ *  Blei, D. M., Ng, A. Y., & Jordan, M. I. (2003). Latent dirichlet
+ *   allocation. Journal of machine Learning research, 3(Jan), 993–1022.
+ *
+ *  Newman, D., Asuncion, A., Smyth, P., & Welling, M. (2009). Distributed
+ *   algorithms for topic models. Journal of Machine Learning Research,
+ *   10 (Aug), 1801–1828.
+ *
+ * If you use automated topic labeling, please cite:
+ *
+ *  Mei, Q., Shen, X., & Zhai, C. (2007). Automatic labeling of multinomial
+ *   topic models. In Proceedings of the 13th ACM SIGKDD International
+ *   Conference on Knowledge Discovery and Data Mining, 490–499.
+ *
  *  Created on: Feb 2, 2021
  *      Author: ans
  */
