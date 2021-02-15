@@ -56,17 +56,17 @@
 #include <cppconn/statement.h>
 #include <mysql_connection.h>
 
-#include <algorithm>	// std::all_of, std::sort, std::upper_bound
-#include <chrono>		// std::chrono
-#include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint8_t, std::uint16_t, std::uint64_t
-#include <functional>	// std::function
-#include <locale>		// std::locale
-#include <queue>		// std::queue
-#include <sstream>		// std::ostringstream
-#include <string>		// std::string, std::to_string
-#include <utility>		// std::move, std::pair
-#include <vector>		// std::vector
+#include <algorithm>		// std::all_of, std::sort, std::upper_bound
+#include <cstddef>			// std::size_t
+#include <cstdint>			// std::uint8_t, std::uint16_t, std::uint64_t
+#include <functional>		// std::function
+#include <locale>			// std::locale
+#include <queue>			// std::queue
+#include <sstream>			// std::ostringstream
+#include <string>			// std::string, std::to_string
+#include <unordered_map>	// std::unordered_map
+#include <utility>			// std::move, std::pair
+#include <vector>			// std::vector
 
 namespace crawlservpp::Module::Analyzer {
 
@@ -225,6 +225,19 @@ namespace crawlservpp::Module::Analyzer {
 		void updateTargetTable();
 
 		///@}
+		///@name Additional Tables
+		///@{
+
+		std::size_t addAdditionalTable(
+				const std::string& name,
+				const std::vector<StringString>& fields,
+				bool compressed,
+				bool clear
+		);
+		const std::string& getAdditionalTableName(std::size_t id) const;
+		void updateAdditionalTable(std::size_t id);
+
+		///@}
 		///@name Prepared SQL Statements
 		///@{
 
@@ -286,6 +299,9 @@ namespace crawlservpp::Module::Analyzer {
 		 */
 		std::uint8_t corpusSlicing{defaultCorpusSlicing};
 
+		//! The IDs and full names of additional tables to write data to.
+		std::unordered_map<std::size_t, std::string> additionalTables;
+
 	private:
 		// IDs of prepared SQL statements
 		struct _ps {
@@ -304,6 +320,7 @@ namespace crawlservpp::Module::Analyzer {
 			std::size_t measureChunk{};
 			std::size_t measureCorpus{};
 			std::size_t updateTargetTable{};
+			std::size_t updateAdditionalTable{};
 		} ps;
 
 		// function for checking whether the parent thread is still running

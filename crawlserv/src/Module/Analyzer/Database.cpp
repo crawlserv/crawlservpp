@@ -120,7 +120,7 @@ namespace crawlservpp::Module::Analyzer {
 	 *   compress the data in the target
 	 *   table.
 	 * \param clear Set whether to clear
-	 *   an existing target table.
+	 *   a previously existing target table.
 	 *
 	 * \throws Analyzer::Database::Exception
 	 *   if no website or URL list has been
@@ -216,7 +216,12 @@ namespace crawlservpp::Module::Analyzer {
 		if(clear) {
 			this->clearTable(this->targetTableFull);
 
-			this->log(this->getLoggingMin(), "cleared target table.");
+			this->log(
+					this->getLoggingMin(),
+					"cleared target table '"
+					+ this->targetTableName
+					+ "'."
+			);
 		}
 	}
 
@@ -228,8 +233,8 @@ namespace crawlservpp::Module::Analyzer {
 	 *
 	 * \throws Module::Analyzer::Database::Exception
 	 *   if the prepared SQL statements for setting
-	 *   the update time of the target table to now
-	 *   is missing.
+	 *   the update time of the target table is
+	 *   missing.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while setting the update time
 	 *   of the target table in the database.
@@ -252,11 +257,230 @@ namespace crawlservpp::Module::Analyzer {
 		try {
 			// execute SQL query
 			if(Database::sqlExecuteUpdate(sqlStatement) > 0) {
-				this->log(this->getLoggingMin(), "updated target table.");
+				this->log(
+						this->getLoggingMin(),
+						"updated target table '"
+						+ this->targetTableName
+						+ "'."
+				);
 			}
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Analyzer::Database::updateTargetTable", e);
+		}
+	}
+
+	/*
+	 * ADDITIONAL TABLE INITIALIZATION AND UPDATE
+	 */
+
+	//! Creates an additioanl table, or adds its field columns, if they do not exist already.
+	/*!
+	 * \note Can be called by the algorithm
+	 *   class to create another full table
+	 *   name and the specified target fields.
+	 *
+	 * \param name The name of the additional
+	 *   table.
+	 * \param compressed Set whether to
+	 *   compress the data in the table.
+	 * \param clear Set whether to clear
+	 *   a previously existing table.
+	 *
+	 * \returns The ID of the additional
+	 *   table.
+	 *
+	 * \throws Analyzer::Database::Exception
+	 *   if no website or URL list has been
+	 *   previously specified, the name of
+	 *   the additional table is empty, no
+	 *   target fields have been specified,
+	 *   or the data type for a target field
+	 *   is missing.
+	 */
+	std::size_t Database::addAdditionalTable(
+			const std::string& name,
+			const std::vector<StringString>& fields,
+			bool compressed,
+			bool clear
+	) {
+		// check options
+		if(this->getOptions().websiteNamespace.empty()) {
+			throw Exception(
+					"Analyzer::Database::addAdditionalTable():"
+					" No website has been specified"
+			);
+		}
+
+		if(this->getOptions().urlListNamespace.empty()) {
+			throw Exception(
+					"Analyzer::Database::addAdditionalTable():"
+					" No URL list has been specified"
+			);
+		}
+
+		if(name.empty()) {
+			throw Exception(
+					"Analyzer::Database::addAdditionalTable():"
+					" The name of the additional table is empty"
+			);
+		}
+
+		if(
+				std::all_of(
+						fields.cbegin(),
+						fields.cend(),
+						[](const auto& nameType) {
+							return nameType.first.empty();
+						}
+				)
+		) {
+			throw Exception(
+					"Analyzer::Database::addAdditionalTable():"
+					" No table fields have been specified"
+					" (only empty strings)"
+			);
+		}
+
+		// create the name of the target table
+		std::string fullTableName{"crawlserv_"};
+
+		fullTableName += this->getOptions().websiteNamespace;
+		fullTableName += "_";
+		fullTableName += this->getOptions().urlListNamespace;
+		fullTableName += "_analyzed_";
+		fullTableName += name;
+
+		// create the properties of the target table
+		CustomTableProperties tableProperties(
+				"analyzed",
+				this->getOptions().websiteId,
+				this->getOptions().urlListId,
+				name,
+				fullTableName,
+				compressed
+		);
+
+		for(const auto& field : fields) {
+			if(field.first.empty()) {
+				continue;
+			}
+
+			tableProperties.columns.emplace_back(
+					"analyzed__" + field.first,
+					field.second
+			);
+
+			if(tableProperties.columns.back().type.empty()) {
+				throw Exception(
+						"Analyzer::Database::addAdditionalTable():"
+						" No type for table field '"
+						+ field.first
+						+ "' has been specified"
+				);
+			}
+		}
+
+		// add or update the target table
+		const std::size_t id{this->addOrUpdateTargetTable(tableProperties)};
+
+		if(clear) {
+			this->clearTable(fullTableName);
+
+			this->log(this->getLoggingMin(), "cleared table '" + name + "'.");
+		}
+
+		this->additionalTables.emplace(id, fullTableName);
+
+		return id;
+	}
+
+	//! Gets the full name of an additional table.
+	/*!
+	 * \param id The ID of the additional table.
+	 *
+	 * \returns A constant reference to a string
+	 *   containing the full name of the
+	 *   additional table in the database.
+	 *
+	 * \throws Main::Database::Exception if the
+	 *   given ID does not identify an additional
+	 *   table.
+	 *
+	 * \sa addAdditionalTable
+	 */
+	const std::string& Database::getAdditionalTableName(std::size_t id) const {
+		// check argument
+		const auto it{
+			this->additionalTables.find(id)
+		};
+
+		if(it == this->additionalTables.end()) {
+			throw Exception(
+					"Analyzer::Database::getAdditionalTableName():"
+					" Invalid additional table ID '" + std::to_string(id) + "'"
+			);
+		}
+
+		return it->second;
+	}
+
+	//! Updates an additional table.
+	/*!
+	 * Sets the time that specifies, when the
+	 *  table has last been updated, to now – i.e.
+	 *  the current database time.
+	 *
+	 * \param id The ID of the additional table.
+	 *
+	 * \throws Module::Analyzer::Database::Exception
+	 *   if the prepared SQL statements for setting
+	 *   the update time of additional tables is
+	 *   missing or the given ID does not identify
+	 *   an additional table.
+	 * \throws Main::Database::Exception if a MySQL
+	 *   error occured while setting the update time
+	 *   of the additional table in the database.
+	 *
+	 * \sa addAdditionalTable
+	 */
+	void Database::updateAdditionalTable(std::size_t id) {
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(this->ps.updateAdditionalTable == 0) {
+			throw Exception(
+					"Analyzer::Database::updateAdditionalTable():"
+					" Missing prepared SQL statement"
+			);
+		}
+
+		// check argument
+		const auto it{
+			this->additionalTables.find(id)
+		};
+
+		if(it == this->additionalTables.end()) {
+			throw Exception(
+					"Analyzer::Database::updateAdditionalTable():"
+					" Invalid additional table ID '" + std::to_string(id) + "'"
+			);
+		}
+
+		// get prepared SQL statement
+		auto& sqlStatement{this->getPreparedStatement(this->ps.updateAdditionalTable)};
+
+		try {
+			// execute SQL query
+			sqlStatement.setUInt64(sqlArg1, id);
+
+			if(Database::sqlExecuteUpdate(sqlStatement) > 0) {
+				this->log(this->getLoggingMin(), "updated table '" + it->second + "'.");
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Analyzer::Database::updateAdditionalTable", e);
 		}
 	}
 
@@ -573,6 +797,16 @@ namespace crawlservpp::Module::Analyzer {
 					" WHERE id = " + std::to_string(this->targetTableId) +
 					" LIMIT 1",
 					this->ps.updateTargetTable
+			);
+
+			this->log(verbose, "prepares updateAdditionalTable()...");
+
+			this->addPreparedStatement(
+					"UPDATE crawlserv_analyzedtables"
+					" SET updated = CURRENT_TIMESTAMP"
+					" WHERE id = ?"
+					" LIMIT 1",
+					this->ps.updateAdditionalTable
 			);
 		}
 		catch(const sql::SQLException &e) {
