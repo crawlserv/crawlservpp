@@ -1057,6 +1057,10 @@ class Config {
 			result += " id=\"opt-" + cat + "-" + id + "\"";
 		}
 		
+		result += " data-value=\"";
+		result += htmlentities(value);
+		result += "\"";
+		
 		result += ">\n";
 		
 		// 'no dictionary' option
