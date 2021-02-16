@@ -40,6 +40,16 @@
 		"simple": true,
 		"position": 7
 	},
+	"iterations": {
+		"type": "number",
+		"min": 1,
+		"max": 65535,
+		"default": 100,
+		"label": "Doc. iterations:",
+		"description": "Maximum number of iterations for infering the topics of previously unseen documents.",
+		"simple": true,
+		"position": 10
+	},
 	"load": {
 		"type": "mdl",
 		"default": "",
@@ -47,15 +57,6 @@
 		"description": "Name of the file to load the topic model from. Training will be skipped if a model is selected.",
 		"simple": true,
 		"position": 1
-	},
-	"optimize.every": {
-		"type": "number",
-		"min": 0,
-		"default": 10,
-		"label": "Optimize every:",
-		"description": "The optimization interval for the model parameters, in iterations.",
-		"simple": true,
-		"position": 8
 	},
 	"save": {
 		"type": "string",
@@ -87,7 +88,9 @@
 		"min": 0,
 		"max": 65535,
 		"default": 0,
+		"label": "Doc. workers:",
 		"description": "Number of worker threads for infering the topics of previously unseen documents, or zero for automated multi-threading.",
-		"simple": false
+		"simple": true,
+		"position": 9
 	}
 }
