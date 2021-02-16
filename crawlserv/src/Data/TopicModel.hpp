@@ -66,12 +66,13 @@
 #include "PickleDict.hpp"
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/SilentInclude/EigenRand.h"
 #include "../Helper/SilentInclude/tomoto.h"
 #include "../Helper/Versions.hpp"
 #include "../Main/Exception.hpp"
 #include "../Struct/TopicModelInfo.hpp"
 
-#include <algorithm>		// std::accumulate, std::find_if, std::max, std::min, std::remove_if
+#include <algorithm>		// std::accumulate, std::transform
 #include <array>			// std::array
 #include <cmath>			// std::log
 #include <cstdint>			// std::uint8_t, std::uint64_t
@@ -250,6 +251,7 @@ namespace crawlservpp::Data {
 		///@{
 
 		[[nodiscard]] std::size_t getNumberOfDocuments() const;
+		[[nodiscard]] std::unordered_map<std::string, std::size_t> getDocuments() const;
 		[[nodiscard]] std::size_t getVocabularySize() const;
 		[[nodiscard]] std::size_t getOriginalVocabularySize() const;
 		[[nodiscard]] const std::vector<std::string>& getVocabulary() const;
@@ -275,7 +277,7 @@ namespace crawlservpp::Data {
 				std::size_t topic,
 				std::size_t n
 		) const;
-		[[nodiscard]] std::vector<float> getDocumentTopics(std::size_t documentId) const;
+		[[nodiscard]] std::vector<std::pair<std::string, std::vector<float>>> getDocumentsTopics() const;
 		[[nodiscard]] std::vector<std::vector<float>> getDocumentsTopics(
 				const std::vector<std::vector<std::string>>& documents,
 				std::size_t maxIterations,
@@ -439,10 +441,16 @@ namespace crawlservpp::Data {
 				std::vector<std::uint8_t>& dataTo
 		) const;
 
-		const tomoto::ITopicModel& getModelInterface(bool isHdf, bool isIdf) const;
+		[[nodiscard]] std::vector<float> getInferredTopics(
+				bool isHdp,
+				bool isIdf,
+				const tomoto::DocumentBase * doc
+		) const;
+
+		[[nodiscard]] const tomoto::ITopicModel& getModelInterface(bool isHdf, bool isIdf) const;
 
 		// internal static helper functions (definitions only)
-		static tomoto::RawDoc createDocument(
+		[[nodiscard]] static tomoto::RawDoc createDocument(
 				const std::string& name,
 				const std::vector<std::string>& tokens,
 				std::size_t firstToken,
@@ -470,6 +478,12 @@ namespace crawlservpp::Data {
 				const PickleDict& dict,
 				const std::string& key,
 				std::string& valueTo
+		);
+
+		[[nodiscard]] static std::vector<std::vector<float>> convertInferredResults(
+				const std::vector<double>& results,
+				std::size_t numberOfDocuments,
+				std::size_t numberOfTopics
 		);
 
 		// internal static helper functions (constexpr and templates)
@@ -536,15 +550,40 @@ namespace crawlservpp::Data {
 		this->checkModel("getNumberOfDocuments", isHdp, isIdf);
 		this->checkTrained("getNumberOfDocuments");
 
-		if(!(this->isPrepared)) {
-			throw Exception(
-					"TopicModel::getNumberOfDocuments():"
-					" The model has not been trained yet"
-			);
-		}
-
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		DATA_TOPICMODEL_RETURN(isHdp, isIdf, getNumDocs);
+	}
+
+	//! Gets a map with the documents and their indices from the model.
+	/*!
+	 * \returns An unordered map with the document IDs
+	 *   as keys and the document indices as values.
+	 *
+	 * \throws TopicModel::Exception if no documents
+	 *   have been added, the topic modeller has been
+	 *   cleared, or the model has not been trained yet.
+	 */
+	inline std::unordered_map<std::string, std::size_t> TopicModel::getDocuments() const {
+		bool isHdp{false};
+		bool isIdf{false};
+
+		this->checkModel("getDocuments", isHdp, isIdf);
+		this->checkTrained("getDocuments");
+
+		std::unordered_map<std::string, std::size_t> result;
+
+		for(std::size_t index{}; index < this->getNumberOfDocuments(); ++index) {
+			const tomoto::DocumentBase * docPtr{nullptr};
+
+			//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+			DATA_TOPICMODEL_RETRIEVE(docPtr, isHdp, isIdf, getDoc, index);
+
+			if(!(docPtr->docUid.empty())) {
+				result[docPtr->docUid] = index;
+			}
+		}
+
+		return result;
 	}
 
 	//! Gets the number of distinct words after training has begun.
@@ -1071,55 +1110,49 @@ namespace crawlservpp::Data {
 		return this->labeler->getLabels(topic, n);
 	}
 
-	//! Gets the topic distribution for a specific document seen during training.
+	//! Gets the topic distributions of all documents the model has been trained on, if available.
 	/*!
-	 * \param documentId The ID of the document, i.e. its
-	 *   index (0 referencing the document added first).
+	 * Unnamed documents inside the model will be ignored.
 	 *
-	 * \returns A vector of floating-point numbers
-	 *   indicating te topic distribution of the given
-	 *   document.
+	 * \returns A vector containing pairs of a string
+	 *   containing the name of the document and a vector
+	 *   of floating-point numbers indicating the topic
+	 *   distribution for that document. An empty vector
+	 *   if the model does not contain any named documents,
+	 *   e.g. if a model has been loaded that has not been
+	 *   saved together with all its training data.
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
-	 *   cleared, the model has not been trained yet, or
-	 *   the given document does not exist inside the
-	 *   model.
+	 *   cleared, or the model has not been trained yet.
 	 */
-	inline std::vector<float> TopicModel::getDocumentTopics(std::size_t documentId) const {
+	inline std::vector<std::pair<std::string, std::vector<float>>> TopicModel::getDocumentsTopics() const {
 		bool isHdp{false};
 		bool isIdf{false};
 
-		this->checkModel("getDocumentTopics", isHdp, isIdf);
-		this->checkTrained("getDocumentTopics");
+		this->checkModel("getDocumentsTopics", isHdp, isIdf);
+		this->checkTrained("getDocumentsTopics");
 
-		if(documentId >= this->getNumberOfDocuments()) {
-			throw Exception(
-					"getDocumentTopics():"
-					" Could not find document #"
-					+ std::to_string(documentId)
-					+ "inside the model (>"
-					+ std::to_string(this->getNumberOfDocuments() - 1)
-					+ ")"
-			);
+		std::vector<std::pair<std::string, std::vector<float>>> results;
+		const auto total{this->getNumberOfDocuments()};
+
+		for(std::size_t docId{}; docId < total; ++docId) {
+			const tomoto::DocumentBase * doc{nullptr};
+
+			DATA_TOPICMODEL_RETRIEVE(doc, isHdp, isIdf, getDoc, docId);
+
+			if(!(doc->docUid.empty())) {
+				results.emplace_back(
+						doc->docUid,
+						this->getInferredTopics(isHdp, isIdf, doc)
+				);
+			}
 		}
 
-		// retrieve document
-		const tomoto::DocumentBase * documentPtr{nullptr};
-
-		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(documentPtr, isHdp, isIdf, getDoc, documentId);
-
-		// retrieve topic distribution for the document
-		std::vector<float> result;
-
-		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(result, isHdp, isIdf, getTopicsByDoc, *documentPtr);
-
-		return result;
+		return results;
 	}
 
-	//! Infers the topic distribution for previously unseen documents.
+	//! Infers the topic distributions for previously unseen documents.
 	/*!
 	 * \param documents A constant reference to a
 	 *   vector containing vectors with the processed
@@ -1132,7 +1165,8 @@ namespace crawlservpp::Data {
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
-	 *   cleared, or the model has not been trained yet.
+	 *   cleared, the model has not been trained yet,
+	 *   or a document could not be created.
 	 */
 	inline std::vector<std::vector<float>> TopicModel::getDocumentsTopics(
 			const std::vector<std::vector<std::string>>& documents,
@@ -1150,30 +1184,38 @@ namespace crawlservpp::Data {
 		std::size_t docIndex{};
 
 		for(const auto& tokens : documents) {
-			const auto doc{
-				TopicModel::createDocument("", tokens, 0, tokens.size())
-			};
-
 			//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 			DATA_TOPICMODEL_RETRIEVE(
 					docUPtrs[docIndex],
 					isHdp,
 					isIdf,
 					makeDoc,
-					doc
+					TopicModel::createDocument(
+							"doc" + std::to_string(docIndex),
+							tokens,
+							0,
+							tokens.size()
+					)
 			);
+
+			if(!(docUPtrs[docIndex])) {
+				throw Exception(
+						"getDocumentsTopics():"
+						" Could not create document 'doc"
+						+ std::to_string(docIndex)
+						+ "'"
+				);
+			}
 
 			++docIndex;
 		}
 
 		// get C-style pointers for underlying API
-		std::vector<tomoto::DocumentBase *> docPtrs;
+		std::vector<tomoto::DocumentBase *> docPtrs(documents.size(), nullptr);
 
-		docPtrs.reserve(documents.size());
-
-		for(auto& uPtr : docUPtrs) {
-			docPtrs.push_back(uPtr.get());
-		}
+		std::transform(docUPtrs.begin(), docUPtrs.end(), docPtrs.begin(), [](const auto& uPtr) {
+			return uPtr.get();
+		});
 
 		// infer topic distributions for documents
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
@@ -1189,23 +1231,15 @@ namespace crawlservpp::Data {
 				false
 		);
 
-		std::vector<std::vector<float>> result(documents.size());
-		std::size_t resultIndex{};
+		std::vector<std::vector<float>> results;
 
-		for(const auto * docPtr : docPtrs) {
-			//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-			DATA_TOPICMODEL_RETRIEVE(
-					result[resultIndex],
-					isHdp,
-					isIdf,
-					getTopicsByDoc,
-					*docPtr
-			);
+		results.reserve(documents.size());
 
-			++resultIndex;
+		for(const auto * doc : docPtrs) {
+			results.emplace_back(this->getInferredTopics(isHdp, isIdf, doc));
 		}
 
-		return result;
+		return results;
 	}
 
 	//! Gets information about the model after training.
@@ -1565,6 +1599,8 @@ namespace crawlservpp::Data {
 		this->checkModel("startTraining", isHdp, isIdf);
 		this->prepareModel(isHdp, isIdf);
 		this->trainModel(isHdp, isIdf, 0, 1);
+
+		this->trainedWithVersion = Helper::Versions::getTomotoVersion();
 	}
 
 	//! Trains the underlying HLDA model.
@@ -1693,7 +1729,7 @@ namespace crawlservpp::Data {
 
 		if(!in.is_open()) {
 			throw Exception(
-					"TopicModel::loadModelFrom():"
+					"TopicModel::load():"
 					" Could not read from '"
 					+ fileName
 					+ "'"
@@ -1786,15 +1822,15 @@ namespace crawlservpp::Data {
 		bool isHdp{false};
 		bool isIdf{false};
 
-		this->checkModel("saveModelTo", isHdp, isIdf);
-		this->checkTrained("saveModelTo");
+		this->checkModel("save", isHdp, isIdf);
+		this->checkTrained("save");
 
 		// open file to write model to
 		std::ofstream out(fileName.c_str(), std::ios::binary);
 
 		if(!out.is_open()) {
 			throw Exception(
-					"TopicModel::saveModelTo():"
+					"TopicModel::save():"
 					" Could not write to '"
 					+ fileName
 					+ "'"
@@ -2111,7 +2147,6 @@ namespace crawlservpp::Data {
 			);
 
 			this->isPrepared = true;
-			this->trainedWithVersion = Helper::Versions::getTomotoVersion();
 		}
 	}
 
@@ -2160,6 +2195,8 @@ namespace crawlservpp::Data {
 
 		if(iterations > 0) {
 			this->isPrepared = true;
+
+			this->startTraining();
 		}
 	}
 
@@ -2203,6 +2240,35 @@ namespace crawlservpp::Data {
 
 		// write dictionary as Python pickle data
 		dict.writeTo(dataTo);
+	}
+
+	// get inferred topics from document pointer
+	inline std::vector<float> TopicModel::getInferredTopics(
+			bool isHdp,
+			bool isIdf,
+			const tomoto::DocumentBase * doc
+	) const {
+		if(isHdp) {
+			if(isIdf) {
+				return this->hdpModelIdf->getTopicsByDoc(
+						*dynamic_cast<const tomoto::DocumentHDP<tomoto::TermWeight::idf> *>(doc)
+				);
+			}
+
+			return this->hdpModel->getTopicsByDoc(
+					*dynamic_cast<const tomoto::DocumentHDP<tomoto::TermWeight::one> *>(doc)
+			);
+		}
+
+		if(isIdf) {
+			return this->ldaModelIdf->getTopicsByDoc(
+					*dynamic_cast<const tomoto::DocumentLDA<tomoto::TermWeight::idf> *>(doc)
+			);
+		}
+
+		return this->ldaModel->getTopicsByDoc(
+				*dynamic_cast<const tomoto::DocumentLDA<tomoto::TermWeight::one> *>(doc)
+		);
 	}
 
 	// get constant reference to the interface of the currently active topic model
@@ -2252,7 +2318,7 @@ namespace crawlservpp::Data {
 
 		if(!TopicModel::bytesEqual(headBytes, modelFileHead)) {
 			throw Exception(
-					"TopicModel::loadModelFrom():"
+					"TopicModel::load():"
 					" Invalid model file or unsupported model type in '"
 					+ fileName
 					+ "' (first bytes do not match tomoto's LDA model format: '"
@@ -2276,7 +2342,7 @@ namespace crawlservpp::Data {
 		}
 		else {
 			throw Exception(
-					"TopicModel::loadModelFrom():"
+					"TopicModel::load():"
 					" Invalid model file or unsupported term weighting scheme in '"
 					+ fileName
 					+ "' (term weighting scheme does not match 'one' or 'idf':"
@@ -2294,7 +2360,7 @@ namespace crawlservpp::Data {
 
 		if(!TopicModel::bytesEqual(typeBytes, modelFileType)) {
 			throw Exception(
-					"TopicModel::loadModelFrom():"
+					"TopicModel::load():"
 					" Invalid model file '"
 					+ fileName
 					+ "' (type does not match tomoto's model format: '"
