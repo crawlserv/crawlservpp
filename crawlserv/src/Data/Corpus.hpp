@@ -279,6 +279,7 @@ namespace crawlservpp::Data {
 
 		bool filterByDate(const std::string& from, const std::string& to);
 		std::size_t filterArticles(const ArticleFunc& callbackArticle, StatusSetter& statusSetter);
+		void reTokenize();
 
 		///@}
 		///@name Tokenization
@@ -373,6 +374,11 @@ namespace crawlservpp::Data {
 				DateArticleSentenceMap& to,
 				StatusSetter& statusSetter
 		);
+		[[nodiscard]] static std::vector<std::string> getTokensForEntry(
+				const TextMap& map,
+				const std::string& id,
+				const std::vector<std::string>& tokens
+		);
 		static bool addCorpus(
 				Corpus& from,
 				DateArticleSentenceMap& to,
@@ -421,6 +427,12 @@ namespace crawlservpp::Data {
 				std::size_t pos,
 				bool& inEntryTo
 		);
+		static void skipAndTrimEntriesBefore(
+				TextMap& map,
+				std::size_t& entryIndex,
+				std::size_t pos,
+				std::size_t removed
+		);
 
 		static void removeToken(TextMap& map, std::size_t entryIndex, bool& emptiedTo);
 		static void removeToken(SentenceMapEntry & entry, bool& emptiedTo);
@@ -431,6 +443,9 @@ namespace crawlservpp::Data {
 				std::size_t maxLength,
 				std::size_t maxChunkSize
 		);
+
+		static void removeEmptyEntries(TextMap& map, const std::vector<std::string>& tokens);
+		static void removeTokenFromLength(TextMap& map, std::size_t entryIndex, std::size_t tokenIndex);
 
 		static void checkMap(
 				std::string_view name,
@@ -1036,7 +1051,7 @@ namespace crawlservpp::Data {
 		}
 
 		const auto& articleEntry{this->articleMap.at(index)};
-		const auto articleEnd{articleEntry.pos + articleEntry.length};
+		const auto articleEnd{TextMapEntry::end(articleEntry)};
 
 		std::vector<std::string> copy;
 
@@ -1083,34 +1098,10 @@ namespace crawlservpp::Data {
 			);
 		}
 
-		const auto& articleEntry{
-			std::find_if(
-					this->articleMap.cbegin(),
-					this->articleMap.cend(),
-					[&id](const auto& entry) {
-						return entry.value == id;
-					}
-			)
-		};
-
-		if(articleEntry == this->articleMap.cend()) {
-			return std::vector<std::string>();
-		}
-
-		std::vector<std::string> copy;
-
-		copy.reserve(articleEntry->length);
-
-		const auto articleEnd{articleEntry->pos + articleEntry->length};
-
-		for(auto tokenIndex{articleEntry->pos}; tokenIndex < articleEnd; ++tokenIndex) {
-			copy.emplace_back(this->tokens[tokenIndex]);
-		}
-
-		return copy;
+		return Corpus::getTokensForEntry(this->articleMap, id, this->tokens);
 	}
 
-	//! Gets all articles at the specified date from a tokenized text corpus.
+	//! Gets the tokens of all articles at the specified date from a tokenized text corpus.
 	/*!
 	 * \param date A constant reference to a string
 	 *   containing the date of the articles to be
@@ -1146,31 +1137,7 @@ namespace crawlservpp::Data {
 			);
 		}
 
-		const auto& dateEntry{
-			std::find_if(
-					this->dateMap.cbegin(),
-					this->dateMap.cend(),
-					[&date](const auto& entry) {
-						return entry.value == date;
-					}
-			)
-		};
-
-		if(dateEntry == this->dateMap.cend()) {
-			return std::vector<std::string>();
-		}
-
-		const auto dateEnd{dateEntry->pos + dateEntry->length};
-
-		std::vector<std::string> copy;
-
-		copy.reserve(dateEntry->length);
-
-		for(auto tokenIndex{dateEntry->pos}; tokenIndex < dateEnd; ++tokenIndex) {
-			copy.emplace_back(this->tokens[tokenIndex]);
-		}
-
-		return copy;
+		return Corpus::getTokensForEntry(this->dateMap, date, this->tokens);
 	}
 
 	//! Gets the tokens of all articles from a tokenized corpus.
@@ -1199,7 +1166,7 @@ namespace crawlservpp::Data {
 
 			copy.back().reserve(article.length);
 
-			const auto articleEnd{article.pos + article.length};
+			const auto articleEnd{TextMapEntry::end(article)};
 
 			for(auto tokenIndex{article.pos}; tokenIndex < articleEnd; ++tokenIndex) {
 				copy.back().emplace_back(this->tokens[tokenIndex]);
@@ -3118,7 +3085,9 @@ namespace crawlservpp::Data {
 	 *   the corpus.
 	 *
 	 * \throws Corpus::Exception if the
-	 *  corpus has not been tokenized.
+	 *   corpus has not been tokenized.
+	 *
+	 * \sa reTokenize
 	 */
 	inline std::size_t Corpus::filterArticles(const ArticleFunc& callbackArticle, StatusSetter& statusSetter) {
 		if(!(this->tokenized)) {
@@ -3164,6 +3133,50 @@ namespace crawlservpp::Data {
 		}
 
 		return removed;
+	}
+
+	//! Re-tokenizes a corpus, removing all empty tokens, articles, and dates.
+	/*!
+	 * \throws Corpus::Exception if the
+	 *   corpus has not been tokenized.
+	 */
+	inline void Corpus::reTokenize() {
+		if(!(this->tokenized)) {
+			throw Exception("Corpus::reTokenize(): Corpus has not been tokenized");
+		}
+
+		// remove empty dates and articles
+		Corpus::removeEmptyEntries(this->articleMap, this->tokens);
+		Corpus::removeEmptyEntries(this->dateMap, this->tokens);
+
+		// remove empty tokens from remaining dates and articles
+		std::size_t dateIndex{};
+		std::size_t articleIndex{};
+		std::size_t removed{};
+
+		for(std::size_t tokenIndex{}; tokenIndex < this->tokens.size(); ++tokenIndex) {
+			Corpus::skipAndTrimEntriesBefore(this->dateMap, dateIndex, tokenIndex, removed);
+			Corpus::skipAndTrimEntriesBefore(this->articleMap, dateIndex, tokenIndex, removed);
+
+			if(this->tokens[tokenIndex].empty()) {
+				Corpus::removeTokenFromLength(this->dateMap, dateIndex, tokenIndex);
+				Corpus::removeTokenFromLength(this->articleMap, articleIndex, tokenIndex);
+
+				++removed;
+			}
+		}
+
+		// remove empty tokens
+		this->tokens.erase(
+				std::remove_if(
+						this->tokens.begin(),
+						this->tokens.end(),
+						[](const auto& token) {
+							return token.empty();
+						}
+				),
+				this->tokens.end()
+		);
 	}
 
 	/*
@@ -4340,6 +4353,39 @@ namespace crawlservpp::Data {
 		return statusSetter.isRunning();
 	}
 
+	// get all tokens that belong to a specific date or article
+	inline std::vector<std::string> Corpus::getTokensForEntry(
+			const TextMap& map,
+			const std::string& id,
+			const std::vector<std::string>& tokens
+	) {
+		const auto& found{
+			std::find_if(
+					map.cbegin(),
+					map.cend(),
+					[&id](const auto& entry) {
+						return entry.value == id;
+					}
+			)
+		};
+
+		if(found == map.cend()) {
+			return std::vector<std::string>();
+		}
+
+		const auto entryEnd{TextMapEntry::end(*found)};
+
+		std::vector<std::string> copy;
+
+		copy.reserve(found->length);
+
+		for(auto tokenIndex{found->pos}; tokenIndex < entryEnd; ++tokenIndex) {
+			copy.emplace_back(tokens[tokenIndex]);
+		}
+
+		return copy;
+	}
+
 	// add corpus to combined corpus, return whether thread is still running
 	inline bool Corpus::addCorpus(
 			Corpus& from,
@@ -4557,7 +4603,7 @@ namespace crawlservpp::Data {
 		return TextMapEntry::end(map.back());
 	}
 
-	// skip map entries before current position, return whether entries have been skipped
+	// skip map entries before current position
 	inline void Corpus::skipEntriesBefore(
 			const TextMap& map,
 			std::size_t& entryIndex,
@@ -4586,6 +4632,26 @@ namespace crawlservpp::Data {
 
 		if(skipped) {
 			inEntryTo = false;
+		}
+	}
+
+	// skip map entries before current position
+	inline void Corpus::skipAndTrimEntriesBefore(
+			TextMap& map,
+			std::size_t& entryIndex,
+			std::size_t pos,
+			std::size_t removed
+	) {
+		while(
+				entryIndex < map.size()
+				&& (
+						TextMapEntry::end(map[entryIndex]) <= pos
+						|| map[entryIndex].length == 0
+				)
+		) {
+			map[entryIndex].pos -= removed;
+
+			++entryIndex;
 		}
 	}
 
@@ -4686,6 +4752,39 @@ namespace crawlservpp::Data {
 		}
 
 		return 0;
+	}
+
+	// remove empty entries from map
+	inline void Corpus::removeEmptyEntries(TextMap& map, const std::vector<std::string>& tokens) {
+		map.erase(
+				std::remove_if(
+						map.begin(),
+						map.end(),
+						[&tokens](const auto& entry) {
+							const auto end{TextMapEntry::end(entry)};
+
+							for(auto tokenIndex{entry.pos}; tokenIndex < end; ++tokenIndex) {
+								if(!(tokens[tokenIndex].empty())) {
+									return false;
+								}
+							}
+
+							return true;
+						}
+				),
+				map.end()
+		);
+	}
+
+	// remove token from length
+	inline void Corpus::removeTokenFromLength(TextMap& map, std::size_t entryIndex, std::size_t tokenIndex) {
+		if(
+				entryIndex < map.size()
+				&& tokenIndex > map[entryIndex].pos
+				&& tokenIndex < TextMapEntry::end(map[entryIndex])
+		) {
+			--(map[entryIndex].length);
+		}
 	}
 
 	// check article or date map for inconsistencies, throws Corpus::Exception
