@@ -22,9 +22,11 @@
 [submodule "crawlserv/src/_extern/EigenRand"]
 	path = crawlserv/src/_extern/EigenRand
 	url = https://github.com/bab2min/EigenRand
+	branch = main
 [submodule "crawlserv/src/_extern/variant"]
 	path = crawlserv/src/_extern/variant
 	url = https://github.com/mapbox/variant
 [submodule "crawlserv/src/_extern/tomotopy"]
 	path = crawlserv/src/_extern/tomotopy
 	url = https://github.com/bab2min/tomotopy
+	branch = main
