@@ -17,7 +17,7 @@
 		"label": "Use tf-idf term weighting",
 		"description": "If enabled, terms will be weighted according to their term frequency–inverse document frequency (tf-idf).",
 		"simple": true,
-		"position": 6
+		"position": 7
 	},
 	"iterations": {
 		"type": "number",
@@ -45,7 +45,7 @@
 		"label": "Min. word frequency:",
 		"description": "The minimum total occurrence of a word to be part of the training data.",
 		"simple": true,
-		"position": 3
+		"position": 4
 	},
 	"min.df": {
 		"type": "number",
@@ -55,7 +55,16 @@
 		"label": "Min. document frequency:",
 		"description": "The minimum number of documents in which a word needs to occur to be part of the training data.",
 		"simple": true,
-		"position": 4
+		"position": 5
+	},
+	"optimize.every": {
+		"type": "number",
+		"min": 0,
+		"default": 10,
+		"label": "Optimize every:",
+		"description": "The optimization interval for the model parameters, in training iterations.",
+		"simple": true,
+		"position": 3
 	},
 	"remove.top.n": {
 		"type": "number",
@@ -65,7 +74,7 @@
 		"label": "Remove top N words:",
 		"description": "The number of most common words to be considered stop words and removed from the training data.",
 		"simple": true,
-		"position": 5
+		"position": 6
 	},
 	"threads": {
 		"type": "number",
