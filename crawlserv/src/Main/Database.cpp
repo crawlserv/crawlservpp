@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -7426,8 +7426,8 @@ namespace crawlservpp::Main {
 	 *   False if it contains data.
 	 *
 	 * \throws Main::Database::Exception if no table
-	 *   name has been specified, i.e. the
-	 *   string containing the name is empty.
+	 *   has been specified, i.e. the string
+	 *   containing the name is empty.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while checking the
 	 *   content of the given table in the
@@ -7488,8 +7488,8 @@ namespace crawlservpp::Main {
 	 *   in the database. False otherwise.
 	 *
 	 * \throws Main::Database::Exception if no table
-	 *   name has been specified, i.e. the
-	 *   string containing the name is empty.
+	 *   has been specified, i.e. the string
+	 *   containing the name is empty.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while checking the
 	 *   existence of the given table in the
@@ -7556,9 +7556,9 @@ namespace crawlservpp::Main {
 	 *   otherwise.
 	 *
 	 * \throws Main::Database::Exception if no table
-	 *   or column name has been specified, i.e.
-	 *   one of the strings containing the name
-	 *   and the column is empty.
+	 *   or columns have been specified, i.e. one of
+	 *   the strings containing the name and the
+	 *   column is empty.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while checking the
 	 *   existence of the given column, e.g.
@@ -7633,9 +7633,9 @@ namespace crawlservpp::Main {
 	 *   specifiers like 'UNSIGNED'.
 	 *
 	 * \throws Main::Database::Exception if no table
-	 *   or column name has been specified, i.e.
-	 *   one of the strings containing the name
-	 *   and the column is empty.
+	 *   or column has been specified, i.e. one of
+	 *   the strings containing the name and the
+	 *   column is empty.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while retrieving the
 	 *   type of the given column, e.g. if the
@@ -8830,11 +8830,11 @@ namespace crawlservpp::Main {
 	 *   structure containing the data to be
 	 *   inserted.
 	 *
-	 * \throws Main::Database::Exception if no column
-	 *   name or no column type is specified in
-	 *   the given data structure, if the given
-	 *   data is too large, or if an invalid data
-	 *   has been encountered.
+	 * \throws Main::Database::Exception if no table,
+	 *   columns, or column type have been specified
+	 *   in the given data structure, if the given data
+	 *   is too large, or if an invalid data has been
+	 *   encountered.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while inserting the data.
 	 *
@@ -8842,6 +8842,13 @@ namespace crawlservpp::Main {
 	 */
 	void Database::insertCustomData(const Data::InsertValue& data) {
 		// check argument
+		if(data.table.empty()) {
+			throw Database::Exception(
+					"Main::Database::insertCustomData():"
+					" No table specified"
+			);
+		}
+
 		if(data.column.empty()) {
 			throw Database::Exception(
 					"Main::Database::insertCustomData():"
@@ -8987,10 +8994,10 @@ namespace crawlservpp::Main {
 	 *   structure containing the data to be
 	 *   inserted.
 	 *
-	 * \throws Main::Database::Exception if no columns
-	 *   or no column type are specified in the
-	 *   given data structure, if the given data
-	 *   is too large, or if an invalid data has
+	 * \throws Main::Database::Exception if no table,
+	 *   columns, or column type have been specified
+	 *   in the given data structure, if the given
+	 *   data is too large, or if an invalid data has
 	 *   been encountered.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while inserting the data.
@@ -8999,6 +9006,13 @@ namespace crawlservpp::Main {
 	 */
 	void Database::insertCustomData(const Data::InsertFields& data) {
 		// check argument
+		if(data.table.empty()) {
+			throw Database::Exception(
+					"Main::Database::insertCustomData():"
+					" No table specified"
+			);
+		}
+
 		if(data.columns_values.empty()) {
 			throw Database::Exception(
 					"Main::Database::insertCustomData():"
@@ -9231,9 +9245,9 @@ namespace crawlservpp::Main {
 	 *   structure containing the data to be
 	 *   inserted.
 	 *
-	 * \throws Main::Database::Exception if no columns
-	 *   are specified in the given data
-	 *   structure, if the given data is too
+	 * \throws Main::Database::Exception if no table
+	 *   or columns have been specified in the given
+	 *   data structure, if the given data is too
 	 *   large, or if an invalid data has been
 	 *   encountered.
 	 * \throws Main::Database::Exception if a MySQL
@@ -9243,6 +9257,13 @@ namespace crawlservpp::Main {
 	 */
 	void Database::insertCustomData(const Data::InsertFieldsMixed& data) {
 		// check argument
+		if(data.table.empty()) {
+			throw Database::Exception(
+					"Main::Database::insertCustomData():"
+					" No table specified"
+			);
+		}
+
 		if(data.columns_types_values.empty()) {
 			throw Database::Exception(
 					"Main::Database::insertCustomData():"
@@ -9413,9 +9434,9 @@ namespace crawlservpp::Main {
 	 *   structure containing the data to be
 	 *   updated.
 	 *
-	 * \throws Main::Database::Exception if no column
-	 *   name or no column type is specified in
-	 *   the given data structure, if the given
+	 * \throws Main::Database::Exception if no table,
+	 *   columns, or column type have been specified
+	 *   in the given data structure, if the given
 	 *   data is too large, or if an invalid data
 	 *   has been encountered.
 	 * \throws Main::Database::Exception if a MySQL
@@ -10490,7 +10511,7 @@ namespace crawlservpp::Main {
 	 *   table to be deleted, if it exists.
 	 *
 	 * \throws Main::Database::Exception if no table
-	 *   is specified, i.e. if the string
+	 *   has been specified, i.e. if the string
 	 *   containing the name of the table is
 	 *   empty.
 	 * \throws Main::Database::Exception if a MySQL
@@ -10538,12 +10559,11 @@ namespace crawlservpp::Main {
 	 *   table.
 	 *
 	 * \throws Main::Database::Exception if no table,
-	 *   no column, or no column type is
-	 *   specified, i.e. if one of the strings
-	 *   containing the name of the table, the
-	 *   name of the column, and the type of the
-	 *   column is empty, or if a column
-	 *   reference is incomplete.
+	 *   column, or column type has been specified,
+	 *   i.e. if one of the strings containing the
+	 *   name of the table, the name of the column,
+	 *   and the type of the column is empty, or if
+	 *   a column reference is incomplete.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while adding the column
 	 *   to the given table in the database.
@@ -10626,10 +10646,9 @@ namespace crawlservpp::Main {
 	 *   table to be compressed.
 	 *
 	 * \throws Main::Database::Exception if no table
-	 *   is specified, i.e. if the string
-	 *   containing the name of the table is
-	 *   empty, or if a row format could not be
-	 *   determined.
+	 *   is specified, i.e. if the string containing
+	 *   the name of the table is empty, or if a row
+	 *   format could not be determined.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while compressing the
 	 *   table in the database.
@@ -10709,10 +10728,9 @@ namespace crawlservpp::Main {
 	 *   during the cloning of the table.
 	 *
 	 * \throws Main::Database::Exception if no table
-	 *   is specified, i.e. if the string
-	 *   containing the name of the table is
-	 *   empty, or if the properties of a
-	 *   table could not be retrieved.
+	 *   is specified, i.e. if the string containing
+	 *   the name of the table is empty, or if the
+	 *   properties of a table could not be retrieved.
 	 * \throws Main::Database::Exception if a MySQL
 	 *   error occured while cloning the table
 	 *   into the other data directory.
