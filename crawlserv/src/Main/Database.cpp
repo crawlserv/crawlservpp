@@ -1914,7 +1914,10 @@ namespace crawlservpp::Main {
 	 *   associated with the given target table
 	 *   from the database.
 	 */
-	Database::IdString Database::getWebsiteNamespaceFromTargetTable(const std::string& type, std::uint64_t tableId) {
+	Database::IdString Database::getWebsiteNamespaceFromTargetTable(
+			const std::string& type,
+			std::uint64_t tableId
+	) {
 		std::uint64_t websiteId{};
 
 		// check arguments
@@ -2090,7 +2093,7 @@ namespace crawlservpp::Main {
 
 		if(!numberString.empty()) {
 			try {
-				n = std::stoul(numberString, nullptr);
+				n = std::stoull(numberString, nullptr);
 			}
 			catch(const std::logic_error& e) {
 				throw Exception(
@@ -5946,9 +5949,11 @@ namespace crawlservpp::Main {
 	 *   error occured while updating the
 	 *   configuration in the database.
 	 */
+	void Database::updateConfiguration(
+			std::uint64_t configId,
+			const ConfigProperties& configProperties
 
-	// update configuration in the database (NOTE: module will not be updated!), throws Database::Exception
-	void Database::updateConfiguration(std::uint64_t configId, const ConfigProperties& configProperties) {
+	) {
 		// check arguments
 		if(configId == 0) {
 			throw Database::Exception(
@@ -6213,13 +6218,17 @@ namespace crawlservpp::Main {
 									columnType.begin(),
 									columnType.end(),
 									columnType.begin(),
-									::tolower
+									[](const auto c) {
+										return std::tolower(c);
+									}
 							);
 							std::transform(
 									targetType.begin(),
 									targetType.end(),
 									targetType.begin(),
-									::tolower
+									[](const auto c) {
+										return std::tolower(c);
+									}
 							);
 
 							// remove size from retrieved data type if no size has been specified
@@ -10755,7 +10764,10 @@ namespace crawlservpp::Main {
 	 *   error occured while cloning the table
 	 *   into the other data directory.
 	 */
-	std::queue<std::string> Database::cloneTable(const std::string& tableName, const std::string& destDir) {
+	std::queue<std::string> Database::cloneTable(
+			const std::string& tableName,
+			const std::string& destDir
+	) {
 		std::queue<std::string> constraints;
 
 		// check argument

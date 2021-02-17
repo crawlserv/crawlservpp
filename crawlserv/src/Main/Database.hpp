@@ -78,10 +78,11 @@
 #include <mysql_connection.h>
 
 #include <algorithm>	// std::find, std::find_if, std::for_each, std::remove, std::sort, std::transform, std::unique
-#include <cctype>		// ::tolower
+#include <cctype>		// std::tolower
 #include <chrono>		// std::chrono
+#include <cmath>		// std::isnan
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint32_t, std::uint64_t
+#include <cstdint>		// std::uint8_t, std::uint32_t, std::uint64_t
 #include <fstream>		// std::ifstream
 #include <functional>	// std::function
 #include <iostream>		// std::cout, std::endl, std::flush
@@ -91,10 +92,10 @@
 #include <queue>		// std::queue
 #include <sstream>		// std::istringstream, std::ostringstream
 #include <stdexcept>	// std::logic_error
-#include <string>		// std::getline, std::stoul, std::string, std::to_string
+#include <string>		// std::getline, std::stoull, std::string, std::to_string
 #include <string_view>	// std::string_view, std::string_view_literals
 #include <thread>		// std::this_thread
-#include <tuple>		// std::get(std::tuple)
+#include <tuple>		// std::get<...>
 #include <utility>		// std::pair, std::swap
 #include <vector>		// std::vector
 
@@ -993,8 +994,9 @@ namespace crawlservpp::Main {
 
 				std::cout << "#";
 
-				if(counter)
+				if(counter > 0) {
 					std::cout << counter;
+				}
 
 				std::cout << std::flush;
 #endif
