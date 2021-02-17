@@ -528,6 +528,24 @@ namespace crawlservpp::Data {
 
 			return result;
 		}
+
+		template<tomoto::TermWeight _tw, typename _RandGen>
+		[[nodiscard]] static std::vector<float> removeDeadTopics(
+				const std::vector<float>& results,
+				const std::unique_ptr<tomoto::HDPModel<_tw, _RandGen>>& model
+		) {
+			std::vector<float> filtered;
+
+			filtered.reserve(results.size());
+
+			for(std::size_t topic{}; topic < results.size(); ++topic) {
+				if(model->isLiveTopic(topic)) {
+					filtered.push_back(results[topic]);
+				}
+			}
+
+			return filtered;
+		}
 	};
 
 	/*
@@ -2263,14 +2281,22 @@ namespace crawlservpp::Data {
 			const tomoto::DocumentBase * doc
 	) const {
 		if(isHdp) {
+			std::vector<float> topics;
+
 			if(isIdf) {
-				return this->hdpModelIdf->getTopicsByDoc(
-						*dynamic_cast<const tomoto::DocumentHDP<tomoto::TermWeight::idf> *>(doc)
+				return TopicModel::removeDeadTopics(
+						this->hdpModelIdf->getTopicsByDoc(
+								*dynamic_cast<const tomoto::DocumentHDP<tomoto::TermWeight::idf> *>(doc)
+						),
+						this->hdpModelIdf
 				);
 			}
 
-			return this->hdpModel->getTopicsByDoc(
-					*dynamic_cast<const tomoto::DocumentHDP<tomoto::TermWeight::one> *>(doc)
+			return TopicModel::removeDeadTopics(
+					this->hdpModel->getTopicsByDoc(
+							*dynamic_cast<const tomoto::DocumentHDP<tomoto::TermWeight::one> *>(doc)
+					),
+					this->hdpModel
 			);
 		}
 
