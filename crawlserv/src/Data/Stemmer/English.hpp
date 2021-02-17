@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,8 +38,6 @@
 
 #include "../../_extern/porter2_stemmer/porter2_stemmer.h"
 
-#include <algorithm>	// std::remove_if, std::transform
-#include <cctype>		// ::tolower
 #include <string>		// std::string
 
 //! Namespace for linguistic stemmers.
