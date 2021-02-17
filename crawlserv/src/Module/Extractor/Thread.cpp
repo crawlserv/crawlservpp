@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,9 +29,6 @@
  */
 
 #include "Thread.hpp"
-
-#define DBG_BEG	try {
-#define DBG_END(x) } catch(const std::out_of_range& e) { throw Exception(std::string(e.what()) + " in " + #x); }
 
 namespace crawlservpp::Module::Extractor {
 
@@ -516,7 +513,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// set sources
-	void Thread::setUpSources() { DBG_BEG
+	void Thread::setUpSources() {
 		std::queue<StringString> sources;
 
 		for(std::size_t index{}; index < this->config.variablesName.size(); ++index) {
@@ -546,8 +543,6 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		this->database.setSources(sources);
-
-		DBG_END(setUpSources)
 	}
 
 	// create table names for locking
@@ -750,7 +745,7 @@ namespace crawlservpp::Module::Extractor {
 	 */
 
 	// initialize queries, throws Thread::Exception
-	void Thread::initQueries() { DBG_BEG
+	void Thread::initQueries() {
 		try {
 			this->addQueries(
 					this->config.extractingErrorFail,
@@ -993,8 +988,6 @@ namespace crawlservpp::Module::Extractor {
 					+ std::string(e.view())
 			);
 		}
-
-		DBG_END(initQueries)
 	}
 
 	// delete queries
@@ -1075,7 +1068,7 @@ namespace crawlservpp::Module::Extractor {
 			const std::vector<std::string>& names,
 			const std::vector<std::uint64_t>& queryIds,
 			std::vector<QueryStruct>& propertiesTo
-	) { DBG_BEG
+	) {
 		// reserve memory first
 		propertiesTo.reserve(queryIds.size());
 
@@ -1110,8 +1103,6 @@ namespace crawlservpp::Module::Extractor {
 			// add even empty queries
 			propertiesTo.emplace_back(this->addQuery(*it, properties));
 		}
-
-		DBG_END(addQueriesTo)
 	}
 
 	/*
@@ -1303,7 +1294,7 @@ namespace crawlservpp::Module::Extractor {
 			if(this->config.pagingAliasAdd > 0) {
 				try {
 					pageAlias = std::to_string(
-							std::stol(pageNames.front())
+							std::stoll(pageNames.front())
 							+ this->config.pagingAliasAdd
 					);
 				}
@@ -1726,7 +1717,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// get values of variables
-	void Thread::extractingGetVariableValues(std::vector<StringString>& variables) { DBG_BEG
+	void Thread::extractingGetVariableValues(std::vector<StringString>& variables) {
 		std::size_t parsedSource{};
 		std::size_t queryCounter{};
 		std::string logEntry;
@@ -1857,7 +1848,7 @@ namespace crawlservpp::Module::Extractor {
 
 					try {
 						aliasValue = std::to_string(
-								std::stol(value)
+								std::stoll(value)
 								+ aliasAdd
 						);
 					}
@@ -1887,12 +1878,10 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 		}
-
-		DBG_END(extractingGetVariableValues)
 	}
 
 	// check values of variables, return true if the current URL needs to be skipped
-	bool Thread::extractingIsSkip(const std::vector<StringString>& variables) { DBG_BEG
+	bool Thread::extractingIsSkip(const std::vector<StringString>& variables) {
 		std::queue<std::string> warnings;
 
 		bool skip{false};
@@ -1928,12 +1917,10 @@ namespace crawlservpp::Module::Extractor {
 		this->logWarningsUrl(warnings);
 
 		return skip;
-
-		DBG_END(extractingIsSkip)
 	}
 
 	// get values of global tokens
-	void Thread::extractingGetTokenValues(std::vector<StringString>& variables) { DBG_BEG
+	void Thread::extractingGetTokenValues(std::vector<StringString>& variables) {
 		if(this->config.pagingVariable.empty()) {
 			// copy headers
 			std::vector<std::string> headers(this->config.variablesTokenHeaders);
@@ -2039,8 +2026,6 @@ namespace crawlservpp::Module::Extractor {
 				}
 			}
 		}
-
-		DBG_END(extractingGetTokenValues)
 	}
 
 	// get values of page-specific tokens
@@ -2048,7 +2033,7 @@ namespace crawlservpp::Module::Extractor {
 			const std::string& page,
 			std::vector<StringString>& tokens,
 			const std::vector<StringString>& variables
-	) { DBG_BEG
+	) {
 		if(this->config.pagingVariable.empty()) {
 			return;
 		}
@@ -2125,8 +2110,6 @@ namespace crawlservpp::Module::Extractor {
 				);
 			}
 		}
-
-		DBG_END(extractingGetPageTokenValues)
 	}
 
 	// get value of token
@@ -2484,7 +2467,7 @@ namespace crawlservpp::Module::Extractor {
 	}
 
 	// extract data by parsing page content, return number of extracted datasets
-	std::size_t Thread::extractingPage(std::uint64_t contentId, const std::string& url) { DBG_BEG
+	std::size_t Thread::extractingPage(std::uint64_t contentId, const std::string& url) {
 		std::queue<std::string> queryWarnings;
 
 		// check for errors if necessary
@@ -2757,13 +2740,13 @@ namespace crawlservpp::Module::Extractor {
 					}
 					else {
 						// concatenate elements
-						std::string result(
-								Helper::Strings::join(
-										extractedFieldValues,
-										this->config.extractingFieldDelimiters.at(index),
-										this->config.extractingFieldIgnoreEmpty.at(index)
-								)
-							);
+						std::string result{
+							Helper::Strings::join(
+									extractedFieldValues,
+									this->config.extractingFieldDelimiters.at(index),
+									this->config.extractingFieldIgnoreEmpty.at(index)
+							)
+						};
 
 						// if necessary, tidy text
 						if(this->config.extractingFieldTidyTexts.at(index)) {
@@ -2882,7 +2865,7 @@ namespace crawlservpp::Module::Extractor {
 						// stringify and add extracted element as JSON array with one boolean value as string
 						dataset.fields.emplace_back(
 								Helper::Json::stringify(
-										booleanResult ? std::string("true") : std::string("false")
+										booleanResult ? "true" : "false"
 								)
 						);
 					}
@@ -2923,12 +2906,10 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		return this->results.size() - before;
-
-		DBG_END(extractingPage)
 	}
 
 	// extract linked data by parsing page content, return number of extracted datasets
-	std::size_t Thread::extractingLinked(std::uint64_t contentId, const std::string& url) { DBG_BEG
+	std::size_t Thread::extractingLinked(std::uint64_t contentId, const std::string& url) {
 		std::queue<std::string> queryWarnings;
 
 		// get datasets for linked data
@@ -3101,13 +3082,13 @@ namespace crawlservpp::Module::Extractor {
 					}
 					else {
 						// concatenate elements
-						std::string result(
-								Helper::Strings::join(
-										linkedValues,
-										this->config.linkedDelimiters.at(index),
-										this->config.linkedIgnoreEmpty.at(index)
-								)
-							);
+						std::string result{
+							Helper::Strings::join(
+									linkedValues,
+									this->config.linkedDelimiters.at(index),
+									this->config.linkedIgnoreEmpty.at(index)
+							)
+						};
 
 						// if necessary, tidy text
 						if(this->config.linkedTidyTexts.at(index)) {
@@ -3226,7 +3207,7 @@ namespace crawlservpp::Module::Extractor {
 						// stringify and add extracted element as JSON array with one boolean value as string
 						dataset.fields.emplace_back(
 								Helper::Json::stringify(
-										booleanResult ? std::string("true") : std::string("false")
+										booleanResult ? "true" : "false"
 								)
 						);
 					}
@@ -3258,8 +3239,6 @@ namespace crawlservpp::Module::Extractor {
 		}
 
 		return this->linked.size() - before;
-
-		DBG_END(extractingLinked)
 	}
 
 	// check libcurl code and decide whether to retry or skip
