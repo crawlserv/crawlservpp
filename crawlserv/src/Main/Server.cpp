@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -75,7 +75,8 @@ namespace crawlservpp::Main {
 
 		// initialize directories
 		Server::initCacheDir();
-		Server::initCookiesDir();
+		Server::initDir(cookieDir);
+		Server::initDir(downloadDir);
 		Server::initDebuggingDir(dbSettings.debugLogging, dbSettings.debugDir);
 
 		// initialize server
@@ -4635,9 +4636,9 @@ namespace crawlservpp::Main {
 		}
 	}
 
-	// create cookies directory if it does not exist
-	void Server::initCookiesDir() {
-		Helper::FileSystem::createDirectoryIfNotExists(cookieDir);
+	// create directory if it does not exist
+	void Server::initDir(std::string_view directory) {
+		Helper::FileSystem::createDirectoryIfNotExists(directory);
 	}
 
 	// create and save debug directory if needed
@@ -4666,6 +4667,11 @@ namespace crawlservpp::Main {
 	void Server::initCallbacks() {
 		this->webServer.setAcceptCallback([this](ConnectionPtr connectionPtr) {
 			return this->onAccept(connectionPtr);
+		});
+
+		this->webServer.setLogCallback(
+				[this](const std::string& entry) {
+			return this->database.log(entry);
 		});
 
 		this->webServer.setRequestCallback(
