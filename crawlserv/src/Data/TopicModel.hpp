@@ -85,6 +85,7 @@
 #include <string>			// std::string, std::to_string
 #include <string_view>		// std::string_view, std::string_view_literals
 #include <unordered_map>	// std::unordered_map
+#include <unordered_set>	// std::unordered_set
 #include <utility>			// std::move, std::pair
 #include <vector>			// std::vector
 
@@ -277,7 +278,9 @@ namespace crawlservpp::Data {
 				std::size_t topic,
 				std::size_t n
 		) const;
-		[[nodiscard]] std::vector<std::pair<std::string, std::vector<float>>> getDocumentsTopics() const;
+		[[nodiscard]] std::vector<std::pair<std::string, std::vector<float>>> getDocumentsTopics(
+				std::unordered_set<std::string>& done
+		) const;
 		[[nodiscard]] std::vector<std::vector<float>> getDocumentsTopics(
 				const std::vector<std::vector<std::string>>& documents,
 				std::size_t maxIterations,
@@ -1114,6 +1117,12 @@ namespace crawlservpp::Data {
 	/*!
 	 * Unnamed documents inside the model will be ignored.
 	 *
+	 * \param done An unordered map which will be used to
+	 *   not classify any article twice. All articles with
+	 *   an ID contained in this map will be ignored. The
+	 *   IDs of all articles that will be returned will be
+	 *   added to the map.
+	 *
 	 * \returns A vector containing pairs of a string
 	 *   containing the name of the document and a vector
 	 *   of floating-point numbers indicating the topic
@@ -1126,7 +1135,9 @@ namespace crawlservpp::Data {
 	 *   have been added, the topic modeller has been
 	 *   cleared, or the model has not been trained yet.
 	 */
-	inline std::vector<std::pair<std::string, std::vector<float>>> TopicModel::getDocumentsTopics() const {
+	inline std::vector<std::pair<std::string, std::vector<float>>> TopicModel::getDocumentsTopics(
+			std::unordered_set<std::string>& done
+	) const {
 		bool isHdp{false};
 		bool isIdf{false};
 
@@ -1141,11 +1152,14 @@ namespace crawlservpp::Data {
 
 			DATA_TOPICMODEL_RETRIEVE(doc, isHdp, isIdf, getDoc, docId);
 
-			if(!(doc->docUid.empty())) {
-				results.emplace_back(
-						doc->docUid,
-						this->getInferredTopics(isHdp, isIdf, doc)
-				);
+			if(
+					!(doc->docUid.empty())
+					&& done.insert(doc->docUid).second
+			) {
+					results.emplace_back(
+							doc->docUid,
+							this->getInferredTopics(isHdp, isIdf, doc)
+					);
 			}
 		}
 
