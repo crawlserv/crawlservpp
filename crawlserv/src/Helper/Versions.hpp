@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,9 +38,12 @@
 
 #include "../_extern/asio/asio/include/asio/version.hpp"
 #include "../_extern/jsoncons/include/jsoncons/config/version.hpp"
-#include "../_extern/mongoose/mongoose.h"
 #include "../_extern/rapidjson/include/rapidjson/rapidjson.h"
 #include "../_extern/wapiti/wapiti.h"
+
+extern "C" {
+	#include "../_extern/mongoose/mongoose.h"
+}
 
 #include <aspell.h>
 #include <boost/version.hpp>

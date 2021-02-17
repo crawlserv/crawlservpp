@@ -342,7 +342,6 @@ target_link_libraries(${PROJECT_NAME} ${uriparser_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${ZLIB_LIBRARIES})
 
 # set required library options
-target_compile_definitions(${PROJECT_NAME} PRIVATE MG_ENABLE_HTTP_STREAMING_MULTIPART)
 target_compile_definitions(${PROJECT_NAME} PRIVATE PCRE2_CODE_UNIT_WIDTH=8)
 target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_HAS_STDSTRING)
 target_compile_definitions(${PROJECT_NAME} PRIVATE RAPIDJSON_NO_SIZETYPEDEFINE)
@@ -350,6 +349,8 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE ZLIB_CONST)
 
 # set optional library option
 target_compile_definitions(${PROJECT_NAME} PRIVATE JSONCONS_NO_DEPRECATED)
+target_compile_definitions(${PROJECT_NAME} PRIVATE MG_ENABLE_LOG=0)
+target_compile_definitions(${PROJECT_NAME} PRIVATE MG_MAX_RECV_BUF_SIZE=10000000000)
 
 # set temporary library option (see https://github.com/HowardHinnant/date/issues/435) 
 target_compile_definitions(${PROJECT_NAME} PRIVATE HAS_UNCAUGHT_EXCEPTIONS)
