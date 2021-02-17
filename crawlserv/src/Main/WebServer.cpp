@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,10 @@
 
 namespace crawlservpp::Main {
 
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor setting the file cache and initializing the web server.
 	/*!
 	 * \param fileCacheDirectory View of the
@@ -42,10 +46,8 @@ namespace crawlservpp::Main {
 	 *   save files uploaded to the server.
 	 */
 	WebServer::WebServer(std::string_view fileCacheDirectory)
-			: fileCache(fileCacheDirectory),
-			  eventManager{}
-	{
-		mg_mgr_init(&(this->eventManager), nullptr);
+	: fileCache(fileCacheDirectory) {
+		mg_mgr_init(&(this->eventManager));
 	}
 
 	//! Destructor freeing the web server.
@@ -57,8 +59,14 @@ namespace crawlservpp::Main {
 	 *   member data when polled.
 	 */
 	WebServer::~WebServer() {
+		this->isShutdown = true;
+
 		mg_mgr_free(&(this->eventManager));
 	}
+
+	/*
+	 * INITIALIZATION
+	 */
 
 	//! Initializes the web server for usage over HTTP.
 	/*!
@@ -73,11 +81,16 @@ namespace crawlservpp::Main {
 	 *   not be bound to the given port.
 	 */
 	void WebServer::initHTTP(const std::string& port) {
+		std::string listenTo{listenToAddress};
+
+		listenTo += port;
+
 		ConnectionPtr connection{
-			mg_bind(
+			mg_http_listen(
 					&(this->eventManager),
-					port.c_str(),
-					WebServer::eventHandler
+					listenTo.c_str(),
+					WebServer::eventHandler,
+					static_cast<void *>(this)
 			)
 		};
 
@@ -88,13 +101,11 @@ namespace crawlservpp::Main {
 					+ port
 			);
 		}
-
-		// set user data (i.e. pointer to class)
-		connection->user_data = this;
-
-		// set protocol
-		mg_set_protocol_http_websocket(connection);
 	}
+
+	/*
+	 * SETTERS
+	 */
 
 	//! Configures cross-origin resource sharing (CORS).
 	/*!
@@ -115,6 +126,16 @@ namespace crawlservpp::Main {
 		std::swap(this->onAccept, callback);
 	}
 
+	//! Sets callback function for logging.
+	/*!
+	 * \param callback A callback function that will
+	 *   be called when the web server wants to log
+	 *   something.
+	 */
+	void WebServer::setLogCallback(LogCallback callback) {
+		std::swap(this->onLog, callback);
+	}
+
 	//! Sets callback function for HTTP requests.
 	/*!
 	 * \param callback A callback function that will
@@ -124,6 +145,10 @@ namespace crawlservpp::Main {
 	void WebServer::setRequestCallback(RequestCallback callback) {
 		std::swap(this->onRequest, callback);
 	}
+
+	/*
+	 * NETWORKING
+	 */
 
 	//! Polls the web server.
 	/*!
@@ -167,18 +192,16 @@ namespace crawlservpp::Main {
 		}
 
 		// send reply
-		std::string head;
+		std::string headers;
 
 		if(!type.empty()) {
-			head += "Content-Type: " + type + "\r\n";
+			headers += "Content-Type: " + type + "\r\n";
 		}
 
-		head += this->getCorsHeaders();
-
-		mg_send_head(connection, code, content.size(), head.c_str());
+		headers += this->getCorsHeaders();
 
 		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
-		mg_printf(connection, "%s", content.c_str());
+		mg_http_reply(connection, code, headers.c_str(), "%s", content.c_str());
 	}
 
 	//! Sends a file located in the file cache.
@@ -231,25 +254,38 @@ namespace crawlservpp::Main {
 		fullFileName += Helper::FileSystem::getPathSeparator();
 		fullFileName += fileName;
 
-		if(!Helper::FileSystem::contains(this->fileCache, fullFileName)) {
-			WebServer::sendError(connection, "Invalid file name");
+		try {
+			if(!Helper::FileSystem::contains(this->fileCache, fullFileName)) {
+				WebServer::sendError(connection, "Invalid file name");
 
-			return;
+				return;
+			}
+		}
+		catch(const Helper::FileSystem::Exception& e) {
+			throw Exception(
+					"WebServer::sendFile(): "
+					+ std::string(e.view())
+			);
 		}
 
 		// add CORS headers
-		std::string headers(this->getCorsHeaders());
-
-		// add attachment header
-		headers += "\r\nContent-Disposition: attachment; filename=\"" + fileName + "\"";
+		std::string headers{this->getCorsHeaders()};
 
 		// serve file from file cache
 		mg_http_serve_file(
 				connection,
-				static_cast<http_message *>(data),
+				static_cast<mg_http_message *>(data),
 				fullFileName.c_str(),
-				mg_mk_str("application/octet-stream"),
-				mg_mk_str_n(headers.c_str(), headers.size())
+				"application/octet-stream",
+				headers.c_str()
+		);
+
+		this->onLog(
+				"sent '"
+				+ fullFileName
+				+ "' to "
+				+ WebServer::getIP(connection)
+				+ "."
 		);
 	}
 
@@ -288,8 +324,8 @@ namespace crawlservpp::Main {
 				responseStr.c_str()
 		);
 
-		// set closing flag
-		WebServer::close(connection, false);
+		// close connection
+		WebServer::close(connection, true);
 	}
 
 	//! Closes a connection immediately.
@@ -317,9 +353,13 @@ namespace crawlservpp::Main {
 		}
 
 		// set closing flag
-		// NOLINTNEXTLINE(hicpp-signed-bitwise)
-		connection->flags |= (immediately ? MG_F_CLOSE_IMMEDIATELY : MG_F_SEND_AND_CLOSE);
+		connection->is_closing = immediately;
+		connection->is_draining = !immediately;
 	}
+
+	/*
+	 * STATIC HELPER FUNCTION
+	 */
 
 	//! Static helper function retrieving the client IP from a connection.
 	/*!
@@ -345,19 +385,17 @@ namespace crawlservpp::Main {
 
 		std::array<char, INET6_ADDRSTRLEN> ip{};
 
-		mg_sock_to_str(
-				connection->sock,
-				ip.data(),
-				INET6_ADDRSTRLEN,
-				// NOLINTNEXTLINE(hicpp-signed-bitwise)
-				MG_SOCK_STRINGIFY_REMOTE | MG_SOCK_STRINGIFY_IP
-		);
+		mg_ntoa(&(connection->peer), ip.data(), INET6_ADDRSTRLEN);
 
 		return std::string{ip.data()};
 	}
 
+	/*
+	 * EVENT HANDLERS (private)
+	 */
+
 	// static event handler, throws WebServer::Exception
-	void WebServer::eventHandler(ConnectionPtr connection, int event, void * data) {
+	void WebServer::eventHandler(ConnectionPtr connection, int event, void * data, void * arg) {
 		// check argument
 		if(connection == nullptr) {
 			throw Exception(
@@ -366,14 +404,14 @@ namespace crawlservpp::Main {
 			);
 		}
 
-		if(connection->user_data == nullptr) {
+		if(arg == nullptr) {
 			throw Exception(
 					"WebServer::eventHandler():"
 					" No WebServer instance has been specified"
 			);
 		}
 
-		static_cast<WebServer *>(connection->user_data)->eventHandlerInClass(
+		static_cast<WebServer *>(arg)->eventHandlerInClass(
 				connection,
 				event,
 				data
@@ -382,7 +420,13 @@ namespace crawlservpp::Main {
 
 	// event handler (in-class)
 	void WebServer::eventHandlerInClass(ConnectionPtr connection, int event, void * data) {
-		http_message * httpMessage{nullptr};
+		// check for shutdown
+		if(this->isShutdown) {
+			return;
+		}
+
+		// handle event
+		mg_http_message * httpMessage{nullptr};
 		std::string method;
 		std::string body;
 
@@ -393,61 +437,22 @@ namespace crawlservpp::Main {
 
 			break;
 
-		case MG_EV_HTTP_REQUEST:
-			// handle request event
-			httpMessage = static_cast<http_message *>(data);
-			method = std::string(httpMessage->method.p, httpMessage->method.len);
-			body = std::string(httpMessage->body.p, httpMessage->body.len);
+		case MG_EV_HTTP_MSG:
+			httpMessage = static_cast<mg_http_message *>(data);
 
-			this->onRequest(connection, method, body, data);
+			if(mg_http_match_uri(httpMessage, "/upload")) {
+				// handle file upload
+				this->uploadHandler(connection, httpMessage);
+			}
+			else {
+				// handle request
+				method = WebServer::toString(httpMessage->method);
+				body = WebServer::toString(httpMessage->body);
+
+				this->onRequest(connection, method, body, data);
+			}
 
 			break;
-
-		case MG_EV_HTTP_PART_BEGIN:
-		case MG_EV_HTTP_PART_DATA:
-		case MG_EV_HTTP_PART_END:
-			// reset file name before upload begins
-			if(event == MG_EV_HTTP_PART_BEGIN) {
-				this->oldFileName = "";
-			}
-
-			// handle file upload
-			if(
-					data != nullptr
-					&& static_cast<mg_http_multipart_part *>(data)->var_name != nullptr
-					&& strncmp(
-							static_cast<mg_http_multipart_part *>(data)->var_name,
-							fileUploadVarName.data(),
-							fileUploadVarName.length()
-					) == 0
-			) {
-				mg_file_upload_handler(
-						connection,
-						event,
-						data,
-						WebServer::generateFileName
-				);
-			}
-
-			if(event == MG_EV_HTTP_PART_END) {
-				// file upload finished: return name on server as plain text
-				// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
-				mg_printf(
-						connection,
-						"HTTP/1.1 200 OK\r\n"
-						"Content-Type: text/plain\r\n"
-						"Connection: close\r\n"
-						"%sr\n\r\n"
-						"%s",
-						this->getCorsHeaders().c_str(),
-						this->oldFileName.c_str()
-				);
-
-				// set closing flag
-				WebServer::close(connection, false);
-			}
-
-	    	break;
 
 		default:
 			// ignore unknown event
@@ -455,82 +460,450 @@ namespace crawlservpp::Main {
 		}
 	}
 
+	// multi-part upload handler
+	void WebServer::uploadHandler(ConnectionPtr connection, mg_http_message * msg) {
+		std::size_t pos{};
+		std::string boundary;
+		std::uint64_t size{};
+		std::string line;
+		std::vector<StringString> uploadHeaders;
+
+		if(
+				WebServer::parseHttpHeaders(msg->headers, boundary, size)
+				&& WebServer::getLine(msg->body, pos, line) /* first line of content */
+		) {
+			if(size > MG_MAX_RECV_BUF_SIZE) {
+				WebServer::sendError(connection, "Data too large");
+
+				this->onLog(
+						"received too large data from "
+						+ WebServer::getIP(connection)
+				);
+			}
+
+			std::string originFile;
+			std::string content;
+
+			while(
+					WebServer::isBoundary(line, boundary)
+					&& WebServer::getUploadHeaders(msg->body, pos, uploadHeaders)
+			) {
+				std::string fileName;
+				bool inFile{parseUploadHeaders(uploadHeaders, fileName)};
+
+				if(!WebServer::checkFileName(inFile, fileName, originFile)) {
+					WebServer::sendError(connection, "Cannot send unnamed or multiple files");
+
+					this->onLog(
+							"recevied unnamed or multiple file(s) from "
+							+ WebServer::getIP(connection)
+							+ " (not supported)."
+					);
+
+					return;
+				}
+
+				while(
+						WebServer::getLine(msg->body, pos, line)
+						&& !WebServer::isBoundary(line, boundary)
+						&& !WebServer::isFinalBoundary(line , boundary)
+				) {
+					if(inFile) {
+						content += line + "\n";
+					}
+				}
+			}
+
+			if(!content.empty()) {
+				// remove last newline
+				content.pop_back();
+			}
+
+			// get whether finished
+			if(WebServer::isFinalBoundary(line , boundary)) {
+				this->fileReceived(connection, originFile, content);
+			}
+			else {
+				WebServer::sendError(connection, "Incomplete data");
+
+				this->onLog(
+						"received incomplete data from "
+						+ WebServer::getIP(connection)
+				);
+			}
+		}
+		else {
+			WebServer::sendError(connection, "Misformed upload data");
+
+			this->onLog(
+					"received misformed data from "
+					+ WebServer::getIP(connection)
+			);
+		}
+	}
+
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
 	// generate CORS headers
 	std::string WebServer::getCorsHeaders() {
 		return	"Access-Control-Allow-Origin: " + this->cors + "\r\n"
-				"Access-Control-Allow-Methods: GET, POST\r\n"
-				"Access-Control-Allow-Headers: Content-Type";
+				"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+				"Access-Control-Allow-Headers: Content-Type\r\n";
 	}
 
-	// static file name generator, throws WebServer::Exception
-	mg_str WebServer::generateFileName(ConnectionPtr connection, mg_str fileName) {
-		// check argument
-		if(connection == nullptr) {
-			throw Exception(
-					"WebServer::generateFileName():"
-					" No connection has been specified ["
-					+ std::string(fileName.p, fileName.len)
-					+ "]"
-			);
-		}
+	// save received file and send new file name
+	void WebServer::fileReceived(ConnectionPtr from, const std::string& name, const std::string& content) {
+		std::string newName;
+		std::string path;
 
-		if(connection->user_data == nullptr) {
-			throw Exception(
-					"WebServer::generateFileName():"
-					" No WebServer has been specified ["
-					+ std::string(fileName.p, fileName.len)
-					+ "]"
-			);
-		}
-
-		return static_cast<WebServer *>(connection->user_data)->generateFileNameInClass();
-	}
-
-	// file name generator (in-class)
-	mg_str WebServer::generateFileNameInClass() {
-		mg_str result{};
-
-		// get length of file cache directory
-		const auto cacheDirLength{this->fileCache.length()};
-
-		// save length of file name in result
-		result.len = cacheDirLength + randFileNameLength + 1;
-
-		// allocate memory for file name
-		// NOLINTNEXTLINE(cppcoreguidelines-no-malloc, cppcoreguidelines-owning-memory, hicpp-no-malloc)
-		char * buffer{static_cast<char *>(std::malloc(result.len))};
-
-		// copy file cache directory to file name
-		std::memcpy(
-				static_cast<void *>(buffer),
-				static_cast<const void *>(this->fileCache.data()),
-				cacheDirLength
-		);
-
-		// add path separator to file name
-		// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-		buffer[cacheDirLength] = Helper::FileSystem::getPathSeparator();
-
-		// generate random file names until no file with the generated name already exists
+		// create new file name
 		do {
-			std::memcpy(
-					// NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
-					static_cast<void *>(buffer + cacheDirLength + 1),
-					static_cast<const void *>(Helper::Strings::generateRandom(randFileNameLength).c_str()),
-					randFileNameLength
-			);
+			newName = Helper::Strings::generateRandom(randFileNameLength);
+			path = this->fileCache + Helper::FileSystem::getPathSeparator() + newName;
+		} while(Helper::FileSystem::exists(path));
+
+		// save file
+		std::ofstream out(path.c_str(), std::ios_base::binary);
+
+		if(!out.is_open()) {
+			WebServer::sendError(from, "Could not create file on server");
+
+			this->onLog("failed to create '" + path + "'.");
+
+			return;
 		}
-		while(Helper::FileSystem::exists(std::string(buffer, result.len)));
 
-		// save new file name in result
-		result.p = buffer;
+		out << content;
 
-		// save file name in class and return result
-		const std::string tmpCopy(result.p, result.len);
+		out.close();
 
-		this->oldFileName = tmpCopy.substr(cacheDirLength + 1);
-		
-		return result;
+		// send new file name in reply
+		mg_http_reply(from, httpOk, this->getCorsHeaders().c_str(), newName.c_str());
+
+		this->onLog(
+				"received '"
+				+ name
+				+ "' from "
+				+ WebServer::getIP(from)
+				+ ", saved as '"
+				+ newName
+				+ "'."
+		);
+	}
+
+	/*
+	 * STATIC INTERNAL HELPER FUNCTIONS (private)
+	 */
+
+	// get boundary from HTTP request headers
+	bool WebServer::parseHttpHeaders(
+			struct mg_http_header headers[],
+			std::string& boundaryTo,
+			std::uint64_t& sizeTo
+	) {
+		bool isFoundBoundary{false};
+		bool isFoundSize{false};
+
+		for(std::size_t index{}; index < MG_MAX_HTTP_HEADERS; ++index) {
+			if(headers[index].name.ptr == nullptr) {
+				break;
+			}
+
+			std::string headerName{WebServer::toString(headers[index].name)};
+
+			std::transform(headerName.begin(), headerName.end(), headerName.begin(), [](const auto c)  {
+					return std::tolower(c);
+			});
+
+			if(
+					!parseContentType(headerName, headers[index].value, boundaryTo, isFoundBoundary)
+					|| !parseContentSize(headerName, headers[index].value, sizeTo, isFoundSize)
+			) {
+				return false;
+			}
+		}
+
+		return isFoundBoundary && isFoundSize;
+	}
+
+	// get line from mongoose string, update position, return false if end has been reached
+	bool WebServer::getLine(struct mg_str& str, std::size_t& pos, std::string& to) {
+		if(pos >= str.len) {
+			return false;
+		}
+
+		std::size_t end{pos};
+
+		for(; end < str.len; ++end) {
+			if(str.ptr[end] == '\n') {
+				break;
+			}
+		}
+
+		std::string{}.swap(to);
+
+		to.reserve(end - pos);
+
+		for(std::size_t index{pos}; index < end; ++index) {
+			to.push_back(str.ptr[index]);
+		}
+
+		if(!to.empty() && to.back() == '\r') {
+			to.pop_back();
+		}
+
+		pos = end + 1;
+
+		return true;
+	}
+
+	// check whether the line indicates a boundary
+	bool WebServer::isBoundary(const std::string& line, const std::string& boundary) {
+		return line.substr(0, filePartBoundaryBegin.size()) == filePartBoundaryBegin
+				&& line.substr(filePartBoundaryBegin.size()) == boundary;
+	}
+
+	// check whether the line indicates the final boundary
+	bool WebServer::isFinalBoundary(const std::string& line, const std::string& boundary) {
+		return line.substr(0, filePartBoundaryBegin.size()) == filePartBoundaryBegin
+				&& line.substr(filePartBoundaryBegin.size(), boundary.size()) == boundary
+				&& line.substr(filePartBoundaryBegin.size() + boundary.size()) == filePartBoundaryFinalEnd;
+	}
+
+	// get headers of uploaded file part
+	bool WebServer::getUploadHeaders(
+			struct mg_str& str,
+			std::size_t& pos,
+			std::vector<StringString>& to
+	) {
+		std::string line;
+
+		while(WebServer::getLine(str, pos, line)) {
+			if(line.empty()) {
+				return true;
+			}
+
+			StringString header;
+
+			if(!WebServer::getUploadHeader(line, header)) {
+				return false;
+			}
+
+			to.emplace_back(header);
+		}
+
+		return false;
+	}
+
+	// get single header of uploaded file part
+	bool WebServer::getUploadHeader(const std::string& from, StringString& to) {
+		std::string lower(from.size(), {});
+
+		std::transform(from.begin(), from.end(), lower.begin(), [](const auto c) {
+			return std::tolower(c);
+		});
+
+		if(lower.substr(0, filePartHeaderBegin.size()) != filePartHeaderBegin) {
+			return false;
+		}
+
+		const auto colon{lower.find(':')};
+
+		if(colon == std::string::npos) {
+			return false;
+		}
+
+		std::string value{lower.substr(colon + 1)};
+
+		Helper::Strings::trim(value);
+
+		to = { lower.substr(0, colon), value };
+
+		return true;
+	}
+
+	// check for content type header of multipart HTTP requests, return false on misformed header
+	bool WebServer::parseContentType(
+			const std::string& headerName,
+			struct mg_str& headerValue,
+			std::string& boundaryTo,
+			bool& isBoundaryFoundTo
+	) {
+		if(headerName != headerContentType) {
+			return true;
+		}
+
+		if(parseContentTypeHeader(WebServer::toString(headerValue), boundaryTo)) {
+			isBoundaryFoundTo = true;
+
+			return true;
+		}
+
+		return false;
+	}
+
+	// check for content size header of multipart HTTP requests, return false on misformed header
+	bool WebServer::parseContentSize(
+			const std::string& headerName,
+			struct mg_str& headerValue,
+			std::uint64_t& sizeTo,
+			bool& isFoundSizeTo
+	) {
+		if(headerName != headerContentSize) {
+			return true;
+		}
+
+		try {
+			sizeTo = std::stoull(WebServer::toString(headerValue));
+
+			isFoundSizeTo = true;
+
+			return true;
+		}
+		catch(const std::logic_error& e) {}
+
+		return false;
+	}
+
+	// parse content type header for multipart HTTP requests
+	bool WebServer::parseContentTypeHeader(const std::string& value, std::string& boundaryTo) {
+		std::size_t pos{value.find(';')};
+
+		if(pos == std::string::npos) {
+			return false;
+		}
+
+		if(value.substr(0, pos) != headerContentTypeValue) {
+			return false;
+		}
+
+		++pos;
+
+		std::string headerPart;
+
+		while(parseNextHeaderPart(value, pos, headerPart)) {
+			if(headerPart.substr(0, headerBoundaryBegin.length()) == headerBoundaryBegin) {
+				boundaryTo = headerPart.substr(headerBoundaryBegin.length());
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	// parse the upload headers, return whether their part contains content of the file to upload
+	bool WebServer::parseUploadHeaders(const std::vector<StringString>& uploadHeaders, std::string& fileNameTo) {
+		for(const auto& header : uploadHeaders) {
+			if(header.first == filePartUploadHeader) {
+				std::size_t pos{};
+				std::string headerPart;
+				std::string name;
+				std::string fileName;
+
+				while(WebServer::parseNextHeaderPart(header.second, pos, headerPart)) {
+					if(headerPart.substr(0, filePartUploadName.length()) == filePartUploadName) {
+						name = headerPart.substr(filePartUploadName.length());
+					}
+
+					if(headerPart.substr(0, filePartUploadFileName.length()) == filePartUploadFileName) {
+						fileName = headerPart.substr(filePartUploadFileName.length());
+					}
+				}
+
+				WebServer::removeQuotes(name);
+				WebServer::removeQuotes(fileName);
+
+				if(name == filePartUploadField) {
+					fileNameTo = fileName;
+
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	// parse next header part, return whether it exists
+	bool WebServer::parseNextHeaderPart(const std::string& value, std::size_t& pos, std::string& to) {
+		if(pos >= value.length()) {
+			return false;
+		}
+
+		const std::size_t end{value.find(';', pos)};
+
+		if(end == std::string::npos) {
+			to = value.substr(pos);
+			pos = value.length();
+		}
+		else {
+			to = value.substr(pos, end - pos);
+			pos = end + 1;
+		}
+
+		Helper::Strings::trim(to);
+
+		return true;
+	}
+
+	// check file name, return false if multiple files are transferred
+	bool WebServer::checkFileName(bool inFile, const std::string& currentFile, std::string& fileName) {
+		if(inFile) {
+			if(currentFile.empty()) {
+				return false;
+			}
+
+			if(fileName.empty()) {
+				fileName = currentFile;
+			}
+			else if(currentFile != fileName) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	// convert mongoose string to std string
+	std::string WebServer::toString(const struct mg_str& str) {
+		if(str.ptr == nullptr) {
+			return std::string{};
+		}
+
+		return std::string(str.ptr, str.len);
+	}
+
+	// remove quotes around string, if applicable
+	void WebServer::removeQuotes(std::string& str) {
+		if(str.length() < quotesLength) {
+			return;
+		}
+
+		switch(str[0]) {
+		case '\'':
+			if(str.back() != '\'') {
+				return;
+			}
+
+			break;
+
+		case '"':
+			if(str.back() != '"') {
+				return;
+			}
+
+			break;
+
+		default:
+			return;
+		}
+
+		// remove quotes
+		str.pop_back();
+		str.erase(0, 1);
 	}
 
 } /* namespace crawlservpp::Main */

@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,19 +35,27 @@
 #include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
 
-#include "../_extern/mongoose/mongoose.h"
+extern "C" {
+	#include "../_extern/mongoose/mongoose.h"
+}
 
-#include <algorithm>	// std::swap
+#include <algorithm>	// std::swap, std::transform
 #include <array>		// std::array
-#include <cstdint>		// std::uint16_t
-#include <cstdlib>		// std::malloc
-#include <cstring>		// std::memcpy
-#include <fstream>		// std::ios_base, std::ofstream
+#include <cctype>		// std::tolower
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint16_t, std::uint64_t
+#include <fstream>		// std::ofstream
 #include <functional>	// std::function
-#include <string>		// std::string
-#include <string_view>	// std::string_view
+#include <ios>			// std::ios_base
+#include <stdexcept>	// std::logic_error
+#include <string>		// std::stoull, std::string
+#include <string_view>	// std::string_view, std::string_view_literals
+#include <utility>		// std::pair
+#include <vector>		// std::vector
 
 namespace crawlservpp::Main {
+
+	using std::string_view_literals::operator""sv;
 
 	/*
 	 * CONSTANTS
@@ -56,11 +64,53 @@ namespace crawlservpp::Main {
 	///@name Constants
 	///@{
 
+	//! The address at which to listen for incoming connections.
+	/*!
+	 * The specified port will be appended.
+	 */
+	inline constexpr auto listenToAddress{"tcp://127.0.0.1:"sv};
+
+	//! The name of a (lower-case) content type header.
+	inline constexpr auto headerContentType{"content-type"sv};
+
+	//! The name of a (lower-case) content size header.
+	inline constexpr auto headerContentSize{"content-length"sv};
+
+	//! The expected content type for HTTP multipart requests.
+	inline constexpr auto headerContentTypeValue{"multipart/form-data"sv};
+
+	//! The beginning of the header part that contains the boundary.
+	inline constexpr auto headerBoundaryBegin{"boundary="sv};
+
+	//! HTTP OK response code.
+	inline constexpr auto httpOk{200};
+
+	//! Required beginning of (lower-case) file part header.
+	inline constexpr auto filePartHeaderBegin{"content-"sv};
+
+	//! Required beginning of a HTTP multipart boundary.
+	inline constexpr auto filePartBoundaryBegin{"--"sv};
+
+	//! The end of the final HTTP multipart boundary.
+	inline constexpr auto filePartBoundaryFinalEnd{"--"sv};
+
+	//! The name of the upload header containing content information.
+	inline constexpr auto filePartUploadHeader{"content-disposition"sv};
+
+	//! The beginning of the field in the content information containing the name of the content.
+	inline constexpr auto filePartUploadName{"name="sv};
+
+	//! The name of the content containing the original name of the file to upload.
+	inline constexpr auto filePartUploadFileName{"filename="sv};
+
+	//! The (lower-case) name of the content containing file content to upload.
+	inline constexpr auto filePartUploadField{"filetoupload"sv};
+
 	//! The length of randomly generated file names.
 	inline constexpr auto randFileNameLength{64};
 
-	//! Name of the variable used for uploading the content of a file.
-	inline constexpr std::string_view fileUploadVarName{"fileToUpload"};
+	//! The length of two encapsulating quotes, in bytes.
+	inline constexpr auto quotesLength{2};
 
 	///@}
 
@@ -88,6 +138,7 @@ namespace crawlservpp::Main {
 				std::function<void(
 						ConnectionPtr
 				)>;
+		using LogCallback = std::function<void(const std::string& entry)>;
 		using RequestCallback =
 				std::function<void(
 						ConnectionPtr,
@@ -95,6 +146,8 @@ namespace crawlservpp::Main {
 						const std::string&,
 						void *
 				)>;
+
+		using StringString = std::pair<std::string, std::string>;
 
 	public:
 		///@name Construction and Destruction
@@ -119,6 +172,7 @@ namespace crawlservpp::Main {
 
 		void setCORS(const std::string& allowed);
 		void setAcceptCallback(AcceptCallback callback);
+		void setLogCallback(LogCallback callback);
 		void setRequestCallback(RequestCallback callback);
 
 		///@}
@@ -147,7 +201,7 @@ namespace crawlservpp::Main {
 		);
 
 		///@}
-		///@name Static Helper
+		///@name Static Helper Function
 		///@{
 
 		static std::string getIP(ConnectionPtr connection);
@@ -177,51 +231,67 @@ namespace crawlservpp::Main {
 		///@}
 
 	private:
-		const std::string_view fileCache;
-
-		mg_mgr eventManager;
+		const std::string fileCache;
+		mg_mgr eventManager{};
 		std::string cors;
-		std::string oldFileName;
+		bool isShutdown{false};
 
 		// callback functions
 		AcceptCallback onAccept;
+		LogCallback onLog;
 		RequestCallback onRequest;
 
 		// event handlers
 		static void eventHandler(
 				ConnectionPtr connection,
 				int event,
-				void * data
+				void * data,
+				void * arg
 		);
 		void eventHandlerInClass(
 				ConnectionPtr connection,
 				int event,
 				void * data
 		);
+		void uploadHandler(ConnectionPtr connection, mg_http_message * msg);
 
-		// private helper functions
+		// internal helper functions
 		std::string getCorsHeaders();
-		mg_str generateFileNameInClass();
-		static mg_str generateFileName(
-				ConnectionPtr connection,
-				mg_str fileName
+		void fileReceived(ConnectionPtr from, const std::string& name, const std::string& content);
+
+		// static internal helper functions
+		static bool parseHttpHeaders(
+				struct mg_http_header headers[],
+				std::string& boundaryTo,
+				std::uint64_t& sizeTo
+		);
+		static bool getLine(struct mg_str& str, std::size_t& pos, std::string& to);
+		static bool isBoundary(const std::string& line, const std::string& boundary);
+		static bool isFinalBoundary(const std::string& line, const std::string& boundary);
+		static bool getUploadHeaders(struct mg_str& str, std::size_t& pos, std::vector<StringString>& to);
+		static bool getUploadHeader(const std::string& from, StringString& to);
+
+		static bool parseContentType(
+				const std::string& headerName,
+				struct mg_str& headerValue,
+				std::string& boundaryTo,
+				bool& isBoundaryFoundTo
+		);
+		static bool parseContentSize(
+				const std::string& headerName,
+				struct mg_str& headerValue,
+				std::uint64_t& sizeTo,
+				bool& isSizeFoundTo
 		);
 
-		// private struct for user data while uploading files
-		struct FileUploadData {
-			std::string name;
-			std::ofstream stream;
+		static bool parseContentTypeHeader(const std::string& value, std::string& boundaryTo);
+		static bool parseUploadHeaders(const std::vector<StringString>& uploadHeaders, std::string& fileNameTo);
+		static bool parseNextHeaderPart(const std::string& value, std::size_t& pos, std::string& to);
 
-			FileUploadData(
-					const std::string& fileName,
-					const std::string& fullFileName
-			) : name(fileName) {
-				this->stream.open(
-						fullFileName.c_str(),
-						std::ios_base::binary
-				);
-			}
-		};
+		static bool checkFileName(bool inFile, const std::string& currentFile, std::string& fileName);
+
+		[[nodiscard]] static std::string toString(const struct mg_str& str);
+		static void removeQuotes(std::string& str);
 	};
 
 } /* namespace crawlservpp::Main */
