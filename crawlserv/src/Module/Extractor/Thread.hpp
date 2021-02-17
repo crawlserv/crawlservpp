@@ -56,11 +56,10 @@
 #include "../../_extern/jsoncons/include/jsoncons_ext/jsonpath/json_query.hpp"
 #include "../../_extern/rapidjson/include/rapidjson/document.h"
 
-#include <algorithm>	// std::any_of, std::count_if, std::find, std::none_of
-#include <cctype>		// ::tolower
+#include <algorithm>	// std::all_of, std::any_of, std::count_if, std::find, std::none_of
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::uint32_t, std::uint64_t
+#include <cstdint>		// std::int64_t, std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
 #include <iomanip>		// std::setprecision
 #include <ios>			// std::fixed
@@ -68,10 +67,10 @@
 #include <queue>		// std::queue
 #include <set>			// std::set
 #include <sstream>		// std::ostringstream
-#include <stdexcept>	// std::logic_error, std::runtime_error
-#include <string>		// std::stol, std::stoul, std::string, std::to_string
+#include <stdexcept>	// std::logic_error
+#include <string>		// std::stoll, std::stoul, std::string, std::to_string
 #include <string_view>	// std::string_view
-#include <utility>		// std::move, std::pair
+#include <utility>		// std::pair
 #include <vector>		// std::vector
 
 namespace crawlservpp::Module::Extractor {
