@@ -8887,7 +8887,12 @@ namespace crawlservpp::Main {
 					break;
 
 				case Data::Type::_double:
-					sqlStatement->setDouble(sqlArg1, data.value._d);
+					if(std::isnan(data.value._d)) {
+						sqlStatement->setNull(sqlArg1, 0);
+					}
+					else {
+						sqlStatement->setDouble(sqlArg1, data.value._d);
+					}
 
 					break;
 
@@ -9088,7 +9093,7 @@ namespace crawlservpp::Main {
 
 			case Data::Type::_double:
 				for(const auto& column_value : data.columns_values) {
-					if(column_value.second._isnull) {
+					if(column_value.second._isnull || std::isnan(column_value.second._d)) {
 						sqlStatement->setNull(counter, 0);
 					}
 					else {
@@ -9325,7 +9330,12 @@ namespace crawlservpp::Main {
 						break;
 
 					case Data::Type::_double:
-						sqlStatement->setDouble(counter, std::get<2>(column_type_value)._d);
+						if(std::isnan(std::get<2>(column_type_value)._d)) {
+							sqlStatement->setNull(counter, 0);
+						}
+						else {
+							sqlStatement->setDouble(counter, std::get<2>(column_type_value)._d);
+						}
 
 						break;
 
@@ -9485,7 +9495,12 @@ namespace crawlservpp::Main {
 					break;
 
 				case Data::Type::_double:
-					sqlStatement->setDouble(sqlArg1, data.value._d);
+					if(std::isnan(data.value._d)) {
+						sqlStatement->setNull(sqlArg1, 0);
+					}
+					else {
+						sqlStatement->setDouble(sqlArg1, data.value._d);
+					}
 
 					break;
 
@@ -9661,7 +9676,7 @@ namespace crawlservpp::Main {
 
 			case Data::Type::_double:
 				for(const auto& column_value : data.columns_values) {
-					if(column_value.second._isnull) {
+					if(column_value.second._isnull || std::isnan(column_value.second._d)) {
 						sqlStatement->setNull(counter, 0);
 					}
 					else {
@@ -9878,7 +9893,12 @@ namespace crawlservpp::Main {
 						break;
 
 					case Data::Type::_double:
-						sqlStatement->setDouble(counter, std::get<2>(column_type_value)._d);
+						if(std::isnan(std::get<2>(column_type_value)._d)) {
+							sqlStatement->setNull(counter, 0);
+						}
+						else {
+							sqlStatement->setDouble(counter, std::get<2>(column_type_value)._d);
+						}
 
 						break;
 
