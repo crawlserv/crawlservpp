@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -90,6 +90,7 @@ namespace crawlservpp::Helper::Json {
 
 	[[nodiscard]] std::string stringify(const std::vector<std::string>& vectorToStringify);
 	[[nodiscard]] std::string stringify(const std::string& stringToStringify);
+	[[nodiscard]] std::string stringify(const char * stringToStringify);
 	[[nodiscard]] std::string stringify(
 			const std::vector<std::vector<std::pair<std::string, std::string>>>& vectorToStringify
 	);
@@ -222,6 +223,31 @@ namespace crawlservpp::Helper::Json {
 
 		// return string
 		return std::string(buffer.GetString(), buffer.GetSize());
+	}
+
+	//! Converts a string into a JSON array with the string as the only element inside it.
+	/*!
+	 * Uses @c RapidJSON for conversion into JSON.
+	 *  For more information about @c RapidJSON,
+	 *  see its
+	 *  <a href="https://github.com/Tencent/rapidjson">
+	 *  GitHub repository</a>.
+	 *
+	 * \note A string view cannot be used, because
+	 *   the underlying API requires the constant
+	 *   reference to a string.
+	 *
+	 * \param stringToStringify A const pointer to
+	 *   a null-terminated string to be converted
+	 *   into a JSON array.
+	 *
+	 * \returns The copy of a string containing
+	 *   valid JSON code representing an array
+	 *   containing the given string as its only
+	 *   element.
+	 */
+	inline std::string stringify(const char * stringToStringify) {
+		return stringify(std::string(stringToStringify));
 	}
 
 	//! Converts a vector of vectors of string pairs into a JSON array with corresponding objects containing [key, value] pairs
