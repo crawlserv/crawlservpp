@@ -483,10 +483,10 @@ namespace crawlservpp::Data {
 				std::string& valueTo
 		);
 
-		[[nodiscard]] static std::vector<std::vector<float>> convertInferredResults(
-				const std::vector<double>& results,
-				std::size_t numberOfDocuments,
-				std::size_t numberOfTopics
+		static void validateLastResults(
+				std::vector<std::pair<std::string, std::vector<float>>>& results,
+				std::unordered_set<std::string>& done,
+				const std::unordered_set<std::string>::const_iterator& inserted
 		);
 
 		// internal static helper functions (constexpr and templates)
@@ -1170,14 +1170,20 @@ namespace crawlservpp::Data {
 
 			DATA_TOPICMODEL_RETRIEVE(doc, isHdp, isIdf, getDoc, docId);
 
-			if(
-					!(doc->docUid.empty())
-					&& done.insert(doc->docUid).second
-			) {
-					results.emplace_back(
-							doc->docUid,
-							this->getInferredTopics(isHdp, isIdf, doc)
-					);
+			if(doc->docUid.empty()) {
+				continue;
+			}
+
+			const auto inserted{done.insert(doc->docUid)};
+
+			if(inserted.second) {
+				results.emplace_back(
+						doc->docUid,
+						this->getInferredTopics(isHdp, isIdf, doc)
+				);
+
+				// remove last results if all values are NaN
+				TopicModel::validateLastResults(results, done, inserted.first);
 			}
 		}
 
@@ -2455,6 +2461,26 @@ namespace crawlservpp::Data {
 		}
 		else {
 			std::string{}.swap(valueTo);
+		}
+	}
+
+	// validate the results added last, remove them if all values are NaN
+	inline void TopicModel::validateLastResults(
+			std::vector<std::pair<std::string, std::vector<float>>>& results,
+			std::unordered_set<std::string>& done,
+			const std::unordered_set<std::string>::const_iterator& inserted
+	) {
+		if(
+				std::all_of(
+						results.back().second.begin(),
+						results.back().second.end(),
+						[](const auto value) {
+							return std::isnan(value);
+						}
+				)
+		) {
+			results.pop_back();
+			done.erase(inserted);
 		}
 	}
 
