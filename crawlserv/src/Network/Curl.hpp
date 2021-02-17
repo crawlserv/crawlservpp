@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@
 
 #include <algorithm>	// std::find, std::remove_if, std::transform
 #include <array>		// std::array
-#include <cctype>		// ::isspace, ::tolower
+#include <cctype>		// std::isspace, std::tolower
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint32_t, std::uint64_t
@@ -1320,14 +1320,19 @@ namespace crawlservpp::Network {
 		std::transform(
 				this->contentType.begin(),
 				this->contentType.end(),
-				this->contentType.begin(), ::tolower
+				this->contentType.begin(),
+				[](const auto c) {
+					return std::tolower(c);
+				}
 		);
 
 		this->contentType.erase(
 				std::remove_if(
 						this->contentType.begin(),
 						this->contentType.end(),
-						::isspace
+						[](const auto c) {
+							return std::isspace(c);
+						}
 				),
 				this->contentType.end()
 		);

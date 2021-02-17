@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@
 #include <curl/curl.h>
 
 #include <algorithm>	// std::count, std::find_if, std::min, std::remove_if, std::transform
-#include <cctype>		// ::tolower
+#include <cctype>		// std::tolower
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::int64_t, std::uint32_t, std::uint64_t

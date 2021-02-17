@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <algorithm>	// std::find_if, std::transform
-#include <cctype>		// ::tolower
+#include <cctype>		// std::tolower
 #include <fstream>		// std::ifstream
 #include <string>		// std::string, std::getline
 #include <utility>		// std::pair
@@ -148,7 +148,14 @@ namespace crawlservpp::Main {
 				if(nameEnd < line.length()) {
 					std::string nameInLine(line, 0, nameEnd);
 
-					std::transform(nameInLine.begin(), nameInLine.end(), nameInLine.begin(), ::tolower);
+					std::transform(
+							nameInLine.begin(),
+							nameInLine.end(),
+							nameInLine.begin(),
+							[](const auto c) {
+								return std::tolower(c);
+							}
+					);
 
 					this->entries.emplace_back(
 							nameInLine,
@@ -187,7 +194,14 @@ namespace crawlservpp::Main {
 	inline bool ConfigFile::getValue(const std::string& name, std::string& to) const {
 		std::string nameCopy(name);
 
-		std::transform(nameCopy.begin(), nameCopy.end(), nameCopy.begin(), ::tolower);
+		std::transform(
+				nameCopy.begin(),
+				nameCopy.end(),
+				nameCopy.begin(),
+				[](const auto c) {
+					return std::tolower(c);
+				}
+		);
 
 		const auto valueIt{
 			std::find_if(
