@@ -140,6 +140,8 @@ namespace crawlservpp::Module::Analyzer {
 		this->resetAlgo();
 		this->resetBase();
 
+		this->log(generalLoggingDefault, "reset.");
+
 		this->onInit();
 	}
 
