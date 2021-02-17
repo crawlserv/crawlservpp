@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -156,6 +156,9 @@ namespace crawlservpp::Main {
 
 	//! The name of the (sub-)directory for cookies.
 	inline constexpr auto cookieDir{"cookies"sv};
+
+	//! The name of the (sub-)directory for downloads.
+	inline constexpr auto downloadDir{"dl"sv};
 
 	//! The name of the (sub-)directory for debugging.
 	inline constexpr auto debugDir{"debug"sv};
@@ -432,7 +435,7 @@ namespace crawlservpp::Main {
 
 		// server initialization
 		static void initCacheDir();
-		static void initCookiesDir();
+		static void initDir(std::string_view directory);
 		static void initDebuggingDir(bool isEnabled, std::string_view directory);
 		void initDatabase(std::uint16_t sleepOnSqlErrorS);
 		void initCallbacks();
