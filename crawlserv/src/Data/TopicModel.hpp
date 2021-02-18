@@ -1121,10 +1121,14 @@ namespace crawlservpp::Data {
 		this->checkModel("getTopicTopNLabels", isHdp, isIdf);
 		this->checkTrained("getTopicTopNLabels");
 
+		if(n == 0) {
+			return std::vector<std::pair<std::string, float>>{};
+		}
+
 		if(!(this->labeler)) {
 			throw Exception(
 					"getTopicTopNLabels():"
-					" Automated topic labelling has not been activated"
+					" Topics have not been labeled"
 			);
 		}
 
