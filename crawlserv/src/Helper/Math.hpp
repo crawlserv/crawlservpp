@@ -32,9 +32,12 @@
 #define HELPER_MATH_HPP_
 
 #include <algorithm>	// std::nth_element
+#include <cmath>		// std::fabs
 #include <cstddef>		// std::size_t
+#include <limits>		// std::numeric_limits
 #include <memory>		// std::allocator
 #include <numeric>		// std::accumulate
+#include <type_traits>	// std::enable_if
 #include <vector>		// std::vector
 
 //! Namespace for global math functions.
@@ -142,6 +145,26 @@ namespace crawlservpp::Helper::Math {
 		const auto mean{avg(values)};
 
 		return variance(mean, values);
+	}
+
+	///@}
+	///@name Floating-Point Number Comparison
+	///@{
+
+	//! Compares two floating-point values using epsilon.
+	/*!
+	 * Original: https://en.cppreference.com/w/cpp/types/numeric_limits/epsilon
+	 *
+	 * \param x, y Floating-point numbers to compare.
+	 * \param ulp Desired precision in ULPs (units in the last place).
+	 */
+	template<typename T> typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type
+		almostEqual(T x, T y, int ulp) {
+	    // the machine epsilon has to be scaled to the magnitude of the values used
+	    // and multiplied by the desired precision in ULPs (units in the last place)
+	    return std::fabs(x - y) <= std::numeric_limits<T>::epsilon() * std::fabs(x + y) * ulp
+	        // unless the result is subnormal
+	        || std::fabs(x - y) < std::numeric_limits<T>::min();
 	}
 
 	///@}
