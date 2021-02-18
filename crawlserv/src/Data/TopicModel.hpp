@@ -348,7 +348,7 @@ namespace crawlservpp::Data {
 		///@name Cleanup
 		///@{
 
-		void clear();
+		void clear(bool labelingOptions);
 
 		///@}
 
@@ -1761,7 +1761,7 @@ namespace crawlservpp::Data {
 	 *   file format is unsupported.
 	 */
 	inline size_t TopicModel::load(const std::string& fileName) {
-		this->clear();
+		this->clear(false);
 
 		bool isHdp{false};
 		bool isIdf{false};
@@ -1809,7 +1809,7 @@ namespace crawlservpp::Data {
 		}
 		catch(...) {
 			// if loading of the model failed, clear it and try another algorithm
-			this->clear();
+			this->clear(false);
 
 			if(isHdp) { /* if the algorithm was set to HDP, set it to LDA */
 				this->fixedNumberOfTopics = defaultNumberOfInitialTopics;
@@ -1902,7 +1902,7 @@ namespace crawlservpp::Data {
 	 */
 
 	//! Clears the model, resets its settings and frees memory.
-	inline void TopicModel::clear() {
+	inline void TopicModel::clear(bool labelingOptions) {
 		this->hdpModel.release();
 		this->hdpModelIdf.release();
 		this->ldaModel.release();
@@ -1928,15 +1928,17 @@ namespace crawlservpp::Data {
 
 		this->labeler.release();
 
-		this->isLabeling = false;
-		this->labelingMinCf = 0;
-		this->labelingMinDf = 0;
-		this->labelingMinLength = 0;
-		this->labelingMaxLength = 0;
-		this->labelingMaxCandidates = 0;
-		this->labelingSmoothing = 0.F;
-		this->labelingMu = 0.F;
-		this->labelingWindowSize = 0;
+		if(labelingOptions) {
+			this->isLabeling = false;
+			this->labelingMinCf = 0;
+			this->labelingMinDf = 0;
+			this->labelingMinLength = 0;
+			this->labelingMaxLength = 0;
+			this->labelingMaxCandidates = 0;
+			this->labelingSmoothing = 0.F;
+			this->labelingMu = 0.F;
+			this->labelingWindowSize = 0;
+		}
 	}
 
 	/*
