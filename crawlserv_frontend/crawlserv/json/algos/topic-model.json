@@ -89,7 +89,7 @@
 		"max": 65535,
 		"default": 0,
 		"label": "Doc. workers:",
-		"description": "Number of worker threads for infering the topics of previously unseen documents, or zero for automated multi-threading.",
+		"description": "Number of worker threads for infering the topics of previously unseen documents and topic labelling, or zero for automated multi-threading.",
 		"simple": true,
 		"position": 9
 	}
