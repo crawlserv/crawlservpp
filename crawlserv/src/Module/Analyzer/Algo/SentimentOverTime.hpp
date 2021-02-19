@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
-#include <algorithm>		// std::all_of, std::find_if
+#include <algorithm>		// std::all_of, std::find_if, std::min
 #include <cmath>			// std::fabs, std::round
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint8_t, std::uint64_t
@@ -63,7 +63,7 @@
 #include <map>				// std::map
 #include <memory>			// std::make_unique, std::unique_ptr
 #include <queue>			// std::queue
-#include <string>			// std::string
+#include <string>			// std::string, std::to_string
 #include <string_view>		// std::string_view, std::string_view_literals
 #include <unordered_map>	// std::unordered_map
 #include <unordered_set>	// std::unordered_set
@@ -204,6 +204,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		struct Entries {
 			std::vector<std::string> categoryLabels;
 			std::vector<std::uint64_t> categoryQueries;
+			bool combineSources{true};
 			std::uint8_t threshold{sentimentDefaultThreshold};
 			bool addArticleSentiment{false};
 			bool ignoreEmptyDate{true};
