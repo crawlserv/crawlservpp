@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -95,6 +95,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * \note When this function is called, both the
 	 *   prepared SQL statements, and the queries have
 	 *   already been initialized.
+	 *
+	 * \throws TermsOverTime::Exception if the corpus
+	 *   is empty.
 	 */
 	void TermsOverTime::onAlgoInit() {
 		StatusSetter statusSetter(
@@ -119,8 +122,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
-			this->addCorpus(index, statusSetter);
+		if(!(this->addCorpora(true, statusSetter))) {
+			throw Exception("TermsOverTime::onAlgoInit(): Corpus is empty");
 		}
 
 		// algorithm is ready
@@ -139,61 +142,27 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * \note The corpus has already been genererated
 	 *   on initialization.
 	 *
+	 * \throws TermsOverTime::Exception if the
+	 *   corpus has no date map.
+	 *
 	 * \sa onAlgoInit
 	 *
 	 * \todo Not implemented yet.
 	 */
 	void TermsOverTime::onAlgoTick() {
-		if(this->currentCorpus < this->corpora.size()) {
-			// set status message and reset progress
-			std::string status{"occurrences"};
+		if(this->firstTick) {
+			this->count();
 
-			if(this->corpora.size() > 1) {
-				status += " in corpus #";
-				status += std::to_string(this->currentCorpus + 1);
-				status += "/";
-				status += std::to_string(this->corpora.size());
-			}
+			this->firstTick = false;
 
-			status += "...";
-
-			this->setStatusMessage("Counting " + status);
-			this->setProgress(0.F);
-
-			this->log(generalLoggingDefault, "counts " + status);
-
-			const auto& corpus{this->corpora[this->currentCorpus]};
-
-			++(this->currentCorpus);
-
-			if(!corpus.hasDateMap()) {
-				this->log(
-						generalLoggingDefault,
-						"WARNING: Corpus #"
-						+ std::to_string(this->currentCorpus + 1)
-						+ " does not have a date map and has been skipped."
-				);
-
-				return;
-			}
-
-			//TODO count occurrences (-> private member function)
-
-			if(corpus.hasArticleMap()) {
-				// count terms per article and date
-			}
-			else {
-				// count terms per date only
-			}
+			return;
 		}
-		else {
-			//TODO save result (-> private member function)
 
-			this->finished();
+		this->save();
 
-			// sleep forever (i.e. until the thread is terminated)
-			this->sleep(std::numeric_limits<std::uint64_t>::max());
-		}
+		// sleep forever (i.e. until the thread is terminated)
+		this->finished();
+		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
 	//! Does nothing.
@@ -226,9 +195,46 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-	//! Resets the configuration options for the algorithm.
+	//! Resets the algorithm.
 	void TermsOverTime::resetAlgo() {
 		this->algoConfig = {};
+
+		this->firstTick = true;
+
+		std::vector<DateArticlesOccurrences>{}.swap(this->dateCounts);
+	}
+
+	/*
+	 * INTERNAL HELPER FUNCTIONS (private)
+	 */
+
+	// count terms
+	void TermsOverTime::count() {
+		this->setStatusMessage("Counting occurrences...");
+		this->setProgress(0.F);
+
+		this->log(generalLoggingDefault, "counts occurrences...");
+
+		const auto& corpus{this->corpora[0]};
+
+		if(!corpus.hasDateMap()) {
+			throw Exception(
+					"TermsOverTime::count():"
+					" Corpus has no date map"
+			);
+		}
+
+		if(corpus.hasArticleMap()) {
+			// TODO: count terms per article and date
+		}
+		else {
+			// TODO: count terms per date only
+		}
+	}
+
+	// save term counts to database
+	void TermsOverTime::save() {
+		//TODO: save result
 	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
