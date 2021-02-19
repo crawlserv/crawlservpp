@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -46,10 +46,8 @@
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint16_t, std::uint64_t
 #include <limits>			// std::numeric_limits
-#include <locale>			// std::locale
 #include <queue>			// std::queue
-#include <sstream>			// std::ostringstream
-#include <string>			// std::string
+#include <string>			// std::string, std::to_string
 #include <string_view>		// std::string_view
 #include <unordered_map>	// std::unordered_map
 #include <utility>			// std::pair
@@ -150,10 +148,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// algorithm options
 		struct Entries {
-			std::uint64_t keyWordQuery{};
 			std::vector<std::string> categoryLabels;
 			std::vector<std::uint64_t> categoryQueries;
+			bool combineSources{true};
 			bool ignoreEmptyDate{true};
+			std::uint64_t keyWordQuery{};
 			std::uint16_t windowSize{1};
 		} algoConfig;
 
