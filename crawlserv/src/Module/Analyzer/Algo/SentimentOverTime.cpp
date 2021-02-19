@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -140,6 +140,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   prepared SQL statements, and the queries have
 	 *   already been initialized.
 	 *
+	 * \throws SentimentOverTime::Exception if no non-
+	 *   empty corpus has been added.
+	 *
 	 * \sa initQueries
 	 */
 	void SentimentOverTime::onAlgoInit() {
@@ -177,8 +180,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
-			this->addCorpus(index, statusSetter);
+		if(!(this->addCorpora(this->algoConfig.combineSources, statusSetter))) {
+			throw Exception(
+					"SentimentOverTime::onAlgoInit():"
+					" No non-empty corpus has been added"
+			);
 		}
 
 		// algorithm is ready
@@ -211,17 +217,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			this->addCurrent();
 
 			++(this->currentCorpus);
-		}
-		else {
-			this->saveSentiments();
 
-			if(this->isRunning()) {
-				this->finished();
-
-				// sleep forever (i.e. until the thread is terminated)
-				this->sleep(std::numeric_limits<std::uint64_t>::max());
-			}
+			return;
 		}
+
+		this->saveSentiments();
+
+		// sleep forever (i.e. until the thread is terminated)
+		this->finished();
+		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
 
@@ -245,6 +249,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->option("add.article.sentiment", this->algoConfig.addArticleSentiment);
 		this->option("cat.labels", this->algoConfig.categoryLabels);
 		this->option("cat.queries", this->algoConfig.categoryQueries);
+		this->option("combine.sources", this->algoConfig.combineSources);
 		this->option("dictionary", this->algoConfig.dictionary);
 		this->option("emojis", this->algoConfig.emojis);
 		this->option("ignore.empty.date", this->algoConfig.ignoreEmptyDate);
@@ -325,9 +330,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-	//! Resets the configuration options for the algorithm.
+	//! Resets the algorithm.
 	void SentimentOverTime::resetAlgo() {
 		this->algoConfig = {};
+
+		std::vector<QueryStruct>{}.swap(this->queriesCategories);
+		DateData{}.swap(this->dateData);
+		ArticleData{}.swap(this->articleData);
+
+		this->currentCorpus = 0;
+
+		this->sentimentAnalyzer.release();
 	}
 
 	/*
