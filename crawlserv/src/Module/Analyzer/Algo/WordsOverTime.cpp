@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@
  *
  * WordsOverTime.cpp
  *
- * Counts the occurrence of articles, sentences, and words in a corpus over time.
+ * Counts the occurrence of articles, sentences, and words in a corpus
+ *  over time.
  *
  *  Created on: Jan 03, 2021
  *      Author: ans
@@ -105,6 +106,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	//! Generates the corpus.
+	/*!
+	 * \throws WordsOverTime::Exception if the corpus
+	 *   is empty.
+	 */
 	void WordsOverTime::onAlgoInit() {
 		StatusSetter statusSetter(
 				"Initializing algorithm...",
@@ -128,8 +133,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
-			this->addCorpus(index, statusSetter);
+		if(!(this->addCorpora(true, statusSetter))) {
+			throw Exception("WordsOverTime::onAlgoInit(): Corpus is empty");
 		}
 
 		// algorithm is ready
@@ -148,24 +153,25 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * \note The corpus has already been genererated
 	 *   on initialization.
 	 *
+	 * \throws WordsOverTime::Exception if the
+	 *   corpus has no date map.
+	 *
 	 * \sa onAlgoInit
 	 */
 	void WordsOverTime::onAlgoTick() {
-		if(this->currentCorpus < this->corpora.size()) {
-			this->addCurrent();
+		if(this->firstTick) {
+			this->count();
 
-			++(this->currentCorpus);
+			this->firstTick = false;
+
+			return;
 		}
-		else {
-			this->saveCounts();
 
-			// sleep forever (i.e. until the thread is terminated)
-			this->finished();
+		this->save();
 
-			if(this->isRunning()) {
-				this->sleep(std::numeric_limits<std::uint64_t>::max());
-			}
-		}
+		// sleep forever (i.e. until the thread is terminated)
+		this->finished();
+		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
 	//! Does nothing.
@@ -192,34 +198,27 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-	//! Does nothing.
-	void WordsOverTime::resetAlgo() {}
+	//! Resets the algorithm.
+	void WordsOverTime::resetAlgo() {
+		this->firstTick = true;
+
+		std::map<std::string, DateResults>{}.swap(this->dateResults);
+	}
 
 	/*
 	 * ALGORITHM FUNCTIONS (private)
 	 */
 
-	// add counts for current corpus
-	void WordsOverTime::addCurrent() {
+	// count words
+	void WordsOverTime::count() {
 		// set status message and reset progress
-		std::string status{"occurrences"};
-
-		if(this->corpora.size() > 1) {
-			status += " in corpus #";
-			status += std::to_string(this->currentCorpus + 1);
-			status += "/";
-			status += std::to_string(this->corpora.size());
-		}
-
-		status += "...";
-
-		this->setStatusMessage("Counting " + status);
+		this->setStatusMessage("Counting occurrences...");
 		this->setProgress(0.F);
 
-		this->log(generalLoggingDefault, "counts " + status);
+		this->log(generalLoggingDefault, "counts occurrences...");
 
 		// set current corpus
-		const auto& corpus = this->corpora[this->currentCorpus];
+		const auto& corpus = this->corpora.back();
 		const auto& dateMap = corpus.getcDateMap();
 		const auto& sentenceMap = corpus.getcSentenceMap();
 		const auto& articleMap = corpus.getcArticleMap();
@@ -227,11 +226,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// check date and sentence map
 		if(dateMap.empty()) {
-			this->log(
-					generalLoggingDefault,
-					"WARNING: Corpus #"
-					+ std::to_string(this->currentCorpus + 1)
-					+ " does not have a date map and has been skipped."
+			throw Exception(
+					"WordsOverTime::count():"
+					" Corpus has no date map"
 			);
 
 			return;
@@ -372,7 +369,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	// save counts to database
-	void WordsOverTime::saveCounts() {
+	void WordsOverTime::save() {
 		this->setStatusMessage("Saving results...");
 		this->setProgress(0.F);
 
