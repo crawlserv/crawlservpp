@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -117,6 +117,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   prepared SQL statements, and the queries have
 	 *   already been initialized.
 	 *
+	 * \throws AssocOverTime::Exception if no non-
+	 *   empty corpus has been added.
+	 *
 	 * \sa initQueries
 	 */
 	void AssocOverTime::onAlgoInit() {
@@ -142,8 +145,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
-			this->addCorpus(index, statusSetter);
+		if(!(this->addCorpora(this->algoConfig.combineSources, statusSetter))) {
+			throw Exception(
+					"AssocOverTime::onAlgoInit():"
+					" No non-empty corpus has been added"
+			);
 		}
 
 		// algorithm is ready
@@ -169,17 +175,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			this->addCurrent();
 
 			++(this->currentCorpus);
-		}
-		else {
-			this->saveAssociations();
 
-			// sleep forever (i.e. until the thread is terminated)
-			this->finished();
-
-			if(this->isRunning()) {
-				this->sleep(std::numeric_limits<std::uint64_t>::max());
-			}
+			return;
 		}
+
+		this->saveAssociations();
+
+		// sleep forever (i.e. until the thread is terminated)
+		this->finished();
+		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
 	//! Does nothing.
@@ -201,6 +205,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->category("associations");
 		this->option("cat.labels", this->algoConfig.categoryLabels);
 		this->option("cat.queries", this->algoConfig.categoryQueries);
+		this->option("combine.sources", this->algoConfig.combineSources);
 		this->option("keyword", this->algoConfig.keyWordQuery);
 		this->option("ignore.empty.date", this->algoConfig.ignoreEmptyDate);
 		this->option("window.size", this->algoConfig.windowSize);
@@ -289,9 +294,23 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-	//! Resets the configuration options for the algorithm.
+	//! Resets the algorithm.
 	void AssocOverTime::resetAlgo() {
 		this->algoConfig = {};
+		this->queryKeyWord = {};
+
+		std::vector<QueryStruct>{}.swap(this->queriesCategories);
+		DateAssociationMap{}.swap(this->associations);
+		std::string{}.swap(this->lastDate);
+
+		this->currentCorpus = 0;
+		this->dateCounter = 0;
+		this->firstDatePos = 0;
+		this->dateSaved = false;
+		this->dateMapSize = 0;
+		this->articleIndex = 0;
+		this->tokenIndex = 0;
+		this->processedDates = 0;
 	}
 
 	/*
