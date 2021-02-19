@@ -154,9 +154,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	private:
 		// algorithm options
 		struct Entries {
-		/*
-		 * TODO: add members for algorithm options here
-		 */
+			/*
+			 * TODO: add members for algorithm options here
+			 */
+			//bool combineSources{true};
 		} algoConfig;
 
 		// algorithm queries
@@ -170,7 +171,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: add additional private member variables here
 		 */
-		//		bool firstTick{true};
+		//bool firstTick{true};
 
 		// algorithm functions
 		/*

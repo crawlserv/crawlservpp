@@ -135,6 +135,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   prepared SQL statements, and the queries have
 	 *   already been initialized.
 	 *
+	 * TODO: change information about corpus exception
+	 * \throws <algo>::Exception if the corpus is empty
+	 *   / no non-empty corpus has been added.
+	 *
 	 * \sa initQueries
 	 */
 	void Empty::onAlgoInit() {
@@ -162,18 +166,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 //		this->checkCorpusSources(statusSetter);
 
 		/*
-		 * TODO: [OPTIONAL] get text corpus, filtered by date
+		 * TODO: [OPTIONAL] get filtered and combined text corpus or separate corpora
 		 */
 
 		// request text corpus
 //		this->log(generalLoggingDefault, "gets text corpus...");
 //
-//		std::size_t corpora{};
-//
-//		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
-//			if(this->addCorpus(index, statusSetter)) {
-//				++corpora;
-//			}
+//		if(!(this->addCorpora(/*this->algoConfig.combineSources*/ true, statusSetter))) {
+//			throw Exception("<algo>::onAlgoInit(): Corpus is empty");
+//			throw Exception(
+//					"<algo>::onAlgoInit():
+//					" No non-empty corpus has been added."
+//			);
 //		}
 
 		/*
@@ -197,16 +201,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		/*
 		 * TODO: [OPTIONAL] set new status
 		 */
+
+		/*
+		 * TODO: algorithm tick
+		 */
 //		if(this->firstTick) {
 //		    /* first tick first status */
 //			this->setStatusMessage("...");
 //
 //			this->firstTick = false;
+//
+//			return;
 //		}
-
-		/*
-		 * TODO: algorithm tick
-		 */
 
 		/*
 		 * TODO: [OPTIONAL] insert data into target table
