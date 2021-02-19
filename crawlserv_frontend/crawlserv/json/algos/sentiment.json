@@ -34,6 +34,14 @@
 		"simple": true,
 		"position": 2	
 	},
+	"combine.sources": {
+		"type": "bool",
+		"default": true,
+		"label": "Combine sources",
+		"description": "Specifies whether to combine entries with the same ID from different sources.",
+		"simple": true,
+		"position": 8
+	},
 	"dictionary": {
 		"type": "dict",
 		"default": "sentiment-en",
