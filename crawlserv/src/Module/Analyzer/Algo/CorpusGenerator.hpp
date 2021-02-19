@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@
  *
  * CorpusGenerator.hpp
  *
- * This algorithm uses the built-in functionality for building text corpora from its input data.
+ * This algorithm uses the built-in functionality for building text
+ *  corpora from its input data.
  *
- * Additionally, it writes some basic statistics (number and length of words and sentences)
- *  to the target table.
- *
+ * Additionally, it writes some basic statistics (number and length of
+ *  words and sentences) to the target table.
  *
  *  Created on: Mar 5, 2020
  *      Author: ans

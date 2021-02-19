@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,11 +22,11 @@
  *
  * CorpusGenerator.cpp
  *
- * This algorithm uses the built-in functionality for building text corpora from its input data.
+ * This algorithm uses the built-in functionality for building text
+ *  corpora from its input data.
  *
- * Additionally, it writes some basic statistics (number and length of words and sentences)
- *  to the target table.
- *
+ * Additionally, it writes some basic statistics (number and length of
+ *  words and sentences) to the target table.
  *
  *  Created on: Mar 5, 2020
  *      Author: ans
@@ -139,171 +139,174 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		std::size_t corpora{};
+		this->addCorpora(false, statusSetter);
+
+		// create corpus statistics
+		if(!statusSetter.change("Creating corpus statistics...")) {
+			return;
+		}
+
+		this->log(generalLoggingDefault, "creates corpus statistics...");
 
 		const auto resultTable{
 			this->getTargetTableName()
 		};
 
-		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
-			if(!(this->addCorpus(index, statusSetter))) {
-				continue;
+		for(std::size_t index{}; index < this->corpora.size(); ++index) {
+			const auto& corpus{this->corpora[index]};
+
+			// calculate token (word) lengths
+			std::vector<std::size_t> tokenLengths;
+
+			tokenLengths.reserve(corpus.getNumTokens());
+
+			const auto& tokens{corpus.getcTokens()};
+
+			for(const auto& token : tokens) {
+				if(!token.empty()) {
+					tokenLengths.push_back(Helper::Utf8::length(token));
+				}
+			};
+
+			const auto avgTokenLength{
+				Helper::Math::avg<float>(tokenLengths)
+			};
+			const auto medTokenLength{
+				Helper::Math::median<float>(tokenLengths)
+			};
+			const auto sd2TokenLength{
+				Helper::Math::variance<float>(avgTokenLength, tokenLengths)
+			};
+
+			std::vector<std::size_t>{}.swap(tokenLengths);
+
+			// calculate sentence lengths
+			std::vector<std::size_t> sentenceLengths;
+			const auto& sentenceMap{corpus.getcSentenceMap()};
+
+			sentenceLengths.reserve(sentenceMap.size());
+
+			for(const auto& sentence : sentenceMap) {
+				if(!CorpusGenerator::isSentenceEmpty(sentence, tokens)) {
+					sentenceLengths.push_back(sentence.second);
+				}
 			}
 
-			++corpora;
+			const auto avgSentenceLength{
+				Helper::Math::avg<float>(sentenceLengths)
+			};
+			const auto medSentenceLength{
+				Helper::Math::median<float>(sentenceLengths)
+			};
+			const auto sd2SentenceLength{
+				Helper::Math::variance<float>(avgSentenceLength, sentenceLengths)
+			};
 
-			if(statusSetter.change("Creating corpus statistics...")) {
-				const auto& corpus{this->corpora.back()};
+			std::vector<std::size_t>{}.swap(sentenceLengths);
 
-				// calculate token (word) lengths
-				std::vector<std::size_t> tokenLengths;
+			// write data to target table
+			Data::InsertFieldsMixed data;
 
-				tokenLengths.reserve(corpus.getNumTokens());
+			data.columns_types_values.reserve(corpusNumFields);
 
-				const auto& tokens{corpus.getcTokens()};
+			data.table = resultTable;
 
-				for(const auto& token : tokens) {
-					if(!token.empty()) {
-						tokenLengths.push_back(Helper::Utf8::length(token));
-					}
-				};
+			std::string source;
 
-				const auto avgTokenLength{
-					Helper::Math::avg<float>(tokenLengths)
-				};
-				const auto medTokenLength{
-					Helper::Math::median<float>(tokenLengths)
-				};
-				const auto sd2TokenLength{
-					Helper::Math::variance<float>(avgTokenLength, tokenLengths)
-				};
+			switch(this->config.generalInputSources[index]) {
+			case generalInputSourcesParsing:
+				source = "parsing";
 
-				std::vector<std::size_t>{}.swap(tokenLengths);
+				break;
 
-				// calculate sentence lengths
-				std::vector<std::size_t> sentenceLengths;
-				const auto& sentenceMap{corpus.getcSentenceMap()};
+			case generalInputSourcesExtracting:
+				source = "extracting";
 
-				sentenceLengths.reserve(sentenceMap.size());
+				break;
 
-				for(const auto& sentence : sentenceMap) {
-					if(!CorpusGenerator::isSentenceEmpty(sentence, tokens)) {
-						sentenceLengths.push_back(sentence.second);
-					}
-				}
+			case generalInputSourcesAnalyzing:
+				source = "analyzing";
 
-				const auto avgSentenceLength{
-					Helper::Math::avg<float>(sentenceLengths)
-				};
-				const auto medSentenceLength{
-					Helper::Math::median<float>(sentenceLengths)
-				};
-				const auto sd2SentenceLength{
-					Helper::Math::variance<float>(avgSentenceLength, sentenceLengths)
-				};
+				break;
 
-				std::vector<std::size_t>{}.swap(sentenceLengths);
+			case generalInputSourcesCrawling:
+				source = "crawling";
 
-				// write data to target table
-				Data::InsertFieldsMixed data;
+				break;
 
-				data.columns_types_values.reserve(corpusNumFields);
+			default:
+				source = "[unknown]";
+			}
 
-				data.table = resultTable;
+			source += ".";
+			source += this->config.generalInputTables.at(index);
+			source += ".";
+			source += this->config.generalInputFields.at(index);
 
-				std::string source;
+			data.columns_types_values.emplace_back(
+					"analyzed__source",
+					DataType::_string,
+					DataValue(source)
+			);
 
-				switch(this->config.generalInputSources[index]) {
-				case generalInputSourcesParsing:
-					source = "parsing";
+			data.columns_types_values.emplace_back(
+					"analyzed__wordcount",
+					DataType::_uint64,
+					DataValue(corpus.getNumTokens())
+			);
 
-					break;
+			data.columns_types_values.emplace_back(
+					"analyzed__avg_wordlen",
+					DataType::_double,
+					DataValue(avgTokenLength)
+			);
 
-				case generalInputSourcesExtracting:
-					source = "extracting";
+			data.columns_types_values.emplace_back(
+					"analyzed__med_wordlen",
+					DataType::_double,
+					DataValue(medTokenLength)
+			);
 
-					break;
+			data.columns_types_values.emplace_back(
+					"analyzed__sd2_wordlen",
+					DataType::_double,
+					DataValue(sd2TokenLength)
+			);
 
-				case generalInputSourcesAnalyzing:
-					source = "analyzing";
+			data.columns_types_values.emplace_back(
+					"analyzed__sentencecount",
+					DataType::_uint64,
+					DataValue(corpus.getcSentenceMap().size())
+			);
 
-					break;
+			data.columns_types_values.emplace_back(
+					"analyzed__avg_sentencelen",
+					DataType::_double,
+					DataValue(avgSentenceLength)
+			);
 
-				case generalInputSourcesCrawling:
-					source = "crawling";
+			data.columns_types_values.emplace_back(
+					"analyzed__med_sentencelen",
+					DataType::_double,
+					DataValue(medSentenceLength)
+			);
 
-					break;
+			data.columns_types_values.emplace_back(
+					"analyzed__sd2_sentencelen",
+					DataType::_double,
+					DataValue(sd2SentenceLength)
+			);
 
-				default:
-					source = "[unknown]";
-				}
+			// clear memory
+			std::vector<Data::Corpus>{}.swap(this->corpora);
 
-				source += ".";
-				source += this->config.generalInputTables.at(index);
-				source += ".";
-				source += this->config.generalInputFields.at(index);
+			// save results
+			this->database.insertCustomData(data);
 
-				data.columns_types_values.emplace_back(
-						"analyzed__source",
-						DataType::_string,
-						DataValue(source)
-				);
+			this->database.updateTargetTable();
 
-				data.columns_types_values.emplace_back(
-						"analyzed__wordcount",
-						DataType::_uint64,
-						DataValue(corpus.getNumTokens())
-				);
-
-				data.columns_types_values.emplace_back(
-						"analyzed__avg_wordlen",
-						DataType::_double,
-						DataValue(avgTokenLength)
-				);
-
-				data.columns_types_values.emplace_back(
-						"analyzed__med_wordlen",
-						DataType::_double,
-						DataValue(medTokenLength)
-				);
-
-				data.columns_types_values.emplace_back(
-						"analyzed__sd2_wordlen",
-						DataType::_double,
-						DataValue(sd2TokenLength)
-				);
-
-				data.columns_types_values.emplace_back(
-						"analyzed__sentencecount",
-						DataType::_uint64,
-						DataValue(corpus.getcSentenceMap().size())
-				);
-
-				data.columns_types_values.emplace_back(
-						"analyzed__avg_sentencelen",
-						DataType::_double,
-						DataValue(avgSentenceLength)
-				);
-
-				data.columns_types_values.emplace_back(
-						"analyzed__med_sentencelen",
-						DataType::_double,
-						DataValue(medSentenceLength)
-				);
-
-				data.columns_types_values.emplace_back(
-						"analyzed__sd2_sentencelen",
-						DataType::_double,
-						DataValue(sd2SentenceLength)
-				);
-
-				// clear memory
-				std::vector<Data::Corpus>{}.swap(this->corpora);
-
-				// save results
-				this->database.insertCustomData(data);
-
-				this->database.updateTargetTable();
+			if(!(this->isRunning())) {
+				return;
 			}
 		}
 
@@ -312,15 +315,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 * 	the parent class will revert to the original status after initialization
 		 */
 
-		if(corpora > 0) {
-			this->status = "IDLE Corpus created.";
+		if(this->corpora.empty()) {
+			this->status = "IDLE No corpus created.";
 		}
 		else {
-			this->status = "IDLE No corpus created.";
+			this->status = "IDLE Corpus created.";
 		}
 
 		// algorithm has finished
 		this->finished();
+		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
 	//! Sleeps until the thread is terminated.
@@ -362,8 +366,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-	//! Does nothing
-	void CorpusGenerator::resetAlgo() {}
+	//! Resets the algorithm.
+	void CorpusGenerator::resetAlgo() {
+		std::string{}.swap(this->status);
+	}
 
 	/*
 	 * INTERNAL STATIC HELPER FUNCTION (private)
