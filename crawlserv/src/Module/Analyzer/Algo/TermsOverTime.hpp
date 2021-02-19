@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,7 +39,6 @@
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 
-#include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint64_t
 #include <limits>			// std::numeric_limits
 #include <string>			// std::string
@@ -115,12 +114,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	private:
 		// algorithm options
 		struct Entries {
-			//TODO add algo options
+			//TODO add additional algo options
 		} algoConfig;
 
-		// corpora and counts
-		std::size_t currentCorpus{};
+		// algorithm state
+		bool firstTick{true};
+
+		// counts
 		std::vector<DateArticlesOccurrences> dateCounts;
+
+		// internal helper functions
+		void count();
+		void save();
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
