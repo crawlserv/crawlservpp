@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,7 +22,8 @@
  *
  * WordsOverTime.hpp
  *
- * Counts the occurrence of articles, sentences, and words in a corpus over time.
+ * Counts the occurrence of articles, sentences, and words in a corpus
+ *  over time.
  *
  *  Created on: Jan 03, 2021
  *      Author: ans
@@ -135,13 +136,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		///@}
 
 	private:
-		// algorithm state and results
-		std::size_t currentCorpus{};
+		// algorithm state
+		bool firstTick{true};
+
+		// results
 		std::map<std::string, DateResults> dateResults;
 
 		// algorithm functions
-		void addCurrent();
-		void saveCounts();
+		void count();
+		void save();
 
 		// internal helper functions
 		ResultMap::iterator addDateGroup(const std::string& group);
