@@ -268,110 +268,50 @@ namespace crawlservpp::Module::Analyzer {
 		return name;
 	}
 
-	//! Gets the contents of the specified corpus.
+	//! Gets the contents of all corpora, filters and combines them if necessary.
 	/*!
-	 * If the corpus is filtered by queries
-	 *  provided in the configuration, tokens
-	 *  of articles in which no single token
-	 *  fulfills any of the queries will be
-	 *  emptied, but not deleted. Make sure to
-	 *  re-tokenize the corpus if all empty
-	 *  tokens need to be removed.
-	 *
-	 * \param index Index of the corpus to add.
-	 *   Needs to be a valid index of
-	 *   Module::Analyzer::Config::generalInputSources.
+	 * \param isCombine Specifies whether to combine
+	 *   multiple corpora, if applicable.
 	 * \param statusSetter Reference to a
 	 *   Struct::StatusSetter to be used for
 	 *   updating the status while adding the
 	 *   corpus.
 	 *
-	 * \returns True, if the corpus has been
-	 *   added, which requires that it had not
-	 *   been empty after filtering.
-	 *   False otherwise.
-	 *
-	 * \sa
-	 *   Module::Analyzer::Config::filterQueryQueries
+	 * \returns True, if any non-empty corpus
+	 *   has been added.
 	 */
-	bool Thread::addCorpus(
-			std::size_t index,
-			StatusSetter& statusSetter
-	) {
-		std::size_t corpusSources{};
-
-		this->corpora.emplace_back(this->config.generalCorpusChecks);
-
-		std::string statusStr;
-
-		if(this->config.generalInputSources.size() > 1) {
-			std::ostringstream corpusStatusStrStr;
-
-			corpusStatusStrStr.imbue(std::locale(""));
-
-			corpusStatusStrStr << "Getting text corpus #";
-			corpusStatusStrStr << index + 1;
-			corpusStatusStrStr << "/";
-			corpusStatusStrStr << this->config.generalInputSources.size();
-			corpusStatusStrStr << "...";
-
-			statusStr = corpusStatusStrStr.str();
-		}
-		else {
-			statusStr = "Getting text corpus...";
+	bool Thread::addCorpora(bool isCombine, StatusSetter& statusSetter) {
+		// get corpora
+		for(std::size_t index{}; index < this->config.generalInputSources.size(); ++index) {
+			this->addCorpus(index, statusSetter);
 		}
 
-		statusSetter.change(statusStr);
+		// combine corpora, if necessary
+		if(isCombine && this->corpora.size() > 1) {
+			this->log(generalLoggingDefault, "combines corpora...");
 
-		if(!(this->database.getCorpus(
-				CorpusProperties(
-						this->config.generalInputSources.at(index),
-						this->config.generalInputTables.at(index),
-						this->config.generalInputFields.at(index),
-						this->config.tokenizerSentenceManipulators,
-						this->config.tokenizerSentenceModels,
-						this->config.tokenizerWordManipulators,
-						this->config.tokenizerWordModels,
-						this->config.tokenizerSavePoints,
-						this->config.tokenizerFreeMemoryEvery
+			this->combineCorpora(statusSetter);
+		}
+
+		// filter corpora by query, if necessary
+		for(std::size_t index{}; index < this->corpora.size(); ++index) {
+			this->filterCorpusByQuery(index, statusSetter);
+		}
+
+		// remove empty corpora
+		this->corpora.erase(
+				std::remove_if(
+						this->corpora.begin(),
+						this->corpora.end(),
+						[](const auto& corpus) {
+							return corpus.empty();
+						}
 				),
-				this->config.filterDateEnable ? this->config.filterDateFrom : std::string{},
-				this->config.filterDateEnable ? this->config.filterDateTo : std::string{},
-				this->corpora.back(),
-				corpusSources,
-				statusSetter
-		))) {
-			this->corpora.pop_back();
+				this->corpora.end()
+		);
 
-			return false;
-		}
-
-		if(!(this->isRunning())) {
-			return false;
-		}
-
-		if(this->corpora.back().empty()) {
-			this->corpora.pop_back();
-
-			return false;
-		}
-
-		// filter corpus by query
-		corpusSources -= this->filterCorpusByQuery(statusSetter);
-
-		// log corpus statistics
-		std::ostringstream logStrStr;
-
-		logStrStr.imbue(std::locale(""));
-
-		logStrStr << "corpus #" << index + 1 << "/" << this->config.generalInputSources.size();
-		logStrStr << ": " << this->corpora.back().getNumTokens() << " tokens";
-
-		logStrStr << " from " << corpusSources << " source(s).";
-
-		this->log(generalLoggingDefault, logStrStr.str());
-
-		return true;
+		// return whether any corpus remains
+		return !(this->corpora.empty());
 	}
 
 	//! Checks the specified sources for creating the corpus.
@@ -389,36 +329,6 @@ namespace crawlservpp::Module::Analyzer {
 				this->config.generalInputTables,
 				this->config.generalInputFields
 		);
-	}
-
-	//! Combines all added corpora into one, concatenating articles with the same ID.
-	/*!
-	 * The corpus needs to be tokenized and
-	 *  needs to contain a sentence map that
-	 *  covers its whole content.
-	 *
-	 * Afterwards, only one corpus will remain
-	 *  in the class, but it will contain the
-	 *  contents of all other corpora.
-	 *
-	 * \param statusSetter Reference to a
-	 *   Struct::StatusSetter to be used for
-	 *   updating the status while combining
-	 *   the sources.
-	 *
-	 * \throws Thread::Exception if one of the
-	 *   corpora is not tokenized and non-empty,
-	 *   or if one of the sentence maps is
-	 *   incoherent, i.e. has gaps.
-	 */
-	void Thread::combineCorpora(StatusSetter& statusSetter) {
-		std::vector<Corpus> combined;
-
-		combined.emplace_back(this->corpora, this->config.generalCorpusChecks, statusSetter);
-
-		if(statusSetter.isRunning()) {
-			std::swap(this->corpora, combined);
-		}
 	}
 
 	/*
@@ -542,15 +452,98 @@ namespace crawlservpp::Module::Analyzer {
 	}
 
 	/*
-	 * INTERNAL HELPER FUNCTION (private)
+	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
 
-	// filter the corpus using the queries provided in the configuration, return the number of removed articles
-	std::size_t Thread::filterCorpusByQuery(StatusSetter& statusSetter) {
+	// gets the contents of the specified corpus
+	void Thread::addCorpus(std::size_t index, StatusSetter& statusSetter) {
+		std::size_t corpusSources{};
+
+		this->corpora.emplace_back(this->config.generalCorpusChecks);
+
+		std::string statusStr;
+
+		if(this->config.generalInputSources.size() > 1) {
+			std::ostringstream corpusStatusStrStr;
+
+			corpusStatusStrStr.imbue(std::locale(""));
+
+			corpusStatusStrStr << "Getting text corpus #";
+			corpusStatusStrStr << index + 1;
+			corpusStatusStrStr << "/";
+			corpusStatusStrStr << this->config.generalInputSources.size();
+			corpusStatusStrStr << "...";
+
+			statusStr = corpusStatusStrStr.str();
+		}
+		else {
+			statusStr = "Getting text corpus...";
+		}
+
+		statusSetter.change(statusStr);
+
+		if(
+				this->database.getCorpus(
+						CorpusProperties(
+								this->config.generalInputSources.at(index),
+								this->config.generalInputTables.at(index),
+								this->config.generalInputFields.at(index),
+								this->config.tokenizerSentenceManipulators,
+								this->config.tokenizerSentenceModels,
+								this->config.tokenizerWordManipulators,
+								this->config.tokenizerWordModels,
+								this->config.tokenizerSavePoints,
+								this->config.tokenizerFreeMemoryEvery
+						),
+						this->config.filterDateEnable ? this->config.filterDateFrom : std::string{},
+						this->config.filterDateEnable ? this->config.filterDateTo : std::string{},
+						this->corpora.back(),
+						corpusSources,
+						statusSetter
+				) && !(this->corpora.back().empty())
+		) {
+			// log corpus statistics
+			std::ostringstream logStrStr;
+
+			logStrStr.imbue(std::locale(""));
+
+			logStrStr << "corpus";
+
+			if(this->config.generalInputSources.size() > 1) {
+				logStrStr	<< " #"
+							<< index + 1
+							<< "/"
+							<< this->config.generalInputSources.size();
+			}
+
+			logStrStr << ": " << this->corpora.back().getNumTokens() << " tokens";
+
+			logStrStr << " from " << corpusSources << " source(s).";
+
+			this->log(generalLoggingDefault, logStrStr.str());
+		}
+		else {
+			this->corpora.pop_back();
+		}
+	}
+
+	// combines all added corpora into one, concatenating articles with the same ID.
+	void Thread::combineCorpora(StatusSetter& statusSetter) {
+		std::vector<Corpus> combined;
+
+		combined.emplace_back(this->corpora, this->config.generalCorpusChecks, statusSetter);
+
+		if(statusSetter.isRunning()) {
+			std::swap(this->corpora, combined);
+		}
+	}
+
+	// filter the corpus using the queries provided in the configuration
+	void Thread::filterCorpusByQuery(std::size_t index, StatusSetter& statusSetter) {
 		std::queue<std::string> warnings;
 
 		if(this->queryFilterQueries.empty()) {
-			return 0;
+			return;
 		}
 
 		// start timer
@@ -558,7 +551,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		// filter by query
 		std::size_t removed{
-			this->corpora.back().filterArticles(
+			this->corpora[index].filterArticles(
 					[this, &warnings](
 							const auto& tokens,
 							auto articlePos,
@@ -594,18 +587,20 @@ namespace crawlservpp::Module::Analyzer {
 			warnings.pop();
 		}
 
-		if(!(this->isRunning())) {
-			return 0;
-		}
-
 		if(removed > 0) {
 			// log new corpus size
 			std::ostringstream logStrStr;
 
 			logStrStr.imbue(std::locale(""));
 
-			logStrStr	<< "filtered corpus (by query) to "
-						<< this->corpora.back().size()
+			logStrStr << "filtered corpus";
+
+			if(this->corpora.size() > 1) {
+				logStrStr << " #" << index;
+			}
+
+			logStrStr	<< " (by query) to "
+						<< this->corpora[index].size()
 						<< " bytes (removed ";
 
 			if(removed == 1) {
@@ -619,8 +614,6 @@ namespace crawlservpp::Module::Analyzer {
 
 			this->log(generalLoggingDefault, logStrStr.str());
 		}
-
-		return removed;
 	}
 
 	/*

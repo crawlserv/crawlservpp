@@ -49,6 +49,7 @@
 #include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/Simple.hpp"
 
+#include <algorithm>	// std::remove_if
 #include <cstddef>		// std::size_t
 #include <locale>		// std::locale
 #include <map>			// std::map
@@ -214,9 +215,8 @@ namespace crawlservpp::Module::Analyzer {
 		///@{
 
 		[[nodiscard]] std::string getTargetTableName() const;
-		bool addCorpus(std::size_t index, StatusSetter& statusSetter);
+		bool addCorpora(bool isCombine, StatusSetter& statusSetter);
 		void checkCorpusSources(StatusSetter& statusSetter);
-		void combineCorpora(StatusSetter& statusSetter);
 
 		///@}
 		///@name Helper Functions for Clean-up
@@ -248,8 +248,10 @@ namespace crawlservpp::Module::Analyzer {
 		void setUpAlgorithm();
 		void logWarnings(std::queue<std::string>& warnings);
 
-		// internal helper function
-		std::size_t filterCorpusByQuery(StatusSetter& statusSetter);
+		// internal helper functions
+		void addCorpus(std::size_t index, StatusSetter& statusSetter);
+		void combineCorpora(StatusSetter& statusSetter);
+		void filterCorpusByQuery(std::size_t index, StatusSetter& statusSetter);
 
 		// hide other functions not to be used by the thread
 		void start();
