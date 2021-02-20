@@ -84,8 +84,8 @@
 #include "WebServer.hpp"
 
 #include "../Data/Compression/Gzip.hpp"
-#include "../Data/Compression/Zlib.hpp"
 #include "../Data/Compression/Zip.hpp"
+#include "../Data/Compression/Zlib.hpp"
 #include "../Data/File.hpp"
 #include "../Data/ImportExport/OpenDocument.hpp"
 #include "../Data/ImportExport/Text.hpp"
