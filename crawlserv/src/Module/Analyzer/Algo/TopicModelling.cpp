@@ -1079,7 +1079,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			// get top labels
 			items = this->model.getTopicTopNLabels(
 					topicId,
-					this->algoConfig.labelNumber
+					1
 			);
 		}
 		else {
