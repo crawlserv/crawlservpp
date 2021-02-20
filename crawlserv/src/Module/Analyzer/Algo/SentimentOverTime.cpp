@@ -340,7 +340,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->currentCorpus = 0;
 
-		this->sentimentAnalyzer.release();
+		this->sentimentAnalyzer.reset();
 	}
 
 	/*
