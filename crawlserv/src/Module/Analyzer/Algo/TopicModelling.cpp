@@ -921,6 +921,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 		}
 
+		this->database.updateAdditionalTable(this->topicTable);
+
 		statusSetter.finish();
 	}
 
