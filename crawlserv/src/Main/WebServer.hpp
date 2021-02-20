@@ -39,7 +39,7 @@ extern "C" {
 	#include "../_extern/mongoose/mongoose.h"
 }
 
-#include <algorithm>	// std::swap, std::transform
+#include <algorithm>	// std::copy, std::swap, std::transform
 #include <array>		// std::array
 #include <cctype>		// std::tolower
 #include <cstddef>		// std::size_t
@@ -134,11 +134,14 @@ namespace crawlservpp::Main {
 	class WebServer final {
 		// for convenience
 		using ConnectionPtr = mg_connection *;
+		using ConstConnectionPtr = const mg_connection *;
+		using StringString = std::pair<std::string, std::string>;
+
 		using AcceptCallback =
 				std::function<void(
 						ConnectionPtr
 				)>;
-		using LogCallback = std::function<void(const std::string& entry)>;
+		using LogCallback = std::function<void(const std::string&)>;
 		using RequestCallback =
 				std::function<void(
 						ConnectionPtr,
@@ -146,8 +149,6 @@ namespace crawlservpp::Main {
 						const std::string&,
 						void *
 				)>;
-
-		using StringString = std::pair<std::string, std::string>;
 
 	public:
 		///@name Construction and Destruction
@@ -204,7 +205,7 @@ namespace crawlservpp::Main {
 		///@name Static Helper Function
 		///@{
 
-		static std::string getIP(ConnectionPtr connection);
+		static std::string getIP(ConstConnectionPtr connection);
 
 		///@}
 
@@ -261,7 +262,7 @@ namespace crawlservpp::Main {
 
 		// static internal helper functions
 		static bool parseHttpHeaders(
-				struct mg_http_header headers[],
+				const std::array<mg_http_header, MG_MAX_HTTP_HEADERS>& headers,
 				std::string& boundaryTo,
 				std::uint64_t& sizeTo
 		);
@@ -273,15 +274,15 @@ namespace crawlservpp::Main {
 
 		static bool parseContentType(
 				const std::string& headerName,
-				struct mg_str& headerValue,
+				const struct mg_str& headerValue,
 				std::string& boundaryTo,
 				bool& isBoundaryFoundTo
 		);
 		static bool parseContentSize(
 				const std::string& headerName,
-				struct mg_str& headerValue,
+				const struct mg_str& headerValue,
 				std::uint64_t& sizeTo,
-				bool& isSizeFoundTo
+				bool& isFoundSizeTo
 		);
 
 		static bool parseContentTypeHeader(const std::string& value, std::string& boundaryTo);

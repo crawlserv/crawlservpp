@@ -200,7 +200,7 @@ namespace crawlservpp::Main {
 
 		headers += this->getCorsHeaders();
 
-		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		mg_http_reply(connection, code, headers.c_str(), "%s", content.c_str());
 	}
 
@@ -317,7 +317,7 @@ namespace crawlservpp::Main {
 				"Content-Length: 0\r\n\r\n"
 		);
 
-		// NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		mg_printf(
 				connection,
 				"%s",
@@ -374,7 +374,7 @@ namespace crawlservpp::Main {
 	 *  has been specified, i.e. the pointer to the
 	 *  connection is @c nullptr.
 	 */
-	std::string WebServer::getIP(ConnectionPtr connection) {
+	std::string WebServer::getIP(ConstConnectionPtr connection) {
 		// check for connection
 		if(connection == nullptr) {
 			throw Exception(
@@ -467,9 +467,12 @@ namespace crawlservpp::Main {
 		std::uint64_t size{};
 		std::string line;
 		std::vector<StringString> uploadHeaders;
+		std::array<mg_http_header, MG_MAX_HTTP_HEADERS> headers{};
+
+		std::copy(std::begin(msg->headers), std::end(msg->headers), headers.begin());
 
 		if(
-				WebServer::parseHttpHeaders(msg->headers, boundary, size)
+				WebServer::parseHttpHeaders(headers, boundary, size)
 				&& WebServer::getLine(msg->body, pos, line) /* first line of content */
 		) {
 			if(size > MG_MAX_RECV_BUF_SIZE) {
@@ -580,6 +583,7 @@ namespace crawlservpp::Main {
 		out.close();
 
 		// send new file name in reply
+		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		mg_http_reply(from, httpOk, this->getCorsHeaders().c_str(), newName.c_str());
 
 		this->onLog(
@@ -599,7 +603,7 @@ namespace crawlservpp::Main {
 
 	// get boundary from HTTP request headers
 	bool WebServer::parseHttpHeaders(
-			struct mg_http_header headers[],
+			const std::array<mg_http_header, MG_MAX_HTTP_HEADERS>& headers,
 			std::string& boundaryTo,
 			std::uint64_t& sizeTo
 	) {
@@ -613,13 +617,28 @@ namespace crawlservpp::Main {
 
 			std::string headerName{WebServer::toString(headers[index].name)};
 
-			std::transform(headerName.begin(), headerName.end(), headerName.begin(), [](const auto c)  {
-					return std::tolower(c);
-			});
+			std::transform(
+					headerName.begin(),
+					headerName.end(),
+					headerName.begin(),
+					[](const auto c)  {
+						return std::tolower(c);
+					}
+			);
 
 			if(
-					!parseContentType(headerName, headers[index].value, boundaryTo, isFoundBoundary)
-					|| !parseContentSize(headerName, headers[index].value, sizeTo, isFoundSize)
+					!parseContentType(
+							headerName,
+							headers[index].value,
+							boundaryTo,
+							isFoundBoundary
+					)
+					|| !parseContentSize(
+							headerName,
+							headers[index].value,
+							sizeTo,
+							isFoundSize
+					)
 			) {
 				return false;
 			}
@@ -637,7 +656,7 @@ namespace crawlservpp::Main {
 		std::size_t end{pos};
 
 		for(; end < str.len; ++end) {
-			if(str.ptr[end] == '\n') {
+			if(str.ptr[end] == '\n') { //NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 				break;
 			}
 		}
@@ -647,7 +666,7 @@ namespace crawlservpp::Main {
 		to.reserve(end - pos);
 
 		for(std::size_t index{pos}; index < end; ++index) {
-			to.push_back(str.ptr[index]);
+			to.push_back(str.ptr[index]); //NOLINT(cppcoreguidelines-pro-bounds-pointer-arithmetic)
 		}
 
 		if(!to.empty() && to.back() == '\r') {
@@ -667,9 +686,12 @@ namespace crawlservpp::Main {
 
 	// check whether the line indicates the final boundary
 	bool WebServer::isFinalBoundary(const std::string& line, const std::string& boundary) {
-		return line.substr(0, filePartBoundaryBegin.size()) == filePartBoundaryBegin
-				&& line.substr(filePartBoundaryBegin.size(), boundary.size()) == boundary
-				&& line.substr(filePartBoundaryBegin.size() + boundary.size()) == filePartBoundaryFinalEnd;
+		return line.substr(0, filePartBoundaryBegin.size())
+				== filePartBoundaryBegin
+				&& line.substr(filePartBoundaryBegin.size(), boundary.size())
+				== boundary
+				&& line.substr(filePartBoundaryBegin.size() + boundary.size())
+				== filePartBoundaryFinalEnd;
 	}
 
 	// get headers of uploaded file part
@@ -727,7 +749,7 @@ namespace crawlservpp::Main {
 	// check for content type header of multipart HTTP requests, return false on misformed header
 	bool WebServer::parseContentType(
 			const std::string& headerName,
-			struct mg_str& headerValue,
+			const struct mg_str& headerValue,
 			std::string& boundaryTo,
 			bool& isBoundaryFoundTo
 	) {
@@ -747,7 +769,7 @@ namespace crawlservpp::Main {
 	// check for content size header of multipart HTTP requests, return false on misformed header
 	bool WebServer::parseContentSize(
 			const std::string& headerName,
-			struct mg_str& headerValue,
+			const struct mg_str& headerValue,
 			std::uint64_t& sizeTo,
 			bool& isFoundSizeTo
 	) {
@@ -795,7 +817,10 @@ namespace crawlservpp::Main {
 	}
 
 	// parse the upload headers, return whether their part contains content of the file to upload
-	bool WebServer::parseUploadHeaders(const std::vector<StringString>& uploadHeaders, std::string& fileNameTo) {
+	bool WebServer::parseUploadHeaders(
+			const std::vector<StringString>& uploadHeaders,
+			std::string& fileNameTo
+	) {
 		for(const auto& header : uploadHeaders) {
 			if(header.first == filePartUploadHeader) {
 				std::size_t pos{};
@@ -803,12 +828,24 @@ namespace crawlservpp::Main {
 				std::string name;
 				std::string fileName;
 
-				while(WebServer::parseNextHeaderPart(header.second, pos, headerPart)) {
-					if(headerPart.substr(0, filePartUploadName.length()) == filePartUploadName) {
+				while(
+						WebServer::parseNextHeaderPart(
+								header.second,
+								pos,
+								headerPart
+						)
+				) {
+					if(
+							headerPart.substr(0, filePartUploadName.length())
+							== filePartUploadName
+					) {
 						name = headerPart.substr(filePartUploadName.length());
 					}
 
-					if(headerPart.substr(0, filePartUploadFileName.length()) == filePartUploadFileName) {
+					if(
+							headerPart.substr(0, filePartUploadFileName.length())
+							== filePartUploadFileName
+					) {
 						fileName = headerPart.substr(filePartUploadFileName.length());
 					}
 				}
@@ -828,7 +865,10 @@ namespace crawlservpp::Main {
 	}
 
 	// parse next header part, return whether it exists
-	bool WebServer::parseNextHeaderPart(const std::string& value, std::size_t& pos, std::string& to) {
+	bool WebServer::parseNextHeaderPart(
+			const std::string& value,
+			std::size_t& pos, std::string& to
+	) {
 		if(pos >= value.length()) {
 			return false;
 		}
@@ -850,7 +890,11 @@ namespace crawlservpp::Main {
 	}
 
 	// check file name, return false if multiple files are transferred
-	bool WebServer::checkFileName(bool inFile, const std::string& currentFile, std::string& fileName) {
+	bool WebServer::checkFileName(
+			bool inFile,
+			const std::string& currentFile,
+			std::string& fileName
+	) {
 		if(inFile) {
 			if(currentFile.empty()) {
 				return false;
@@ -867,7 +911,7 @@ namespace crawlservpp::Main {
 		return true;
 	}
 
-	// convert mongoose string to std string
+	// convert mongoose string to C++ string
 	std::string WebServer::toString(const struct mg_str& str) {
 		if(str.ptr == nullptr) {
 			return std::string{};
