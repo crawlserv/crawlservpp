@@ -82,7 +82,7 @@ namespace crawlservpp::Data::ImportExport::Text {
 			bool ignoreEmpty
 	) {
 		// split content into entries
-		std::queue<std::string> result(Helper::Strings::splitToQueue(content, '\n', ignoreEmpty));
+		std::queue<std::string> result{Helper::Strings::splitToQueue(content, '\n', ignoreEmpty)};
 
 		// delete header if necessary
 		if(skipFirstLine && !result.empty()) {

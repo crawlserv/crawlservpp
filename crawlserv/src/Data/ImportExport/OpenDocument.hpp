@@ -233,7 +233,7 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 
 		if(Helper::Strings::isDec(raw)) {
 			// try to convert to numeric value
-			const auto oldLocale{
+			const auto * oldLocale{
 				std::setlocale(LC_NUMERIC, "C")
 			};
 
@@ -242,7 +242,7 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 
 				isString = false;
 
-				attributes += " office:value-type=\"float\" office:value=\"";
+				attributes += R"( office:value-type="float" office:value=")";
 				attributes += std::to_string(numericValue);
 				attributes += "\"";
 			}
@@ -280,6 +280,6 @@ namespace crawlservpp::Data::ImportExport::OpenDocument {
 		return result;
 	}
 
-} /* rawlservpp::Data::ImportExport::OpenDocument */
+} /* namespace crawlservpp::Data::ImportExport::OpenDocument */
 
 #endif /* DATA_IMPORTEXPORT_OPENDOCUMENT_HPP_ */

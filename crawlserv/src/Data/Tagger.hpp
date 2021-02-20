@@ -343,7 +343,7 @@ namespace crawlservpp::Data {
 			};
 
 			// label words
-			const uint32_t T = seq->len;
+			const auto T{seq->len};
 
 			std::unique_ptr<uint32_t, wapitiDelete> out{
 					static_cast<uint32_t*>(wapiti::xmalloc(sizeof(uint32_t) * T))
