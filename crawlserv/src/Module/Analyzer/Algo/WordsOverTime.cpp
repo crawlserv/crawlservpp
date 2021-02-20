@@ -274,8 +274,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			// do not count empty tokens (and articles/sentences consisting of empty tokens)!
 			const auto end{TextMapEntry::end(date)};
-			std::size_t articleEnd{false};
-			std::size_t sentenceEnd{false};
+			std::size_t articleEnd{};
+			std::size_t sentenceEnd{};
 			bool articleContent{false};
 			bool sentenceContent{false};
 
