@@ -23,7 +23,7 @@
 		"type": "number",
 		"min": 1,
 		"max": 65535,
-		"default": 100,
+		"default": 1000,
 		"label": "Iterations:",
 		"description": "The number of training iterations that will be performed.",
 		"simple": true,

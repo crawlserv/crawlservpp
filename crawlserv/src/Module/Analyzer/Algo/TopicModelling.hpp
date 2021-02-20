@@ -134,7 +134,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	inline constexpr auto topicModellingDefaultBurnIn{100};
 
 	//! The default number of iterations to train the model.
-	inline constexpr auto topicModellingDefaultIterations{100};
+	inline constexpr auto topicModellingDefaultIterations{1000};
 
 	//! The default number of iterations to train the model at once.
 	inline constexpr auto topicModellingDefaultIterationsAtOnce{25};
