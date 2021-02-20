@@ -337,12 +337,12 @@ namespace crawlservpp::Module::Analyzer {
 
 	//! Clean up all corpora and free their memory.
 	void Thread::cleanUpCorpora() {
-		std::vector<Corpus>{}.swap(this->corpora);
+		Helper::Memory::free(this->corpora);
 	}
 
 	//! Clean up all queries and free their memory.
 	void Thread::cleanUpQueries() {
-		std::vector<QueryStruct>{}.swap(this->queryFilterQueries);
+		Helper::Memory::free(this->queryFilterQueries);
 
 		this->deleteQueries();
 		this->clearQueries();

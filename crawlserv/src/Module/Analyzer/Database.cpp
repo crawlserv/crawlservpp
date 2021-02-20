@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1604,16 +1604,9 @@ namespace crawlservpp::Module::Analyzer {
 
 					last = this->getLastInsertedId();
 
-					// free memory early
-					std::string().swap(chunks.at(n));
-
-					if(articleMaps.size() > n) {
-						TextMap().swap(articleMaps.at(n));
-					}
-
-					if(dateMaps.size() > n) {
-						TextMap().swap(dateMaps.at(n));
-					}
+					Helper::Memory::free(chunks.at(n));
+					Helper::Memory::freeIf(articleMaps.size() > n, articleMaps.at(n));
+					Helper::Memory::freeIf(dateMaps.size() > n, dateMaps.at(n));
 
 					// measure chunk
 					measureChunkStatement.setUInt64(sqlArg1, last);
@@ -2329,16 +2322,9 @@ namespace crawlservpp::Module::Analyzer {
 
 				last = this->getLastInsertedId();
 
-				// free memory early
-				std::string().swap(chunks.at(n));
-
-				if(articleMaps.size() > n) {
-					TextMap().swap(articleMaps.at(n));
-				}
-
-				if(dateMaps.size() > n) {
-					TextMap().swap(dateMaps.at(n));
-				}
+				Helper::Memory::free(chunks.at(n));
+				Helper::Memory::freeIf(articleMaps.size() > n, articleMaps.at(n));
+				Helper::Memory::freeIf(dateMaps.size() > n, dateMaps.at(n));
 
 				statusSetter.update(
 						progressGeneratedSavePoint

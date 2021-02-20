@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 
 #include "HTML.hpp"
 
+#include "../Helper/Memory.hpp"
 #include "../Main/Exception.hpp"
 
 #include <pugixml.hpp>
@@ -302,9 +303,7 @@ namespace crawlservpp::Parsing {
 
 		std::ostringstream out;
 
-		if(!resultTo.empty()) {
-			std::string().swap(resultTo);
-		}
+		Helper::Memory::freeIf(!resultTo.empty(), resultTo);
 
 		this->doc->print(out);
 

@@ -334,9 +334,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void SentimentOverTime::resetAlgo() {
 		this->algoConfig = {};
 
-		std::vector<QueryStruct>{}.swap(this->queriesCategories);
-		DateData{}.swap(this->dateData);
-		ArticleData{}.swap(this->articleData);
+		Helper::Memory::free(this->queriesCategories);
+		Helper::Memory::free(this->dateData);
+		Helper::Memory::free(this->articleData);
 
 		this->currentCorpus = 0;
 

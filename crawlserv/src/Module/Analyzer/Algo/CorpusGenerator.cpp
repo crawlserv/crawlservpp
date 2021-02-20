@@ -178,7 +178,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				Helper::Math::variance<float>(avgTokenLength, tokenLengths)
 			};
 
-			std::vector<std::size_t>{}.swap(tokenLengths);
+			Helper::Memory::free(tokenLengths);
 
 			// calculate sentence lengths
 			std::vector<std::size_t> sentenceLengths;
@@ -202,7 +202,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				Helper::Math::variance<float>(avgSentenceLength, sentenceLengths)
 			};
 
-			std::vector<std::size_t>{}.swap(sentenceLengths);
+			Helper::Memory::free(sentenceLengths);
 
 			// write data to target table
 			Data::InsertFieldsMixed data;
@@ -297,8 +297,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					DataValue(sd2SentenceLength)
 			);
 
-			// clear memory
-			std::vector<Data::Corpus>{}.swap(this->corpora);
+			Helper::Memory::free(this->corpora);
 
 			// save results
 			this->database.insertCustomData(data);
@@ -368,7 +367,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	//! Resets the algorithm.
 	void CorpusGenerator::resetAlgo() {
-		std::string{}.swap(this->status);
+		Helper::Memory::free(this->status);
 	}
 
 	/*

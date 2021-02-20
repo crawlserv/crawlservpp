@@ -111,6 +111,12 @@ namespace crawlservpp::Helper::Json {
 	);
 
 	///@}
+	///@name Memory
+	///@{
+
+	static void free(rapidjson::Document& target);
+
+	///@}
 
 	/*
 	 * CLASS FOR JSON EXCEPTIONS
@@ -809,6 +815,15 @@ namespace crawlservpp::Helper::Json {
 		}
 
 		return result;
+	}
+
+	//! Frees memory by swapping.
+	/*!
+	 * \param target The @c rapidjson object to
+	 *   be freed by swapping.
+	 */
+	inline void free(rapidjson::Document& target) {
+		rapidjson::Value(rapidjson::kObjectType).Swap(target);
 	}
 
 } /* namespace crawlservpp::Helper::Json */

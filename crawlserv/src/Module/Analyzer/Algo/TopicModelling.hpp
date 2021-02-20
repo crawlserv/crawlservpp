@@ -70,6 +70,7 @@
 #include "../../../Data/TopicModel.hpp"
 #include "../../../Helper/FileSystem.hpp"
 #include "../../../Helper/Math.hpp"
+#include "../../../Helper/Memory.hpp"
 #include "../../../Helper/Queue.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/StatusSetter.hpp"

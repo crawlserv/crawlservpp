@@ -92,6 +92,7 @@
 #include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Json.hpp"
+#include "../Helper/Memory.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Module/Analyzer/Algo/All.hpp"
 #include "../Module/Crawler/Thread.hpp"

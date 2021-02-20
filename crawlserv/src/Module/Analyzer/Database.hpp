@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 #include "../../Data/Corpus.hpp"
 #include "../../Data/Data.hpp"
 #include "../../Helper/Json.hpp"
+#include "../../Helper/Memory.hpp"
 #include "../../Helper/Portability/mysqlcppconn.h"
 #include "../../Main/Exception.hpp"
 #include "../../Struct/CorpusProperties.hpp"

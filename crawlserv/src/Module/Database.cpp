@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -325,47 +325,47 @@ namespace crawlservpp::Module {
 	 *   will be written to the database.
 	 */
 	void Database::log(std::uint8_t level, std::queue<std::string>& logEntries) {
-		if(level <= this->loggingLevel || this->debugLogging) {
-			while(!logEntries.empty()) {
-				if(level <= this->loggingLevel) {
-					// write log entry to database
-					this->Main::Database::log(
-							"[#"
-							+ this->threadIdString
-							+ "] "
-							+ logEntries.front()
-					);
-				}
+		if(level > this->loggingLevel && (!this->debugLogging)) {
+			Helper::Memory::free(logEntries);
 
-				if(this->debugLogging && this->loggingFile.is_open()) {
-					// repair log entry if necessary
-					std::string repairedEntry;
+			return;
+		}
 
-					const bool repaired{
-						Helper::Utf8::repairUtf8(
-								logEntries.front(),
-								repairedEntry
-						)
-					};
-
-					if(repaired) {
-						repairedEntry += " [invalid UTF-8 character(s) removed from log]";
-					}
-
-					// write log entry to file
-					this->loggingFile << repairedEntry << "\n";
-				}
-
-				logEntries.pop();
+		while(!logEntries.empty()) {
+			if(level <= this->loggingLevel) {
+				// write log entry to database
+				this->Main::Database::log(
+						"[#"
+						+ this->threadIdString
+						+ "] "
+						+ logEntries.front()
+				);
 			}
 
 			if(this->debugLogging && this->loggingFile.is_open()) {
-				this->loggingFile.flush();
+				// repair log entry if necessary
+				std::string repairedEntry;
+
+				const bool repaired{
+					Helper::Utf8::repairUtf8(
+							logEntries.front(),
+							repairedEntry
+					)
+				};
+
+				if(repaired) {
+					repairedEntry += " [invalid UTF-8 character(s) removed from log]";
+				}
+
+				// write log entry to file
+				this->loggingFile << repairedEntry << "\n";
 			}
+
+			logEntries.pop();
 		}
-		else {
-			// clear the queue
-			std::queue<std::string>().swap(logEntries);
+
+		if(this->debugLogging && this->loggingFile.is_open()) {
+			this->loggingFile.flush();
 		}
 	}
 

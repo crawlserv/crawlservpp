@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@
 
 #include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Memory.hpp"
 #include "../Helper/Utf8.hpp"
 #include "../Main/Database.hpp"
 #include "../Main/Exception.hpp"

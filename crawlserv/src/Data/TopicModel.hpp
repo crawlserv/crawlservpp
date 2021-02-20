@@ -66,6 +66,7 @@
 #include "PickleDict.hpp"
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Memory.hpp"
 #include "../Helper/SilentInclude/EigenRand.h"
 #include "../Helper/SilentInclude/tomoto.h"
 #include "../Helper/Versions.hpp"
@@ -1905,7 +1906,7 @@ namespace crawlservpp::Data {
 		this->ldaModel.reset();
 		this->ldaModelIdf.reset();
 
-		std::vector<std::string>{}.swap(this->docNames);
+		Helper::Memory::free(this->docNames);
 
 		this->hasDocs = false;
 		this->isPrepared = false;
@@ -2463,7 +2464,7 @@ namespace crawlservpp::Data {
 			valueTo = std::move(*entry);
 		}
 		else {
-			std::string{}.swap(valueTo);
+			Helper::Memory::free(valueTo);
 		}
 	}
 

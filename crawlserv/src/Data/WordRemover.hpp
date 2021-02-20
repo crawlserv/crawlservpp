@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include "Dictionary.hpp"
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Memory.hpp"
 
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint64_t
@@ -121,7 +122,7 @@ namespace crawlservpp::Data {
 		}
 
 		// remove word
-		std::string{}.swap(word);
+		Helper::Memory::free(word);
 	}
 
 	/*

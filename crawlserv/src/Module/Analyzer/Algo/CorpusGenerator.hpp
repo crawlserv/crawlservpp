@@ -39,6 +39,7 @@
 
 #include "../../../Data/Corpus.hpp"
 #include "../../../Helper/Math.hpp"
+#include "../../../Helper/Memory.hpp"
 #include "../../../Helper/Utf8.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/StatusSetter.hpp"

@@ -299,9 +299,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->algoConfig = {};
 		this->queryKeyWord = {};
 
-		std::vector<QueryStruct>{}.swap(this->queriesCategories);
-		DateAssociationMap{}.swap(this->associations);
-		std::string{}.swap(this->lastDate);
+		Helper::Memory::free(this->queriesCategories);
+		Helper::Memory::free(this->associations);
+		Helper::Memory::free(this->lastDate);
 
 		this->currentCorpus = 0;
 		this->dateCounter = 0;
@@ -352,7 +352,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->articleIndex = 0;
 		this->tokenIndex = 0;
 
-		std::string{}.swap(this->lastDate);
+		Helper::Memory::free(this->lastDate);
 
 		auto dateIt{this->associations.begin()};
 
@@ -545,10 +545,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 		}
 
-		// clear memory
-		std::unordered_map<std::string, std::unordered_map<std::string, Associations>>().swap(
-				this->associations
-		);
+		Helper::Memory::free(this->associations);
 
 		// target table updated
 		this->database.updateTargetTable();

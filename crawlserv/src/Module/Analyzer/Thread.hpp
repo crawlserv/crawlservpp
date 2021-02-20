@@ -39,6 +39,7 @@
 #include "../Thread.hpp"
 
 #include "../../Data/Corpus.hpp"
+#include "../../Helper/Memory.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Query/Container.hpp"
 #include "../../Struct/CorpusProperties.hpp"

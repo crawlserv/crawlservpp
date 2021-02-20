@@ -547,9 +547,8 @@ namespace crawlservpp::Main {
 			}
 
 			// clear IP and JSON
-			std::string().swap(this->cmdIp);
-
-			rapidjson::Value(rapidjson::kObjectType).Swap(this->cmdJson);
+			Helper::Memory::free(this->cmdIp);
+			Helper::Json::free(this->cmdJson);
 		}
 
 		// return the reply

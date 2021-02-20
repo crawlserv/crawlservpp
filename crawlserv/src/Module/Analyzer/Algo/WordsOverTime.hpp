@@ -36,6 +36,7 @@
 
 #include "../../../Data/Data.hpp"
 #include "../../../Helper/DateTime.hpp"
+#include "../../../Helper/Memory.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/TextMap.hpp"

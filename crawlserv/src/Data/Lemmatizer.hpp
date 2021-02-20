@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include "Dictionary.hpp"
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Memory.hpp"
 #include "../Helper/Strings.hpp"
 
 #include <cstddef>			// std::size_t
@@ -213,7 +214,7 @@ namespace crawlservpp::Data {
 
 	//! Clears the lemmatizer, freeing the memory used by all dictionaries.
 	inline void Lemmatizer::clear() {
-		std::unordered_map<std::string, Dictionary>().swap(this->dictionaries);
+		Helper::Memory::free(this->dictionaries);
 	}
 
 	/*

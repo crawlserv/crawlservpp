@@ -202,7 +202,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void WordsOverTime::resetAlgo() {
 		this->firstTick = true;
 
-		std::map<std::string, DateResults>{}.swap(this->dateResults);
+		Helper::Memory::free(this->dateResults);
 	}
 
 	/*

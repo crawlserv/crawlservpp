@@ -34,6 +34,7 @@
 #include "../Thread.hpp"
 
 #include "../../../Data/Corpus.hpp"
+#include "../../../Helper/Memory.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/StatusSetter.hpp"
 #include "../../../Struct/ThreadOptions.hpp"

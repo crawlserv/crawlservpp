@@ -298,8 +298,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->isTrained = false;
 		this->topicTable = 0;
 
-		std::unordered_set<std::string>{}.swap(this->articlesDone);
-		std::vector<std::pair<std::string, std::vector<float>>>{}.swap(this->results);
+		Helper::Memory::free(this->articlesDone);
+		Helper::Memory::free(this->results);
 
 		timer.tick();
 	}

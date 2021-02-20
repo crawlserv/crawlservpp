@@ -661,7 +661,7 @@ namespace crawlservpp::Main {
 			}
 		}
 
-		std::string{}.swap(to);
+		Helper::Memory::free(to);
 
 		to.reserve(end - pos);
 

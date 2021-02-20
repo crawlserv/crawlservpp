@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@
 #include "XPath.hpp"
 
 #include "../Helper/Json.hpp"
+#include "../Helper/Memory.hpp"
 #include "../Main/Exception.hpp"
 #include "../Parsing/XML.hpp"
 #include "../Struct/QueryProperties.hpp"
@@ -755,12 +756,12 @@ namespace crawlservpp::Query {
 
 	//! Clears all queries currently managed by the container and frees the associated memory.
 	inline void Container::clearQueries() {
-		std::vector<XPath>().swap(this->queriesXPath);
-		std::vector<RegEx>().swap(this->queriesRegEx);
-		std::vector<JsonPointer>().swap(this->queriesJsonPointer);
-		std::vector<JsonPath>().swap(this->queriesJsonPath);
-		std::vector<XPathJsonPointer>().swap(this->queriesXPathJsonPointer);
-		std::vector<XPathJsonPath>().swap(this->queriesXPathJsonPath);
+		Helper::Memory::free(this->queriesXPath);
+		Helper::Memory::free(this->queriesRegEx);
+		Helper::Memory::free(this->queriesJsonPointer);
+		Helper::Memory::free(this->queriesJsonPath);
+		Helper::Memory::free(this->queriesXPathJsonPointer);
+		Helper::Memory::free(this->queriesXPathJsonPath);
 	}
 
 	//! Clears the current query target and frees the associated memory.
@@ -771,11 +772,8 @@ namespace crawlservpp::Query {
 		// clear parsed content
 		this->parsedXML.clear();
 
-		jsoncons::json().swap(this->parsedJsonCons);
-
-		rapidjson::Value(
-				rapidjson::kObjectType
-		).Swap(this->parsedJsonRapid);
+		Helper::Memory::free(this->parsedJsonCons);
+		Helper::Json::free(this->parsedJsonRapid);
 
 		// reset parsing state
 		this->xmlParsed = false;
@@ -783,8 +781,8 @@ namespace crawlservpp::Query {
 		this->jsonParsedCons = false;
 
 		// clear parsing errors
-		std::string().swap(this->xmlParsingError);
-		std::string().swap(this->jsonParsingError);
+		Helper::Memory::free(this->xmlParsingError);
+		Helper::Memory::free(this->jsonParsingError);
 
 		// unset pointers
 		this->queryTargetPtr = nullptr;
@@ -821,13 +819,10 @@ namespace crawlservpp::Query {
 
 		// clear previous subset
 		if(this->subSetCurrent > 0) {
-			if(!(this->stringifiedSubSets.empty())) {
-				std::string().swap(
-						this->stringifiedSubSets.at(
-								this->subSetCurrent - 1
-						)
-				);
-			}
+			Helper::Memory::freeIf(
+					!(this->stringifiedSubSets.empty()),
+					this->stringifiedSubSets.at(this->subSetCurrent - 1)
+			);
 
 			switch(this->subSetType) {
 			case QueryStruct::typeXPath:
@@ -838,7 +833,7 @@ namespace crawlservpp::Query {
 				break;
 
 			case QueryStruct::typeJsonPointer:
-				rapidjson::Value(rapidjson::kObjectType).Swap(
+				Helper::Json::free(
 						this->jsonPointerSubSets.at(
 								this->subSetCurrent - 1
 						)
@@ -847,7 +842,7 @@ namespace crawlservpp::Query {
 				break;
 
 			case QueryStruct::typeJsonPath:
-				jsoncons::json().swap(
+				Helper::Memory::free(
 						this->jsonPathSubSets.at(
 								this->subSetCurrent - 1
 						)
@@ -3962,15 +3957,14 @@ namespace crawlservpp::Query {
 		this->subSetJsonParsedCons = false;
 
 		// clear parsing errors
-		std::string().swap(this->subSetXmlParsingError);
-		std::string().swap(this->subSetJsonParsingError);
+		Helper::Memory::free(this->subSetXmlParsingError);
+		Helper::Memory::free(this->subSetJsonParsingError);
 
 		// clear parsed content
 		this->subSetParsedXML.clear();
 
-		jsoncons::json().swap(this->subSetParsedJsonCons);
-
-		rapidjson::Value(rapidjson::kObjectType).Swap(this->subSetParsedJsonRapid);
+		Helper::Memory::free(this->subSetParsedJsonCons);
+		Helper::Json::free(this->subSetParsedJsonRapid);
 	}
 
 	// clear subsets
@@ -3978,17 +3972,17 @@ namespace crawlservpp::Query {
 		if(this->minimizeMemory) {
 			switch(this->subSetType) {
 			case QueryStruct::typeXPath:
-				std::vector<Parsing::XML>().swap(this->xPathSubSets);
+				Helper::Memory::free(this->xPathSubSets);
 
 				break;
 
 			case QueryStruct::typeJsonPointer:
-				std::vector<rapidjson::Document>().swap(this->jsonPointerSubSets);
+				Helper::Memory::free(this->jsonPointerSubSets);
 
 				break;
 
 			case QueryStruct::typeJsonPath:
-				std::vector<jsoncons::json>().swap(this->jsonPathSubSets);
+				Helper::Memory::free(this->jsonPathSubSets);
 
 				break;
 
@@ -3996,7 +3990,7 @@ namespace crawlservpp::Query {
 				break;
 			}
 
-			std::vector<std::string>().swap(this->stringifiedSubSets);
+			Helper::Memory::free(this->stringifiedSubSets);
 		}
 		else {
 			switch(this->subSetType) {
@@ -4102,7 +4096,7 @@ namespace crawlservpp::Query {
 		switch(this->subSetType) {
 		case QueryStruct::typeXPath:
 			if(this->minimizeMemory) {
-				std::vector<Parsing::XML>().swap(this->xPathSubSets);
+				Helper::Memory::free(this->xPathSubSets);
 			}
 			else {
 				this->xPathSubSets.clear();
@@ -4112,7 +4106,7 @@ namespace crawlservpp::Query {
 
 		case QueryStruct::typeJsonPointer:
 			if(this->minimizeMemory) {
-				std::vector<rapidjson::Document>().swap(this->jsonPointerSubSets);
+				Helper::Memory::free(this->jsonPointerSubSets);
 			}
 			else {
 				this->jsonPointerSubSets.clear();
@@ -4122,7 +4116,7 @@ namespace crawlservpp::Query {
 
 		case QueryStruct::typeJsonPath:
 			if(this->minimizeMemory) {
-				std::vector<jsoncons::json>().swap(this->jsonPathSubSets);
+				Helper::Memory::free(this->jsonPathSubSets);
 			}
 			else {
 				this->jsonPathSubSets.clear();
@@ -4198,9 +4192,7 @@ namespace crawlservpp::Query {
 			switch(this->subSetType) {
 			case QueryStruct::typeJsonPointer:
 				if(this->minimizeMemory) {
-					std::vector<rapidjson::Document>().swap(
-							this->jsonPointerSubSets
-					);
+					Helper::Memory::free(this->jsonPointerSubSets);
 				}
 				else {
 					this->jsonPointerSubSets.clear();
@@ -4210,9 +4202,7 @@ namespace crawlservpp::Query {
 
 			case QueryStruct::typeJsonPath:
 				if(this->minimizeMemory) {
-					std::vector<jsoncons::json>().swap(
-							this->jsonPathSubSets
-					);
+					Helper::Memory::free(this->jsonPathSubSets);
 				}
 				else {
 					this->jsonPathSubSets.clear();
@@ -4288,9 +4278,7 @@ namespace crawlservpp::Query {
 			switch(this->subSetType) {
 			case QueryStruct::typeXPath:
 				if(this->minimizeMemory) {
-					std::vector<Parsing::XML>().swap(
-							this->xPathSubSets
-					);
+					Helper::Memory::free(this->xPathSubSets);
 				}
 				else {
 					this->xPathSubSets.clear();
@@ -4300,9 +4288,7 @@ namespace crawlservpp::Query {
 
 			case QueryStruct::typeJsonPointer:
 				if(this->minimizeMemory) {
-					std::vector<rapidjson::Document>().swap(
-							this->jsonPointerSubSets
-					);
+					Helper::Memory::free(this->jsonPointerSubSets);
 				}
 				else {
 					this->jsonPointerSubSets.clear();
@@ -4378,9 +4364,7 @@ namespace crawlservpp::Query {
 			switch(this->subSetType) {
 			case QueryStruct::typeXPath:
 				if(this->minimizeMemory) {
-					std::vector<Parsing::XML>().swap(
-							this->xPathSubSets
-					);
+					Helper::Memory::free(this->xPathSubSets);
 				}
 				else {
 					this->xPathSubSets.clear();
@@ -4390,9 +4374,7 @@ namespace crawlservpp::Query {
 
 			case QueryStruct::typeJsonPath:
 				if(this->minimizeMemory) {
-					std::vector<jsoncons::json>().swap(
-							this->jsonPathSubSets
-					);
+					Helper::Memory::free(this->jsonPathSubSets);
 				}
 				else {
 					this->jsonPathSubSets.clear();

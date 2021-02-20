@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@
 
 #ifndef STRUCT_TEXTMAP_HPP_
 #define STRUCT_TEXTMAP_HPP_
+
+#include "../Helper/Memory.hpp"
 
 #include <cstddef>	// std::size_t
 #include <string>	// std::string
@@ -127,7 +129,7 @@ namespace crawlservpp::Struct {
 			this->p = 0;
 			this->l = 0;
 
-			std::string().swap(this->value);
+			Helper::Memory::free(this->value);
 		}
 
 		///@}

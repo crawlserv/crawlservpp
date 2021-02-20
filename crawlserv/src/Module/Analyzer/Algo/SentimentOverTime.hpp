@@ -48,6 +48,7 @@
 #include "../../../Data/Sentiment.hpp"
 #include "../../../Helper/DateTime.hpp"
 #include "../../../Helper/FileSystem.hpp"
+#include "../../../Helper/Memory.hpp"
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/QueryStruct.hpp"
 #include "../../../Struct/StatusSetter.hpp"

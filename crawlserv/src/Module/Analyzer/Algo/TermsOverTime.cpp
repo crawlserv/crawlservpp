@@ -201,7 +201,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->firstTick = true;
 
-		std::vector<DateArticlesOccurrences>{}.swap(this->dateCounts);
+		Helper::Memory::free(this->dateCounts);
 	}
 
 	/*

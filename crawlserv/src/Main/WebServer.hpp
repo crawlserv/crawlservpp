@@ -32,6 +32,7 @@
 #define MAIN_WEBSERVER_HPP_
 
 #include "../Helper/FileSystem.hpp"
+#include "../Helper/Memory.hpp"
 #include "../Helper/Strings.hpp"
 #include "../Main/Exception.hpp"
 
