@@ -31,8 +31,8 @@
 #ifndef HELPER_QUEUE_HPP_
 #define HELPER_QUEUE_HPP_
 
-#include <stack>	// std::stack
 #include <queue>	// std::queue
+#include <stack>	// std::stack
 
 //! Namespace for global queue helper functions.
 namespace crawlservpp::Helper::Queue {
