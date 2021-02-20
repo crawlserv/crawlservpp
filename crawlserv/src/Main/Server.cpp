@@ -4979,7 +4979,7 @@ namespace crawlservpp::Main {
 	}
 
 	// check whether the server is connected and get the IP address of the connection
-	std::string Server::getIp(const ConnectionPtr connection, std::string_view function) {
+	std::string Server::getIp(ConstConnectionPtr connection, std::string_view function) {
 		if(connection == nullptr) {
 			std::string exceptionString{
 				"Server::"
@@ -5921,7 +5921,7 @@ namespace crawlservpp::Main {
 			const rapidjson::Document& json,
 			std::uint64_t& websiteTo,
 			std::uint64_t& urlListTo,
-			std::uint64_t& tableTo,
+			std::uint64_t& sourceTableTo,
 			bool& isColumnNamesTo,
 			ServerCommandResponse& responseTo
 	) {
@@ -5930,7 +5930,7 @@ namespace crawlservpp::Main {
 		if(
 				Server::getArgument(json, "website", websiteTo, error)
 				&& Server::getArgument(json, "urllist", urlListTo, error)
-				&& Server::getArgument(json, "source", tableTo, error)
+				&& Server::getArgument(json, "source", sourceTableTo, error)
 				&& Server::getArgument(json, "column-names", isColumnNamesTo, true, error)
 		) {
 			return true;

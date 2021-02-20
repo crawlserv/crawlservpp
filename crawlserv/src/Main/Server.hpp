@@ -598,7 +598,7 @@ namespace crawlservpp::Main {
 				const rapidjson::Document& json,
 				std::uint64_t& websiteTo,
 				std::uint64_t& urlListTo,
-				std::uint64_t& sourceTo,
+				std::uint64_t& sourceTableTo,
 				bool& isColumnNamesTo,
 				ServerCommandResponse& responseTo
 		);
@@ -670,8 +670,8 @@ namespace crawlservpp::Main {
 		);
 		static bool cmdDeleteUrlsGetQuery(
 				Module::Database& db,
-				std::uint64_t queryId,
-				std::string& propertiesTo,
+				std::uint64_t query,
+				std::string& regExTo,
 				ServerCommandResponse& responseTo
 		);
 		static bool cmdDeleteUrlsGetUrls(
