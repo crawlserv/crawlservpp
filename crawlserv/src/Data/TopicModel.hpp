@@ -136,18 +136,15 @@
 		if(isIdf) { \
 			return this->hdpModelIdf->function(__VA_ARGS__); \
 		} \
-		else { \
-			return this->hdpModel->function(__VA_ARGS__); \
-		} \
+		\
+		return this->hdpModel->function(__VA_ARGS__); \
 	} \
-	else { \
-		if(isIdf) { \
-			return this->ldaModelIdf->function(__VA_ARGS__); \
-		} \
-		else { \
-			return this->ldaModel->function(__VA_ARGS__); \
-		} \
-	}
+	\
+	if(isIdf) { \
+		return this->ldaModelIdf->function(__VA_ARGS__); \
+	} \
+	\
+	return this->ldaModel->function(__VA_ARGS__);
 
 namespace crawlservpp::Data {
 
@@ -296,12 +293,12 @@ namespace crawlservpp::Data {
 		void setUseIdf(bool idf);
 		void setBurnInIteration(std::size_t skipIterations);
 		void setWordRemoval(
-			std::size_t minWordCount,
-			std::size_t minCollectionFrequency,
-			std::size_t minDocumentFrequency
+				std::size_t collectionFrequency,
+				std::size_t documentFrequency,
+				std::size_t fixedNumberOfTopWords
 		);
 		void setInitialParameters(
-				std::size_t numberOfTopics,
+				std::size_t numberOfInitialTopics,
 				float alpha,
 				float eta,
 				float gamma
@@ -342,7 +339,7 @@ namespace crawlservpp::Data {
 		///@{
 
 		std::size_t load(const std::string& fileName);
-		std::size_t save(const std::string& fileName, bool full) const;
+		std::size_t save(const std::string& fileName, bool full) const; //NOLINT(modernize-use-nodiscard)
 
 		///@}
 		///@name Cleanup
@@ -450,7 +447,7 @@ namespace crawlservpp::Data {
 				const tomoto::DocumentBase * doc
 		) const;
 
-		[[nodiscard]] const tomoto::ITopicModel& getModelInterface(bool isHdf, bool isIdf) const;
+		[[nodiscard]] const tomoto::ITopicModel& getModelInterface(bool isHdp, bool isIdf) const;
 
 		// internal static helper functions (definitions only)
 		[[nodiscard]] static tomoto::RawDoc createDocument(
@@ -507,7 +504,7 @@ namespace crawlservpp::Data {
 			}
 
 			for(std::size_t index{}; index < bytes.size(); ++index) {
-				if(bytes[index] != s[index]) {
+				if(bytes[index] != s[index]) { //NOLINT(cppcoreguidelines-pro-bounds-constant-array-index)
 					return false;
 				}
 			}
@@ -1692,7 +1689,7 @@ namespace crawlservpp::Data {
 	 */
 	inline void TopicModel::label(std::size_t threads) {
 		if(!(this->isLabeling)) {
-			this->labeler.release();
+			this->labeler.reset();
 
 			return;
 		}
@@ -1903,10 +1900,10 @@ namespace crawlservpp::Data {
 
 	//! Clears the model, resets its settings and frees memory.
 	inline void TopicModel::clear(bool labelingOptions) {
-		this->hdpModel.release();
-		this->hdpModelIdf.release();
-		this->ldaModel.release();
-		this->ldaModelIdf.release();
+		this->hdpModel.reset();
+		this->hdpModelIdf.reset();
+		this->ldaModel.reset();
+		this->ldaModelIdf.reset();
 
 		std::vector<std::string>{}.swap(this->docNames);
 
@@ -1926,7 +1923,7 @@ namespace crawlservpp::Data {
 
 		this->trainedWithVersion.clear();
 
-		this->labeler.release();
+		this->labeler.reset();
 
 		if(labelingOptions) {
 			this->isLabeling = false;
@@ -2364,7 +2361,7 @@ namespace crawlservpp::Data {
 
 	// check first bytes of the topic model file (indicating the type of the model)
 	inline void TopicModel::readModelFileHead(std::istream& in, const std::string& fileName) {
-		std::array<char, modelFileHead.size()> headBytes;
+		std::array<char, modelFileHead.size()> headBytes{};
 
 		in.read(headBytes.data(), modelFileHead.size());
 
@@ -2382,7 +2379,7 @@ namespace crawlservpp::Data {
 
 	// check and read term weighting scheme from topic model file
 	inline void TopicModel::readModelFileTermWeighting(std::istream& in, const std::string& fileName, bool& isIdfTo) {
-		std::array<char, modelFileTermWeightingLen> twBytes;
+		std::array<char, modelFileTermWeightingLen> twBytes{};
 
 		in.read(twBytes.data(), modelFileTermWeightingLen);
 
@@ -2406,7 +2403,7 @@ namespace crawlservpp::Data {
 
 	// check file type of topic model file
 	inline void TopicModel::readModelFileType(std::istream& in, const std::string& fileName) {
-		std::array<char, modelFileType.size()> typeBytes;
+		std::array<char, modelFileType.size()> typeBytes{};
 
 		in.read(typeBytes.data(), modelFileType.size());
 
@@ -2490,6 +2487,6 @@ namespace crawlservpp::Data {
 		}
 	}
 
-} /* namespace crawlservpp::Data::TopicModel */
+} /* namespace crawlservpp::Data */
 
 #endif /* DATA_TOPICMODEL_HPP_ */
