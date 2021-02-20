@@ -45,11 +45,12 @@ extern "C" {
 	#include "../_extern/mongoose/mongoose.h"
 }
 
+#include <Eigen/Core>
+
 #include <aspell.h>
 #include <boost/version.hpp>
 #include <cppconn/driver.h>
 #include <curl/curl.h>
-#include <Eigen/Core>
 #include <mapbox/variant.hpp>
 #include <pcre2.h>
 #include <pugixml.hpp>
