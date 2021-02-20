@@ -238,7 +238,7 @@ namespace crawlservpp::Main {
 	}
 
 	// helper function: process a character from user input
-	bool App::inputLoop(DatabaseSettings& dbSettings, bool& inputCancelTo) {
+	bool App::inputLoop(DatabaseSettings& dbSettings, bool& isCancelTo) {
 		// get next character from user input
 		char input{Helper::Portability::getch()};
 
@@ -277,7 +277,7 @@ namespace crawlservpp::Main {
 			// CTRL+C, ESCAPE -> cancel and end input loop
 			std::cout << "[CANCELLED]";
 
-			inputCancelTo = true;
+			isCancelTo = true;
 
 			return false;
 
