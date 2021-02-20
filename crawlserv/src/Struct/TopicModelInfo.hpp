@@ -182,7 +182,7 @@ namespace crawlservpp::Struct {
 		///@{
 
 		//! Return queue with strings describing the information contained in the structure.
-		std::queue<std::string> toQueueOfStrings() const {
+		[[nodiscard]] std::queue<std::string> toQueueOfStrings() const {
 			std::queue<std::string> result;
 
 			result.emplace("<Basic Info>");
@@ -357,6 +357,6 @@ namespace crawlservpp::Struct {
 		}
 	};
 
-} /* namespace crawlservpp:Struct */
+} /* namespace crawlservpp::Struct */
 
 #endif /* STRUCT_HDPMODELINFO_HPP_ */
