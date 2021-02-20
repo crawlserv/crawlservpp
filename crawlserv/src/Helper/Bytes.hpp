@@ -212,13 +212,13 @@ namespace crawlservpp::Helper::Bytes {
 			std::reverse(numberBytes.begin(), numberBytes.end());
 		}
 
-		return static_cast<std::uint64_t>(numberBytes[eighth]) << sevenBytesBits
-				| static_cast<std::uint64_t>(numberBytes[seventh]) << sixBytesBits
-				| static_cast<std::uint64_t>(numberBytes[sixth]) << fiveBytesBits
-				| static_cast<std::uint64_t>(numberBytes[fifth]) << fourBytesBits
-				| static_cast<std::uint64_t>(numberBytes[fourth]) << threeBytesBits
-				| static_cast<std::uint64_t>(numberBytes[third]) << twoBytesBits
-				| static_cast<std::uint64_t>(numberBytes[second]) << oneByteBits
+		return static_cast<std::uint64_t>(numberBytes[eighth]) << sevenBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[seventh]) << sixBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[sixth]) << fiveBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[fifth]) << fourBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[fourth]) << threeBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[third]) << twoBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[second]) << oneByteBits //NOLINT(hicpp-signed-bitwise)
 				| static_cast<std::uint64_t>(numberBytes[first]);
 	}
 
@@ -248,7 +248,7 @@ namespace crawlservpp::Helper::Bytes {
 		std::array<std::uint8_t, sizeEight> numberBytes{};
 
 		for(std::size_t n{}; n < len; ++n) {
-			numberBytes[n] = bytes[pos + n];
+			numberBytes.at(n) = bytes[pos + n];
 		};
 
 		pos += len;
@@ -257,13 +257,13 @@ namespace crawlservpp::Helper::Bytes {
 			std::reverse(numberBytes.begin(), numberBytes.end());
 		}
 
-		return static_cast<std::uint64_t>(numberBytes[eighth]) << sevenBytesBits
-				| static_cast<std::uint64_t>(numberBytes[seventh]) << sixBytesBits
-				| static_cast<std::uint64_t>(numberBytes[sixth]) << fiveBytesBits
-				| static_cast<std::uint64_t>(numberBytes[fifth]) << fourBytesBits
-				| static_cast<std::uint64_t>(numberBytes[fourth]) << threeBytesBits
-				| static_cast<std::uint64_t>(numberBytes[third]) << twoBytesBits
-				| static_cast<std::uint64_t>(numberBytes[second]) << oneByteBits
+		return static_cast<std::uint64_t>(numberBytes[eighth]) << sevenBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[seventh]) << sixBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[sixth]) << fiveBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[fifth]) << fourBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[fourth]) << threeBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[third]) << twoBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint64_t>(numberBytes[second]) << oneByteBits //NOLINT(hicpp-signed-bitwise)
 				| static_cast<std::uint64_t>(numberBytes[first]);
 	}
 
@@ -325,9 +325,9 @@ namespace crawlservpp::Helper::Bytes {
 			std::reverse(numberBytes.begin(), numberBytes.end());
 		}
 
-		return static_cast<std::uint32_t>(numberBytes[fourth]) << threeBytesBits
-				| static_cast<std::uint32_t>(numberBytes[third]) << twoBytesBits
-				| static_cast<std::uint32_t>(numberBytes[second]) << oneByteBits
+		return static_cast<std::uint32_t>(numberBytes[fourth]) << threeBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint32_t>(numberBytes[third]) << twoBytesBits //NOLINT(hicpp-signed-bitwise)
+				| static_cast<std::uint32_t>(numberBytes[second]) << oneByteBits //NOLINT(hicpp-signed-bitwise)
 				| static_cast<std::uint32_t>(numberBytes[first]);
 	}
 
@@ -370,7 +370,7 @@ namespace crawlservpp::Helper::Bytes {
 			std::reverse(numberBytes.begin(), numberBytes.end());
 		}
 
-		return static_cast<std::uint16_t>(numberBytes[second]) << oneByteBits
+		return static_cast<std::uint16_t>(numberBytes[second]) << oneByteBits //NOLINT(hicpp-signed-bitwise)
 				| static_cast<std::uint16_t>(numberBytes[first]);
 	}
 
@@ -430,7 +430,7 @@ namespace crawlservpp::Helper::Bytes {
 	 *   eight bytes.
 	 */
 	inline std::array<std::uint8_t, sizeEight> uInt64ToBytes(std::uint64_t number) {
-		std::array<std::uint8_t, sizeEight> result;
+		std::array<std::uint8_t, sizeEight> result{};
 
 		reinterpret_cast<std::uint64_t&>(*result.data()) = number;
 
@@ -449,7 +449,7 @@ namespace crawlservpp::Helper::Bytes {
 	 *   eight bytes.
 	 */
 	inline std::array<std::uint8_t, sizeEight> int64ToBytes(std::int64_t number) {
-		std::array<std::uint8_t, sizeEight> result;
+		std::array<std::uint8_t, sizeEight> result{};
 
 		reinterpret_cast<std::int64_t&>(*result.data()) = number;
 
@@ -468,7 +468,7 @@ namespace crawlservpp::Helper::Bytes {
 	 *   four bytes.
 	 */
 	inline std::array<std::uint8_t, sizeFour> uInt32ToBytes(std::uint32_t number) {
-		std::array<std::uint8_t, sizeFour> result;
+		std::array<std::uint8_t, sizeFour> result{};
 
 		reinterpret_cast<std::uint32_t&>(*result.data()) = number;
 
@@ -487,7 +487,7 @@ namespace crawlservpp::Helper::Bytes {
 	 *   four bytes.
 	 */
 	inline std::array<std::uint8_t, sizeFour> int32ToBytes(std::int32_t number) {
-		std::array<std::uint8_t, sizeFour> result;
+		std::array<std::uint8_t, sizeFour> result{};
 
 		reinterpret_cast<std::int32_t&>(*result.data()) = number;
 
@@ -506,7 +506,7 @@ namespace crawlservpp::Helper::Bytes {
 	 *   two bytes.
 	 */
 	inline std::array<std::uint8_t, sizeTwo> uInt16ToBytes(std::uint16_t number) {
-		std::array<std::uint8_t, sizeTwo> result;
+		std::array<std::uint8_t, sizeTwo> result{};
 
 		reinterpret_cast<std::uint16_t&>(*result.data()) = number;
 
@@ -525,7 +525,7 @@ namespace crawlservpp::Helper::Bytes {
 	 *   two bytes.
 	 */
 	inline std::array<std::uint8_t, sizeTwo> int16ToBytes(std::int16_t number) {
-		std::array<std::uint8_t, sizeTwo> result;
+		std::array<std::uint8_t, sizeTwo> result{};
 
 		reinterpret_cast<std::int16_t&>(*result.data()) = number;
 
@@ -545,7 +545,7 @@ namespace crawlservpp::Helper::Bytes {
 	 *   eight bytes.
 	 */
 	inline std::array<std::uint8_t, sizeEight> doubleToBytes(double number) {
-		std::array<std::uint8_t, sizeEight> result;
+		std::array<std::uint8_t, sizeEight> result{};
 
 		reinterpret_cast<double&>(*result.data()) = number;
 
@@ -583,8 +583,8 @@ namespace crawlservpp::Helper::Bytes {
 
 		result.reserve(resultSize);
 
-		result.push_back(hexChars[((byte & hex240) >> hexShift)]);
-		result.push_back(hexChars[byte & hex15]);
+		result.push_back(hexChars.at(((byte & hex240) >> hexShift)));
+		result.push_back(hexChars.at(byte & hex15));
 
 		return result;
 	}
@@ -630,7 +630,7 @@ namespace crawlservpp::Helper::Bytes {
 			return "\\t";
 
 		default:
-			if(std::isprint(c)) {
+			if(std::isprint(c) != 0) {
 				return std::string(c, 1);
 			}
 
