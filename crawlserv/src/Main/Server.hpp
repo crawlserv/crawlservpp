@@ -258,6 +258,7 @@ namespace crawlservpp::Main {
 		using WebsiteProperties = Struct::WebsiteProperties;
 
 		using ConnectionPtr = mg_connection *;
+		using ConstConnectionPtr = const mg_connection *;
 		using StringString = std::pair<std::string, std::string>;
 		using Queries = std::vector<std::pair<std::string, std::vector<StringString>>>;
 
@@ -457,7 +458,7 @@ namespace crawlservpp::Main {
 		// internal helper functions
 		void continueParserThread(const ThreadDatabaseEntry& entry);
 		void continueAnalyzerThread(const ThreadDatabaseEntry& entry);
-		static std::string getIp(const ConnectionPtr connection, std::string_view function);
+		static std::string getIp(ConstConnectionPtr connection, std::string_view function);
 		bool isWebsiteInUse(std::uint64_t website, ServerCommandResponse& responseTo) const;
 		bool isUrlListInUse(std::uint64_t urlList, ServerCommandResponse& responseTo) const;
 		bool checkConfig(std::uint64_t config, ServerCommandResponse& responseTo);
