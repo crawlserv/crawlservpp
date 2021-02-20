@@ -369,7 +369,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// handle articles without date
-		this->firstDatePos = dateMap.front().pos;
+		this->firstDatePos = TextMapEntry::pos(dateMap.front());
 
 		if(this->firstDatePos > 0 && !(this->algoConfig.ignoreEmptyDate)) {
 			if(articleMap.empty()) {
@@ -393,7 +393,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				// handle articles without date
 				while(
 						this->articleIndex < articleMap.size()
-						&& articleMap[this->articleIndex].pos < this->firstDatePos
+						&& TextMapEntry::pos(articleMap[this->articleIndex]) < this->firstDatePos
 				) {
 					// add empty date if still necessary
 					if(!(this->dateSaved)) {
@@ -410,8 +410,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					// go through all tokens of the current article
 					while(
 							this->tokenIndex < tokens.size()
-							&& this->tokenIndex < articleMap[this->articleIndex].pos
-							+ articleMap[this->articleIndex].length
+							&& this->tokenIndex < TextMapEntry::end(articleMap[this->articleIndex])
 					) {
 						this->processToken(
 								tokens[this->tokenIndex],
@@ -423,7 +422,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					}
 
 					// update offset of article
-					articleIt->second.offset += articleMap[this->articleIndex].length;
+					articleIt->second.offset += TextMapEntry::length(articleMap[this->articleIndex]);
 
 					++(this->articleIndex);
 				}
@@ -589,7 +588,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		if(this->firstDatePos > 0 && this->algoConfig.ignoreEmptyDate) {
 			while(
 					this->articleIndex < articleMap.size()
-					&& articleMap[this->articleIndex].pos < date.pos
+					&& TextMapEntry::pos(articleMap[this->articleIndex]) < TextMapEntry::pos(date)
 			) {
 				++(this->articleIndex);
 			}
@@ -614,7 +613,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// go through all articles of the current date
 		while(
 				this->articleIndex < articleMap.size()
-				&& articleMap[this->articleIndex].pos < TextMapEntry::end(date)
+				&& TextMapEntry::pos(articleMap[this->articleIndex]) < TextMapEntry::end(date)
 		) {
 			// add article if still necessary, and save its iterator
 			const auto articleIt{
@@ -625,7 +624,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			if(this->algoConfig.ignoreEmptyDate) {
 				while(
 						this->tokenIndex < tokens.size()
-						&& this->tokenIndex < articleMap[this->articleIndex].pos
+						&& this->tokenIndex < TextMapEntry::pos(articleMap[this->articleIndex])
 				) {
 					++(this->tokenIndex);
 				}
@@ -634,8 +633,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			// go through all tokens of the current article
 			while(
 					this->tokenIndex < tokens.size()
-					&& this->tokenIndex < articleMap[this->articleIndex].pos
-					+ articleMap[this->articleIndex].length
+					&& this->tokenIndex < TextMapEntry::end(articleMap[this->articleIndex])
 			) {
 				this->processToken(
 						tokens[this->tokenIndex],
@@ -647,7 +645,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 
 			// update offset of article
-			articleIt->second.offset += articleMap[this->articleIndex].length;
+			articleIt->second.offset += TextMapEntry::length(articleMap[this->articleIndex]);
 
 			++(this->articleIndex);
 		}

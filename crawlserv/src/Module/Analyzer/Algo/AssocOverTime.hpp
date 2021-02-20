@@ -39,6 +39,7 @@
 #include "../../../Main/Database.hpp"
 #include "../../../Struct/QueryStruct.hpp"
 #include "../../../Struct/StatusSetter.hpp"
+#include "../../../Struct/TextMap.hpp"
 #include "../../../Struct/ThreadOptions.hpp"
 #include "../../../Struct/ThreadStatus.hpp"
 

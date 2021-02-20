@@ -447,7 +447,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			// identify date
 			if(
 					SentimentOverTime::identifyCurrent(
-							sentence.first,
+							TextMapEntry::pos(sentence),
 							dateNumber,
 							dateMap,
 							lastDate
@@ -478,7 +478,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 			if(processArticles) {
 				SentimentOverTime::identifyCurrent(
-						sentence.first,
+						TextMapEntry::pos(sentence),
 						articleNumber,
 						articleMap,
 						lastArticle
@@ -684,7 +684,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		for(std::size_t category{}; category < this->algoConfig.categoryLabels.size(); ++category) {
 			bool found{false};
 
-			for(std::size_t word{sentence.first}; word < end; ++word) {
+			for(std::size_t word{TextMapEntry::pos(sentence)}; word < end; ++word) {
 				bool result{false};
 
 				if(
@@ -746,9 +746,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		const auto end{TextMapEntry::end(sentence)};
 		std::vector<std::string> words;
 
-		words.reserve(sentence.second);
+		words.reserve(TextMapEntry::length(sentence));
 
-		for(std::size_t word{sentence.first}; word < end; ++word) {
+		for(std::size_t word{TextMapEntry::pos(sentence)}; word < end; ++word) {
 			words.emplace_back(tokens[word]);
 		}
 
@@ -821,7 +821,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						sentenceMap.cbegin(),
 						sentenceMap.cend(),
 						[&articleIt, &articleEnd](const auto& sentence) {
-							return sentence.first >= articleIt->pos
+							return TextMapEntry::pos(sentence) >= TextMapEntry::pos(*articleIt)
 									&& TextMapEntry::end(sentence) <= articleEnd;
 						}
 				)
@@ -870,7 +870,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			const TextMap& map,
 			std::size_t& numberTo
 	) {
-		if(!map.empty() && map[0].pos == 0) {
+		if(!map.empty() && TextMapEntry::pos(map[0]) == 0) {
 			numberTo = 1;
 
 			return true;

@@ -53,10 +53,10 @@ namespace crawlservpp::Struct {
 		 * Zero indicates the very beginning
 		 *  of the text.
 		 */
-		std::size_t pos{};
+		std::size_t p{};
 
 		//! The length of the annotated part inside the text.
-		std::size_t length{};
+		std::size_t l{};
 
 		//! Value of the annotation.
 		/*!
@@ -85,7 +85,7 @@ namespace crawlservpp::Struct {
 		TextMapEntry(
 				std::size_t setPos,
 				std::size_t setLength
-		) : pos(setPos), length(setLength) {}
+		) : p(setPos), l(setLength) {}
 
 		//! Constructor creating a non-empty annotation.
 		/*!
@@ -103,7 +103,7 @@ namespace crawlservpp::Struct {
 				std::size_t setPos,
 				std::size_t setLength,
 				const std::string& setValue
-		) : pos(setPos), length(setLength), value(setValue) {}
+		) : p(setPos), l(setLength), value(setValue) {}
 
 		///@}
 		///@name Swap
@@ -124,36 +124,127 @@ namespace crawlservpp::Struct {
 
 		//! Resets its properties to their default values and frees the memory used by the entry.
 		void free() {
-			this->pos = 0;
-			this->length = 0;
+			this->p = 0;
+			this->l = 0;
 
 			std::string().swap(this->value);
 		}
 
 		///@}
-		///@name Static Helper Function
+		///@name Static Access Functions
 		///@{
 
-		//! Gets the end of a text map entry.
+		//! Gets a reference to the position of a text map entry.
 		/*!
-		 * \param entry Constant reference to the
-		 *   text map entry to get the end of.
+		 * \param entry Reference to the text map
+		 *   entry to get the position of.
 		 *
-		 * \returns The end of the given entry.
+		 * \returns Reference to the position of
+		 *   the given entry.
+		 *
 		 */
-		static std::size_t end(const TextMapEntry& entry) {
-			return entry.pos + entry.length;
+		static std::size_t& pos(TextMapEntry& entry) {
+			return entry.p;
 		}
 
-		//! Gets the end of a sentence map entry.
+		//! Gets a reference to the position of a sentence map entry.
+		/*!
+		 * \param entry Reference to the sentence
+		 *   map entry to get the position of.
+		 *
+		 * \returns Reference to the position of
+		 *   the given entry.
+		 *
+		 */
+		static std::size_t& pos(std::pair<std::size_t, std::size_t>& entry) {
+			return entry.first;
+		}
+
+		//! Gets the position of a text map entry.
 		/*!
 		 * \param entry Constant reference to the
-		 *   sentence map entry to get the end of.
+		 *   text map entry to get the position of.
+		 *
+		 * \returns The position of the given entry.
+		 *
+		 */
+		static std::size_t pos(const TextMapEntry& entry) {
+			return entry.p;
+		}
+
+		//! Gets the position of a sentence map entry.
+		/*!
+		 * \param entry Constant reference to the
+		 *   sentence map entry to get the position
+		 *   of.
+		 *
+		 * \returns The position of the given entry.
+		 *
+		 */
+		static std::size_t pos(const std::pair<std::size_t, std::size_t>& entry) {
+			return entry.first;
+		}
+
+		//! Gets the end of a map entry.
+		/*!
+		 * \param entry Constant reference to the
+		 *   map entry to get the end of.
 		 *
 		 * \returns The end of the given entry.
 		 */
-		static std::size_t end(const std::pair<std::size_t, std::size_t>& entry) {
-			return entry.first + entry.second;
+		template<typename T> static std::size_t end(const T& entry) {
+			return TextMapEntry::pos(entry) + TextMapEntry::length(entry);
+		}
+
+		//! Gets a reference to the length of a text map entry.
+		/*!
+		 * \param entry Reference to the text map
+		 *   entry to get the length of.
+		 *
+		 * \returns Reference to the length of the
+		 *   given entry.
+		 *
+		 */
+		static std::size_t& length(TextMapEntry& entry) {
+			return entry.l;
+		}
+
+		//! Gets a reference to the length of a sentence map entry.
+		/*!
+		 * \param entry Reference to the sentence
+		 *   map entry to get the length of.
+		 *
+		 * \returns Reference to the length of the
+		 *   given entry.
+		 *
+		 */
+		static std::size_t& length(std::pair<std::size_t, std::size_t>& entry) {
+			return entry.second;
+		}
+
+		//! Gets the length of a text map entry.
+		/*!
+		 * \param entry Constant reference to the
+		 *   text map entry to get the length of.
+		 *
+		 * \returns The length of the given entry.
+		 *
+		 */
+		static std::size_t length(const TextMapEntry& entry) {
+			return entry.l;
+		}
+
+		//! Gets the length of a sentence map entry.
+		/*!
+		 * \param entry Constant reference to the
+		 *   sentence map entry to get the length
+		 *   of.
+		 *
+		 * \returns The length of the given entry.
+		 *
+		 */
+		static std::size_t length(const std::pair<std::size_t, std::size_t>& entry) {
+			return entry.second;
 		}
 
 		///@}

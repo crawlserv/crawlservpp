@@ -234,7 +234,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			return;
 		}
 
-		const auto firstDatePos{dateMap[0].pos};
+		const auto firstDatePos{TextMapEntry::pos(dateMap[0])};
 		ResultMap::iterator dateIt;
 		std::string currentDateGroup;
 		std::size_t articleIndex{};
@@ -245,14 +245,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// skip articles and sentences without (i.e. before first) date
 		while(
 				articleIndex < articleMap.size()
-				&& articleMap[articleIndex].pos < firstDatePos
+				&& TextMapEntry::pos(articleMap[articleIndex]) < firstDatePos
 		) {
 			++articleIndex;
 		}
 
 		while(
 				sentenceIndex < sentenceMap.size()
-				&& sentenceMap[sentenceIndex].first < firstDatePos
+				&& TextMapEntry::pos(sentenceMap[sentenceIndex]) < firstDatePos
 		) {
 			++sentenceIndex;
 		}
@@ -279,8 +279,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			bool articleContent{false};
 			bool sentenceContent{false};
 
-			for(std::size_t tokenIndex{date.pos}; tokenIndex < end; ++tokenIndex) {
-				if(articleIndex < articleMap.size() && articleMap[articleIndex].pos == tokenIndex) {
+			for(std::size_t tokenIndex{TextMapEntry::pos(date)}; tokenIndex < end; ++tokenIndex) {
+				if(
+						articleIndex < articleMap.size()
+						&& TextMapEntry::pos(articleMap[articleIndex]) == tokenIndex
+				) {
 					// new article
 					if(articleContent) {
 						dateIt->second.articles.emplace(articleMap[articleIndex - 1].value);
@@ -304,7 +307,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					articleEnd = 0;
 				}
 
-				if(sentenceIndex < sentenceMap.size() && sentenceMap[sentenceIndex].first == tokenIndex) {
+				if(
+						sentenceIndex < sentenceMap.size()
+						&& TextMapEntry::pos(sentenceMap[sentenceIndex]) == tokenIndex
+				) {
 					// new sentence
 					if(sentenceContent) {
 						++(dateIt->second.sentences);

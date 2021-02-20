@@ -361,7 +361,7 @@ namespace crawlservpp::Helper::Json {
 			
 			rapidjson::Value valuePos;
 			
-			valuePos.SetUint64(textMapEntry.pos);
+			valuePos.SetUint64(Struct::TextMapEntry::pos(textMapEntry));
 			
 			objectValue.AddMember(keyPos, valuePos, allocator);
 
@@ -372,7 +372,7 @@ namespace crawlservpp::Helper::Json {
 			
 			rapidjson::Value valueLength;
 			
-			valueLength.SetUint64(textMapEntry.length);
+			valueLength.SetUint64(Struct::TextMapEntry::length(textMapEntry));
 			
 			objectValue.AddMember(keyLength, valueLength, allocator);
 
