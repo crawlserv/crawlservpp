@@ -286,7 +286,7 @@ namespace crawlservpp::Wrapper {
 					this->ptr,
 					name.c_str(),
 					fileSource.get(),
-					ZIP_FL_ENC_UTF_8 | overwrite ? ZIP_FL_OVERWRITE : 0
+					ZIP_FL_ENC_UTF_8 | (overwrite ? ZIP_FL_OVERWRITE : 0)
 			)
 		};
 
