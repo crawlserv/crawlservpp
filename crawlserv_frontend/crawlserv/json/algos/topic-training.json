@@ -7,7 +7,7 @@
 		"min": 0,
 		"default": 100,
 		"label": "Burn-in:",
-		"description": "The number of iterations that will be skipped (\"burnt in\") before training.",
+		"description": "The number of iterations that will be skipped (&quot;burnt in&quot) before training.",
 		"simple": true,
 		"position": 1
 	},
