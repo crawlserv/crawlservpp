@@ -64,7 +64,7 @@ namespace crawlservpp::Wrapper {
 		///@{
 
 		ZipSource();
-		ZipSource(const void * data, zip_uint64_t len);
+		ZipSource(const void * data, zip_uint64_t size);
 		virtual ~ZipSource();
 
 		///@}
