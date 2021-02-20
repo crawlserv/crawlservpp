@@ -443,7 +443,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				const std::string& tableName,
 				std::size_t numberOfColumns,
 				const std::pair<std::string, std::vector<float>>& articleClassification,
-				const std::string top
+				const std::string& top
 		);
 
 		static void getNArticlesFromQueue(

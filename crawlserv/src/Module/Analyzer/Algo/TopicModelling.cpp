@@ -666,7 +666,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage(tick.str());
 		this->setProgress(
 				static_cast<float>(this->iteration)
-				/ this->algoConfig.iterations
+				/ static_cast<float>(this->algoConfig.iterations)
 		);
 	}
 
@@ -1205,7 +1205,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			const std::string& tableName,
 			std::size_t numberOfColumns,
 			const std::pair<std::string, std::vector<float>>& articleClassification,
-			const std::string top
+			const std::string& top
 	) {
 		Data::InsertFieldsMixed data;
 
