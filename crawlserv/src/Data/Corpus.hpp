@@ -5102,7 +5102,7 @@ namespace crawlservpp::Data {
 		exception << chunkIndex + 1;
 		exception << "/";
 		exception << numberOfChunks;
-		exception << "conflicts with length given in previous chunk (";
+		exception << " conflicts with length given in previous chunk (";
 		exception << length;
 		exception << " != ";
 		exception << lastEnd;
