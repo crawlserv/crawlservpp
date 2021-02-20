@@ -217,6 +217,7 @@ namespace crawlservpp::Data {
 		 * CONSTANTS
 		 */
 
+		//TODO: use constexpr set
 		inline static const std::unordered_set<std::string_view> NEGATE{
 			"aint",
 			"arent",
@@ -281,6 +282,7 @@ namespace crawlservpp::Data {
 
 		// booster/dampener 'intensifiers' or 'degree adverbs'
 		// http://en.wiktionary.org/wiki/Category:English_degree_adverbs
+		//TODO: use constexpr map
 		inline static const std::unordered_map<std::string_view, float> BOOSTER_DICT{
 			{ "absolutely", VaderB_INCR },
 			{ "amazingly", VaderB_INCR },
@@ -369,6 +371,7 @@ namespace crawlservpp::Data {
 		};
 
 		// check for special case idioms and phrases containing lexicon words
+		//TODO: use constexpr map
 		inline static const std::unordered_map<std::string_view, float> SPECIAL_CASES{
 			{ "the shit", 3.F },
 			{ "the bomb", 3.F },
@@ -644,7 +647,7 @@ namespace crawlservpp::Data {
 
 		Sentiment::butCheck(wordsLower, sentiments);
 
-		return this->scoreValence(sentiments, newWords);
+		return Sentiment::scoreValence(sentiments, newWords);
 	}
 
 	/*
