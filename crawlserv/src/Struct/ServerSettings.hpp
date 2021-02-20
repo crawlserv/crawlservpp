@@ -36,6 +36,13 @@
 
 namespace crawlservpp::Struct {
 
+	///@name Constants
+	///@{
+
+	constexpr auto serverSleepOnSqlErrorDefault{60};
+
+	///@}
+
 	//! Server settings containing its port, as well as allowed clients, origins, and actions.
 	/*!
 	 * These settings are read from the
@@ -61,7 +68,7 @@ namespace crawlservpp::Struct {
 		bool dataDeletable{false};
 
 		//! Number of seconds to wait if a MySQL error occures before retrying and possibly terminating the thread.
-		std::uint16_t sleepOnSqlErrorS{60};
+		std::uint16_t sleepOnSqlErrorS{serverSleepOnSqlErrorDefault};
 
 		///@}
 	};
