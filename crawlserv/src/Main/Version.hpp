@@ -31,10 +31,10 @@
 #ifndef MAIN_VERSION_HPP_
 #define MAIN_VERSION_HPP_
 
-#define CRAWLSERVPP_VERSION_MAJOR 0
-#define CRAWLSERVPP_VERSION_MINOR 0
-#define CRAWLSERVPP_VERSION_RELEASE 1
-#define CRAWLSERVPP_VERSION_SUFFIX "alpha"
+#define CRAWLSERVPP_VERSION_MAJOR 0 //NOLINT(cppcoreguidelines-macro-usage)
+#define CRAWLSERVPP_VERSION_MINOR 0 //NOLINT(cppcoreguidelines-macro-usage)
+#define CRAWLSERVPP_VERSION_RELEASE 1 //NOLINT(cppcoreguidelines-macro-usage)
+#define CRAWLSERVPP_VERSION_SUFFIX "alpha" //NOLINT(cppcoreguidelines-macro-usage)
 
 #include <string>		// std::string, std::to_string
 #include <string_view>	// std::string_view_literals
