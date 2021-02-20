@@ -45,7 +45,7 @@
 #include <array>			// std::array
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::int8_t, std::int64_t, std::uint[8|16|32|62]_t
-#include <cstdlib>			// std::atof, std::atol
+#include <cstdlib>			// std::strtof, std::strtoll
 #include <iterator>			// std::make_move_iterator
 #include <limits>			// std::numeric_limits
 #include <optional>			// std::optional
@@ -68,22 +68,22 @@ namespace crawlservpp::Data {
 	///@{
 
 	//! One byte.
-	inline constexpr auto oneByte{1};
+	inline constexpr auto pickleOneByte{1};
 
 	//! Two bytes.
-	inline constexpr auto twoBytes{2};
+	inline constexpr auto pickleTwoBytes{2};
 
 	//! Four bytes.
-	inline constexpr auto fourBytes{4};
+	inline constexpr auto pickleFourBytes{4};
 
 	//! Eight bytes.
-	inline constexpr auto eightBytes{8};
+	inline constexpr auto pickleEightBytes{8};
 
 	//! Nine bytes (eight bytes and an op-code).
-	inline constexpr auto nineBytes{9};
+	inline constexpr auto pickleNineBytes{9};
 
 	//! The minimum size of a Python pickle to extract a frame.
-	inline constexpr auto minPickleSize{11};
+	inline constexpr auto pickleMinSize{11};
 
 	//! The protocol version of Python pickles used.
 	inline constexpr auto pickleProtocolVersion{4};
@@ -98,16 +98,19 @@ namespace crawlservpp::Data {
 	inline constexpr auto pickleHeadSize{2};
 
 	//! The minimum size of a Python pickle frame.
-	inline constexpr auto minPickleFrameSize{9};
+	inline constexpr auto pickleMinFrameSize{9};
 
 	//! Maximum number in unsigned one-byte number.
-	inline constexpr std::uint8_t maxUOneByteNumber{255};
+	inline constexpr std::uint8_t pickleMaxUOneByteNumber{255};
 
 	//! Maximum number in unsigned two-byte number.
-	inline constexpr std::uint16_t maxUTwoByteNumber{65535};
+	inline constexpr std::uint16_t pickleMaxUTwoByteNumber{65535};
 
 	//! Maximum number in unsigned four-byte number.
-	inline constexpr std::uint32_t maxUFourByteNumber{4294967295};
+	inline constexpr std::uint32_t pickleMaxUFourByteNumber{4294967295};
+
+	//! The base used for converting strings to numbers.
+	inline constexpr auto pickleBase{10};
 
 	///@}
 	/*
@@ -137,7 +140,7 @@ namespace crawlservpp::Data {
 		//! Default constructor.
 		PickleDict() = default;
 
-		PickleDict(const Bytes& data);
+		explicit PickleDict(const Bytes& data);
 
 		///@}
 		///@name Getters
@@ -282,11 +285,6 @@ namespace crawlservpp::Data {
 		 */
 
 		// internal helper functions
-		bool readKey(
-				const Bytes& data,
-				std::size_t& pos,
-				std::string& keyTo
-		);
 		void readValue(
 				const Bytes& data,
 				std::size_t& pos,
@@ -294,6 +292,11 @@ namespace crawlservpp::Data {
 		);
 
 		// internal static helper functions
+		static bool readKey(
+				const Bytes& data,
+				std::size_t& pos,
+				std::string& keyTo
+		);
 		static Bytes unpack(const Bytes& data);
 		static bool extractNextFrame(
 				const Bytes& bytes,
@@ -309,7 +312,7 @@ namespace crawlservpp::Data {
 
 		static void checkLength(
 				std::size_t dataLength,
-				std::size_t length
+				std::size_t currentEnd
 		);
 		static std::size_t readValueLength(
 				const Bytes& data,
@@ -503,12 +506,15 @@ namespace crawlservpp::Data {
 	 * Only Python pickles with protocol version 4 or
 	 *  higher are supported.
 	 *
-	 * \param data Constant reference to a vector
-	 *   containing the bytes of the Python pickle.
-	 *
 	 * \note Does not actually run Python pickle op-codes,
 	 *   only extracts data from, or writes its data to a
 	 *   simple Python pickle.
+	 *
+	 * \param data Constant reference to a vector
+	 *   containing the bytes of the Python pickle.
+	 *
+	 * \throws PickleDict::Exception if the data could
+	 *   not be read correctly.
 	 *
 	 * \warning Only \c SHORT_BINSTRING and
 	 *   \c SHORT_BINUNICODE, i.e. strings up to a length
@@ -529,7 +535,7 @@ namespace crawlservpp::Data {
 			std::string key;
 
 			if(
-					this->readKey(unpackedData, pos, key)
+					PickleDict::readKey(unpackedData, pos, key)
 					&& PickleDict::skipMemoize(unpackedData, pos)
 			) {
 				this->readValue(unpackedData, pos, key);
@@ -567,7 +573,7 @@ namespace crawlservpp::Data {
 			PickleDict::writeNumberEntry(entry, frame);
 		}
 
-		for(const auto entry : this->floats) {
+		for(const auto& entry : this->floats) {
 			PickleDict::writeFloatEntry(entry, frame);
 		}
 
@@ -585,53 +591,6 @@ namespace crawlservpp::Data {
 	/*
 	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
-
-	// read a key at the current position in the data, return whether a key was read
-	inline bool PickleDict::readKey(
-			const Bytes& data,
-			std::size_t& pos,
-			std::string& keyTo
-	) {
-		// check current op-code for pushing a short string
-		if(
-				data[pos] == static_cast<std::uint8_t>(OpCode::SHORT_BINSTRING)
-				|| data[pos] == static_cast<std::uint8_t>(OpCode::SHORT_BINUNICODE)
-		) {
-			// (= 1 byte)
-			++pos;
-
-			// read key length
-			const auto keyLength{data[pos]};
-
-			// (= 1 byte)
-			++pos;
-
-			// check key length
-			const auto keyEnd{pos + keyLength};
-
-			if(keyEnd > data.size()) {
-				throw Exception(
-						"SimpleDict::readKey():"
-						" Unexpected end of data (expected >"
-						+ std::to_string(keyEnd - data.size())
-						+ " bytes more)"
-				);
-			}
-
-			// clear target and reserve memory
-			keyTo.clear();
-			keyTo.reserve(keyLength);
-
-			// read key
-			for(; pos < keyEnd; ++pos) {
-				keyTo.push_back(static_cast<char>(data[pos]));
-			}
-
-			return true;
-		}
-
-		return false;
-	}
 
 	// read a value from the current position in the data, or none at all
 	inline void PickleDict::readValue(
@@ -708,19 +667,19 @@ namespace crawlservpp::Data {
 
 		case OpCode::EXT1:
 			// skip one-byte argument
-			pos += oneByte;
+			pos += pickleOneByte;
 
 			break;
 
 		case OpCode::EXT2:
 			// skip two-byte argument
-			pos += twoBytes;
+			pos += pickleTwoBytes;
 
 			break;
 
 		case OpCode::EXT4:
 			// skip four-byte argument
-			pos += fourBytes;
+			pos += pickleFourBytes;
 
 			break;
 
@@ -756,7 +715,7 @@ namespace crawlservpp::Data {
 
 		case OpCode::BININT2:
 			// get two-byte unsigned integer
-			PickleDict::checkLength(data.size(), pos + twoBytes);
+			PickleDict::checkLength(data.size(), pos + pickleTwoBytes);
 
 			this->setNumber(key, Helper::Bytes::bytesToUInt16(data, pos));
 
@@ -765,7 +724,7 @@ namespace crawlservpp::Data {
 		case OpCode::LONG_BINGET:
 		case OpCode::LONG_BINPUT:
 			// get four-byte unsigned integer
-			PickleDict::checkLength(data.size(), pos + fourBytes);
+			PickleDict::checkLength(data.size(), pos + pickleFourBytes);
 
 			this->setNumber(key, Helper::Bytes::bytesToUInt32(data, pos));
 
@@ -773,33 +732,33 @@ namespace crawlservpp::Data {
 
 		case OpCode::LONG1:
 			// read one-byte length and corresponding integer
-			valueLength = PickleDict::readValueLength(data, pos, oneByte);
+			valueLength = PickleDict::readValueLength(data, pos, pickleOneByte);
 
 			switch(valueLength) {
-			case oneByte:
+			case pickleOneByte:
 				this->setNumber(key, static_cast<std::int8_t>(data[pos]));
 
 				++pos;
 
 				break;
 
-			case twoBytes:
+			case pickleTwoBytes:
 				this->setNumber(key, Helper::Bytes::bytesToInt16(data, pos));
 
 				break;
 
-			case fourBytes:
+			case pickleFourBytes:
 				this->setNumber(key, Helper::Bytes::bytesToInt32(data, pos));
 
 				break;
 
-			case eightBytes:
+			case pickleEightBytes:
 				this->setNumber(key, Helper::Bytes::bytesToInt64(data, pos));
 
 				break;
 
 			default:
-				if(valueLength > eightBytes) {
+				if(valueLength > pickleEightBytes) {
 					throw Exception(
 							"Pickle::readValue(): Value lengths consisting of "
 							+ std::to_string(valueLength)
@@ -815,7 +774,7 @@ namespace crawlservpp::Data {
 		case OpCode::BININT:
 		case OpCode::LONG4:
 			// get four-byte signed integer
-			PickleDict::checkLength(data.size(), pos + fourBytes);
+			PickleDict::checkLength(data.size(), pos + pickleFourBytes);
 
 			this->setNumber(key, Helper::Bytes::bytesToInt32(data, pos));
 
@@ -830,7 +789,7 @@ namespace crawlservpp::Data {
 
 			++pos; // jump past newline
 
-			this->setNumber(key, std::atol(s1.c_str()));
+			this->setNumber(key, std::strtoll(s1.c_str(), nullptr, pickleBase));
 
 			break;
 
@@ -839,7 +798,7 @@ namespace crawlservpp::Data {
 		 */
 		case OpCode::BINFLOAT:
 			// get eight-byte floating-point number
-			PickleDict::checkLength(data.size(), pos + eightBytes);
+			PickleDict::checkLength(data.size(), pos + pickleEightBytes);
 
 			this->setFloat(key, Helper::Bytes::bytesToDouble(data, pos));
 
@@ -853,7 +812,7 @@ namespace crawlservpp::Data {
 
 			++pos; // jump past newline
 
-			this->setFloat(key, std::atof(s1.c_str()));
+			this->setFloat(key, std::strtod(s1.c_str(), nullptr));
 
 			break;
 
@@ -864,7 +823,7 @@ namespace crawlservpp::Data {
 		case OpCode::SHORT_BINSTRING:
 		case OpCode::SHORT_BINUNICODE:
 			// read one-byte length and corresponding string
-			valueLength = PickleDict::readValueLength(data, pos, oneByte);
+			valueLength = PickleDict::readValueLength(data, pos, pickleOneByte);
 
 			this->setString(key, PickleDict::getString(data, pos, valueLength));
 
@@ -874,7 +833,7 @@ namespace crawlservpp::Data {
 		case OpCode::BINSTRING:
 		case OpCode::BINUNICODE:
 			// read four-bytes length and corresponding string
-			valueLength = PickleDict::readValueLength(data, pos, fourBytes);
+			valueLength = PickleDict::readValueLength(data, pos, pickleFourBytes);
 
 			this->setString(key, PickleDict::getString(data, pos, valueLength));
 
@@ -884,7 +843,7 @@ namespace crawlservpp::Data {
 		case OpCode::BINUNICODE8:
 		case OpCode::BYTEARRAY8:
 			// read eight-bytes length and corresponding string
-			valueLength = PickleDict::readValueLength(data, pos, eightBytes);
+			valueLength = PickleDict::readValueLength(data, pos, pickleEightBytes);
 
 			this->setString(key, PickleDict::getString(data, pos, valueLength));
 
@@ -957,6 +916,53 @@ namespace crawlservpp::Data {
 	 * INTERNAL STATIC HELPER FUNCTIONS (private)
 	 */
 
+	// read a key at the current position in the data, return whether a key was read
+	inline bool PickleDict::readKey(
+			const Bytes& data,
+			std::size_t& pos,
+			std::string& keyTo
+	) {
+		// check current op-code for pushing a short string
+		if(
+				data[pos] == static_cast<std::uint8_t>(OpCode::SHORT_BINSTRING)
+				|| data[pos] == static_cast<std::uint8_t>(OpCode::SHORT_BINUNICODE)
+		) {
+			// (= 1 byte)
+			++pos;
+
+			// read key length
+			const auto keyLength{data[pos]};
+
+			// (= 1 byte)
+			++pos;
+
+			// check key length
+			const auto keyEnd{pos + keyLength};
+
+			if(keyEnd > data.size()) {
+				throw Exception(
+						"SimpleDict::readKey():"
+						" Unexpected end of data (expected >"
+						+ std::to_string(keyEnd - data.size())
+						+ " bytes more)"
+				);
+			}
+
+			// clear target and reserve memory
+			keyTo.clear();
+			keyTo.reserve(keyLength);
+
+			// read key
+			for(; pos < keyEnd; ++pos) {
+				keyTo.push_back(static_cast<char>(data[pos]));
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	// unpack all frames from a Python pickle  with protocol version 4
 	inline Bytes PickleDict::unpack(const Bytes& data) {
 		Bytes unpacked;
@@ -984,7 +990,7 @@ namespace crawlservpp::Data {
 	) {
 		if(pos == 0) {
 			// check format and version of the Python pickle
-			if(bytes.size() < minPickleSize) {
+			if(bytes.size() < pickleMinSize) {
 				throw Exception(
 						"Pickle::extractFirstFrame():"
 						" No Python pickle found (only "
@@ -1025,7 +1031,7 @@ namespace crawlservpp::Data {
 		// check number of remaining bytes
 		const auto remaining{bytes.size() - pos};
 
-		if(remaining < minPickleFrameSize) {
+		if(remaining < pickleMinFrameSize) {
 			throw Exception(
 					"Pickle::extractFirstFrame():"
 					" No frame found in Python pickle (only "
@@ -1112,28 +1118,28 @@ namespace crawlservpp::Data {
 		std::size_t result{};
 
 		switch(numBytes) {
-		case oneByte:
+		case pickleOneByte:
 			result = data[pos];
 
 			break;
 
-		case twoBytes:
+		case pickleTwoBytes:
 			result = Helper::Bytes::bytesToUInt16(data, pos);
 
 			break;
 
-		case fourBytes:
+		case pickleFourBytes:
 			result = Helper::Bytes::bytesToUInt32(data, pos);
 
 			break;
 
-		case eightBytes:
+		case pickleEightBytes:
 			result = Helper::Bytes::bytesToUInt64(data, pos);
 
 			break;
 
 		default:
-			if(numBytes > eightBytes) {
+			if(numBytes > pickleEightBytes) {
 				throw Exception(
 						"Pickle::readValue(): Value lengths consisting of "
 						+ std::to_string(numBytes)
@@ -1209,7 +1215,7 @@ namespace crawlservpp::Data {
 		}
 
 		// reserve memory
-		to.reserve(to.size() + frameSize + nineBytes);
+		to.reserve(to.size() + frameSize + pickleNineBytes);
 
 		// write frame head (including its size)
 		to.push_back(static_cast<std::uint8_t>(OpCode::FRAME));
@@ -1246,13 +1252,13 @@ namespace crawlservpp::Data {
 		PickleDict::writeKey(entry.first, to);
 
 		if(entry.second >= 0) {
-			if(entry.second <= maxUOneByteNumber) {
+			if(entry.second <= pickleMaxUOneByteNumber) {
 				PickleDict::writeBinInt1(static_cast<std::uint8_t>(entry.second), to);
 
 				return;
 			}
 
-			if(entry.second <= maxUTwoByteNumber) {
+			if(entry.second <= pickleMaxUTwoByteNumber) {
 				PickleDict::writeBinInt2(static_cast<std::uint16_t>(entry.second), to);
 
 				return;
@@ -1278,10 +1284,10 @@ namespace crawlservpp::Data {
 	) {
 		PickleDict::writeKey(entry.first, to);
 
-		if(entry.second.size() <= maxUOneByteNumber) {
+		if(entry.second.size() <= pickleMaxUOneByteNumber) {
 			PickleDict::writeShortBinUnicode(entry.second, to);
 		}
-		else if(entry.second.size() <= maxUFourByteNumber) {
+		else if(entry.second.size() <= pickleMaxUFourByteNumber) {
 			PickleDict::writeBinUnicode(entry.second, to);
 		}
 		else {
@@ -1314,11 +1320,11 @@ namespace crawlservpp::Data {
 		to.push_back(static_cast<std::uint8_t>(OpCode::LONG1));
 
 		if(PickleDict::inRange<std::int8_t>(value)) {
-			to.push_back(oneByte);
+			to.push_back(pickleOneByte);
 			to.push_back(static_cast<std::int8_t>(value));
 		}
 		else if(PickleDict::inRange<std::int16_t>(value)) {
-			to.push_back(twoBytes);
+			to.push_back(pickleTwoBytes);
 
 			PickleDict::writeBytes(
 					Helper::Bytes::int16ToBytes(
@@ -1328,7 +1334,7 @@ namespace crawlservpp::Data {
 			);
 		}
 		else if(PickleDict::inRange<std::int32_t>(value)) {
-			to.push_back(fourBytes);
+			to.push_back(pickleFourBytes);
 
 			PickleDict::writeBytes(
 					Helper::Bytes::int32ToBytes(
@@ -1338,7 +1344,7 @@ namespace crawlservpp::Data {
 			);
 		}
 		else {
-			to.push_back(eightBytes);
+			to.push_back(pickleEightBytes);
 
 			PickleDict::writeBytes(Helper::Bytes::int64ToBytes(value), to);
 		}
@@ -1358,15 +1364,15 @@ namespace crawlservpp::Data {
 		// use max. 255 bytes
 		std::uint8_t length{};
 
-		if(value.size() > maxUOneByteNumber) {
-			length = maxUOneByteNumber;
+		if(value.size() > pickleMaxUOneByteNumber) {
+			length = pickleMaxUOneByteNumber;
 		}
 		else {
 			length = static_cast<std::uint8_t>(value.size());
 		}
 
 		// reserve memory
-		to.reserve(length + oneByte);
+		to.reserve(length + pickleOneByte);
 
 		// write length
 		to.push_back(length);
@@ -1384,15 +1390,15 @@ namespace crawlservpp::Data {
 		// use max. 4,294,967,295 bytes
 		std::uint32_t length{};
 
-		if(value.size() > maxUOneByteNumber) {
-			length = maxUOneByteNumber;
+		if(value.size() > pickleMaxUOneByteNumber) {
+			length = pickleMaxUOneByteNumber;
 		}
 		else {
 			length = static_cast<std::uint32_t>(value.size());
 		}
 
 		// reserve memory
-		to.reserve(length + fourBytes);
+		to.reserve(length + pickleFourBytes);
 
 		// write length
 		PickleDict::writeBytes(Helper::Bytes::uInt32ToBytes(length), to);
@@ -1408,7 +1414,7 @@ namespace crawlservpp::Data {
 		to.push_back(static_cast<std::uint8_t>(OpCode::BINUNICODE8));
 
 		// reserve memory
-		to.reserve(value.size() + eightBytes);
+		to.reserve(value.size() + pickleEightBytes);
 
 		// write length
 		PickleDict::writeBytes(Helper::Bytes::uInt64ToBytes(value.size()), to);
