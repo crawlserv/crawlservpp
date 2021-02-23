@@ -41,7 +41,7 @@
 			"[token-based] Correct words (aspell, specify language)"
 		],
 		"default": [],
-		"label": "Sentence Manipulators:",
+		"label": "Manipulators:",
 		"description": "Manipulators used to preprocess the text corpus.",
 		"simple": true,
 		"position": 1
@@ -50,7 +50,7 @@
 		"type": "array",
 		"item-type": "mdl",
 		"default": [],
-		"label": "Sentence Models:",
+		"label": "Models:",
 		"description": "Model for the (sentence-based) manipulator with the same array index.",
 		"simple": true,
 		"position": 2
