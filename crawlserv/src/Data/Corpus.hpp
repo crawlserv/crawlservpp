@@ -48,7 +48,8 @@
 #include "../Struct/StatusSetter.hpp"
 #include "../Struct/TextMap.hpp"
 
-#include <algorithm>	// std::accumulate, std::all_of, std::count_if, std::find_if, std::remove_if
+#include <algorithm>	// std::accumulate, std::all_of, std::any_of, std::count_if, std::find_if, std::remove_if
+#include <cctype>		// std::toupper
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::int64_t, std::uint8_t, std::uint16_t
 #include <functional>	// std::function, std::reference_wrapper
@@ -58,7 +59,7 @@
 #include <optional>		// std::optional, std::nullopt
 #include <ostream>		// std::ostream
 #include <sstream>		// std::ostringstream
-#include <string>		// std::string
+#include <string>		// std::string, std::to_string
 #include <string_view>	// std::string_view
 #include <utility>		// std::pair
 #include <vector>		// std::vector
@@ -95,36 +96,34 @@ namespace crawlservpp::Data {
 	inline constexpr auto maxSingleUtf8CharSize{4};
 
 	///@}
-	///@name Sentence Manipulation
+	///@name Sentence and Word Manipulation
 	///@{
 
-	//! Do not manipulate sentences.
-	inline constexpr std::uint16_t sentenceManipNone{0};
+	//! Do not manipulate anything.
+	inline constexpr std::uint16_t corpusManipNone{0};
 
 	//! The POS (position of speech) tagger based on @c Wapiti by Thomas Lavergne.
-	inline constexpr std::uint16_t sentenceManipTagger{1};
+	inline constexpr std::uint16_t corpusManipTagger{1};
 
-	///@}
-	///@name Word Manipulation
-	///@{
-
-	//! Do not manipulate words.
-	inline constexpr std::uint16_t wordManipNone{0};
-
-	//! Remove tokens that contain only one UTF-8 codepoint.
-	inline constexpr std::uint16_t wordManipRemoveSingleUtf8Chars{1};
+	//! The posterior POS tagger based on @c Wapiti by Thomas Lavergne (slow, but more accurate).
+	inline constexpr std::uint16_t corpusManipTaggerPosterior{2};
 
 	//! The @c porter2_stemmer algorithm for English only, implemented by Sean Massung.
-	inline constexpr std::uint16_t wordManipPorter2Stemmer{2};
+	inline constexpr std::uint16_t corpusManipEnglishStemmer{3};
 
 	//! Simple stemmer for German only, based on @c CISTEM by Leonie Weißweiler and Alexander Fraser.
-	inline constexpr std::uint16_t wordManipGermanStemmer{3};
+	inline constexpr std::uint16_t corpusManipGermanStemmer{4};
 
 	//! Multilingual lemmatizer.
-	inline constexpr std::uint16_t wordManipLemmatizer{4};
+	inline constexpr std::uint16_t corpusManipLemmatizer{5};
 
 	//! Remove single words found in a dictionary.
-	inline constexpr std::uint16_t wordManipRemove{5};
+	inline constexpr std::uint16_t corpusManipRemove{6};
+
+	//! Correct single words using a @c aspell dictionary.
+	inline constexpr std::uint16_t corpusManipCorrect{7};
+
+	//TODO(ans): add corpusManipReplace (by dictionary)
 
 	///@}
 
@@ -144,10 +143,10 @@ namespace crawlservpp::Data {
 	 *  that indicates the ID or date associated
 	 *  with the referenced part of the corpus.
 	 *
-	 * The corpus can be manipulated using a number
-	 *  of sentence and word manipulators, resulting
-	 *  in a tokenized corpus. If not manipulated,
-	 *  it will be stored as continuous text.
+	 * The corpus can be preprocessed using a number
+	 *  of manipulators, resulting in a tokenized
+	 *  corpus. If not preprocessed, it will be
+	 *  stored as continuous text.
 	 *
 	 * \note For the filtering by date to work,
 	 *   all input data needs to be sorted by date,
@@ -163,11 +162,12 @@ namespace crawlservpp::Data {
 		using TextMapEntry = Struct::TextMapEntry;
 
 	public:
-		using ArticleFunc = std::function<bool(const std::vector<std::string>&, std::size_t, std::size_t)>;
+		using ArticleFunc
+				= std::function<bool(const std::vector<std::string>&, std::size_t, std::size_t)>;
 		using SentenceFunc = std::function<void(std::vector<std::string>&)>;
-		using WordFunc = std::function<void(std::string& token)>;
 
-		using DateArticleSentenceMap = std::map<std::string, std::map<std::string, std::vector<std::vector<std::string>>>>;
+		using DateArticleSentenceMap
+				= std::map<std::string, std::map<std::string, std::vector<std::vector<std::string>>>>;
 		using SentenceMap = std::vector<std::pair<std::size_t, std::size_t>>;
 		using PositionLength = std::pair<std::size_t, std::size_t>;
 		using SentenceMapEntry = PositionLength;
@@ -281,16 +281,15 @@ namespace crawlservpp::Data {
 		///@{
 
 		[[nodiscard]] bool tokenize(
-				const std::vector<std::uint16_t>& sentenceManipulators,
-				const std::vector<std::string>& sentenceModels,
-				const std::vector<std::uint16_t>& wordManipulators,
-				const std::vector<std::string>& wordModels,
+				const std::vector<std::uint16_t>& manipulators,
+				const std::vector<std::string>& models,
+				const std::vector<std::string>& dictionaries,
+				const std::vector<std::string>& languages,
 				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
 		[[nodiscard]] bool tokenizeCustom(
-				const std::optional<SentenceFunc>& callbackSentence,
-				const std::optional<WordFunc>& callbackWord,
+				const std::optional<SentenceFunc>& callback,
 				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
@@ -333,10 +332,6 @@ namespace crawlservpp::Data {
 		bool checkConsistency{false};
 		std::size_t tokenBytes{};
 
-		// lemmatizer and word remover
-		Lemmatizer lemmatizer;
-		WordRemover wordRemover;
-
 		// internal helper functions
 		void moveCombinedIn(DateArticleSentenceMap& from);
 
@@ -373,13 +368,11 @@ namespace crawlservpp::Data {
 		void reTokenize();
 
 		[[nodiscard]] bool tokenizeTokenized(
-				std::optional<SentenceFunc> callbackSentence,
-				std::optional<WordFunc> callbackWord,
+				std::optional<SentenceFunc> callback,
 				StatusSetter& statusSetter
 		);
 		[[nodiscard]] bool tokenizeContinuous(
-				std::optional<SentenceFunc> callbackSentence,
-				std::optional<WordFunc> callbackWord,
+				std::optional<SentenceFunc> callback,
 				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
@@ -454,6 +447,12 @@ namespace crawlservpp::Data {
 				TextMapEntry& remaining
 		);
 
+		static void notUsed(
+				std::string_view type,
+				const std::vector<std::string>& values,
+				std::size_t index
+		);
+
 		static std::size_t bytes(const std::vector<std::string>& words);
 
 		static void addChunkMap(
@@ -495,8 +494,7 @@ namespace crawlservpp::Data {
 
 		static void processSentence(
 				std::vector<std::string>& sentence,
-				const std::optional<SentenceFunc>& callbackSentence,
-				const std::optional<WordFunc>& callbackWord,
+				const std::optional<SentenceFunc>& callback,
 				bool inArticle,
 				bool inDate,
 				std::size_t& currentWord,
@@ -1461,7 +1459,7 @@ namespace crawlservpp::Data {
 			this->dateMap.emplace_back(dateMapEntry);
 		}
 	}
-	//! Creates continuous text corpus by combining previously separated chunks, as well as their article and date maps.
+	//! Creates continuous text corpus by combining previously separated chunks as well as their article and date maps.
 	/*!
 	 * Performs consistency checks of the provided
 	 *  article maps, if consistency checks have
@@ -2661,7 +2659,10 @@ namespace crawlservpp::Data {
 	 * \throws Corpus::Exception if the
 	 *   corpus has not been tokenized.
 	 */
-	inline std::size_t Corpus::filterArticles(const ArticleFunc& callbackArticle, StatusSetter& statusSetter) {
+	inline std::size_t Corpus::filterArticles(
+			const ArticleFunc& callbackArticle,
+			StatusSetter& statusSetter
+	) {
 		this->checkThatTokenized("filterArticle");
 
 		if(this->tokens.empty()) {
@@ -2733,10 +2734,9 @@ namespace crawlservpp::Data {
 
 	//! Converts a text corpus into processed tokens.
 	/*!
-	 * If sentence manipulators are given,
-	 *  first the sentence as a whole will
-	 *  be manipulated, then the individual
-	 *  words contained in this sentence.
+	 * It will use the given manipulators
+	 *  to manipulate each sentence (or
+	 *  their respective tokens) first.
 	 *
 	 * Please make sure that the corpus is
 	 *  tidied beforehand, i.e. UTF-8 and
@@ -2745,32 +2745,43 @@ namespace crawlservpp::Data {
 	 *  sentences are created by simple
 	 *  punctuation analysis.
 	 *
-	 * \warning Once tokenized, the continous
-	 *   text corpus will be lost. Create
-	 *   a copy beforehand if you still need
-	 *   the original corpus.
+	 * \note Once tokenized, the continous text
+	 *   corpus will be lost. Create a copy
+	 *   beforehand if you still need the
+	 *   original corpus.
 	 *
-	 * \param sentenceManipulators Vector
-	 *   containing the IDs of the default
-	 *   manipulators that will be used on
-	 *   all sentences in the corpus, where
-	 *   every sentence is separated by one
-	 *   of the following punctuations from
-	 *   the others: @c .:!?; or by the end
-	 *   of the current article, date, or the
-	 *   whole corpus.
-	 * \param sentenceModels Vector of
-	 *   strings containing the models used
-	 *   by the sentence manipulators.
-	 * \param wordManipulators Vector
-	 *   containing the IDs of the default
-	 *   manipulators that will be used
-	 *   for each word in the corpus,
-	 *   where every word is separated by a
-	 *   simple space from the others.
-	 * \param wordModels Vector of strings
-	 *   containing the models used by the
-	 *   word manipulators.
+	 * \warning The vectors containing the
+	 *   manipulators, models, dictionaries,
+	 *   and languages must have the same
+	 *   number of elements.
+	 *
+	 * \param manipulators A vector
+	 *   containing the IDs of the
+	 *   manipulators that will be used on all
+	 *   sentences (or all of their tokens) in
+	 *   the corpus, where every sentence is
+	 *   separated by one of the following
+	 *   punctuations from the others: @c .:!?;
+	 *   or by the end of the current article,
+	 *   date, or the whole corpus.
+	 * \param models A vector of strings
+	 *   containing the model to be used by the
+	 *   manipulator with the same array index,
+	 *   or an empty string if the respective
+	 *   manipulator does not require a model.
+	 * \param dictionaries A vector of strings
+	 *   containing the dictionary to be used
+	 *   by the manipulator with the same array
+	 *   index, or an empty string if the
+	 *   respective manipulator does not
+	 *   require a dictionary.
+	 * \param languages A vector of strings
+	 *   containing the language to be used by
+	 *   the manipulator with the same array
+	 *   index, or an empty string if the
+	 *   respective manipulator does not
+	 *   require a dictionary or its default
+	 *   language should be used.
 	 * \param freeMemoryEvery Number of
 	 *   processed bytes in a continuous
 	 *   corpus after which memory will be
@@ -2787,150 +2798,198 @@ namespace crawlservpp::Data {
 	 *   tokenization has been cancelled.
 	 *
 	 * \throws Corpus::Exception if an invalid
-	 *   sentence or word manipulator has been
-	 *   specified.
+	 *   manipulator has been specified, a
+	 *   model or dictionary is missing for
+	 *   a manipulator requiring one, or a
+	 *   model, dictionary or language is set
+	 *   for a manipulator that does not use
+	 *   one.
 	 */
 	inline bool Corpus::tokenize(
-			const std::vector<std::uint16_t>& sentenceManipulators,
-			const std::vector<std::string>& sentenceModels,
-			const std::vector<std::uint16_t>& wordManipulators,
-			const std::vector<std::string>& wordModels,
+			const std::vector<std::uint16_t>& manipulators,
+			const std::vector<std::string>& models,
+			const std::vector<std::string>& dictionaries,
+			const std::vector<std::string>& languages,
 			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
-		bool sentenceManipulation{false};
-		bool wordManipulation{false};
+		bool isManipulation{
+			std::any_of(
+					manipulators.begin(),
+					manipulators.end(),
+					[](const auto manipulator) {
+						return manipulator > corpusManipNone;
+					}
+			)
+		};
 
-		for(const auto manipulator : sentenceManipulators) {
-			if(manipulator > 0) {
-				sentenceManipulation = true;
+		// prepare manipulators and check their configurations
+		std::vector<Data::Tagger> taggers;
+		Lemmatizer lemmatizer;
+		WordRemover wordRemover;
+		std::size_t manipulatorIndex{};
+		std::size_t taggerIndex{};
+
+		for(const auto& manipulator : manipulators) {
+			switch(manipulator) {
+			case corpusManipNone:
+				continue;
+
+			case corpusManipEnglishStemmer:
+			case corpusManipGermanStemmer:
+				Corpus::notUsed("model", models, manipulatorIndex);
+				Corpus::notUsed("dictionary", dictionaries, manipulatorIndex);
+				Corpus::notUsed("language", languages, manipulatorIndex);
 
 				break;
-			}
-		}
 
-		for(const auto manipulator : wordManipulators) {
-			if(manipulator > 0) {
-				wordManipulation = true;
-
-				break;
-			}
-		}
-
-		// prepare manipulators
-		std::vector<Data::Tagger> taggers(sentenceManipulators.size());
-
-		for(
-				auto it{sentenceManipulators.cbegin()};
-				it != sentenceManipulators.cend();
-				++it
-		) {
-			const auto index{
-				static_cast<std::size_t>(
-						it - sentenceManipulators.cbegin()
-				)
-			};
-
-			switch(*it) {
-			case sentenceManipTagger:
-				if(sentenceModels.size() > index) {
-					taggers.at(index).loadModel(sentenceModels.at(index));
+			case corpusManipTagger:
+			case corpusManipTaggerPosterior:
+				if(models.at(manipulatorIndex).empty()) {
+					throw Exception(
+						"Corpus::tokenize():"
+						" No model set for part-of-speech tagger (manipulator #"
+						+ std::to_string(manipulatorIndex + 1)
+						+ ")"
+					);
 				}
+
+				Corpus::notUsed("dictionary", dictionaries, manipulatorIndex);
+				Corpus::notUsed("language", languages, manipulatorIndex);
+
+				taggers.emplace_back();
+
+				taggers.back().loadModel(models.at(manipulatorIndex));
+				taggers.back().setPosteriorDecoding(manipulator == corpusManipTaggerPosterior);
+
+				++taggerIndex;
+
+				break;
+
+			case corpusManipLemmatizer:
+				if(dictionaries.at(manipulatorIndex).empty()) {
+					throw Exception(
+						"Corpus::tokenize():"
+						" No dictionary set for lemmatizer (manipulator #"
+						+ std::to_string(manipulatorIndex + 1)
+						+ ")"
+					);
+				}
+
+				Corpus::notUsed("model", models, manipulatorIndex);
+				Corpus::notUsed("language", languages, manipulatorIndex);
+
+				break;
+
+			case corpusManipRemove:
+				if(dictionaries.at(manipulatorIndex).empty()) {
+					throw Exception(
+						"Corpus::tokenize():"
+						" No dictionary set for word remover (manipulator #"
+						+ std::to_string(manipulatorIndex + 1)
+						+ ")"
+					);
+				}
+
+				Corpus::notUsed("model", models, manipulatorIndex);
+				Corpus::notUsed("language", languages, manipulatorIndex);
+
+				break;
+
+			case corpusManipCorrect:
+				Corpus::notUsed("model", models, manipulatorIndex);
+				Corpus::notUsed("dictionary", dictionaries, manipulatorIndex);
 
 				break;
 
 			default:
-				break;
+				throw Exception(
+						"Corpus::tokenize():"
+						" Invalid manipulator (#"
+						+ std::to_string(manipulator)
+						+ ")"
+				);
 			}
+
+			++manipulatorIndex;
 		}
 
-		auto sentenceLambda = [&sentenceManipulators, &taggers](std::vector<std::string>& sentence) {
-			for(
-					auto it{sentenceManipulators.cbegin()};
-					it != sentenceManipulators.cend();
-					++it
-			) {
-				const auto index{
-					it - sentenceManipulators.cbegin()
-				};
+		// set manipulation callback
+		auto callbackLambda = [
+							   &manipulators,
+							   &taggers,
+							   &dictionaries,
+							   &languages,
+							   &lemmatizer,
+							   &wordRemover
+							  ](
+									  std::vector<std::string>& sentence
+							  ) {
+			std::size_t manipulatorIndex{};
+			std::size_t taggerIndex{};
 
-				switch(*it) {
-				case sentenceManipNone:
-					return;
+			for(const auto& manipulator : manipulators) {
+				switch(manipulator) {
+				case corpusManipNone:
+					continue;
 
-				case sentenceManipTagger:
-					taggers.at(index).label(sentence);
+				case corpusManipTagger:
+				case corpusManipTaggerPosterior:
+					taggers.at(taggerIndex).label(sentence);
+
+					++taggerIndex;
 
 					break;
 
-				default:
-					throw Exception(
-							"Corpus::tokenize():"
-							" Invalid sentence manipulator"
-					);
-				}
-			}
-		};
-
-		auto wordLambda = [&wordManipulators, &wordModels, this](std::string& word) {
-			for(
-					auto it{wordManipulators.cbegin()};
-					it != wordManipulators.cend();
-					++it
-			) {
-				const auto index{
-					it - wordManipulators.cbegin()
-				};
-
-				switch(*it) {
-				case wordManipNone:
-					return;
-
-				case wordManipRemoveSingleUtf8Chars:
-					if(
-							word.size() <= maxSingleUtf8CharSize
-							&& word.size() >= minSingleUtf8CharSize
-					) {
-						if(Helper::Utf8::isSingleUtf8Char(word)) {
-							Helper::Memory::free(word);
-						}
+				case corpusManipEnglishStemmer:
+					for(auto& word : sentence) {
+						Data::Stemmer::stemEnglish(word);
 					}
 
 					break;
 
-				case wordManipPorter2Stemmer:
-					Data::Stemmer::stemEnglish(word);
+				case  corpusManipGermanStemmer:
+					for(auto& word : sentence) {
+						Data::Stemmer::stemGerman(word);
+					}
 
 					break;
 
-				case wordManipGermanStemmer:
-					Data::Stemmer::stemGerman(word);
+				case corpusManipLemmatizer:
+					for(auto& word : sentence) {
+						lemmatizer.lemmatize(word, dictionaries.at(manipulatorIndex));
+					}
 
 					break;
 
-				case wordManipLemmatizer:
-					this->lemmatizer.lemmatize(word, wordModels.at(index));
+				case corpusManipRemove:
+					for(auto& word : sentence) {
+						wordRemover.remove(word, dictionaries.at(manipulatorIndex));
+					}
 
 					break;
 
-				case wordManipRemove:
-					this->wordRemover.remove(word, wordModels.at(index));
+				case corpusManipCorrect:
+					//TODO
 
 					break;
 
 				default:
 					throw Exception(
 							"Corpus::tokenize():"
-							" Invalid word manipulator"
+							" Invalid manipulator (#"
+							+ std::to_string(manipulator)
+							+ ")"
 					);
 				}
+
+				++manipulatorIndex;
 			}
 		};
 
 		// tokenize corpus
 		return this->tokenizeCustom(
-				sentenceManipulation ? std::optional<SentenceFunc>{sentenceLambda} : std::nullopt,
-				wordManipulation ? std::optional<WordFunc>{wordLambda} : std::nullopt,
+				isManipulation ? std::optional<SentenceFunc>{callbackLambda} : std::nullopt,
 				freeMemoryEvery,
 				statusSetter
 		);
@@ -2995,8 +3054,7 @@ namespace crawlservpp::Data {
 	 *   content of the corpus.
 	 */
 	inline bool Corpus::tokenizeCustom(
-			const std::optional<SentenceFunc>& callbackSentence,
-			const std::optional<WordFunc>& callbackWord,
+			const std::optional<SentenceFunc>& callback,
 			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
@@ -3004,8 +3062,7 @@ namespace crawlservpp::Data {
 			if(
 					!(
 							this->tokenizeTokenized(
-									callbackSentence,
-									callbackWord,
+									callback,
 									statusSetter
 							)
 					)
@@ -3017,8 +3074,7 @@ namespace crawlservpp::Data {
 			if(
 					!(
 							this->tokenizeContinuous(
-									callbackSentence,
-									callbackWord,
+									callback,
 									freeMemoryEvery,
 									statusSetter
 							)
@@ -3029,9 +3085,6 @@ namespace crawlservpp::Data {
 		}
 
 		statusSetter.finish();
-
-		this->lemmatizer.clear();
-		this->wordRemover.clear();
 
 		return true;
 	}
@@ -3463,12 +3516,11 @@ namespace crawlservpp::Data {
 
 	// tokenize already tokenized corpus, return whether thread is still running
 	inline bool Corpus::tokenizeTokenized(
-			std::optional<SentenceFunc> callbackSentence,
-			std::optional<WordFunc> callbackWord,
+			std::optional<SentenceFunc> callback,
 			StatusSetter& statusSetter
 	) {
 		// run manipulators on already tokenized corpus
-		if(!callbackSentence && !callbackWord) {
+		if(!callback) {
 			return statusSetter.isRunning();
 		}
 
@@ -3546,20 +3598,15 @@ namespace crawlservpp::Data {
 					this->tokens.begin() + sentenceEnd
 			);
 
-			// process sentence if necessary
-			if(callbackSentence) {
-				(*callbackSentence)(sentence);
+			// modify sentence (or its tokens), if necessary
+			if(callback) {
+				(*callback)(sentence);
 			}
 
 			for(auto n{sentenceBegin}; n < sentenceEnd; ++n) {
 				auto& token{
 					this->tokens.at(n)
 				};
-
-				// process word if necessary
-				if(callbackWord) {
-					(*callbackWord)(token);
-				}
 
 				// remove empty word from date, article, and sentence map
 				if(token.empty()) {
@@ -3625,8 +3672,7 @@ namespace crawlservpp::Data {
 
 	// tokenize still continuous corpus
 	inline bool Corpus::tokenizeContinuous(
-			std::optional<SentenceFunc> callbackSentence,
-			std::optional<WordFunc> callbackWord,
+			std::optional<SentenceFunc> callback,
 			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
@@ -3800,8 +3846,7 @@ namespace crawlservpp::Data {
 			if(sentenceEnd && !sentence.empty()) {
 				Corpus::processSentence(
 						sentence,
-						callbackSentence,
-						callbackWord,
+						callback,
 						appendToArticle,
 						appendToDate,
 						currentWord,
@@ -3889,8 +3934,7 @@ namespace crawlservpp::Data {
 		if(!sentence.empty()) {
 			Corpus::processSentence(
 					sentence,
-					callbackSentence,
-					callbackWord,
+					callback,
 					endOfLastArticle,
 					endOfLastDate,
 					currentWord,
@@ -4314,6 +4358,31 @@ namespace crawlservpp::Data {
 		}
 	}
 
+	// check that the specified value is not set, throw an exception otherwise
+	inline void Corpus::notUsed(
+			std::string_view type,
+			const std::vector<std::string>& values,
+			std::size_t index
+	) {
+		if(!values.at(index).empty()) {
+			std::string typeCapitalized(type);
+
+			if(!type.empty()) {
+				typeCapitalized[0] = std::toupper(typeCapitalized[0]);
+			}
+
+			throw Exception(
+					"Corpus::tokenize():"
+					" "
+					+ typeCapitalized
+					+ " ('"
+					+ values.at(index)
+					+ "') set but not used by manipulator #"
+					+ std::to_string(index + 1)
+			);
+		}
+	}
+
 	// return the number of bytes in a vector of strings
 	inline std::size_t Corpus::bytes(const std::vector<std::string>& words) {
 		return std::accumulate(
@@ -4530,8 +4599,7 @@ namespace crawlservpp::Data {
 	// process sentence for tokenization of the corpus
 	inline void Corpus::processSentence(
 			std::vector<std::string>& sentence,
-			const std::optional<SentenceFunc>& callbackSentence,
-			const std::optional<WordFunc>& callbackWord,
+			const std::optional<SentenceFunc>& callback,
 			bool inArticle,
 			bool inDate,
 			std::size_t& currentWord,
@@ -4542,17 +4610,13 @@ namespace crawlservpp::Data {
 			std::vector<std::string>& tokens,
 			std::size_t& tokenBytes
 	) {
-		if(callbackSentence) {
-			// modify sentence
-			(*callbackSentence)(sentence);
+		if(callback) {
+			// modify sentence (or its tokens), if necessary
+			(*callback)(sentence);
 		}
 
 		// modify words of the sentence, do not keep emptied words
 		for(auto wordIt{sentence.begin()}; wordIt != sentence.end(); ) {
-			if(callbackWord) {
-				(*callbackWord)(*wordIt);
-			}
-
 			if(wordIt->empty()) {
 				// remove empty word
 				wordIt = sentence.erase(wordIt);

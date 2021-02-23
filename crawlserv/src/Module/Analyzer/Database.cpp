@@ -1233,34 +1233,26 @@ namespace crawlservpp::Module::Analyzer {
 				corpusStatement.setString(sqlArg2, properties.sourceTable);
 				corpusStatement.setString(sqlArg3, properties.sourceColumn);
 
-				if(
-						properties.wordManipulators.empty()
-						&& properties.sentenceManipulators.empty()
-				) {
+				if(properties.manipulators.empty()) {
 					corpusStatement.setNull(sqlArg4, 0);
 				}
 				else {
 					std::string lastSavePoint;
 
-					for(std::size_t n{}; n < properties.wordManipulators.size(); ++n) {
-						lastSavePoint += 'w';
-						lastSavePoint += std::to_string(properties.wordManipulators[n]);
+					for(std::size_t n{}; n < properties.manipulators.size(); ++n) {
+						lastSavePoint += std::to_string(properties.manipulators[n]);
 						lastSavePoint += '[';
 
-						if(properties.wordModels.size() > n) {
-							lastSavePoint += properties.wordModels[n];
+						if(properties.models.size() > n) {
+							lastSavePoint += properties.models[n];
 						}
 
-						lastSavePoint += ']';
-					}
+						if(properties.dictionaries.size() > n) {
+							lastSavePoint += properties.dictionaries[n];
+						}
 
-					for(std::size_t n{}; n < properties.sentenceManipulators.size(); ++n) {
-						lastSavePoint += 's';
-						lastSavePoint += std::to_string(properties.sentenceManipulators[n]);
-						lastSavePoint += '[';
-
-						if(properties.sentenceModels.size() > n) {
-							lastSavePoint += properties.sentenceModels[n];
+						if(properties.languages.size() > n) {
+							lastSavePoint += properties.languages[n];
 						}
 
 						lastSavePoint += ']';
@@ -1936,8 +1928,7 @@ namespace crawlservpp::Module::Analyzer {
 	) {
 		std::string savePoint;
 		std::string result;
-		std::size_t numSentenceManipulators{};
-		std::size_t numWordManipulators{};
+		std::size_t numManipulators{};
 
 		// check connection to database
 		this->checkConnection();
@@ -1962,21 +1953,23 @@ namespace crawlservpp::Module::Analyzer {
 			sqlStatement.setString(sqlArg4, corpusCreationTime);
 
 			for(
-					auto it{properties.sentenceManipulators.cbegin()};
-					it != properties.sentenceManipulators.cend();
+					auto it{properties.manipulators.cbegin()};
+					it != properties.manipulators.cend();
 					++it
 			) {
 				const auto index{
 					static_cast<std::size_t>(
 							it
-							- properties.sentenceManipulators.cbegin()
+							- properties.manipulators.cbegin()
 					)
 				};
 
 				savePoint += "s";
 				savePoint += std::to_string(*it);
 				savePoint += "[";
-				savePoint += properties.sentenceModels.at(index);
+				savePoint += properties.models.at(index);
+				savePoint += properties.dictionaries.at(index);
+				savePoint += properties.languages.at(index);
 				savePoint += "]";
 
 				// execute SQL query for
@@ -1991,42 +1984,7 @@ namespace crawlservpp::Module::Analyzer {
 					if(sqlResultSet->getBoolean("result")) {
 						result = savePoint;
 
-						numSentenceManipulators = index + 1;
-					}
-				}
-			}
-
-			for(
-					auto it{properties.wordManipulators.cbegin()};
-					it != properties.wordManipulators.cend();
-					++it
-			) {
-				const auto index{
-					static_cast<std::size_t>(
-							it
-							- properties.wordManipulators.cbegin()
-					)
-				};
-
-				savePoint += "w";
-				savePoint += std::to_string(*it);
-				savePoint += "[";
-				savePoint += properties.wordModels.at(index);
-				savePoint += "]";
-
-				// execute SQL query for
-				sqlStatement.setString(sqlArg5, savePoint);
-
-				SqlResultSetPtr sqlResultSet{
-					Database::sqlExecuteQuery(sqlStatement)
-				};
-
-				// get result
-				if(sqlResultSet && sqlResultSet->next()) {
-					if(sqlResultSet->getBoolean("result")) {
-						result = savePoint;
-
-						numWordManipulators = index + 1;
+						numManipulators = index + 1;
 					}
 				}
 			}
@@ -2036,18 +1994,10 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		// remove manipulators that have already been run on save point
-		if(numWordManipulators > 0) {
-			properties.sentenceManipulators.clear();
-
-			properties.wordManipulators.erase(
-					properties.wordManipulators.begin(),
-					properties.wordManipulators.begin() + numWordManipulators
-			);
-		}
-		else if(numSentenceManipulators > 0) {
-			properties.sentenceManipulators.erase(
-					properties.sentenceManipulators.begin(),
-					properties.sentenceManipulators.begin() + numSentenceManipulators
+		if(numManipulators > 0) {
+			properties.manipulators.erase(
+					properties.manipulators.begin(),
+					properties.manipulators.begin() + numManipulators
 			);
 		}
 
@@ -2057,7 +2007,7 @@ namespace crawlservpp::Module::Analyzer {
 				std::upper_bound(
 						properties.savePoints.begin(),
 						properties.savePoints.end(),
-						numSentenceManipulators + numWordManipulators
+						numManipulators
 				)
 		);
 
@@ -2086,61 +2036,37 @@ namespace crawlservpp::Module::Analyzer {
 
 			if(
 					savePoint
-					> properties.sentenceManipulators.size()
-					+ properties.wordManipulators.size()
+					> properties.manipulators.size()
 			) {
 				continue;
 			}
 
-			std::vector<std::uint16_t> sentenceManipulators;
-			std::vector<std::string> sentenceModels;
-			std::vector<std::uint16_t> wordManipulators;
-			std::vector<std::string> wordModels;
+			std::vector<std::uint16_t> manipulators;
+			std::vector<std::string> models;
+			std::vector<std::string> dictionaries;
+			std::vector<std::string> languages;
+
+			Database::append(manipulators, properties.manipulators, done, savePoint);
+			Database::append(models, properties.models, done, savePoint);
+			Database::append(dictionaries, properties.dictionaries, done, savePoint);
+			Database::append(languages, properties.languages, done, savePoint);
 
 			for(auto manipulator{done}; manipulator < savePoint; ++manipulator) {
-				if(manipulator >= properties.sentenceManipulators.size()) {
-					// add word manipulator
-					const auto index{
-						manipulator - properties.sentenceManipulators.size()
-					};
-
-					wordManipulators.push_back(
-							properties.wordManipulators.at(index)
-					);
-					wordModels.push_back(
-							properties.wordModels.at(index)
-					);
-
-					savePointName += "w";
-					savePointName += std::to_string(wordManipulators.back());
-					savePointName += "[";
-					savePointName += wordModels.back();
-					savePointName += "]";
-				}
-				else {
-					// add sentence manipulator
-					sentenceManipulators.push_back(
-							properties.sentenceManipulators.at(manipulator)
-					);
-					sentenceModels.push_back(
-							properties.sentenceModels.at(manipulator)
-					);
-
-					savePointName += "s";
-					savePointName += std::to_string(sentenceManipulators.back());
-					savePointName += "[";
-					savePointName += sentenceModels.back();
-					savePointName += "]";
-				}
-
-				++done;
+				savePointName += std::to_string(manipulators.back());
+				savePointName += "[";
+				savePointName += models.at(manipulator);
+				savePointName += dictionaries.at(manipulator);
+				savePointName += languages.at(manipulator);
+				savePointName += "]";
 			}
 
+			done = savePoint;
+
 			if(!corpusRef.tokenize(
-					sentenceManipulators,
-					sentenceModels,
-					wordManipulators,
-					wordModels,
+					manipulators,
+					models,
+					dictionaries,
+					languages,
 					properties.freeMemoryEvery,
 					statusSetter
 			)) {
@@ -2160,49 +2086,24 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		// run remaining manipulators, if necessary (result will not be saved to the database)
-		const auto total{
-			properties.sentenceManipulators.size()
-			+ properties.wordManipulators.size()
-		};
+		if(done < properties.manipulators.size()) {
+			std::vector<std::uint16_t> manipulators;
+			std::vector<std::string> models;
+			std::vector<std::string> dictionaries;
+			std::vector<std::string> languages;
 
-		if(done < total) {
-			std::vector<std::uint16_t> sentenceManipulators;
-			std::vector<std::string> sentenceModels;
-			std::vector<std::uint16_t> wordManipulators;
-			std::vector<std::string> wordModels;
-
-			for(auto manipulator{done}; manipulator < total; ++manipulator) {
-				if(manipulator >= properties.sentenceManipulators.size()) {
-					// add word manipulator
-					const auto index{
-						manipulator - properties.sentenceManipulators.size()
-					};
-
-					wordManipulators.push_back(
-							properties.wordManipulators.at(index)
-					);
-					wordModels.push_back(
-							properties.wordModels.at(index)
-					);
-				}
-				else {
-					// add sentence manipulator
-					sentenceManipulators.push_back(
-							properties.sentenceManipulators.at(manipulator)
-					);
-					sentenceModels.push_back(
-							properties.sentenceModels.at(manipulator)
-					);
-				}
-			}
+			Database::append(manipulators, properties.manipulators, done);
+			Database::append(models, properties.models, done);
+			Database::append(dictionaries, properties.dictionaries, done);
+			Database::append(languages, properties.languages, done);
 
 			statusSetter.change("Preprocessing corpus...");
 
 			return corpusRef.tokenize(
-					sentenceManipulators,
-					sentenceModels,
-					wordManipulators,
-					wordModels,
+					manipulators,
+					models,
+					dictionaries,
+					languages,
 					properties.freeMemoryEvery,
 					statusSetter
 			);
@@ -2210,7 +2111,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		if(!corpusRef.isTokenized()) {
 			// tokenize without manipulators
-			return corpusRef.tokenizeCustom({}, {}, properties.freeMemoryEvery, statusSetter);
+			return corpusRef.tokenizeCustom({}, properties.freeMemoryEvery, statusSetter);
 		}
 
 		return statusSetter.isRunning();

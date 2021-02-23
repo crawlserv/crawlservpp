@@ -57,17 +57,17 @@ namespace crawlservpp::Struct {
 		//! The name of the table column from which the corpus is created.
 		std::string sourceColumn;
 
-		//! IDs of manipulators to change whole sentences.
-		std::vector<std::uint16_t> sentenceManipulators;
+		//! The IDs of manipulators for preprocessing the corpus.
+		std::vector<std::uint16_t> manipulators;
 
-		//! The models used by the sentence manipulators with the same array index.
-		std::vector<std::string> sentenceModels;
+		//! The models used by the manipulators with the same array index.
+		std::vector<std::string> models;
 
-		//! IDs of manipulators to change single words.
-		std::vector<std::uint16_t> wordManipulators;
+		//! The dictionaries used by the manipulators with the same array index.
+		std::vector<std::string> dictionaries;
 
-		//! The models used by the word manipulators with the same array index.
-		std::vector<std::string> wordModels;
+		//! The languages used by the manipulators with the same array index.
+		std::vector<std::string> languages;
 
 		//! List of savepoints.
 		/*!
@@ -114,16 +114,22 @@ namespace crawlservpp::Struct {
 		 * \param setSourceColumn Constant reference to a
 		 *   string containing the name of the table column
 		 *   from which the corpus is created.
-		 * \param setSentenceManipulators Constant reference
-		 *   to a vector containing the manipulators to be
-		 *   applied on each sentence of the corpus.
-		 * \param setSentenceModels Constant reference to a
-		 *   vector of strings, containing a model for each
-		 *   sentence manipulator, or an empty string if no
+		 * \param setManipulators Constant reference to a
+		 *   vector containing the manipulators to be
+		 *   applied when preprocessing the corpus.
+		 * \param setModels Constant reference to a vector
+		 *   of strings, containing a model for each
+		 *   manipulator, or an empty string if no
 		 *   model is required by the manipulator.
-		 * \param setWordManipulators Constant reference to
-		 *   a vector containing the manipulators to be
-		 *   applied on each word of the corpus.
+		 * \param setDictionaries Constant reference to a
+		 *   vector of strings, containing a dictionary for
+		 *   each manipulator, or an empty string if no
+		 *   dictionary is required by the manipulator.
+		 * \param setLanguages Constant reference to a
+		 *   vector of strings, containing a language for
+		 *   each manipulator, or an empty string if no
+		 *   language is required by the manipulator, or
+		 *   its default language should be used.
 		 * \param setWordModels Constant reference to a
 		 *   vector of strings, containing a model for each
 		 *   word manipulator, or an empty string if no
@@ -161,19 +167,19 @@ namespace crawlservpp::Struct {
 				std::uint16_t setSourceType,
 				const std::string& setSourceTable,
 				const std::string& setSourceColumn,
-				const std::vector<std::uint16_t>& setSentenceManipulators,
-				const std::vector<std::string>& setSentenceModels,
-				const std::vector<std::uint16_t>& setWordManipulators,
-				const std::vector<std::string>& setWordModels,
+				const std::vector<std::uint16_t>& setManipulators,
+				const std::vector<std::string>& setModels,
+				const std::vector<std::string>& setDictionaries,
+				const std::vector<std::string>& setLanguages,
 				const std::vector<std::uint16_t>& setSavePoints,
 				std::uint64_t setFreeMemoryEvery
 		) : sourceType{setSourceType},
 			sourceTable{setSourceTable},
 			sourceColumn{setSourceColumn},
-			sentenceManipulators{setSentenceManipulators},
-			sentenceModels{setSentenceModels},
-			wordManipulators{setWordManipulators},
-			wordModels{setWordModels},
+			manipulators{setManipulators},
+			models{setModels},
+			dictionaries{setDictionaries},
+			languages{setLanguages},
 			savePoints{setSavePoints},
 			freeMemoryEvery{setFreeMemoryEvery},
 			tokenize{true} {}

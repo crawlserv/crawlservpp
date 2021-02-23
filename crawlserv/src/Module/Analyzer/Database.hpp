@@ -61,6 +61,8 @@
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint8_t, std::uint16_t, std::uint64_t
 #include <functional>		// std::function
+#include <iterator>			// std::begin, std::end
+#include <limits>			// std::numeric_limits
 #include <locale>			// std::locale
 #include <queue>			// std::queue
 #include <sstream>			// std::ostringstream
@@ -367,6 +369,21 @@ namespace crawlservpp::Module::Analyzer {
 				const std::string& savePoint,
 				StatusSetter& statusSetter
 		);
+
+		// internal helper function template
+		template<typename T> static void append(
+				T& to,
+				const T& from,
+				typename T::size_type startAt = 0,
+				typename T::size_type endAt = std::numeric_limits<typename T::size_type>::max()
+		) {
+			if(endAt == std::numeric_limits<typename T::size_type>::max()) {
+				to.insert(std::end(to), std::begin(from) + startAt, std::end(from));
+			}
+			else {
+				to.insert(std::end(to), std::begin(from) + startAt, std::begin(from) + endAt);
+			}
+		}
 	};
 
 } /* namespace crawlservpp::Module::Analyzer */

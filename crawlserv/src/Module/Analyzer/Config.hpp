@@ -204,45 +204,15 @@ namespace crawlservpp::Module::Analyzer {
 			///@name Corpus Tokenization
 			///@{
 
-			//! Steps after which the corpus will be stored in the database.
+			//! Dictionary for the (token-based) manipulator with the same array index.
 			/*!
-			 * If zero, the unmanipulated corpus will be
-			 *  stored. After that, the numbering starts
-			 *  with the sentence manipulators, and
-			 *  continues with the word manipulators.
+			 * Empty strings will be ignored.
 			 *
-			 * \note Savepoints will be ignored, if a
-			 *   suitable savepoint has been found beyond
-			 *   them.
+			 * Preprocessing of the corpus will
+			 *  fail, if no dictionary is set for
+			 *  a manipulator that requires one.
 			 */
-			std::vector<std::uint16_t> tokenizerSavePoints{};
-
-			//! Manipulators used on the sentences of the text corpus.
-			/*!
-			 * \sa Data::sentenceManipNone,
-			 * 	 Data::sentenceManipTagger,
-			 */
-			std::vector<std::uint16_t> tokenizerSentenceManipulators;
-
-			//! Model for the sentence manipulator with the same array index.
-			/*!
-			 * Empty strings will be ignored.
-			 */
-			std::vector<std::string> tokenizerSentenceModels;
-
-			//! Manipulators used on the words of the text corpus.
-			/*!
-			 * \sa Data::wordManipNone,
-			 *   Data::wordManipPorter2Stemmer,
-			 *   Data::wordManipGermanStemmer
-			 */
-			std::vector<std::uint16_t> tokenizerWordManipulators;
-
-			//! Model for the word manipulator with the same array index.
-			/*!
-			 * Empty strings will be ignored.
-			 */
-			std::vector<std::string> tokenizerWordModels;
+			std::vector<std::string> tokenizerDicts;
 
 			//! Number of processed bytes in a continuous corpus after which memory will be freed.
 			/*!
@@ -250,6 +220,51 @@ namespace crawlservpp::Module::Analyzer {
 			 *  processing is complete.
 			 */
 			std::uint64_t tokenizerFreeMemoryEvery{defaultFreeMemoryEvery};
+
+			//! Language for the (token-based aspell) manipulator with the same array index.
+			/*!
+			 * Empty strings will be ignored.
+			 *
+			 * If not set, the default language of the
+			 *  server's aspell configuration will be
+			 *  used.
+			 */
+			std::vector<std::string> tokenizerLanguages;
+
+			//! Manipulators used on the text corpus.
+			/*!
+			 * \sa Data::corpusManipNone,
+			 * 	 Data::corpusManipTagger,
+			 * 	 Data::corpusManipTaggerPosterior,
+			 * 	 Data::corpusManipEnglishStemmer,
+			 * 	 Data::corpusManipGermanStemmer,
+			 * 	 Data::corpusManipLemmatizer,
+			 * 	 Data::corpusManipRemove,
+			 * 	 Data::corpusManipCorrect
+			 */
+			std::vector<std::uint16_t> tokenizerManipulators;
+
+			//! Model for the (sentence-based) manipulator with the same array index.
+			/*!
+			 * Empty strings will be ignored.
+			 *
+			 * Preprocessing of the corpus will
+			 *  fail, if no model is set for a
+			 *  manipulator that requires one.
+			 */
+			std::vector<std::string> tokenizerModels;
+
+			//! Steps after which the corpus will be stored in the database.
+			/*!
+			 * If zero, the unmanipulated corpus will be
+			 *  stored. Starting from one, the number
+			 *  corresponds to the manipulators used.
+			 *
+			 * \note Savepoints will not be stored, if a
+			 *   suitable savepoint already exists beyond
+			 *   them.
+			 */
+			std::vector<std::uint16_t> tokenizerSavePoints{};
 
 			///@}
 		}
@@ -364,12 +379,12 @@ namespace crawlservpp::Module::Analyzer {
 
 		// corpus tokenization options
 		this->category("tokenizer");
-		this->option("savepoints", this->config.tokenizerSavePoints);
-		this->option("sentence.manipulators", this->config.tokenizerSentenceManipulators);
-		this->option("sentence models", this->config.tokenizerSentenceModels);
-		this->option("word.manipulators", this->config.tokenizerWordManipulators);
-		this->option("word.models", this->config.tokenizerWordModels);
+		this->option("dicts", this->config.tokenizerDicts);
 		this->option("free.memory.every", this->config.tokenizerFreeMemoryEvery);
+		this->option("languages", this->config.tokenizerLanguages);
+		this->option("manipulators", this->config.tokenizerManipulators);
+		this->option("models", this->config.tokenizerModels);
+		this->option("savepoints", this->config.tokenizerSavePoints);
 
 		// parse algo options
 		this->parseAlgoOption();
@@ -434,38 +449,51 @@ namespace crawlservpp::Module::Analyzer {
 			this->warning("Incomplete input field(s) removed from configuration.");
 		}
 
-		// check number of corpus manipulators and their models
+		// check number of manipulators and their dictionaries, models, and languages
 		if(
-				this->config.tokenizerSentenceModels.size()
-				> this->config.tokenizerSentenceManipulators.size()
+				this->config.tokenizerDicts.size()
+				> this->config.tokenizerManipulators.size()
 		) {
 			this->warning(
 					"The configuration contains"
-					" more sentence models than sentence"
-					" manipulators, redundant models will"
-					" be ignored."
+					" more dictionaries than manipulators,"
+					" redundant dictionaries will be ignored."
 			);
 		}
 
 		if(
-				this->config.tokenizerWordModels.size()
-				> this->config.tokenizerWordManipulators.size()
+				this->config.tokenizerModels.size()
+				> this->config.tokenizerManipulators.size()
 		) {
 			this->warning(
 					"The configuration contains"
-					" more word models than word"
-					" manipulators, redundant models will"
-					" be ignored."
+					" more models than manipulators,"
+					" redundant models will be ignored."
+			);
+		}
+
+		if(
+				this->config.tokenizerLanguages.size()
+				> this->config.tokenizerManipulators.size()
+		) {
+			this->warning(
+					"The configuration contains"
+					" more languages than manipulators,"
+					" redundant languages will be ignored."
 			);
 		}
 
 		// resize so that the numbers of models equals the numbers of manipulators
-		this->config.tokenizerSentenceModels.resize(
-				this->config.tokenizerSentenceManipulators.size()
+		this->config.tokenizerDicts.resize(
+				this->config.tokenizerManipulators.size()
 		);
 
-		this->config.tokenizerWordModels.resize(
-				this->config.tokenizerWordManipulators.size()
+		this->config.tokenizerModels.resize(
+				this->config.tokenizerManipulators.size()
+		);
+
+		this->config.tokenizerLanguages.resize(
+				this->config.tokenizerManipulators.size()
 		);
 
 		// check algo options

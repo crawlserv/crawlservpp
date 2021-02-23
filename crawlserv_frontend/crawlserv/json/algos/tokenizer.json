@@ -2,65 +2,14 @@
 	"label": "Corpus Tokenization",
 	"open": true,
 
-	"savepoints": {
-		"type": "array",
-		"item-type": "number",
-		"min": 0,
-		"max": 65535,
-		"default": [0],
-		"label": "Savepoints",
-		"description": "Steps after which the corpus will be stored in the database. Zero means the unmanipulated corpus will be saved, then the numbering starts with the sentence manipulators, and continues with the word manipulators. NOTE: Savepoints will be ignored, if a suitable savepoint has been found beyond them.",
-		"simple": true,
-		"position": 5 
-	},
-	"sentence.manipulators": {
-		"type": "array",
-		"item-type": "enum",
-		"enum-values": [
-			"none",
-			"POS tagger, fast (wapiti)",
-			"POS tagger, accurate (wapiti)"
-		],
-		"default": [],
-		"label": "Sentence Manipulators:",
-		"description": "Manipulators used on the sentences of the text corpus.",
-		"simple": true,
-		"position": 1
-	},
-	"sentence.models": {
-		"type": "array",
-		"item-type": "mdl",
-		"default": [],
-		"label": "Sentence Models:",
-		"description": "Model for the sentence manipulator with the same array index.",
-		"simple": true,
-		"position": 2
-	},
-	"word.manipulators": {
-		"type": "array",
-		"item-type": "enum",
-		"enum-values": [
-			"none",
-			"Single UTF-8 code point removal",
-			"English stemmer (porter2)",
-			"German stemmer (cistem)",
-			"Multilingual lemmatizer (from dictionary)",
-			"Remove words (from dictionary)"
-		],
-		"default": [],
-		"label": "Word Manipulators:",
-		"description": "Manipulators used on the words of the text corpus.",
-		"simple": true,
-		"position": 3
-	},
-	"word.models": {
+	"dicts": {
 		"type": "array",
 		"item-type": "dict",
 		"default": [],
 		"label": "Dictionaries:",
-		"description": "Dictionary for the word manipulator with the same array index.",
+		"description": "Dictionary for the (token-based) manipulator with the same array index.",
 		"simple": true,
-		"position": 4
+		"position": 3
 	},
 	"free.memory.every": {
 		"type": "number",
@@ -68,5 +17,53 @@
 		"default": 100000000,
 		"description": "Number of processed bytes in a continuous corpus after which memory will be freed. If zero, memory will only be freed after processing is complete.",
 		"simple": false
-	}
+	},
+	"languages": {
+		"type": "array",
+		"item-type": "string",
+		"default": [],
+		"label": "Languages:",
+		"description": "Language for the (token-based aspell) manipulator with the same array index. If no language is set, the default language of the server's aspell configuration will be used.",
+		"simple": true,
+		"position": 4
+	},
+	"manipulators": {
+		"type": "array",
+		"item-type": "enum",
+		"enum-values": [
+			"none",
+			"[sentence-based] POS tagger, fast (wapiti, from model)",
+			"[sentence-based] POS tagger, accurate (wapiti, from model)",
+			"[token-based] English stemmer (porter2)",
+			"[token-based] German stemmer (cistem)",
+			"[token-based] Multilingual lemmatizer (from dictionary)",
+			"[token-based] Remove words (from dictionary)",
+			"[token-based] Correct words (aspell, specify language)"
+		],
+		"default": [],
+		"label": "Sentence Manipulators:",
+		"description": "Manipulators used to preprocess the text corpus.",
+		"simple": true,
+		"position": 1
+	},
+	"models": {
+		"type": "array",
+		"item-type": "mdl",
+		"default": [],
+		"label": "Sentence Models:",
+		"description": "Model for the (sentence-based) manipulator with the same array index.",
+		"simple": true,
+		"position": 2
+	},
+	"savepoints": {
+		"type": "array",
+		"item-type": "number",
+		"min": 0,
+		"max": 65535,
+		"default": [0],
+		"label": "Savepoints",
+		"description": "Steps after which the corpus will be stored in the database. Zero means the unmanipulated corpus will be saved. Starting from one, the number corresponds to the manipulators used.",
+		"simple": true,
+		"position": 5 
+	},
 }
