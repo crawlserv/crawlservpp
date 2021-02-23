@@ -716,7 +716,7 @@ namespace crawlservpp::Data {
 				PositionLength& origin,
 				std::size_t pos
 		) {
-			if(entryIndex == 0 && !map.empty()) {
+			if(pos == 0) {
 				/* first token: set origin to first map entry */
 				origin.first = TextMapEntry::pos(map[0]);
 				origin.second = TextMapEntry::end(map[0]);
