@@ -110,7 +110,26 @@
 		} \
 	}
 
-// macro for retrieving a value from different kinds of (pre-compiled) models
+// macros for retrieving a value from different kinds of (pre-compiled) models
+//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+#define DATA_TOPICMODEL_RETRIEVE_NOARGS(x, isHdp, isIdf, function) \
+	if(isHdp) { \
+		if(isIdf) { \
+			x = this->hdpModelIdf->function(); \
+		} \
+		else { \
+			x = this->hdpModel->function(); \
+		} \
+	} \
+	else { \
+		if(isIdf) { \
+			x = this->ldaModelIdf->function(); \
+		} \
+		else { \
+			x = this->ldaModel->function(); \
+		} \
+	}
+
 //NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define DATA_TOPICMODEL_RETRIEVE(x, isHdp, isIdf, function, ...) \
 	if(isHdp) { \
@@ -132,20 +151,20 @@
 
 // macro for returning a value from different kinds of (pre-compiled) models
 //NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-#define DATA_TOPICMODEL_RETURN(isHdp, isIdf, function, ...) \
+#define DATA_TOPICMODEL_RETURN(isHdp, isIdf, function) \
 	if(isHdp) { \
 		if(isIdf) { \
-			return this->hdpModelIdf->function(__VA_ARGS__); \
+			return this->hdpModelIdf->function(); \
 		} \
 		\
-		return this->hdpModel->function(__VA_ARGS__); \
+		return this->hdpModel->function(); \
 	} \
 	\
 	if(isIdf) { \
-		return this->ldaModelIdf->function(__VA_ARGS__); \
+		return this->ldaModelIdf->function(); \
 	} \
 	\
-	return this->ldaModel->function(__VA_ARGS__);
+	return this->ldaModel->function();
 
 namespace crawlservpp::Data {
 
@@ -960,7 +979,7 @@ namespace crawlservpp::Data {
 		topics.reserve(this->getK(isHdp, isIdf));
 
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(counts, isHdp, isIdf, getCountByTopic);
+		DATA_TOPICMODEL_RETRIEVE_NOARGS(counts, isHdp, isIdf, getCountByTopic);
 
 		std::size_t topicIndex{};
 
@@ -1018,9 +1037,9 @@ namespace crawlservpp::Data {
 
 		// retrieve vocabulary frequencies
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(vocabularyFrequencies, isHdp, isIdf, getVocabCf);
+		DATA_TOPICMODEL_RETRIEVE_NOARGS(vocabularyFrequencies, isHdp, isIdf, getVocabCf);
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(vocabularyUsed, isHdp, isIdf, getV);
+		DATA_TOPICMODEL_RETRIEVE_NOARGS(vocabularyUsed, isHdp, isIdf, getV);
 
 		// sum up for normalization
 		const auto frequencySum{
@@ -1323,9 +1342,9 @@ namespace crawlservpp::Data {
 		information.numberOfTopics = this->getNumberOfTopics();
 
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(information.alpha, isHdp, isIdf, getAlpha);
+		DATA_TOPICMODEL_RETRIEVE_NOARGS(information.alpha, isHdp, isIdf, getAlpha);
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(information.eta, isHdp, isIdf, getEta);
+		DATA_TOPICMODEL_RETRIEVE_NOARGS(information.eta, isHdp, isIdf, getEta);
 
 		if(isHdp) {
 			information.numberOfInitialTopics = this->numberOfInitialTopics;
@@ -2140,11 +2159,7 @@ namespace crawlservpp::Data {
 		}
 
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETURN(
-				isHdp,
-				isIdf,
-				getK
-		);
+		DATA_TOPICMODEL_RETURN(isHdp, isIdf, getK);
 	}
 
 	// check whether topic is alive (without additional checking)
@@ -2231,7 +2246,7 @@ namespace crawlservpp::Data {
 		std::size_t iterations{};
 
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(iterations, isHdp, isIdf, getGlobalStep);
+		DATA_TOPICMODEL_RETRIEVE_NOARGS(iterations, isHdp, isIdf, getGlobalStep);
 
 		this->hasDocs = true;
 
