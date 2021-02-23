@@ -60,6 +60,8 @@ function handleJsonError(txt, jqxhr, status, thrown) {
 		}
 	}
 	
+	alert(error);
+	
 	throw new Error(error);
 }
 
