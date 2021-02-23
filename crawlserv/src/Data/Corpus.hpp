@@ -3988,8 +3988,8 @@ namespace crawlservpp::Data {
 			}
 		}
 
-		Helper::Memory::free(this->articleMap);
-		Helper::Memory::free(this->dateMap);
+		newArticleMap.swap(this->articleMap);
+		newDateMap.swap(this->dateMap);
 
 		this->tokenized = true;
 
