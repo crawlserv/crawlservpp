@@ -134,7 +134,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->log(generalLoggingDefault, "gets text corpus...");
 
 		if(!(this->addCorpora(true, statusSetter))) {
-			throw Exception("WordsOverTime::onAlgoInit(): Corpus is empty");
+			if(this->isRunning()) {
+				throw Exception("WordsOverTime::onAlgoInit(): Corpus is empty");
+			}
+
+			return;
 		}
 
 		// algorithm is ready

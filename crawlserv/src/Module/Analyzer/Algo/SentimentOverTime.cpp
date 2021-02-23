@@ -181,10 +181,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->log(generalLoggingDefault, "gets text corpus...");
 
 		if(!(this->addCorpora(this->algoConfig.combineSources, statusSetter))) {
-			throw Exception(
-					"SentimentOverTime::onAlgoInit():"
-					" No non-empty corpus has been added"
-			);
+			if(this->isRunning()) {
+				throw Exception(
+						"SentimentOverTime::onAlgoInit():"
+						" No non-empty corpus has been added"
+				);
+			}
+
+			return;
 		}
 
 		// algorithm is ready

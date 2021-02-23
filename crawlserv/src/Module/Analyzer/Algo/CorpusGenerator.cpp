@@ -139,7 +139,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// request text corpus
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		this->addCorpora(false, statusSetter);
+		if(!(this->addCorpora(false, statusSetter))) {
+			if(this->isRunning()) {
+				throw Exception("CorpusGenerator::onAlgoInit(): Corpus is empty");
+			}
+
+			return;
+		}
 
 		// create corpus statistics
 		if(!statusSetter.change("Creating corpus statistics...")) {

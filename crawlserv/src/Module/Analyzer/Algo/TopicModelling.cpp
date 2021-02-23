@@ -166,6 +166,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// check sources, request text corpora and combine them into one
 		this->getCorpus(statusSetter);
 
+		if(!(this->isRunning())) {
+			return;
+		}
+
 		// initialize algorithm
 		this->initModel();
 		this->loadModel(statusSetter);
@@ -358,7 +362,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// get corpora and combine them into one
 		this->log(generalLoggingDefault, "gets text corpus...");
 
-		if(!(this->addCorpora(true, statusSetter))) {
+		if(!(this->addCorpora(true, statusSetter)) && this->isRunning()) {
 			throw Exception("TopicModelling::getCorpus(): Corpus is empty");
 		}
 	}
