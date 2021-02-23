@@ -65,5 +65,5 @@
 		"description": "Steps after which the corpus will be stored in the database. Zero means the unmanipulated corpus will be saved. Starting from one, the number corresponds to the manipulators used.",
 		"simple": true,
 		"position": 5 
-	},
+	}
 }
