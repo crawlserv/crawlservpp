@@ -173,11 +173,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 //		this->log(generalLoggingDefault, "gets text corpus...");
 //
 //		if(!(this->addCorpora(/*this->algoConfig.combineSources*/ true, statusSetter))) {
-//			throw Exception("<algo>::onAlgoInit(): Corpus is empty");
-//			throw Exception(
-//					"<algo>::onAlgoInit():
-//					" No non-empty corpus has been added."
-//			);
+//			if(this->isRunning()) {
+//				throw Exception("<algo>::onAlgoInit(): Corpus is empty");
+//				throw Exception(
+//						"<algo>::onAlgoInit():
+//						" No non-empty corpus has been added."
+//				);
+//			}
+//
+//			return;
 //		}
 
 		/*
