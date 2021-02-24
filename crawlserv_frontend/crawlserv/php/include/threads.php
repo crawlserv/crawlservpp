@@ -142,6 +142,8 @@ $result = $dbConnection->query(
 
 if($result == NULL) {
     http_response_code(503);
+    
+    die("ERROR: Could not get threads");
 }
 
 $num = $result->num_rows;
@@ -182,12 +184,16 @@ if($num > 0) {
         
         if($result2 == NULL) {
             http_response_code(503);
+            
+            die("ERROR: Could not get website namespace");
         }
         
         $row2 = $result2->fetch_assoc();
         
         if($row2 == NULL) {
             http_response_code(503);
+            
+            die("ERROR: Could not fetch website namespace");
         }
         
         $website = $row2["namespace"];
@@ -205,12 +211,16 @@ if($num > 0) {
         
         if($result2 == NULL) {
             http_response_code(503);
+            
+            die("ERROR: Could not get URL list namespace");
         }
         
         $row2 = $result2->fetch_assoc();
         
         if($row2 == NULL) {
             http_response_code(503);
+            
+            die("ERROR: Could not fetch URL list namespace");
         }
         
         $urllist = $row2["namespace"];
@@ -228,12 +238,16 @@ if($num > 0) {
         
         if($result2 == NULL) {
             http_response_code(503);
+            
+            die("ERROR: Could not get configuration name");
         }
         
         $row2 = $result2->fetch_assoc();
         
         if($row2 == NULL) {
             http_response_code(503);
+            
+            die("ERROR: Could not fetch configuration name");
         }
         
         $config = $row2["name"];
@@ -249,6 +263,8 @@ if($num > 0) {
         
         if($result2 == NULL) {
             http_response_code(503);
+            
+            die("ERROR: Could not get number of remaining URLs");
         }
         
         $row2 = $result2->fetch_assoc();
