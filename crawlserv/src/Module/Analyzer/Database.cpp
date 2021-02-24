@@ -116,10 +116,10 @@ namespace crawlservpp::Module::Analyzer {
 	 *   the full target table name and the
 	 *   required target fields.
 	 *
-	 * \param compressed Set whether to
+	 * \param isCompressed Set whether to
 	 *   compress the data in the target
 	 *   table.
-	 * \param clear Set whether to clear
+	 * \param isDelete Set whether to delete
 	 *   a previously existing target table.
 	 *
 	 * \throws Analyzer::Database::Exception
@@ -133,7 +133,7 @@ namespace crawlservpp::Module::Analyzer {
 	 * \sa setTargetTable, setTargetFields
 	 *
 	 */
-	void Database::initTargetTable(bool compressed, bool clear) {
+	void Database::initTargetTable(bool isCompressed, bool isDelete) {
 		// check options
 		if(this->getOptions().websiteNamespace.empty()) {
 			throw Exception(
@@ -187,7 +187,7 @@ namespace crawlservpp::Module::Analyzer {
 				this->getOptions().urlListId,
 				this->targetTableName,
 				this->targetTableFull,
-				compressed
+				isCompressed
 		);
 
 		for(const auto& field : this->targetFields) {
@@ -210,19 +210,20 @@ namespace crawlservpp::Module::Analyzer {
 			}
 		}
 
-		// add or update the target table
-		this->targetTableId = this->addOrUpdateTargetTable(propertiesTarget);
-
-		if(clear) {
-			this->clearTable(this->targetTableFull);
+		// delete the table, if necessary
+		if(isDelete) {
+			this->dropTable(this->targetTableFull);
 
 			this->log(
 					this->getLoggingMin(),
-					"cleared target table '"
+					"deleted previous table '"
 					+ this->targetTableName
-					+ "'."
+					+ "', if it existed."
 			);
 		}
+
+		// add or update the target table
+		this->targetTableId = this->addOrUpdateTargetTable(propertiesTarget);
 	}
 
 	//! Updates the target table.
@@ -282,9 +283,9 @@ namespace crawlservpp::Module::Analyzer {
 	 *
 	 * \param name The name of the additional
 	 *   table.
-	 * \param compressed Set whether to
+	 * \param isCompressed Set whether to
 	 *   compress the data in the table.
-	 * \param clear Set whether to clear
+	 * \param isDelete Set whether to delete
 	 *   a previously existing table.
 	 *
 	 * \returns The ID of the additional
@@ -301,8 +302,8 @@ namespace crawlservpp::Module::Analyzer {
 	std::size_t Database::addAdditionalTable(
 			const std::string& name,
 			const std::vector<StringString>& fields,
-			bool compressed,
-			bool clear
+			bool isCompressed,
+			bool isDelete
 	) {
 		// check options
 		if(this->getOptions().websiteNamespace.empty()) {
@@ -358,7 +359,7 @@ namespace crawlservpp::Module::Analyzer {
 				this->getOptions().urlListId,
 				name,
 				fullTableName,
-				compressed
+				isCompressed
 		);
 
 		for(const auto& field : fields) {
@@ -381,14 +382,20 @@ namespace crawlservpp::Module::Analyzer {
 			}
 		}
 
+		// delete previous table, if necessary
+		if(isDelete) {
+			this->dropTable(fullTableName);
+
+			this->log(
+					this->getLoggingMin(),
+					"deleted previous table '"
+					+ name
+					+ "', if it existed."
+			);
+		}
+
 		// add or update the target table
 		const std::size_t id{this->addOrUpdateTargetTable(tableProperties)};
-
-		if(clear) {
-			this->clearTable(fullTableName);
-
-			this->log(this->getLoggingMin(), "cleared table '" + name + "'.");
-		}
 
 		this->additionalTables.emplace(id, fullTableName);
 

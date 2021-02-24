@@ -223,7 +223,7 @@ namespace crawlservpp::Module::Analyzer {
 		///@name Target Table Initialization and Update
 		///@{
 
-		void initTargetTable(bool compressed, bool clear);
+		void initTargetTable(bool isCompressed, bool isDelete);
 		void updateTargetTable();
 
 		///@}
