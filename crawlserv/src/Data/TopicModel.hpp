@@ -73,7 +73,7 @@
 #include "../Main/Exception.hpp"
 #include "../Struct/TopicModelInfo.hpp"
 
-#include <algorithm>		// std::accumulate, std::transform
+#include <algorithm>		// std::transform
 #include <array>			// std::array
 #include <cmath>			// std::log
 #include <cstdint>			// std::uint8_t, std::uint64_t
@@ -82,6 +82,7 @@
 #include <ios>				// std::ios
 #include <limits>			// std::numeric_limits
 #include <memory>			// std::make_unique, std::unique_ptr
+#include <numeric>			// std::accumulate
 #include <random>			// std::random_device
 #include <string>			// std::string, std::to_string
 #include <string_view>		// std::string_view, std::string_view_literals
@@ -189,7 +190,7 @@ namespace crawlservpp::Data {
 	//! The default concentration coeficient of the Dirichlet Process for document-table.
 	inline constexpr auto defaultAlpha{0.1F};
 
-	//! The default hyperparameter for the Dirichlet distribution for topic-word.
+	//! The default hyperparameter for the Dirichlet distribution for topic-token.
 	inline constexpr auto defaultEta{0.01F};
 
 	//! The default concentration coefficient of the Dirichlet Process for table-topic.
@@ -273,7 +274,7 @@ namespace crawlservpp::Data {
 		[[nodiscard]] std::size_t getVocabularySize() const;
 		[[nodiscard]] std::size_t getOriginalVocabularySize() const;
 		[[nodiscard]] const std::vector<std::string>& getVocabulary() const;
-		[[nodiscard]] std::size_t getNumberOfWords() const;
+		[[nodiscard]] std::size_t getNumberOfTokens() const;
 		[[nodiscard]] std::size_t getBurnInIterations() const;
 		[[nodiscard]] std::size_t getIterations() const;
 		[[nodiscard]] std::size_t getParameterOptimizationInterval() const;
@@ -281,13 +282,13 @@ namespace crawlservpp::Data {
 		[[nodiscard]] std::string_view getModelName() const;
 		[[nodiscard]] std::string_view getTermWeighting() const;
 		[[nodiscard]] std::size_t getDocumentId(const std::string& name) const;
-		[[nodiscard]] std::vector<std::string> getRemovedWords() const;
+		[[nodiscard]] std::vector<std::string> getRemovedTokens() const;
 		[[nodiscard]] std::size_t getNumberOfTopics() const;
 		[[nodiscard]] std::vector<std::size_t> getTopics() const;
 		[[nodiscard]] std::vector<std::pair<std::size_t, std::uint64_t>> getTopicsSorted() const;
-		[[nodiscard]] double getLogLikelihoodPerWord() const;
-		[[nodiscard]] double getWordEntropy() const;
-		[[nodiscard]] std::vector<std::pair<std::string, float>> getTopicTopNWords(
+		[[nodiscard]] double getLogLikelihoodPerToken() const;
+		[[nodiscard]] double getTokenEntropy() const;
+		[[nodiscard]] std::vector<std::pair<std::string, float>> getTopicTopNTokens(
 				std::size_t topic,
 				std::size_t n
 		) const;
@@ -312,10 +313,10 @@ namespace crawlservpp::Data {
 		void setFixedNumberOfTopics(std::size_t k);
 		void setUseIdf(bool idf);
 		void setBurnInIteration(std::size_t skipIterations);
-		void setWordRemoval(
+		void setTokenRemoval(
 				std::size_t collectionFrequency,
 				std::size_t documentFrequency,
-				std::size_t fixedNumberOfTopWords
+				std::size_t fixedNumberOfTopTokens
 		);
 		void setInitialParameters(
 				std::size_t numberOfInitialTopics,
@@ -395,9 +396,9 @@ namespace crawlservpp::Data {
 		float initialEta{defaultEta};
 		float initialGamma{defaultGamma};
 		std::size_t seed{std::random_device{}()};
-		std::size_t minWordCf{};
-		std::size_t minWordDf{};
-		std::size_t removeTopNWords{};
+		std::size_t minTokenCf{};
+		std::size_t minTokenDf{};
+		std::size_t removeTopNTokens{};
 		std::size_t optimizationInterval{defaultOptimizationInterval};
 		std::string trainedWithVersion{};
 
@@ -415,7 +416,7 @@ namespace crawlservpp::Data {
 
 		// internal helper functions
 		void initModel(bool& isHdpTo, bool& isIdfTo);
-		[[nodiscard]] std::string dictLookUp(tomoto::Vid wordId) const;
+		[[nodiscard]] std::string dictLookUp(tomoto::Vid tokenId) const;
 
 		void checkModel(
 				const std::string& function,
@@ -624,10 +625,10 @@ namespace crawlservpp::Data {
 		return result;
 	}
 
-	//! Gets the number of distinct words after training has begun.
+	//! Gets the number of distinct tokens after training has begun.
 	/*!
-	 * \returns The number of distinct words after stop
-	 *   words have been removed.
+	 * \returns The number of distinct tokens after
+	 *   stopwords have been removed.
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
@@ -644,10 +645,10 @@ namespace crawlservpp::Data {
 		DATA_TOPICMODEL_RETURN(isHdp, isIdf, getV);
 	}
 
-	//! Gets the number of distinct words before training.
+	//! Gets the number of distinct tokens before training.
 	/*!
-	 * \returns The number of distinct words before stop
-	 *   words have been removed.
+	 * \returns The number of distinct tokens before
+	 *   stopwords have been removed.
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
@@ -665,7 +666,7 @@ namespace crawlservpp::Data {
 
 	//! Gets the complete dictionary used by the model.
 	/*!
-	 * \note Includes words removed during training.
+	 * \note Includes tokens removed during training.
 	 *
 	 * \returns Constant reference to a vector of strings
 	 *   containing the complete dictionary of the model.
@@ -685,21 +686,21 @@ namespace crawlservpp::Data {
 	}
 
 
-	//! Gets the number of words after training has begun.
+	//! Gets the number of tokens after training has begun.
 	/*!
-	 * \returns The number of words after stop words
+	 * \returns The number of tokens after stopwords
 	 *   have been removed.
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
 	 *   cleared, or the model has not been trained yet.
 	 */
-	inline std::size_t TopicModel::getNumberOfWords() const {
+	inline std::size_t TopicModel::getNumberOfTokens() const {
 		bool isHdp{false};
 		bool isIdf{false};
 
-		this->checkModel("getNumberOfWords", isHdp, isIdf);
-		this->checkTrained("getNumberOfWords");
+		this->checkModel("getNumberOfTokens", isHdp, isIdf);
+		this->checkTrained("getNumberOfTokens");
 
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		DATA_TOPICMODEL_RETURN(isHdp, isIdf, getN);
@@ -859,22 +860,22 @@ namespace crawlservpp::Data {
 		return id;
 	}
 
-	//! Gets the most common (i.e. stop) words that have been removed.
+	//! Gets the most common tokens (i.e. stopwords) that have been removed.
 	/*!
 	 * \returns A vector of strings containing the
-	 *   removed (s)top words. The vector is empty if no
-	 *   (s)top words have been removed.
+	 *   removed tokens. The vector is empty if no
+	 *   tokens have been removed.
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
 	 *   cleared, or the model has not been trained yet.
 	 */
-	inline std::vector<std::string> TopicModel::getRemovedWords() const {
+	inline std::vector<std::string> TopicModel::getRemovedTokens() const {
 		bool isHdp{false};
 		bool isIdf{false};
 
-		this->checkModel("getRemovedWords", isHdp, isIdf);
-		this->checkTrained("getRemovedWords");
+		this->checkModel("getRemovedTokens", isHdp, isIdf);
+		this->checkTrained("getRemovedTokens");
 
 		const auto& dict{
 			this->getDict(isHdp, isIdf)
@@ -882,8 +883,8 @@ namespace crawlservpp::Data {
 		const auto& size{dict.size()};
 		 std::vector<std::string> removed;
 
-		for(std::size_t wordIndex{size - this->removeTopNWords}; wordIndex < size; ++wordIndex) {
-			removed.emplace_back(dict.toWord(wordIndex));
+		for(auto tokendIndex{size - this->removeTopNTokens}; tokendIndex < size; ++tokendIndex) {
+			removed.emplace_back(dict.toWord(tokendIndex));
 		}
 
 		return removed;
@@ -998,39 +999,39 @@ namespace crawlservpp::Data {
 		return topics;
 	}
 
-	//! Gets the log-likelihood per word.
+	//! Gets the log-likelihood per token.
 	/*!
-	 * \returns The current log-likelihood per word.
+	 * \returns The current log-likelihood per token.
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
 	 *   cleared, or the model has not been trained yet.
 	 */
-	inline double TopicModel::getLogLikelihoodPerWord() const {
+	inline double TopicModel::getLogLikelihoodPerToken() const {
 		bool isHdp{false};
 		bool isIdf{false};
 
-		this->checkModel("getLogLikelihoodPerWord", isHdp, isIdf);
-		this->checkTrained("getLogLikelihoodPerWord");
+		this->checkModel("getLogLikelihoodPerToken", isHdp, isIdf);
+		this->checkTrained("getLogLikelihoodPerToken");
 
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 		DATA_TOPICMODEL_RETURN(isHdp, isIdf, getLLPerWord);
 	}
 
-	//! Gets the word entropy after training.
+	//! Gets the token entropy after training.
 	/*!
-	 * \returns The word entropy for the whole corpus.
+	 * \returns The token entropy for the whole corpus.
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
 	 *   cleared, or the model has not been trained yet.
 	 */
-	inline double TopicModel::getWordEntropy() const {
+	inline double TopicModel::getTokenEntropy() const {
 		bool isHdp{false};
 		bool isIdf{false};
 
-		this->checkModel("getWordEntropy", isHdp, isIdf);
-		this->checkTrained("getWordEntropy");
+		this->checkModel("getTokenEntropy", isHdp, isIdf);
+		this->checkTrained("getTokenEntropy");
 
 		std::vector<std::uint64_t> vocabularyFrequencies;
 		std::uint64_t vocabularyUsed{};
@@ -1072,44 +1073,44 @@ namespace crawlservpp::Data {
 		);
 	}
 
-	//! Gets the top \c N words for the specified topic.
+	//! Gets the top \c N tokens for the specified topic.
 	/*!
 	 * \param topic The ID of the topic.
-	 * \param n The number of top words to retrieve
+	 * \param n The number of top tokens to retrieve
 	 *   from the topic, i.e. \c N.
 	 *
 	 * \returns A vector containing pairs of the top
-	 *   \c N words of the specified topic and their
+	 *   \c N tokens of the specified topic and their
 	 *   probabiities, sorted by the latter.
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
 	 *   cleared, or the model has not been trained yet.
 	 */
-	inline std::vector<std::pair<std::string, float>> TopicModel::getTopicTopNWords(
+	inline std::vector<std::pair<std::string, float>> TopicModel::getTopicTopNTokens(
 			std::size_t topic,
 			std::size_t n
 	) const {
 		bool isHdp{false};
 		bool isIdf{false};
 
-		this->checkModel("getTopicTopNWords", isHdp, isIdf);
-		this->checkTrained("getTopicTopNWords");
+		this->checkModel("getTopicTopNTokens", isHdp, isIdf);
+		this->checkTrained("getTopicTopNTokens");
 
-		std::vector<std::pair<tomoto::Vid, float>> wordIds;
+		std::vector<std::pair<tomoto::Vid, float>> tokenIds;
 
 		//NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
-		DATA_TOPICMODEL_RETRIEVE(wordIds, isHdp, isIdf, getWidsByTopicSorted, topic, n);
+		DATA_TOPICMODEL_RETRIEVE(tokenIds, isHdp, isIdf, getWidsByTopicSorted, topic, n);
 
-		std::vector<std::pair<std::string, float>> words;
+		std::vector<std::pair<std::string, float>> tokens;
 
-		words.reserve(n);
+		tokens.reserve(n);
 
-		for(const auto& wordId : wordIds) {
-			words.emplace_back(this->dictLookUp(wordId.first), wordId.second);
+		for(const auto& tokenId : tokenIds) {
+			tokens.emplace_back(this->dictLookUp(tokenId.first), tokenId.second);
 		}
 
-		return words;
+		return tokens;
 	}
 
 	//! Gets the top \c N labels for the specified topic.
@@ -1215,8 +1216,8 @@ namespace crawlservpp::Data {
 	/*!
 	 * \param documents A constant reference to a
 	 *   vector containing vectors with the processed
-	 *   tokens/words of the documents to infer the
-	 *   topics for.
+	 *   tokens of the documents to infer the topics
+	 *   for.
 	 *
 	 * \returns A vector containing vectors of floating-
 	 *   point numbers indicating the topic distribution
@@ -1322,19 +1323,19 @@ namespace crawlservpp::Data {
 		information.modelName = this->getModelName();
 		information.modelVersion = Helper::Versions::getTomotoVersion();
 		information.numberOfDocuments = this->getNumberOfDocuments();
-		information.numberOfWords = this->getNumberOfWords();
+		information.numberOfTokens = this->getNumberOfTokens();
 		information.sizeOfVocabulary = this->getOriginalVocabularySize();
 		information.sizeOfVocabularyUsed = this->getVocabularySize();
-		information.wordEntropy = this->getWordEntropy();
-		information.removedWords = this->getRemovedWords();
+		information.tokenEntropy = this->getTokenEntropy();
+		information.removedTokens = this->getRemovedTokens();
 		information.numberOfIterations = this->getIterations();
 		information.numberOfBurnInSteps = this->getBurnInIterations();
 		information.optimizationInterval = this->getParameterOptimizationInterval();
-		information.logLikelihoodPerWord = this->getLogLikelihoodPerWord();
+		information.logLikelihoodPerToken = this->getLogLikelihoodPerToken();
 		information.weighting = this->getTermWeighting();
-		information.minCollectionFrequency = this->minWordCf;
-		information.minDocumentFrequency = this->minWordDf;
-		information.numberOfTopWordsToBeRemoved = this->removeTopNWords;
+		information.minCollectionFrequency = this->minTokenCf;
+		information.minDocumentFrequency = this->minTokenDf;
+		information.numberOfTopTokensToBeRemoved = this->removeTopNTokens;
 		information.initialAlpha = this->initialAlpha;
 		information.initialEta = this->initialEta;
 		information.seed = this->seed;
@@ -1430,37 +1431,37 @@ namespace crawlservpp::Data {
 		DATA_TOPICMODEL_CALL(isHdp, isIdf, setBurnInIteration, skipIterations);
 	}
 
-	//! Sets which (un)common words to remove before training.
+	//! Sets which (un)common tokens to remove before training.
 	/*!
 	 * \param collectionFrequency The minimum number of
-	 *   occurrences in the corpus required for a word
+	 *   occurrences in the corpus required for a token
 	 *   to be kept. Zero or one to not use this
 	 *   criterion.
 	 * \param documentFrequency The minimum number of
-	 *   documents in which a word is required to occur
+	 *   documents in which a token is required to occur
 	 *   in order to be kept. Zero or one to not use
 	 *   this criterion.
-	 * \param fixedNumberOfTopWords The number of
-	 *   most-occurring words that will be classified as
-	 *   stop words and ignored. Zero to not define any
-	 *   stop words.
+	 * \param fixedNumberOfTopTokens The number of
+	 *   most-occurring tokens that will be classified as
+	 *   stopwords and ignored. Zero to not define any
+	 *   stopwords.
 	 *
 	 * \throws TopicModel::Exception if the model has
 	 *   already been trained.
 	 */
-	inline void TopicModel::setWordRemoval(
+	inline void TopicModel::setTokenRemoval(
 			std::size_t collectionFrequency,
 			std::size_t documentFrequency,
-			std::size_t fixedNumberOfTopWords
+			std::size_t fixedNumberOfTopTokens
 	) {
 		this->checkNotTrained(
-				"setWordRemoval",
-				"Stop word settings cannot be changed"
+				"setTokenRemoval",
+				"Stopword settings cannot be changed"
 		);
 
-		this->minWordCf = collectionFrequency;
-		this->minWordDf = documentFrequency;
-		this->removeTopNWords = fixedNumberOfTopWords;
+		this->minTokenCf = collectionFrequency;
+		this->minTokenDf = documentFrequency;
+		this->removeTopNTokens = fixedNumberOfTopTokens;
 	}
 
 	//! Sets the initial parameters for the model.
@@ -1474,7 +1475,7 @@ namespace crawlservpp::Data {
 	 * \param alpha The initial concentration coeficient
 	 *   of the Dirichlet Process for document-table.
 	 * \param eta The Dirichlet prior on the per-topic
-	 *   word distribution.
+	 *   token distribution.
 	 * \param gamma The initial concentration coeficient
 	 *   of Dirichlet Process for table-topic. Will be
 	 *   ignored if LDA will be used, i.e. the number of
@@ -1602,7 +1603,7 @@ namespace crawlservpp::Data {
 	 *   already been trained.
 	 *
 	 * \note It is recommended to stem (or lemmatize)
-	 *   the words in the document before adding it to
+	 *   the tokens in the document before adding it to
 	 *   the model.
 	 */
 	inline void TopicModel::addDocument(
@@ -1648,8 +1649,8 @@ namespace crawlservpp::Data {
 	 *
 	 * \throws TopicModel::Exception if no documents
 	 *   have been added, the topic modeller has been
-	 *   cleared, or an invalid word ID is encountered
-	 *   while removing stop words.
+	 *   cleared, or an invalid token ID is encountered
+	 *   while removing stopwords.
 	 */
 	inline void TopicModel::startTraining() {
 		bool isHdp{false};
@@ -1936,9 +1937,9 @@ namespace crawlservpp::Data {
 		this->initialEta = defaultEta;
 		this->initialGamma = defaultGamma;
 		this->seed = std::random_device{}();
-		this->minWordCf = 0;
-		this->minWordDf = 0;
-		this->removeTopNWords = 0;
+		this->minTokenCf = 0;
+		this->minTokenDf = 0;
+		this->removeTopNTokens = 0;
 		this->optimizationInterval = defaultOptimizationInterval;
 
 		this->trainedWithVersion.clear();
@@ -2032,8 +2033,8 @@ namespace crawlservpp::Data {
 		}
 	}
 
-	// look up word ID in dictionary
-	inline std::string TopicModel::dictLookUp(tomoto::Vid wordId) const {
+	// look up token ID in dictionary
+	inline std::string TopicModel::dictLookUp(tomoto::Vid tokenId) const {
 		bool isHdp{false};
 		bool isIdf{false};
 
@@ -2042,7 +2043,7 @@ namespace crawlservpp::Data {
 
 		std::string result;
 
-		return this->getDict(isHdp, isIdf).toWord(wordId);
+		return this->getDict(isHdp, isIdf).toWord(tokenId);
 	}
 
 	// check model
@@ -2198,9 +2199,9 @@ namespace crawlservpp::Data {
 					isIdf,
 					prepare,
 					true,
-					this->minWordCf,
-					this->minWordDf,
-					this->removeTopNWords
+					this->minTokenCf,
+					this->minTokenDf,
+					this->removeTopNTokens
 			);
 
 			this->isPrepared = true;
@@ -2229,9 +2230,9 @@ namespace crawlservpp::Data {
 		// get model information from a dictionary generated by reading Python pickle data
 		PickleDict dict(data);
 
-		TopicModel::numberFromDict(dict, "min_cf", this->minWordCf);
-		TopicModel::numberFromDict(dict, "min_df", this->minWordDf);
-		TopicModel::numberFromDict(dict, "rm_top", this->removeTopNWords);
+		TopicModel::numberFromDict(dict, "min_cf", this->minTokenCf);
+		TopicModel::numberFromDict(dict, "min_df", this->minTokenDf);
+		TopicModel::numberFromDict(dict, "rm_top", this->removeTopNTokens);
 		TopicModel::numberFromDict(dict, "initial_k", this->numberOfInitialTopics); /* HDP only*/
 		TopicModel::numberFromDict(dict, "k", this->fixedNumberOfTopics); /* LDA only */
 		TopicModel::numberFromDict(dict, "seed", this->seed);
@@ -2273,9 +2274,9 @@ namespace crawlservpp::Data {
 				)
 		);
 
-		dict.setNumber("min_cf", this->minWordCf);
-		dict.setNumber("min_df", this->minWordDf);
-		dict.setNumber("rm_top", this->removeTopNWords);
+		dict.setNumber("min_cf", this->minTokenCf);
+		dict.setNumber("min_df", this->minTokenDf);
+		dict.setNumber("rm_top", this->removeTopNTokens);
 
 		if(isHdp) {
 			dict.setNumber("initial_k", this->numberOfInitialTopics);
