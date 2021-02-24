@@ -22,7 +22,7 @@
  *
  * Queue.hpp
  *
- * Helper functions for queues.
+ * Helper function templates for queues.
  *
  *  Created on: Feb 8, 2021
  *      Author: ans
@@ -34,7 +34,7 @@
 #include <queue>	// std::queue
 #include <stack>	// std::stack
 
-//! Namespace for global queue helper functions.
+//! Namespace for global queue helper function templates.
 namespace crawlservpp::Helper::Queue {
 
 	/*
