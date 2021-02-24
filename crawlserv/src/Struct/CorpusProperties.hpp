@@ -73,10 +73,9 @@ namespace crawlservpp::Struct {
 		/*!
 		 * Manipulation steps after which the result will
 		 *  be stored in the database. If zero, the
-		 *  unmanipulated corpus will be stored. After
-		 *  that, the numbering starts with the sentence
-		 *  manipulators, and continues with the word
-		 *  manipulators.
+		 *  unmanipulated corpus will be stored. Starting
+		 *  with one, the save points correspond to the
+		 *  manipulators used on the corpus.
 		 *
 		 * Only the unmanipulated corpus will be stored
 		 *  by default.
@@ -130,22 +129,12 @@ namespace crawlservpp::Struct {
 		 *   each manipulator, or an empty string if no
 		 *   language is required by the manipulator, or
 		 *   its default language should be used.
-		 * \param setWordModels Constant reference to a
-		 *   vector of strings, containing a model for each
-		 *   word manipulator, or an empty string if no
-		 *   model is required by the manipulator.
 		 * \param setSavePoints Constant reference to a
 		 *   vector containing the save points to be
-		 *   generated, each of them counting from zero
-		 *   for the unmanipulated corpus, followed by
-		 *   the sentence manipulators, followed by the
-		 *   word manipulators. For example, if one sentence
-		 *   manipulator and one word manipulator are given,
-		 *   a save point of @c 0 means saving the
-		 *   unmanipulated corpus, @c 1 means saving the
-		 *   corpus after running the sentence manipulator,
-		 *   and @c 2 means saving the corpus after running
-		 *   the word manipulator.
+		 *   generated. A value of zero indicates that the
+		 *   unmanipulated corpus will be saved. Starting
+		 *   from one, the number corresponds to the
+		 *   manipulator used on the corpus.
 		 * \param setFreeMemoryEvery Number of processed bytes
 		 *   in a continuous corpus after which memory will
 		 *   be freed. If zero, memory will only be freed
@@ -155,13 +144,14 @@ namespace crawlservpp::Struct {
 		 *   Module::Analyzer::generalInputSourcesExtracting,
 		 *   Module::Analyzer::generalInputSourcesAnalyzing,
 		 *   Module::Analyzer::generalInputSourcesCrawling,
-		 *	 Data::Corpus::sentenceManipNone,
-		 *	 Data::Corpus::sentenceManipTagger,
-		 *	 Data::Corpus::wordManipNone,
-		 *	 Data::Corpus::wordManipRemoveSingleUtf8Chars,
-		 *	 Data::Corpus::wordManipPorter2Stemmer,
-		 *	 Data::Corpus::wordManipGermanStemmer,
-		 *	 Data::Corpus::wordManipLemmatizer
+		 *	 Data::Corpus::corpusManipNone,
+		 *	 Data::Corpus::corpusManipTagger,
+		 *	 Data::Corpus::corpusManipTaggerPosterior,
+		 *	 Data::Corpus::corpusManipEnglishStemmer,
+		 *	 Data::Corpus::corpusManipGermanStemmer,
+		 *	 Data::Corpus::corpusManipLemmatizer,
+		 *	 Data::Corpus::corpusManipRemove,
+		 *	 Data::Corpus::corpusManipCorrect
 		 */
 		CorpusProperties(
 				std::uint16_t setSourceType,
