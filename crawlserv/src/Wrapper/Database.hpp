@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -158,7 +158,6 @@ namespace crawlservpp::Wrapper {
 		[[nodiscard]] bool isTableExists(const std::string& tableName);
 		[[nodiscard]] bool isColumnExists(const std::string& tableName, const std::string& columnName);
 		[[nodiscard]] std::string getColumnType(const std::string& tableName, const std::string& columnName);
-		void clearTable(std::string_view tableName);
 
 		///@}
 		///@name Custom Data
@@ -437,11 +436,6 @@ namespace crawlservpp::Wrapper {
 	//! \copydoc Main::Database::getColumnType
 	inline std::string Database::getColumnType(const std::string& tableName, const std::string& columnName) {
 		return this->database.getColumnType(tableName, columnName);
-	}
-
-	//! \copydoc Main::Database::clearTable
-	inline void Database::clearTable(std::string_view tableName) {
-		this->database.clearTable(tableName);
 	}
 
 	/*
