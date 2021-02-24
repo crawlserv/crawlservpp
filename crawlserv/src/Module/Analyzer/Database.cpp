@@ -1964,7 +1964,6 @@ namespace crawlservpp::Module::Analyzer {
 					)
 				};
 
-				savePoint += "s";
 				savePoint += std::to_string(*it);
 				savePoint += "[";
 				savePoint += properties.models.at(index);
