@@ -710,9 +710,7 @@ namespace crawlservpp::Module::Crawler {
 						)
 					};
 
-					newUrls.reserve(newUrls.size() + temp.size());
-
-					newUrls.insert(newUrls.end(), temp.cbegin(), temp.cend());
+					Helper::Container::append(newUrls, temp);
 
 					if(!(this->isRunning())) {
 						break;
@@ -3187,9 +3185,7 @@ namespace crawlservpp::Module::Crawler {
 
 				this->getMultiFromQuery(query, results, queryWarnings);
 
-				urls.reserve(urls.size() + results.size());
-
-				urls.insert(urls.end(), results.cbegin(), results.cend());
+				Helper::Container::append(urls, results);
 			}
 			else {
 				std::string result;

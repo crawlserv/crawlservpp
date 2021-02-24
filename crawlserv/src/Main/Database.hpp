@@ -45,6 +45,7 @@
 #include "Version.hpp"
 
 #include "../Data/Data.hpp"
+#include "../Helper/Container.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Json.hpp"
 #include "../Helper/Portability/locale.h"

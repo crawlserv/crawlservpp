@@ -40,6 +40,7 @@
 #define HELPER_PICKLEDICT_HPP_
 
 #include "../Helper/Bytes.hpp"
+#include "../Helper/Container.hpp"
 #include "../Main/Exception.hpp"
 
 #include <array>			// std::array
@@ -972,11 +973,7 @@ namespace crawlservpp::Data {
 		while(PickleDict::extractNextFrame(data, pos, frame)) {
 			auto frameData{PickleDict::unpackFrame(frame)};
 
-			unpacked.insert(
-					unpacked.end(),
-					std::make_move_iterator(frameData.begin()),
-					std::make_move_iterator(frameData.end())
-			);
+			Helper::Container::moveInto(unpacked, frameData);
 		}
 
 		return unpacked;
@@ -1066,11 +1063,7 @@ namespace crawlservpp::Data {
 		complete.reserve(frame.data.size() + 1);
 		complete.push_back(frame.opCode);
 
-		complete.insert(
-				complete.end(),
-				frame.data.begin(),
-				frame.data.end()
-		);
+		Helper::Container::append(complete, frame.data);
 
 		return complete;
 	}
@@ -1223,7 +1216,7 @@ namespace crawlservpp::Data {
 		PickleDict::writeBytes(Helper::Bytes::uInt64ToBytes(frameSize), to);
 
 		// write frame data
-		to.insert(to.end(), frameBytes.begin(), frameBytes.end());
+		Helper::Container::append(to, frameBytes);
 
 		// finish frame
 		if(isLast) {

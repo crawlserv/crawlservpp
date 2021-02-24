@@ -36,6 +36,7 @@
 #include "RegEx.hpp"
 #include "XPath.hpp"
 
+#include "../Helper/Container.hpp"
 #include "../Helper/Json.hpp"
 #include "../Helper/Memory.hpp"
 #include "../Main/Exception.hpp"
@@ -4086,11 +4087,7 @@ namespace crawlservpp::Query {
 		this->subSetNumber += subsets.size();
 
 		// insert new subsets
-		this->stringifiedSubSets.insert(
-				this->stringifiedSubSets.begin() + this->subSetCurrent,
-				std::make_move_iterator(subsets.begin()),
-				std::make_move_iterator(subsets.end())
-		);
+		Helper::Container::moveInto(this->stringifiedSubSets, subsets, this->subSetCurrent);
 
 		// clear non-stringified subsets if necessary
 		switch(this->subSetType) {
@@ -4142,11 +4139,7 @@ namespace crawlservpp::Query {
 		// check subset type
 		if(this->subSetType == QueryStruct::typeXPath) {
 			// insert new XPath subsets
-			this->xPathSubSets.insert(
-					this->xPathSubSets.begin() + this->subSetCurrent,
-					std::make_move_iterator(subsets.begin()),
-					std::make_move_iterator(subsets.end())
-			);
+			Helper::Container::moveInto(this->xPathSubSets, subsets, this->subSetCurrent);
 
 			// stringify new subsets if the others are also stringified
 			if(!(this->stringifiedSubSets.empty())) {
@@ -4162,10 +4155,10 @@ namespace crawlservpp::Query {
 					stringified.emplace_back(subsetString);
 				}
 
-				this->stringifiedSubSets.insert(
-						this->stringifiedSubSets.begin() + this->subSetCurrent,
-						std::make_move_iterator(stringified.begin()),
-						std::make_move_iterator(stringified.end())
+				Helper::Container::moveInto(
+						this->stringifiedSubSets,
+						stringified,
+						this->subSetCurrent
 				);
 			}
 		}
@@ -4182,10 +4175,10 @@ namespace crawlservpp::Query {
 			}
 
 			// insert new (stringified) XPath subsets
-			this->stringifiedSubSets.insert(
-				this->stringifiedSubSets.begin() + this->subSetCurrent,
-				stringified.begin(),
-				stringified.end()
+			Helper::Container::moveInto(
+					this->stringifiedSubSets,
+					stringified,
+					this->subSetCurrent
 			);
 
 			// clear non-stringified subsets if neccesary
@@ -4229,11 +4222,7 @@ namespace crawlservpp::Query {
 		// check subset type
 		if(this->subSetType == QueryStruct::typeJsonPath) {
 			// insert new JSONPath subsets
-			this->jsonPathSubSets.insert(
-					this->jsonPathSubSets.begin() + this->subSetCurrent,
-					std::make_move_iterator(subsets.begin()),
-					std::make_move_iterator(subsets.end())
-			);
+			Helper::Container::moveInto(this->jsonPathSubSets, subsets, this->subSetCurrent);
 
 			// stringify new subsets if the others are also stringified
 			if(!(this->stringifiedSubSets.empty())) {
@@ -4247,10 +4236,10 @@ namespace crawlservpp::Query {
 					);
 				}
 
-				this->stringifiedSubSets.insert(
-						this->stringifiedSubSets.begin() + this->subSetCurrent,
-						std::make_move_iterator(stringified.begin()),
-						std::make_move_iterator(stringified.end())
+				Helper::Container::moveInto(
+						this->stringifiedSubSets,
+						stringified,
+						this->subSetCurrent
 				);
 			}
 		}
@@ -4267,11 +4256,10 @@ namespace crawlservpp::Query {
 			}
 
 			// insert new (stringified) JSONPath subsets
-			this->stringifiedSubSets.insert(
-				this->stringifiedSubSets.begin()
-				+ this->subSetCurrent,
-				stringified.begin(),
-				stringified.end()
+			Helper::Container::moveInto(
+					this->stringifiedSubSets,
+					stringified,
+					this->subSetCurrent
 			);
 
 			// clear non-stringified subsets if neccesary
@@ -4315,11 +4303,7 @@ namespace crawlservpp::Query {
 		// check subset type
 		if(this->subSetType == QueryStruct::typeJsonPointer) {
 			// insert new JSONPointer subsets
-			this->jsonPointerSubSets.insert(
-					this->jsonPointerSubSets.begin() + this->subSetCurrent,
-					std::make_move_iterator(subsets.begin()),
-					std::make_move_iterator(subsets.end())
-			);
+			Helper::Container::moveInto(this->jsonPointerSubSets, subsets, this->subSetCurrent);
 
 			// stringify new subsets if the others are also stringified
 			if(!(this->stringifiedSubSets.empty())) {
@@ -4333,10 +4317,10 @@ namespace crawlservpp::Query {
 					);
 				}
 
-				this->stringifiedSubSets.insert(
-						this->stringifiedSubSets.begin() + this->subSetCurrent,
-						std::make_move_iterator(stringified.begin()),
-						std::make_move_iterator(stringified.end())
+				Helper::Container::moveInto(
+						this->stringifiedSubSets,
+						stringified,
+						this->subSetCurrent
 				);
 			}
 		}
@@ -4353,12 +4337,7 @@ namespace crawlservpp::Query {
 			}
 
 			// insert new (stringified) JSONPointer subsets
-			this->stringifiedSubSets.insert(
-				this->stringifiedSubSets.begin()
-				+ this->subSetCurrent,
-				stringified.begin(),
-				stringified.end()
-			);
+			Helper::Container::moveInto(this->stringifiedSubSets, stringified, this->subSetCurrent);
 
 			// clear non-stringified subsets if neccesary
 			switch(this->subSetType) {

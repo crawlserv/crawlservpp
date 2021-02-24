@@ -36,6 +36,7 @@
 
 #include "../Thread.hpp"
 
+#include "../../Helper/Container.hpp"
 #include "../../Helper/DateTime.hpp"
 #include "../../Helper/Strings.hpp"
 #include "../../Helper/Utf8.hpp"

@@ -440,11 +440,7 @@ namespace crawlservpp::Main {
 					};
 
 					// add InnoDB directories to all data directories
-					this->dirs.insert(
-							this->dirs.end(),
-							innoDirs.begin(),
-							innoDirs.end()
-					);
+					Helper::Container::append(this->dirs, innoDirs);
 				}
 			}
 			else {
