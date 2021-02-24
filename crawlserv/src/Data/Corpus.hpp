@@ -41,6 +41,7 @@
 #include "Tagger.hpp"
 #include "WordRemover.hpp"
 
+#include "../Helper/Container.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Helper/Memory.hpp"
 #include "../Helper/Utf8.hpp"
@@ -53,7 +54,7 @@
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::int64_t, std::uint8_t, std::uint16_t
 #include <functional>	// std::function, std::reference_wrapper
-#include <iterator>		// std::distance, std::make_move_iterator
+#include <iterator>		// std::distance
 #include <locale>		// std::locale
 #include <map>			// std::map
 #include <optional>		// std::optional, std::nullopt
@@ -2676,16 +2677,16 @@ namespace crawlservpp::Data {
 		std::size_t removed{};
 
 		for(const auto& article : this->articleMap) {
+			const auto articleEnd{TextMapEntry::end(article)};
+
 			if(
 					!callbackArticle(
 							this->tokens,
 							TextMapEntry::pos(article),
-							TextMapEntry::length(article)
+							articleEnd
 					)
 			) {
 				// empty all tokens belonging to the article that has been filtered out
-				const auto articleEnd{TextMapEntry::end(article)};
-
 				for(
 						std::size_t tokenIndex{TextMapEntry::pos(article)};
 						tokenIndex < articleEnd;
@@ -2833,7 +2834,7 @@ namespace crawlservpp::Data {
 		for(const auto& manipulator : manipulators) {
 			switch(manipulator) {
 			case corpusManipNone:
-				continue;
+				break;
 
 			case corpusManipEnglishStemmer:
 			case corpusManipGermanStemmer:
@@ -2931,7 +2932,7 @@ namespace crawlservpp::Data {
 			for(const auto& manipulator : manipulators) {
 				switch(manipulator) {
 				case corpusManipNone:
-					continue;
+					break;
 
 				case corpusManipTagger:
 				case corpusManipTaggerPosterior:
@@ -3145,11 +3146,7 @@ namespace crawlservpp::Data {
 
 					this->tokenBytes += Corpus::bytes(sentence);
 
-					this->tokens.insert(
-							this->tokens.end(),
-							std::make_move_iterator(sentence.begin()),
-							std::make_move_iterator(sentence.end())
-					);
+					Helper::Container::moveInto(this->tokens, sentence);
 				}
 
 				TextMapEntry::length(this->articleMap.back()) = articleLength;
@@ -4655,11 +4652,7 @@ namespace crawlservpp::Data {
 			);
 
 			// move the words in the finished sentence into the tokens of the corpus
-			tokens.insert(
-					tokens.end(),
-					std::make_move_iterator(sentence.begin()),
-					std::make_move_iterator(sentence.end())
-			);
+			Helper::Container::moveInto(tokens, sentence);
 		}
 
 		sentence.clear();
@@ -4820,12 +4813,7 @@ namespace crawlservpp::Data {
 
 		auto& articleSentences{to[date][article]};
 
-		articleSentences.insert(
-				articleSentences.end(),
-				std::make_move_iterator(from.begin()),
-				std::make_move_iterator(from.end())
-		);
-
+		Helper::Container::moveInto(articleSentences, from);
 		Helper::Memory::free(from);
 	}
 
