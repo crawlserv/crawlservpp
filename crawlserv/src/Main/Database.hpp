@@ -601,7 +601,6 @@ namespace crawlservpp::Main {
 				std::vector<std::vector<std::string>>& contentsTo,
 				bool includeColumnNames
 		);
-		void clearTable(std::string_view tableName);
 		void lockTables(std::queue<TableNameWriteAccess>& tableLocks);
 		void unlockTables();
 		void startTransaction(const std::string& isolationLevel);
@@ -814,6 +813,7 @@ namespace crawlservpp::Main {
 		///@{
 
 		void createTable(const TableProperties& properties);
+		void clearTable(const std::string& name);
 		void dropTable(const std::string& name);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);

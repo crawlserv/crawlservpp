@@ -7798,7 +7798,7 @@ namespace crawlservpp::Main {
 	 *   occured while clearing the table, e.g.
 	 *   if the specified table does not exist.
 	 */
-	void Database::clearTable(std::string_view tableName) {
+	void Database::clearTable(const std::string& tableName) {
 		// check argument
 		if(!Helper::Strings::checkSQLName(tableName)) {
 			std::string exceptionString{
@@ -10543,14 +10543,17 @@ namespace crawlservpp::Main {
 	 *   error occured while removing the table
 	 *   from the database.
 	 */
-	void Database::dropTable(const std::string& tableName) {
+	void Database::dropTable(const std::string& name) {
 		// check argument
-		if(tableName.empty()) {
+		if(name.empty()) {
 			throw Database::Exception(
 					"Main::Database::dropTable():"
 					" No table name specified"
 			);
 		}
+
+		// clear table before deleting
+		this->clearTable(name);
 
 		// check connection
 		this->checkConnection();
@@ -10563,7 +10566,7 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(
 					sqlStatement,
 					"DROP TABLE IF EXISTS `"
-					+ tableName
+					+ name
 					+ "`"
 			);
 		}
