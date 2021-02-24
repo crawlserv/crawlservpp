@@ -26,7 +26,7 @@
  *  corpora from its input data.
  *
  * Additionally, it writes some basic statistics (number and length of
- *  words and sentences) to the target table.
+ *  tokens and sentences) to the target table.
  *
  *  Created on: Mar 5, 2020
  *      Author: ans
@@ -96,10 +96,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		fields.reserve(corpusNumFields);
 
 		fields.emplace_back("source", "TEXT");
-		fields.emplace_back("wordcount", "BIGINT UNSIGNED");
-		fields.emplace_back("avg_wordlen", "FLOAT");
-		fields.emplace_back("med_wordlen", "FLOAT");
-		fields.emplace_back("sd2_wordlen", "FLOAT");
+		fields.emplace_back("tokencount", "BIGINT UNSIGNED");
+		fields.emplace_back("avg_tokenlen", "FLOAT");
+		fields.emplace_back("med_tokenlen", "FLOAT");
+		fields.emplace_back("sd2_tokenlen", "FLOAT");
 		fields.emplace_back("sentencecount", "BIGINT UNSIGNED");
 		fields.emplace_back("avg_sentencelen", "FLOAT");
 		fields.emplace_back("med_sentencelen", "FLOAT");
@@ -161,7 +161,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		for(std::size_t index{}; index < this->corpora.size(); ++index) {
 			const auto& corpus{this->corpora[index]};
 
-			// calculate token (word) lengths
+			// calculate token lengths
 			std::vector<std::size_t> tokenLengths;
 
 			tokenLengths.reserve(corpus.getNumTokens());
@@ -256,25 +256,25 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 
 			data.columns_types_values.emplace_back(
-					"analyzed__wordcount",
+					"analyzed__tokencount",
 					DataType::_uint64,
 					DataValue(corpus.getNumTokens())
 			);
 
 			data.columns_types_values.emplace_back(
-					"analyzed__avg_wordlen",
+					"analyzed__avg_tokenlen",
 					DataType::_double,
 					DataValue(avgTokenLength)
 			);
 
 			data.columns_types_values.emplace_back(
-					"analyzed__med_wordlen",
+					"analyzed__med_tokenlen",
 					DataType::_double,
 					DataValue(medTokenLength)
 			);
 
 			data.columns_types_values.emplace_back(
-					"analyzed__sd2_wordlen",
+					"analyzed__sd2_tokenlen",
 					DataType::_double,
 					DataValue(sd2TokenLength)
 			);

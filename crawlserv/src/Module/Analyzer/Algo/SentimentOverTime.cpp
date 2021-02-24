@@ -688,13 +688,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		for(std::size_t category{}; category < this->algoConfig.categoryLabels.size(); ++category) {
 			bool found{false};
 
-			for(std::size_t word{TextMapEntry::pos(sentence)}; word < end; ++word) {
+			for(auto token{TextMapEntry::pos(sentence)}; token < end; ++token) {
 				bool result{false};
 
 				if(
 						this->getBoolFromRegEx(
 								this->queriesCategories[category],
-								tokens[word],
+								tokens[token],
 								result,
 								warnings
 						)
@@ -748,15 +748,15 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			const std::vector<std::string>& tokens
 	) {
 		const auto end{TextMapEntry::end(sentence)};
-		std::vector<std::string> words;
+		std::vector<std::string> sentenceTokens;
 
-		words.reserve(TextMapEntry::length(sentence));
+		sentenceTokens.reserve(TextMapEntry::length(sentence));
 
-		for(std::size_t word{TextMapEntry::pos(sentence)}; word < end; ++word) {
-			words.emplace_back(tokens[word]);
+		for(auto token{TextMapEntry::pos(sentence)}; token < end; ++token) {
+			sentenceTokens.emplace_back(tokens.at(token));
 		}
 
-		return this->sentimentAnalyzer->analyze(words).compound;
+		return this->sentimentAnalyzer->analyze(sentenceTokens).compound;
 	}
 
 	// calculate article sentiment if not calculated yet

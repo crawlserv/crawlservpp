@@ -53,10 +53,10 @@ namespace crawlservpp::Data::Stemmer {
 
 	///@{
 
-	//! Minimum length of a word to strip two letters from the end or the beginning.
+	//! Minimum length of a token to strip two letters from the end or the beginning.
 	inline constexpr auto minLengthStrip2{6};
 
-	//! Minimum length of a word to strip one letter from the end.
+	//! Minimum length of a token to strip one letter from the end.
 	inline constexpr auto minLengthStrip1{4};
 
 	//! Literal for binary inversion.
@@ -412,7 +412,7 @@ namespace crawlservpp::Data::Stemmer {
 			return;
 		}
 
-		// strip 'ge-' if word is long enough
+		// strip 'ge-' if token is long enough
 		if(
 				token.length() >= minLengthStrip2
 				&& token[0] == 'g'

@@ -26,7 +26,7 @@
  *  corpora from its input data.
  *
  * Additionally, it writes some basic statistics (number and length of
- *  words and sentences) to the target table.
+ *  tokens and sentences) to the target table.
  *
  *  Created on: Mar 5, 2020
  *      Author: ans
@@ -75,7 +75,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	//! Algorithm building a text corpus and creating corpus statistics from the input data.
 	/*!
-	 * \note Empty words and sentences will be ignored.
+	 * \note Empty tokens and sentences will be ignored.
 	 */
 	class CorpusGenerator final : public Module::Analyzer::Thread {
 		// for convenience

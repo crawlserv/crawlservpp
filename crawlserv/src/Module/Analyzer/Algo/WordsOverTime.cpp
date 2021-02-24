@@ -22,7 +22,7 @@
  *
  * WordsOverTime.cpp
  *
- * Counts the occurrence of articles, sentences, and words in a corpus
+ * Counts the occurrence of articles, sentences, and tokens in a corpus
  *  over time.
  *
  *  Created on: Jan 03, 2021
@@ -95,7 +95,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		fields.emplace_back("date", "VARCHAR(10)");
 		fields.emplace_back("articles", "BIGINT UNSIGNED");
 		fields.emplace_back("sentences", "BIGINT UNSIGNED");
-		fields.emplace_back("words", "BIGINT UNSIGNED");
+		fields.emplace_back("tokens", "BIGINT UNSIGNED");
 
 		this->database.setTargetFields(fields);
 
@@ -213,7 +213,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * ALGORITHM FUNCTIONS (private)
 	 */
 
-	// count words
+	// count tokens
 	void WordsOverTime::count() {
 		// set status message and reset progress
 		this->setStatusMessage("Counting occurrences...");
@@ -418,7 +418,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 
 			data.columns_types_values.emplace_back(
-					"analyzed__words",
+					"analyzed__tokens",
 					Data::Type::_uint64,
 					Data::Value(date.second.words)
 			);

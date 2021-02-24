@@ -20,16 +20,16 @@
  *
  * ---
  *
- * WordRemover.hpp
+ * TokenRemover.hpp
  *
- * Removes words found in a (pre-loaded) dictionary.
+ * Removes tokens found in a (pre-loaded) dictionary.
  *
  *  Created on: Sep 1, 2020
  *      Author: ans
  */
 
-#ifndef DATA_WORDREMOVER_HPP_
-#define DATA_WORDREMOVER_HPP_
+#ifndef DATA_TOKENREMOVER_HPP_
+#define DATA_TOKENREMOVER_HPP_
 
 #include "Dictionary.hpp"
 
@@ -50,17 +50,17 @@ namespace crawlservpp::Data {
 	 * DECLARATION
 	 */
 
-	//! Word remover.
-	class WordRemover {
+	//! Token remover.
+	class TokenRemover {
 
 		// for convenience
 		using DictionaryIterator = std::unordered_map<std::string, std::unordered_set<std::string>>::const_iterator;
 
 	public:
-		///@name Word removal
+		///@name Token removal
 		///@{
 
-		void remove(std::string& word, const std::string& dictionary);
+		void remove(std::string& token, const std::string& dictionary);
 
 		///@}
 		///@name Cleanup
@@ -83,19 +83,19 @@ namespace crawlservpp::Data {
 	 */
 
 	/*
-	 * WORD REMOVAL
+	 * TOKEN REMOVAL
 	 */
 
-	//! Removes a word if found in the dictionary.
+	//! Removes a token if found in the dictionary.
 	/*!
-	 * \param word Reference to a string
-	 *   containing the word to be removed, if
+	 * \param token Reference to a string
+	 *   containing the token to be removed, if
 	 *   necessary.
 	 * \param dictionary View of a string containing
 	 *   the name of the dictionary to be used
-	 *   for checking whether to remove the word.
+	 *   for checking whether to remove the token.
 	 */
-	inline void WordRemover::remove(std::string& word, const std::string& dictionary) {
+	inline void TokenRemover::remove(std::string& token, const std::string& dictionary) {
 		// get dictionary or build it if necessary
 		DictionaryIterator dict{
 			this->dictionaries.find(dictionary)
@@ -105,24 +105,24 @@ namespace crawlservpp::Data {
 			dict = build(dictionary);
 		}
 
-		// get length of word and look it up in dictionary
-		std::size_t wordLength{word.find(' ')};
+		// get length of token and look it up in dictionary
+		auto tokenLength{token.find(' ')};
 
-		if(wordLength > word.length()) {
-			wordLength = word.length();
+		if(tokenLength > token.length()) {
+			tokenLength = token.length();
 		}
 
 		const auto entry{
-			dict->second.find(word.substr(0, wordLength))
+			dict->second.find(token.substr(0, tokenLength))
 		};
 
 		if(entry == dict->second.end()) {
-			// word not in dictionary
+			/* token not in dictionary */
 			return;
 		}
 
-		// remove word
-		Helper::Memory::free(word);
+		// remove token
+		Helper::Memory::free(token);
 	}
 
 	/*
@@ -130,7 +130,7 @@ namespace crawlservpp::Data {
 	 */
 
 	//! Clears the lemmatizer, freeing the memory used by all dictionaries.
-	inline void WordRemover::clear() {
+	inline void TokenRemover::clear() {
 		std::unordered_map<std::string, std::unordered_set<std::string>>().swap(this->dictionaries);
 	}
 
@@ -139,7 +139,7 @@ namespace crawlservpp::Data {
 	 */
 
 	// build the dictionary
-	inline WordRemover::DictionaryIterator WordRemover::build(const std::string& dictionary) {
+	inline TokenRemover::DictionaryIterator TokenRemover::build(const std::string& dictionary) {
 		std::unordered_set<std::string> newDictionary;
 
 		// read dictionary file line by line
@@ -174,4 +174,4 @@ namespace crawlservpp::Data {
 
 } /* namespace crawlservpp::Data */
 
-#endif /* DATA_WORDREMOVER_HPP_ */
+#endif /* DATA_TOKENREMOVER_HPP_ */

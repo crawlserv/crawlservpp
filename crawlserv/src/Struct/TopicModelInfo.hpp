@@ -82,20 +82,20 @@ namespace crawlservpp::Struct {
 		//! The number of documents in the model
 		std::size_t numberOfDocuments{};
 
-		//! The number of words in the model.
-		std::size_t numberOfWords{};
+		//! The number of tokens in the model.
+		std::size_t numberOfTokens{};
 
-		// The number of unique words in the model.
+		// The number of unique tokens in the model.
 		std::size_t sizeOfVocabulary{};
 
-		// The number of unique words used in the model.
+		// The number of unique tokens used in the model.
 		std::size_t sizeOfVocabularyUsed{};
 
-		//! The entropy of words in the model.
-		double wordEntropy{};
+		//! The entropy of tokens in the model.
+		double tokenEntropy{};
 
-		//! The (s)top words removed before training.
-		std::vector<std::string> removedWords;
+		//! The top tokens removed before training.
+		std::vector<std::string> removedTokens;
 
 		///@}
 		///@name Training Information
@@ -110,8 +110,8 @@ namespace crawlservpp::Struct {
 		//! The optimization interval.
 		std::size_t optimizationInterval{};
 
-		//! The log-likelihood per word.
-		double logLikelihoodPerWord{};
+		//! The log-likelihood per token.
+		double logLikelihoodPerToken{};
 
 		///@}
 		///@name Initial Parameters
@@ -120,25 +120,25 @@ namespace crawlservpp::Struct {
 		//! Term weighting mode as string.
 		std::string weighting;
 
-		//! Minimum collection frequency of words.
+		//! Minimum collection frequency of tokens.
 		std::size_t minCollectionFrequency{};
 
-		//! Minimum document frequency of words.
+		//! Minimum document frequency of tokens.
 		std::size_t minDocumentFrequency{};
 
-		//! The number of (s)top words to be removed.
-		std::size_t numberOfTopWordsToBeRemoved{};
+		//! The number of top tokens to be removed.
+		std::size_t numberOfTopTokensToBeRemoved{};
 
 		//! The initial number of topics, which will be adjusted for the data during training.
 		std::size_t numberOfInitialTopics{};
 
-		//! The initial concentration coefficient of the Dirichlet Process for document-table.
+		//! The initial concentration coefficient of the Dirichlet Process for document–table.
 		float initialAlpha{};
 
-		//! The initial hyperparameter for the Dirichlet distribution for topic-word.
+		//! The initial hyperparameter for the Dirichlet distribution for topic–token.
 		float initialEta{};
 
-		//! The initial concentration coefficient of the Dirichlet Process for table-topic.
+		//! The initial concentration coefficient of the Dirichlet Process for table–topic.
 		float initialGamma{};
 
 		//! The initial seed for random number generation.
@@ -157,7 +157,7 @@ namespace crawlservpp::Struct {
 		//! The Dirichlet priors on the per-document topic distributions (LDA only).
 		std::vector<float> alphas;
 
-		//! The Dirichlet prior on the per-topic word distribution (HDP only).
+		//! The Dirichlet prior on the per-topic token distribution (HDP only).
 		float eta{};
 
 		//! The concentration coefficient of the Dirichlet Process for table-topic.
@@ -198,8 +198,8 @@ namespace crawlservpp::Struct {
 					+
 					std::to_string(this->numberOfDocuments)
 					+ " docs, "
-					+ std::to_string(this->numberOfWords)
-					+ " words"
+					+ std::to_string(this->numberOfTokens)
+					+ " tokens"
 			);
 			result.emplace(
 					"| Total Vocabs: "
@@ -208,20 +208,20 @@ namespace crawlservpp::Struct {
 					+ std::to_string(this->sizeOfVocabularyUsed)
 			);
 			result.emplace(
-					"| Entropy of words: "
-					+ std::to_string(this->wordEntropy)
+					"| Entropy of tokens: "
+					+ std::to_string(this->tokenEntropy)
 			);
 
 			std::string removed{"| Removed Vocabs:"};
 
-			if(this->removedWords.empty()) {
+			if(this->removedTokens.empty()) {
 				removed += " <NA>";
 			}
 			else {
-				for(const auto& word : this->removedWords) {
+				for(const auto& token : this->removedTokens) {
 					removed.push_back(' ');
 
-					removed += word;
+					removed += token;
 				}
 			}
 
@@ -239,8 +239,8 @@ namespace crawlservpp::Struct {
 					+ std::to_string(this->optimizationInterval)
 			);
 			result.emplace(
-					"| Log-likelihood per word: "
-					+ std::to_string(this->logLikelihoodPerWord)
+					"| Log-likelihood per token: "
+					+ std::to_string(this->logLikelihoodPerToken)
 			);
 			result.emplace("|");
 			result.emplace("<Initial Parameters>");
@@ -248,17 +248,17 @@ namespace crawlservpp::Struct {
 			result.emplace(
 					"| min_cf: "
 					+ std::to_string(this->minCollectionFrequency)
-					+ " (minimum collection frequency of words)"
+					+ " (minimum collection frequency of tokens)"
 			);
 			result.emplace(
 					"| min_df: "
 					+ std::to_string(this->minDocumentFrequency)
-					+ " (minimum document frequency of words)"
+					+ " (minimum document frequency of tokens)"
 			);
 			result.emplace(
 					"| rm_top: "
-					+ std::to_string(this->numberOfTopWordsToBeRemoved)
-					+ " (the number of top words to be removed)"
+					+ std::to_string(this->numberOfTopTokensToBeRemoved)
+					+ " (the number of top tokens to be removed)"
 			);
 			if(this->numberOfInitialTopics > 0) {
 				result.emplace(
@@ -283,7 +283,7 @@ namespace crawlservpp::Struct {
 			result.emplace(
 					"| eta: "
 					+ std::to_string(this->initialEta)
-					+ " (hyperparameter of Dirichlet distribution for topic-word)"
+					+ " (hyperparameter of Dirichlet distribution for topic-token)"
 			);
 
 			if(this->initialGamma > 0.) { /* only used by HDP */
@@ -338,7 +338,7 @@ namespace crawlservpp::Struct {
 
 				result.emplace(line);
 			}
-			result.emplace("| eta (Dirichlet prior on the per-topic word distribution)");
+			result.emplace("| eta (Dirichlet prior on the per-topic token distribution)");
 			result.emplace("|  " + std::to_string(this->eta));
 
 			if(gamma > 0.) { /* only used by HDP */

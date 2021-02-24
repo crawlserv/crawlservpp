@@ -194,7 +194,7 @@ namespace crawlservpp::Module::Analyzer {
 			///@name Filter by Query
 			///@{
 
-			//! Queries which need to be fulfilled for at least one word in an article in order to keep it.
+			//! Queries which need to be fulfilled for at least one token in an article in order to keep it.
 			/*!
 			 * If no queries are given, no filtering will take place.
 			 */

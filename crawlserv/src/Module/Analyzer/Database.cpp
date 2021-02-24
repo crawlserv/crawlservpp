@@ -580,7 +580,7 @@ namespace crawlservpp::Module::Analyzer {
 			this->log(verbose, "prepares getCorpus() [4/5]...");
 
 			this->addPreparedStatement(
-					"SELECT id, corpus, articlemap, datemap, sentencemap, sources, chunks, words"
+					"SELECT id, corpus, articlemap, datemap, sentencemap, sources, chunks, tokens"
 					" FROM `crawlserv_corpora`"
 					" USE INDEX(urllist)"
 					" WHERE website = "	+ this->getWebsiteIdString() +
@@ -599,7 +599,7 @@ namespace crawlservpp::Module::Analyzer {
 			this->log(verbose, "prepares getCorpus() [5/5]...");
 
 			this->addPreparedStatement(
-					"SELECT id, corpus, articlemap, datemap, sentencemap, words"
+					"SELECT id, corpus, articlemap, datemap, sentencemap, tokens"
 					" FROM `crawlserv_corpora`"
 					" WHERE previous = ?"
 					" LIMIT 1",
@@ -730,7 +730,7 @@ namespace crawlservpp::Module::Analyzer {
 						" previous,"
 						" sources,"
 						" chunks,"
-						" words"
+						" tokens"
 					") "
 					"VALUES"
 					" (" +
@@ -1673,7 +1673,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		// get all the chunks of the corpus from the database
 		std::vector<std::string> chunks;
-		std::vector<std::size_t> wordNums;
+		std::vector<std::size_t> tokenNums;
 		std::vector<TextMap> articleMaps;
 		std::vector<TextMap> dateMaps;
 		std::vector<SentenceMap> sentenceMaps;
@@ -1787,16 +1787,16 @@ namespace crawlservpp::Module::Analyzer {
 				chunks.emplace_back(sqlResultSet->getString("corpus"));
 
 				if(!savePoint.empty()) {
-					if(sqlResultSet->isNull("words")) {
+					if(sqlResultSet->isNull("tokens")) {
 						throw Exception(
 								"Analyzer::Database::corpusLoad():"
-								" Could not get number of words"
+								" Could not get number of tokens"
 								" in a corpus chunk"
 						);
 					}
 
-					wordNums.push_back(
-							sqlResultSet->getUInt64("words")
+					tokenNums.push_back(
+							sqlResultSet->getUInt64("tokens")
 					);
 				}
 
@@ -1897,7 +1897,7 @@ namespace crawlservpp::Module::Analyzer {
 		else {
 			corpusTo.combineTokenized(
 					chunks,
-					wordNums,
+					tokenNums,
 					articleMaps,
 					dateMaps,
 					sentenceMaps,
@@ -2129,7 +2129,7 @@ namespace crawlservpp::Module::Analyzer {
 		std::vector<TextMap> articleMaps;
 		std::vector<TextMap> dateMaps;
 		std::vector<SentenceMap> sentenceMaps;
-		std::vector<std::size_t> wordNums;
+		std::vector<std::size_t> tokenNums;
 
 		corpus.copyChunksTokenized(
 				static_cast<std::size_t>(
@@ -2140,7 +2140,7 @@ namespace crawlservpp::Module::Analyzer {
 						)
 				),
 				chunks,
-				wordNums,
+				tokenNums,
 				articleMaps,
 				dateMaps,
 				sentenceMaps
@@ -2216,7 +2216,7 @@ namespace crawlservpp::Module::Analyzer {
 
 				addStatementTokenized.setUInt64(sqlArg10, numSources);
 				addStatementTokenized.setUInt64(sqlArg11, chunks.size());
-				addStatementTokenized.setUInt64(sqlArg12, wordNums.at(n));
+				addStatementTokenized.setUInt64(sqlArg12, tokenNums.at(n));
 
 				Database::sqlExecute(addStatementTokenized);
 

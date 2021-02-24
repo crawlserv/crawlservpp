@@ -118,13 +118,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 */
 	inline constexpr auto topicModellingDefaultNumberOfTopics{2};
 
-	//! The default number of most-probable words for each detected topic.
+	//! The default number of most-probable tokens for each detected topic.
 	/*!
-	 * This number of most-probable words for each
+	 * This number of most-probable tokens for each
 	 *  detected topic will be written to the
 	 *  provided topic table.
 	 */
-	inline constexpr auto topicModellingDefaultNumberOfTopicWords{5};
+	inline constexpr auto topicModellingDefaultNumberOfTopicTokens{5};
 
 	//! The default number of burn-in iterations.
 	/*!
@@ -139,16 +139,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! The default number of iterations to train the model at once.
 	inline constexpr auto topicModellingDefaultIterationsAtOnce{25};
 
-	//! The default number of a word's minimum frequency in the corpus.
+	//! The default number of a token's minimum frequency in the corpus.
 	inline constexpr auto topicModellingDefaultMinCf{1};
 
-	//! The default number of a word's minimum document frequency.
+	//! The default number of a token's minimum document frequency.
 	inline constexpr auto topicModellingDefaultMinDf{1};
 
 	//! The default optimization interval for the model parameters, in training iterations.
 	inline constexpr auto topicModellingDefaultOptimizeEvery{10};
 
-	//! The default number of most-common words to ignore.
+	//! The default number of most-common tokens to ignore.
 	inline constexpr auto topicModellingDefaultRemoveTopN{0};
 
 	//! The default number of threads for training the model.
@@ -160,7 +160,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! The default threshold for topics to be included when converting a HDP to a LDA model
 	inline constexpr auto topicModellingDefaultConversionThreshold{0.F};
 
-	//! The default initial hyperparameter for the Dirichlet distribution for topic–word.
+	//! The default initial hyperparameter for the Dirichlet distribution for topic–token.
 	inline constexpr auto topicModellingDefaultEta{0.01F};
 
 	//! The default initial concentration coefficient of the Dirichlet Process for table–topic.
@@ -183,10 +183,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! The default number of a topic label's minimum document frequency.
 	inline constexpr auto topicModellingDefaultMinLabelDf{1};
 
-	//! The default minimum length of topic labels, in words.
+	//! The default minimum length of topic labels, in tokens.
 	inline constexpr auto topicModellingDefaultMinLabelLength{2};
 
-	//! The default maximum length of topic labels, in words.
+	//! The default maximum length of topic labels, in tokens.
 	inline constexpr auto topicModellingDefaultMaxLabelLength{5};
 
 	//! The default maximum number of topic label candidates to be extracted from the training data.
@@ -216,8 +216,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! The number of columns per top label.
 	inline constexpr auto topicModellingColumnsPerLabel{2};
 
-	//! The number of columns per top word.
-	inline constexpr auto topicModellingColumnsPerWord{2};
+	//! The number of columns per top token.
+	inline constexpr auto topicModellingColumnsPerToken{2};
 
 	//! Precision used when testing topic probabilities for equality, in ULPs (units in the last place).
 	inline constexpr auto topicModellingPrecisionUlp{5};
@@ -322,7 +322,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			std::uint16_t initialNumberOfTopics{topicModellingDefaultNumberOfTopics};
 			bool isNumberOfTopicsFixed{false};
 			std::string topicTable;
-			std::uint16_t numberOfTopicWords{topicModellingDefaultNumberOfTopicWords};
+			std::uint16_t numberOfTopicTokens{topicModellingDefaultNumberOfTopicTokens};
 
 			// training
 			std::uint64_t burnIn{topicModellingDefaultBurnIn};

@@ -207,7 +207,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->trainModel();
 
 		// update status
-		const auto ll{this->model.getLogLikelihoodPerWord()};
+		const auto ll{this->model.getLogLikelihoodPerToken()};
 		const auto k{this->model.getNumberOfTopics()};
 
 		this->updateTrainingStatus(ll, k);
@@ -234,7 +234,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->option("k", this->algoConfig.initialNumberOfTopics);
 		this->option("k.fixed", this->algoConfig.isNumberOfTopicsFixed);
 		this->option("table", this->algoConfig.topicTable);
-		this->option("table.n", this->algoConfig.numberOfTopicWords);
+		this->option("table.n", this->algoConfig.numberOfTopicTokens);
 
 		this->category("topic-training");
 
@@ -326,7 +326,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		this->model.setUseIdf(this->algoConfig.idf);
-		this->model.setWordRemoval(
+		this->model.setTokenRemoval(
 				this->algoConfig.minCf,
 				this->algoConfig.minDf,
 				this->algoConfig.removeTopN
@@ -589,7 +589,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void TopicModelling::initTopicTable() {
 		std::vector<StringString> topicTableFields;
 
-		topicTableFields.reserve(this->algoConfig.numberOfTopicWords + topicModellingTopicColumns);
+		topicTableFields.reserve(this->algoConfig.numberOfTopicTokens + topicModellingTopicColumns);
 
 		topicTableFields.emplace_back("topic_id", "BIGINT UNSIGNED NOT NULL");
 		topicTableFields.emplace_back("topic_count", "BIGINT UNSIGNED NOT NULL");
@@ -599,9 +599,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			topicTableFields.emplace_back("label" + std::to_string(label) + "_prob", "FLOAT");
 		}
 
-		for(std::size_t word{1}; word <= this->algoConfig.numberOfTopicWords; ++word) {
-			topicTableFields.emplace_back("word" + std::to_string(word), "TEXT");
-			topicTableFields.emplace_back("word" + std::to_string(word) + "_prob", "FLOAT");
+		for(std::size_t token{1}; token <= this->algoConfig.numberOfTopicTokens; ++token) {
+			topicTableFields.emplace_back("token" + std::to_string(token), "TEXT");
+			topicTableFields.emplace_back("token" + std::to_string(token) + "_prob", "FLOAT");
 		}
 
 		this->topicTable = this->database.addAdditionalTable(
@@ -682,7 +682,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		tick << "performed training iteration #";
 		tick << this->iteration;
-		tick << " with log-likelihood per word: ";
+		tick << " with log-likelihood per token: ";
 		tick << ll;
 		tick << ", and number of topics: ";
 		tick << k;
@@ -910,7 +910,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		result.columns_types_values.reserve(
 				topicModellingTopicColumns
 				+ this->algoConfig.labelNumber * topicModellingColumnsPerLabel
-				+ this->algoConfig.numberOfTopicWords * topicModellingColumnsPerWord
+				+ this->algoConfig.numberOfTopicTokens * topicModellingColumnsPerToken
 		);
 
 		// add topic ID and topic count
@@ -949,28 +949,28 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			++label;
 		}
 
-		// add top N words
-		const auto wordPairs{
-			this->model.getTopicTopNWords(
+		// add top N tokens
+		const auto tokenPairs{
+			this->model.getTopicTopNTokens(
 					topic.first,
-					this->algoConfig.numberOfTopicWords
+					this->algoConfig.numberOfTopicTokens
 			)
 		};
-		std::size_t word{1};
+		std::size_t token{1};
 
-		for(const auto& wordPair : wordPairs) {
+		for(const auto& tokenPair : tokenPairs) {
 			result.columns_types_values.emplace_back(
-					"analyzed__word" + std::to_string(word),
+					"analyzed__token" + std::to_string(token),
 					Data::Type::_string,
-					wordPair.first
+					tokenPair.first
 			);
 			result.columns_types_values.emplace_back(
-					"analyzed__word" + std::to_string(word) + "_prob",
+					"analyzed__token" + std::to_string(token) + "_prob",
 					Data::Type::_double,
-					wordPair.second
+					tokenPair.second
 			);
 
-			++word;
+			++token;
 		}
 
 		return result;
@@ -1051,10 +1051,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 		}
 		else {
-			// get top words
-			items = this->model.getTopicTopNWords(
+			// get top tokens
+			items = this->model.getTopicTopNTokens(
 					topicId,
-					this->algoConfig.numberOfTopicWords
+					this->algoConfig.numberOfTopicTokens
 			);
 		}
 

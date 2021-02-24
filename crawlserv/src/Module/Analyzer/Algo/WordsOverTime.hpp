@@ -22,7 +22,7 @@
  *
  * WordsOverTime.hpp
  *
- * Counts the occurrence of articles, sentences, and words in a corpus
+ * Counts the occurrence of articles, sentences, and tokens in a corpus
  *  over time.
  *
  *  Created on: Jan 03, 2021
@@ -74,7 +74,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 * DECLARATION
 	 */
 
-	//! Counts the occurrence of articles, sentences, and words in a corpus over time.
+	//! Counts the occurrence of articles, sentences, and tokens in a corpus over time.
 	class WordsOverTime final : public Module::Analyzer::Thread {
 		// structure for results
 		struct DateResults {
