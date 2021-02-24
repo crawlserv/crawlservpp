@@ -1992,12 +1992,12 @@ namespace crawlservpp::Module::Analyzer {
 			Database::sqlException("Analyzer::Database::corpusFindSavePoint", e);
 		}
 
-		// remove manipulators that have already been run on save point
+		// remove manipulators that have already been run on save point (and their options)
 		if(numManipulators > 0) {
-			properties.manipulators.erase(
-					properties.manipulators.begin(),
-					properties.manipulators.begin() + numManipulators
-			);
+			Helper::Container::eraseFirst(properties.manipulators, numManipulators);
+			Helper::Container::eraseFirst(properties.models, numManipulators);
+			Helper::Container::eraseFirst(properties.dictionaries, numManipulators);
+			Helper::Container::eraseFirst(properties.languages, numManipulators);
 		}
 
 		// remove save points before already run manipulators
@@ -2045,10 +2045,10 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<std::string> dictionaries;
 			std::vector<std::string> languages;
 
-			Database::append(manipulators, properties.manipulators, done, savePoint);
-			Database::append(models, properties.models, done, savePoint);
-			Database::append(dictionaries, properties.dictionaries, done, savePoint);
-			Database::append(languages, properties.languages, done, savePoint);
+			Helper::Container::append(manipulators, properties.manipulators, done, savePoint);
+			Helper::Container::append(models, properties.models, done, savePoint);
+			Helper::Container::append(dictionaries, properties.dictionaries, done, savePoint);
+			Helper::Container::append(languages, properties.languages, done, savePoint);
 
 			for(auto manipulator{done}; manipulator < savePoint; ++manipulator) {
 				savePointName += std::to_string(manipulators.back());
@@ -2091,10 +2091,10 @@ namespace crawlservpp::Module::Analyzer {
 			std::vector<std::string> dictionaries;
 			std::vector<std::string> languages;
 
-			Database::append(manipulators, properties.manipulators, done);
-			Database::append(models, properties.models, done);
-			Database::append(dictionaries, properties.dictionaries, done);
-			Database::append(languages, properties.languages, done);
+			Helper::Container::append(manipulators, properties.manipulators, done);
+			Helper::Container::append(models, properties.models, done);
+			Helper::Container::append(dictionaries, properties.dictionaries, done);
+			Helper::Container::append(languages, properties.languages, done);
 
 			statusSetter.change("Preprocessing corpus...");
 
