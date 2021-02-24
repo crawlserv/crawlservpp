@@ -31,7 +31,8 @@
 #ifndef HELPER_CONTAINER_HPP_
 #define HELPER_CONTAINER_HPP_
 
-#include <iterator>			// std::begin, std::end, std::make_move_iterator
+#include <iterator>	// std::begin, std::end, std::make_move_iterator
+#include <numeric>	// std::accumulate
 
 //! Namespace for global container helper function templates.
 namespace crawlservpp::Helper::Container {
@@ -117,6 +118,24 @@ namespace crawlservpp::Helper::Container {
 	 */
 	template<typename T> static void eraseFirst(T& container, typename T::size_type n) {
 		container.erase(std::begin(container), std::begin(container) + n);
+	}
+
+	//! Returns the number of bytes in an iterable container.
+	/*!
+	 * \note The type of the elements in the
+	 *  container must provide a \c size() member
+	 *  function, returning the number of bytes
+	 *  in the element
+	 */
+	template<typename T> static typename T::size_type bytes(const T& container) {
+		return std::accumulate(
+				std::begin(container),
+				std::end(container),
+				typename T::size_type{},
+				[](const auto size, const auto& element) {
+					return size + element.size();
+				}
+		);
 	}
 
 } /* namespace crawlservpp::Helper::Container */
