@@ -551,7 +551,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		// filter by query
 		std::size_t removed{
-			this->corpora[index].filterArticles(
+			this->corpora.at(index).filterArticles(
 					[this, &warnings](
 							const auto& tokens,
 							auto articlePos,
@@ -562,7 +562,7 @@ namespace crawlservpp::Module::Analyzer {
 								this->queryFilterQueries.end(),
 								[this, &tokens, articlePos, articleEnd, &warnings](const auto& query) {
 									for(std::size_t index{articlePos}; index < articleEnd; ++index) {
-										this->setQueryTarget(tokens[index], "");
+										this->setQueryTarget(tokens.at(index), "");
 
 										bool result{false};
 
