@@ -25,6 +25,7 @@
 
 #include <cstdio>		// std::fclose, std::FILE, std::fopen
 #include <cstdlib>		// std::free
+#include <iterator>		// std::distance
 #include <limits>		// std::numeric_limits
 #include <memory>		// std::unique_ptr
 #include <stdexcept>	// std::runtime_error
@@ -84,7 +85,10 @@ namespace crawlservpp::Data {
 		///@{
 
 		void loadModel(const std::string& modelFile);
-		void label(std::vector<std::string>& sentence);
+		void label(
+				std::vector<std::string>::iterator sentenceBegin,
+				std::vector<std::string>::iterator sentenceEnd
+		);
 
 		///@}
 
@@ -195,10 +199,11 @@ namespace crawlservpp::Data {
 	//! Sets whether the input is already partly labelled.
 	/*!
 	 * Already existing labels will be kept used to
-	 *  improve the POS tagging of the remaining words.
+	 *  improve the POS tagging of the remaining
+	 *  tokens.
 	 *
-	 * The labels need to be separated from the words
-	 *  by either a space or a tabulator.
+	 * The labels need to be separated from the
+	 *  tokens by either a space or a tabulator.
 	 *
 	 * See
 	 *  <a href="https://wapiti.limsi.fr/manual.html#forced">
@@ -271,61 +276,66 @@ namespace crawlservpp::Data {
 
 	//! POS (part of speech)-tags a sentence.
 	/*!
+	 * The tags will be added to each token of the
+	 *  specified sentence, separated by a space.
+	 *
 	 * See <a href="https://wapiti.limsi.fr/manual.html">
 	 *  the manual</a> of @c Wapiti for more information.
 	 *
-	 * \param sentence Reference to a vector containing
-	 *   the words of the sentence, to which the tag will
-	 *   be added, separated by a space.
+	 * \param sentenceBegin Iterator pointing to the
+	 *   beginning of the sentence to be tagged.
+	 * \param sentenceEnd Iterator pointing to the end
+	 *   of the sentence to be tagged.
 	 *
 	 * \throws Tagger::Exception if an error occurs while
 	 *   POS-tagging the sentence.
 	 */
-	inline void Tagger::label(std::vector<std::string>& sentence) {
-		// check length of sentence and trim REALLY long sentences
-		if(sentence.empty()) {
+	inline void Tagger::label(
+			std::vector<std::string>::iterator sentenceBegin,
+			std::vector<std::string>::iterator sentenceEnd
+	) {
+		// check length of sentence and ignore final tokens in REALLY long sentences
+		const auto sentenceLength{std::distance(sentenceBegin, sentenceEnd)};
+
+		if(sentenceLength == 0) {
 			return;
 		}
 
-		if(sentence.size() > std::numeric_limits<std::uint32_t>::max()) {
-			sentence.resize(std::numeric_limits<std::uint32_t>::max());
+		if(sentenceLength > std::numeric_limits<std::uint32_t>::max()) {
+			sentenceEnd = sentenceBegin + std::numeric_limits<std::uint32_t>::max();
+		};
+
+		// copy tokens into continous memory
+		std::vector<std::vector<char>> tokenCopies;
+		std::vector<char *> tokenPtrs;
+
+		tokenCopies.reserve(sentenceLength);
+		tokenPtrs.reserve(sentenceLength);
+
+		for(auto tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
+			tokenCopies.emplace_back(tokenIt->begin(), tokenIt->end());
+			tokenCopies.back().push_back('\0');
 		}
 
-		// copy words into continous memory and discard
-		if(sentence.size() > std::numeric_limits<std::uint32_t>::max()) {
-			sentence.resize(std::numeric_limits<std::uint32_t>::max());
+		for(auto& tokenCopy : tokenCopies) {
+			tokenPtrs.push_back(tokenCopy.data());
 		}
 
-		std::vector<std::vector<char>> wordCopies;
-		std::vector<char *> wordPtrs;
-
-		wordCopies.reserve(sentence.size());
-		wordPtrs.reserve(sentence.size());
-
-		for(const auto& word : sentence) {
-			wordCopies.emplace_back(word.begin(), word.end());
-			wordCopies.back().push_back('\0');
-		}
-
-		for(auto& wordCopy : wordCopies) {
-			wordPtrs.push_back(wordCopy.data());
-		}
-
-		// convert words into raw data
+		// convert tokens into raw data
 		std::unique_ptr<wapiti::raw_t, wapitiDelete> rawData{
 			static_cast<wapiti::raw_t *>(
 					wapiti::xmalloc(
-							sizeof(wapiti::raw_t) + sizeof(char *) * wordPtrs.size()
+							sizeof(wapiti::raw_t) + sizeof(char *) * tokenPtrs.size()
 					)
 			)
 		};
 
-		rawData->len = wordPtrs.size();
+		rawData->len = tokenPtrs.size();
 
 		std::uint32_t index{};
 
-		for(auto * wordPtr : wordPtrs) {
-			rawData->lines[index] = wordPtr;
+		for(auto * tokenPtr : tokenPtrs) {
+			rawData->lines[index] = tokenPtr;
 
 			++index;
 		}
@@ -342,7 +352,7 @@ namespace crawlservpp::Data {
 				)
 			};
 
-			// label words
+			// label tokens
 			const auto T{seq->len};
 
 			std::unique_ptr<uint32_t, wapitiDelete> out{
@@ -360,10 +370,13 @@ namespace crawlservpp::Data {
 			// append labels to strings
 			index = 0;
 
-			for(auto& word : sentence) {
-				word.push_back(' ');
+			for(auto tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
+				const std::string label{wapiti::qrk_id2str(lbls, out.get()[index])};
 
-				word += wapiti::qrk_id2str(lbls, out.get()[index]);
+				tokenIt->reserve(tokenIt->size() + label.size() + 1);
+				tokenIt->push_back(' ');
+
+				(*tokenIt) += label;
 
 				++index;
 			}
