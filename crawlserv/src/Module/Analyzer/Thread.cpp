@@ -555,13 +555,13 @@ namespace crawlservpp::Module::Analyzer {
 					[this, &warnings](
 							const auto& tokens,
 							auto articlePos,
-							auto articleLen
+							auto articleEnd
 					) {
 						return std::any_of(
 								this->queryFilterQueries.begin(),
 								this->queryFilterQueries.end(),
-								[this, &tokens, articlePos, articleLen, &warnings](const auto& query) {
-									for(std::size_t index{articlePos}; index < articlePos + articleLen; ++index) {
+								[this, &tokens, articlePos, articleEnd, &warnings](const auto& query) {
+									for(std::size_t index{articlePos}; index < articleEnd; ++index) {
 										this->setQueryTarget(tokens[index], "");
 
 										bool result{false};
