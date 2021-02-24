@@ -39,7 +39,7 @@
 #include "Stemmer/English.hpp"
 #include "Stemmer/German.hpp"
 #include "Tagger.hpp"
-#include "WordRemover.hpp"
+#include "TokenRemover.hpp"
 
 #include "../Helper/Container.hpp"
 #include "../Helper/DateTime.hpp"
@@ -49,7 +49,7 @@
 #include "../Struct/StatusSetter.hpp"
 #include "../Struct/TextMap.hpp"
 
-#include <algorithm>	// std::accumulate, std::all_of, std::any_of, std::count_if, std::find_if, std::remove_if
+#include <algorithm>	// std::all_of, std::any_of, std::count_if, std::find_if, std::remove_if
 #include <cctype>		// std::toupper
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::int64_t, std::uint8_t, std::uint16_t
@@ -57,6 +57,7 @@
 #include <iterator>		// std::distance
 #include <locale>		// std::locale
 #include <map>			// std::map
+#include <numeric>		// std::accumulate
 #include <optional>		// std::optional, std::nullopt
 #include <ostream>		// std::ostream
 #include <sstream>		// std::ostringstream
@@ -97,7 +98,7 @@ namespace crawlservpp::Data {
 	inline constexpr auto maxSingleUtf8CharSize{4};
 
 	///@}
-	///@name Sentence and Word Manipulation
+	///@name Sentence and Token Manipulation
 	///@{
 
 	//! Do not manipulate anything.
@@ -118,10 +119,10 @@ namespace crawlservpp::Data {
 	//! Multilingual lemmatizer.
 	inline constexpr std::uint16_t corpusManipLemmatizer{5};
 
-	//! Remove single words found in a dictionary.
+	//! Remove single tokens found in a dictionary.
 	inline constexpr std::uint16_t corpusManipRemove{6};
 
-	//! Correct single words using a @c aspell dictionary.
+	//! Correct single tokens using a @c aspell dictionary.
 	inline constexpr std::uint16_t corpusManipCorrect{7};
 
 	//TODO(ans): add corpusManipReplace (by dictionary)
@@ -163,12 +164,14 @@ namespace crawlservpp::Data {
 		using TextMapEntry = Struct::TextMapEntry;
 
 	public:
-		using ArticleFunc
-				= std::function<bool(const std::vector<std::string>&, std::size_t, std::size_t)>;
-		using SentenceFunc = std::function<void(std::vector<std::string>&)>;
+		using Sizes = std::vector<std::size_t>;
+		using Tokens = std::vector<std::string>;
+
+		using ArticleFunc = std::function<bool(const Tokens&, std::size_t, std::size_t)>;
+		using SentenceFunc = std::function<void(Tokens::iterator, Tokens::iterator)>;
 
 		using DateArticleSentenceMap
-				= std::map<std::string, std::map<std::string, std::vector<std::vector<std::string>>>>;
+				= std::map<std::string, std::map<std::string, std::vector<Tokens>>>;
 		using SentenceMap = std::vector<std::pair<std::size_t, std::size_t>>;
 		using PositionLength = std::pair<std::size_t, std::size_t>;
 		using SentenceMapEntry = PositionLength;
@@ -187,8 +190,8 @@ namespace crawlservpp::Data {
 		[[nodiscard]] const std::string& getcCorpus() const;
 
 		[[nodiscard]] bool isTokenized() const;
-		[[nodiscard]] std::vector<std::string>& getTokens();
-		[[nodiscard]] const std::vector<std::string>& getcTokens() const;
+		[[nodiscard]] Tokens& getTokens();
+		[[nodiscard]] const Tokens& getcTokens() const;
 		[[nodiscard]] std::size_t getNumTokens() const;
 
 		[[nodiscard]] bool hasArticleMap() const;
@@ -206,10 +209,10 @@ namespace crawlservpp::Data {
 		[[nodiscard]] std::string get(std::size_t index) const;
 		[[nodiscard]] std::string get(const std::string& id) const;
 		[[nodiscard]] std::string getDate(const std::string& date) const;
-		[[nodiscard]] std::vector<std::string> getTokenized(std::size_t index) const;
-		[[nodiscard]] std::vector<std::string> getTokenized(const std::string& id) const;
-		[[nodiscard]] std::vector<std::string> getDateTokenized(const std::string& date) const;
-		[[nodiscard]] std::vector<std::vector<std::string>> getArticles() const;
+		[[nodiscard]] Tokens getTokenized(std::size_t index) const;
+		[[nodiscard]] Tokens getTokenized(const std::string& id) const;
+		[[nodiscard]] Tokens getDateTokenized(const std::string& date) const;
+		[[nodiscard]] std::vector<Tokens> getArticles() const;
 
 		[[nodiscard]] std::size_t size() const;
 		[[nodiscard]] bool empty() const;
@@ -221,24 +224,24 @@ namespace crawlservpp::Data {
 		///@{
 
 		void create(
-				std::vector<std::string>& texts,
+				Tokens& texts,
 				bool deleteInputData
 		);
 		void create(
-				std::vector<std::string>& texts,
+				Tokens& texts,
 				std::vector<std::string>& articleIds,
 				std::vector<std::string>& dateTimes,
 				bool deleteInputData
 		);
 		void combineContinuous(
-				std::vector<std::string>& chunks,
+				Tokens& chunks,
 				std::vector<TextMap>& articleMaps,
 				std::vector<TextMap>& dateMaps,
 				bool deleteInputData
 		);
 		void combineTokenized(
-				std::vector<std::string>& chunks,
-				std::vector<std::size_t>& wordNums,
+				Tokens& chunks,
+				Sizes& tokenNums,
 				std::vector<TextMap>& articleMaps,
 				std::vector<TextMap>& dateMaps,
 				std::vector<SentenceMap>& sentenceMaps,
@@ -257,14 +260,14 @@ namespace crawlservpp::Data {
 		) const;
 		void copyChunksContinuous(
 				std::size_t chunkSize,
-				std::vector<std::string>& to,
+				Tokens& to,
 				std::vector<TextMap>& articleMapsTo,
 				std::vector<TextMap>& dateMapsTo
 		) const;
 		void copyChunksTokenized(
 				std::size_t chunkSize,
-				std::vector<std::string>& to,
-				std::vector<std::size_t>& wordNumsTo,
+				Tokens& to,
+				Sizes& tokenNumsTo,
 				std::vector<TextMap>& articleMapsTo,
 				std::vector<TextMap>& dateMapsTo,
 				std::vector<SentenceMap>& sentenceMapsTo
@@ -314,7 +317,7 @@ namespace crawlservpp::Data {
 		std::string corpus;
 
 		//! Tokenized text corpus.
-		std::vector<std::string> tokens;
+		Tokens tokens;
 
 		//! Index of articles and their IDs.
 		TextMap articleMap;
@@ -359,8 +362,8 @@ namespace crawlservpp::Data {
 
 		void addAsOneChunk(
 				std::size_t size,
-				std::vector<std::string>& to,
-				std::vector<std::size_t>& wordNumsTo,
+				Tokens& to,
+				Sizes& tokenNumsTo,
 				std::vector<TextMap>& articleMapsTo,
 				std::vector<TextMap>& dateMapsTo,
 				std::vector<SentenceMap>& sentenceMapsTo
@@ -385,10 +388,10 @@ namespace crawlservpp::Data {
 				StatusSetter& statusSetter
 		);
 
-		[[nodiscard]] static std::vector<std::string> getTokensForEntry(
+		[[nodiscard]] static Tokens getTokensForEntry(
 				const TextMap& map,
 				const std::string& id,
-				const std::vector<std::string>& tokens
+				const Tokens& tokens
 		);
 
 		[[nodiscard]] static std::size_t getValidLengthOfChunk(
@@ -402,12 +405,12 @@ namespace crawlservpp::Data {
 				std::size_t maxChunkSize
 		);
 
-		static void checkTokensForChunking(const std::vector<std::string>& tokens);
+		static void checkTokensForChunking(const Tokens& tokens);
 
 		static void reserveChunks(
 				std::size_t chunks,
-				std::vector<std::string>& to,
-				std::vector<std::size_t>& wordNumsTo,
+				Tokens& to,
+				Sizes& tokenNumsTo,
 				std::vector<TextMap>& articleMapsTo,
 				std::vector<TextMap>& dateMapsTo,
 				std::vector<SentenceMap>& sentenceMapsTo,
@@ -428,8 +431,8 @@ namespace crawlservpp::Data {
 		static void finishChunk(
 				std::string& contentFrom,
 				SentenceMap& sentencesFrom,
-				std::vector<std::string>& contentTo,
-				std::vector<std::size_t>& wordNumTo,
+				Tokens& contentTo,
+				Sizes& tokenNumTo,
 				std::vector<SentenceMap>& sentencesTo,
 				std::size_t chunkTokens,
 				std::size_t& chunkOffset,
@@ -454,7 +457,7 @@ namespace crawlservpp::Data {
 				std::size_t index
 		);
 
-		static std::size_t bytes(const std::vector<std::string>& words);
+		static std::size_t bytes(const Tokens& tokens);
 
 		static void addChunkMap(
 				const std::optional<std::reference_wrapper<const TextMap>>& from,
@@ -486,7 +489,7 @@ namespace crawlservpp::Data {
 				bool& inEntryTo
 		);
 
-		static void removeEmpty(std::vector<std::string>& from);
+		static void removeEmpty(Tokens& from);
 		static void removeToken(TextMap& map, std::size_t entryIndex, bool& emptiedTo);
 		static void removeToken(SentenceMapEntry& entry, bool& emptiedTo);
 
@@ -494,16 +497,16 @@ namespace crawlservpp::Data {
 		static std::size_t getEntryEnd(const TextMap& map, std::size_t entryIndex);
 
 		static void processSentence(
-				std::vector<std::string>& sentence,
+				Tokens& sentence,
 				const std::optional<SentenceFunc>& callback,
 				bool inArticle,
 				bool inDate,
-				std::size_t& currentWord,
-				std::size_t& sentenceFirstWord,
+				std::size_t& currentToken,
+				std::size_t& sentenceFirstToken,
 				TextMap& articleMap,
 				TextMap& dateMap,
 				SentenceMap& sentenceMap,
-				std::vector<std::string>& tokens,
+				Tokens& tokens,
 				std::size_t& tokenBytes
 		);
 
@@ -521,7 +524,7 @@ namespace crawlservpp::Data {
 		);
 
 		static void finishArticle(
-				std::vector<std::vector<std::string>>& from,
+				std::vector<Tokens>& from,
 				DateArticleSentenceMap& to,
 				const std::string& date,
 				const std::string& article
@@ -541,7 +544,7 @@ namespace crawlservpp::Data {
 				std::size_t& chunkTokens,
 				std::string& chunkContent,
 				SentenceMap& chunkSentences,
-				const std::vector<std::string>& tokens,
+				const Tokens& tokens,
 				std::size_t& tokensComplete,
 				std::size_t& additionalBytes
 		);
@@ -606,7 +609,7 @@ namespace crawlservpp::Data {
 				const TextMapEntry& entry,
 				const TextMap& map,
 				const TextMap::const_iterator& next,
-				const std::vector<std::string>& words
+				const Tokens& tokens
 		);
 		static void exceptionTokenBytes(
 				std::string_view function,
@@ -650,7 +653,7 @@ namespace crawlservpp::Data {
 					std::accumulate(
 							vec.cbegin(),
 							vec.cend(),
-							static_cast<std::size_t>(0),
+							std::size_t{},
 							[](const auto& a, const auto& b) {
 								return a + b.size();
 							}
@@ -670,7 +673,7 @@ namespace crawlservpp::Data {
 		// remove empty entries from map (checking all of their tokens)
 		template<typename T> static void removeEmptyEntries(
 				T& map,
-				const std::vector<std::string>& tokens
+				const Tokens& tokens
 		) {
 			map.erase(
 					std::remove_if(
@@ -894,7 +897,7 @@ namespace crawlservpp::Data {
 	 * \throws Corpus::Exception if the corpus
 	 *   has not been tokenized.
 	 */
-	inline std::vector<std::string>& Corpus::getTokens() {
+	inline Corpus::Tokens& Corpus::getTokens() {
 		this->checkThatTokenized("getTokens");
 
 		return this->tokens;
@@ -909,7 +912,7 @@ namespace crawlservpp::Data {
 	 * \throws Corpus::Exception if the corpus
 	 *   has not been tokenized.
 	 */
-	inline const std::vector<std::string>& Corpus::getcTokens() const {
+	inline const Corpus::Tokens& Corpus::getcTokens() const {
 		this->checkThatTokenized("getcTokens");
 
 		return this->tokens;
@@ -1178,7 +1181,7 @@ namespace crawlservpp::Data {
 	 *   article map), or if the corpus has
 	 *   not been tokenized.
 	 */
-	inline std::vector<std::string> Corpus::getTokenized(std::size_t index) const {
+	inline Corpus::Tokens Corpus::getTokenized(std::size_t index) const {
 		this->checkThatTokenized("getTokenized");
 
 		if(this->articleMap.empty()) {
@@ -1199,7 +1202,7 @@ namespace crawlservpp::Data {
 		const auto& articleEntry{this->articleMap.at(index)};
 		const auto articleEnd{TextMapEntry::end(articleEntry)};
 
-		std::vector<std::string> copy;
+		Tokens copy;
 
 		copy.reserve(TextMapEntry::length(articleEntry));
 
@@ -1227,7 +1230,7 @@ namespace crawlservpp::Data {
 	 *   an empty string, or if the corpus has
 	 *   not been tokenized.
 	 */
-	inline std::vector<std::string> Corpus::getTokenized(const std::string& id) const {
+	inline Corpus::Tokens Corpus::getTokenized(const std::string& id) const {
 		this->checkThatTokenized("getTokenized");
 
 		// check argument
@@ -1258,7 +1261,7 @@ namespace crawlservpp::Data {
 	 *   has an invalid length, or if the corpus has
 	 *   not been tokenized.
 	 */
-	inline std::vector<std::string> Corpus::getDateTokenized(const std::string& date) const {
+	inline Corpus::Tokens Corpus::getDateTokenized(const std::string& date) const {
 		this->checkThatTokenized("getDateTokenized");
 
 		// check argument
@@ -1281,10 +1284,10 @@ namespace crawlservpp::Data {
 	 * \throws Corpus::Exception if the corpus has not
 	 *   been tokenized.
 	 */
-	inline std::vector<std::vector<std::string>> Corpus::getArticles() const {
+	inline std::vector<Corpus::Tokens> Corpus::getArticles() const {
 		this->checkThatTokenized("getArticles");
 
-		std::vector<std::vector<std::string>> copy;
+		std::vector<Tokens> copy;
 
 		copy.reserve(this->articleMap.size());
 
@@ -1373,7 +1376,7 @@ namespace crawlservpp::Data {
 	 *   will be cleared, freeing the used memory early.
 	 */
 	inline void Corpus::create(
-			std::vector<std::string>& texts,
+			Tokens& texts,
 			bool deleteInputData
 	) {
 		// clear old corpus
@@ -1418,7 +1421,7 @@ namespace crawlservpp::Data {
 	 *   freeing the used memory early.
 	 */
 	inline void Corpus::create(
-			std::vector<std::string>& texts,
+			Tokens& texts,
 			std::vector<std::string>& articleIds,
 			std::vector<std::string>& dateTimes,
 			bool deleteInputData
@@ -1486,7 +1489,7 @@ namespace crawlservpp::Data {
 	 * \sa copyChunksContinuous
 	 */
 	inline void Corpus::combineContinuous(
-			std::vector<std::string>& chunks,
+			Tokens& chunks,
 			std::vector<TextMap>& articleMaps,
 			std::vector<TextMap>& dateMaps,
 			bool deleteInputData
@@ -1619,8 +1622,8 @@ namespace crawlservpp::Data {
 	 *
 	 * \param chunks Reference to a vector containing
 	 *   strings with the text of the chunks.
-	 * \param wordNums Reference to a vector containing
-	 *   the number of words in each chunk.
+	 * \param tokenNums Reference to a vector containing
+	 *   the number of tokens in each chunk.
 	 * \param articleMaps Reference to a vector
 	 *   containing the article maps of the chunks.
 	 * \param dateMaps Reference to a vector containing
@@ -1628,7 +1631,7 @@ namespace crawlservpp::Data {
 	 * \param sentenceMaps Reference to a vector
 	 *   containing the sentence maps of the chunks.
 	 * \param deleteInputData If true, the given texts,
-	 *   word counts, as well as article, date and
+	 *   token counts, as well as article, date and
 	 *   sentence maps will be cleared, freeing the
 	 *   used memory early.
 	 *
@@ -1642,15 +1645,15 @@ namespace crawlservpp::Data {
 	 *   length given in the previous chunk, if the
 	 *   length of the last sentence in the combined
 	 *   corpus exceeds the length of the corpus
-	 *   itself, or if there are more word counts,
+	 *   itself, or if there are more token counts,
 	 *   article maps, date maps and/or sentence maps
 	 *   given than corpus chunks.
 	 *
 	 * \sa copyChunksTokenized
 	 */
 	inline void Corpus::combineTokenized(
-			std::vector<std::string>& chunks,
-			std::vector<std::size_t>& wordNums,
+			Tokens& chunks,
+			Sizes& tokenNums,
 			std::vector<TextMap>& articleMaps,
 			std::vector<TextMap>& dateMaps,
 			std::vector<SentenceMap>& sentenceMaps,
@@ -1663,7 +1666,7 @@ namespace crawlservpp::Data {
 		if(
 				this->checkConsistency
 				&& (
-						wordNums.size() > chunks.size()
+						tokenNums.size() > chunks.size()
 						|| articleMaps.size() > chunks.size()
 						|| dateMaps.size() > chunks.size()
 						|| sentenceMaps.size() > chunks.size()
@@ -1671,7 +1674,7 @@ namespace crawlservpp::Data {
 		) {
 			throw Exception(
 					"Corpus::combineTokenized():"
-					" More word counts, article maps, date maps,"
+					" More token counts, article maps, date maps,"
 					" and/or sentence maps than corpus chunks"
 			);
 		}
@@ -1688,23 +1691,23 @@ namespace crawlservpp::Data {
 		}
 
 		// reserve memory
-		const auto totalWords{
+		const auto totalTokens{
 			std::accumulate(
-					wordNums.cbegin(),
-					wordNums.cend(),
-					static_cast<std::size_t>(0)
+					tokenNums.cbegin(),
+					tokenNums.cend(),
+					std::size_t{}
 			)
 		};
 
-		Helper::Memory::freeIf(deleteInputData, wordNums);
+		Helper::Memory::freeIf(deleteInputData, tokenNums);
 
-		this->tokens.reserve(totalWords);
+		this->tokens.reserve(totalTokens);
 
 		Corpus::reserveCombined(articleMaps, this->articleMap);
 		Corpus::reserveCombined(dateMaps, this->dateMap);
 		Corpus::reserveCombined(sentenceMaps, this->sentenceMap);
 
-		// add words from chunks
+		// add tokens from chunks
 		std::size_t chunkIndex{};
 		bool splitToken{false};
 
@@ -1857,7 +1860,7 @@ namespace crawlservpp::Data {
 	 */
 	inline void Corpus::copyChunksContinuous(
 			std::size_t chunkSize,
-			std::vector<std::string>& to,
+			Tokens& to,
 			std::vector<TextMap>& articleMapsTo,
 			std::vector<TextMap>& dateMapsTo
 	) const {
@@ -2140,8 +2143,8 @@ namespace crawlservpp::Data {
 	 * \param to Reference to a vector of
 	 *   strings to which the texts of the
 	 *   corpus chunks will be appended.
-	 * \param wordNumsTo Reference to a vector
-	 *   to which the number of words for each
+	 * \param tokenNumsTo Reference to a vector
+	 *   to which the number of tokens for each
 	 *   chunk will be written.
 	 * \param articleMapsTo Reference to a
 	 *   vector of text map structures, to
@@ -2182,8 +2185,8 @@ namespace crawlservpp::Data {
 	 */
 	inline void Corpus::copyChunksTokenized(
 			std::size_t chunkSize,
-			std::vector<std::string>& to,
-			std::vector<std::size_t>& wordNumsTo,
+			Tokens& to,
+			Sizes& tokenNumsTo,
 			std::vector<TextMap>& articleMapsTo,
 			std::vector<TextMap>& dateMapsTo,
 			std::vector<SentenceMap>& sentenceMapsTo
@@ -2224,7 +2227,7 @@ namespace crawlservpp::Data {
 			this->addAsOneChunk(
 					size,
 					to,
-					wordNumsTo,
+					tokenNumsTo,
 					articleMapsTo,
 					dateMapsTo,
 					sentenceMapsTo
@@ -2241,7 +2244,7 @@ namespace crawlservpp::Data {
 		Corpus::reserveChunks(
 				numberOfChunks,
 				to,
-				wordNumsTo,
+				tokenNumsTo,
 				articleMapsTo,
 				dateMapsTo,
 				sentenceMapsTo,
@@ -2305,7 +2308,7 @@ namespace crawlservpp::Data {
 						chunkContent,
 						chunkSentences,
 						to,
-						wordNumsTo,
+						tokenNumsTo,
 						sentenceMapsTo,
 						chunkTokens,
 						chunkOffset,
@@ -2330,7 +2333,7 @@ namespace crawlservpp::Data {
 				chunkContent,
 				chunkSentences,
 				to,
-				wordNumsTo,
+				tokenNumsTo,
 				sentenceMapsTo,
 				chunkTokens,
 				chunkOffset,
@@ -2347,7 +2350,7 @@ namespace crawlservpp::Data {
 
 			if(to.back().empty()) {
 				to.pop_back();
-				wordNumsTo.pop_back();
+				tokenNumsTo.pop_back();
 				sentenceMapsTo.pop_back();
 
 				if(!articleMapsTo.empty()) {
@@ -2472,7 +2475,7 @@ namespace crawlservpp::Data {
 				deleteBytes = std::accumulate(
 						this->tokens.begin(),
 						deleteTo,
-						static_cast<std::size_t>(0),
+						std::size_t{},
 						[](const auto& a, const auto& b) {
 							return a + b.size();
 						}
@@ -2487,7 +2490,7 @@ namespace crawlservpp::Data {
 				deleteBytes += std::accumulate(
 						deleteFrom,
 						this->tokens.end(),
-						static_cast<std::size_t>(0),
+						std::size_t{},
 						[](const auto& a, const auto& b) {
 							return a + b.size();
 						}
@@ -2827,7 +2830,7 @@ namespace crawlservpp::Data {
 		// prepare manipulators and check their configurations
 		std::vector<Data::Tagger> taggers;
 		Lemmatizer lemmatizer;
-		WordRemover wordRemover;
+		TokenRemover tokenRemover;
 		std::size_t manipulatorIndex{};
 		std::size_t taggerIndex{};
 
@@ -2886,7 +2889,7 @@ namespace crawlservpp::Data {
 				if(dictionaries.at(manipulatorIndex).empty()) {
 					throw Exception(
 						"Corpus::tokenize():"
-						" No dictionary set for word remover (manipulator #"
+						" No dictionary set for token remover (manipulator #"
 						+ std::to_string(manipulatorIndex + 1)
 						+ ")"
 					);
@@ -2922,10 +2925,11 @@ namespace crawlservpp::Data {
 							   &dictionaries,
 							   &languages,
 							   &lemmatizer,
-							   &wordRemover
-							  ](
-									  std::vector<std::string>& sentence
-							  ) {
+							   &tokenRemover
+		](
+				Tokens::iterator sentenceBegin,
+				Tokens::iterator sentenceEnd
+		) {
 			std::size_t manipulatorIndex{};
 			std::size_t taggerIndex{};
 
@@ -2936,36 +2940,36 @@ namespace crawlservpp::Data {
 
 				case corpusManipTagger:
 				case corpusManipTaggerPosterior:
-					taggers.at(taggerIndex).label(sentence);
+					taggers.at(taggerIndex).label(sentenceBegin, sentenceEnd);
 
 					++taggerIndex;
 
 					break;
 
 				case corpusManipEnglishStemmer:
-					for(auto& word : sentence) {
-						Data::Stemmer::stemEnglish(word);
+					for(auto tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
+						Data::Stemmer::stemEnglish(*tokenIt);
 					}
 
 					break;
 
 				case  corpusManipGermanStemmer:
-					for(auto& word : sentence) {
-						Data::Stemmer::stemGerman(word);
+					for(auto tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
+						Data::Stemmer::stemGerman(*tokenIt);
 					}
 
 					break;
 
 				case corpusManipLemmatizer:
-					for(auto& word : sentence) {
-						lemmatizer.lemmatize(word, dictionaries.at(manipulatorIndex));
+					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
+						lemmatizer.lemmatize(*tokenIt, dictionaries.at(manipulatorIndex));
 					}
 
 					break;
 
 				case corpusManipRemove:
-					for(auto& word : sentence) {
-						wordRemover.remove(word, dictionaries.at(manipulatorIndex));
+					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
+						tokenRemover.remove(*tokenIt, dictionaries.at(manipulatorIndex));
 					}
 
 					break;
@@ -3001,7 +3005,7 @@ namespace crawlservpp::Data {
 	 * If a sentence manipulator is given,
 	 *  first the sentence as a whole will
 	 *  be manipulated, then the individual
-	 *  words contained in this sentence.
+	 *  tokens contained in this sentence.
 	 *
 	 * Please make sure that the corpus is
 	 *  tidied beforehand, i.e. UTF-8 and
@@ -3024,14 +3028,14 @@ namespace crawlservpp::Data {
 	 *   from the others: @c .:!? or by the
 	 *   end of the current article, date,
 	 *   or corpus.
-	 * \param callbackWord Optional callback
+	 * \param callback Optional callback
 	 *   function (or lambda) that will be used
 	 *   on all sentences in the corpus, where
 	 *   every sentence is separated by one of
 	 *   the following punctuations from the
 	 *   others: @c .:;!? or by the end of the
 	 *   current article, date, or the whole
-	 *   corpus. A word will not be added to
+	 *   corpus. A token will not be added to
 	 *   the tokens of the corpus, if the
 	 *   callback function empties it.
 	 * \param freeMemoryEvery Number of
@@ -3144,7 +3148,7 @@ namespace crawlservpp::Data {
 					dateLength += sentence.size();
 					articleLength += sentence.size();
 
-					this->tokenBytes += Corpus::bytes(sentence);
+					this->tokenBytes += Helper::Container::bytes(sentence);
 
 					Helper::Container::moveInto(this->tokens, sentence);
 				}
@@ -3425,8 +3429,8 @@ namespace crawlservpp::Data {
 	// add whole corpus as one chunk
 	inline void Corpus::addAsOneChunk(
 			std::size_t size,
-			std::vector<std::string>& to,
-			std::vector<std::size_t>& wordNumsTo,
+			Tokens& to,
+			Sizes& tokenNumsTo,
 			std::vector<TextMap>& articleMapsTo,
 			std::vector<TextMap>& dateMapsTo,
 			std::vector<SentenceMap>& sentenceMapsTo
@@ -3449,7 +3453,7 @@ namespace crawlservpp::Data {
 		articleMapsTo.emplace_back(this->articleMap);
 		dateMapsTo.emplace_back(this->dateMap);
 		sentenceMapsTo.emplace_back(this->sentenceMap);
-		wordNumsTo.emplace_back(this->tokens.size());
+		tokenNumsTo.emplace_back(this->tokens.size());
 	}
 
 	// re-tokenize corpus, removing all empty tokens, articles, and dates
@@ -3590,22 +3594,18 @@ namespace crawlservpp::Data {
 			// update beginning of sentence
 			TextMapEntry::pos(sentenceEntry) -= numDeletedTokens;
 
-			std::vector<std::string> sentence(
-					this->tokens.begin() + sentenceBegin,
-					this->tokens.begin() + sentenceEnd
-			);
-
 			// modify sentence (or its tokens), if necessary
 			if(callback) {
-				(*callback)(sentence);
+				(*callback)(
+						this->tokens.begin() + sentenceBegin,
+						this->tokens.begin() + sentenceEnd
+				);
 			}
 
-			for(auto n{sentenceBegin}; n < sentenceEnd; ++n) {
-				auto& token{
-					this->tokens.at(n)
-				};
+			for(auto tokenIndex{sentenceBegin}; tokenIndex < sentenceEnd; ++tokenIndex) {
+				const auto& token{this->tokens.at(tokenIndex)};
 
-				// remove empty word from date, article, and sentence map
+				// remove empty token from date, article, and sentence map
 				if(token.empty()) {
 					if(inDate) {
 						Corpus::removeToken(this->dateMap, dateIndex, emptyDates);
@@ -3674,19 +3674,19 @@ namespace crawlservpp::Data {
 			StatusSetter& statusSetter
 	) {
 		// tokenize continuous text corpus
-		std::vector<std::string> sentence;
+		Tokens sentence;
 
-		std::size_t wordBegin{};
-		std::size_t sentenceFirstWord{};
-		std::size_t currentWord{};
+		std::size_t tokenBegin{};
+		std::size_t sentenceFirstToken{};
+		std::size_t currentToken{};
 		std::size_t statusCounter{};
 		std::size_t corpusTrimmed{};
 
 		bool inArticle{false};
 		bool inDate{false};
 
-		std::size_t articleFirstWord{};
-		std::size_t dateFirstWord{};
+		std::size_t articleFirstToken{};
+		std::size_t dateFirstToken{};
 		std::size_t articleEnd{Corpus::getFirstEnd(this->articleMap)};
 		std::size_t dateEnd{Corpus::getFirstEnd(this->dateMap)};
 		std::size_t nextArticle{};
@@ -3712,7 +3712,7 @@ namespace crawlservpp::Data {
 						&& nextArticle < this->articleMap.size()
 						&& pos == TextMapEntry::pos(this->articleMap[nextArticle])
 				) {
-					articleFirstWord = currentWord;
+					articleFirstToken = currentToken;
 					articleEnd = TextMapEntry::end(this->articleMap[nextArticle]);
 
 					inArticle = true;
@@ -3728,8 +3728,8 @@ namespace crawlservpp::Data {
 					inArticle = false;
 
 					newArticleMap.emplace_back(
-							articleFirstWord,
-							currentWord - articleFirstWord,
+							articleFirstToken,
+							currentToken - articleFirstToken,
 							this->articleMap[nextArticle - 1].value
 					);
 
@@ -3745,7 +3745,7 @@ namespace crawlservpp::Data {
 						&& nextDate < this->dateMap.size()
 						&& pos == TextMapEntry::pos(this->dateMap[nextDate])
 				) {
-					dateFirstWord = currentWord;
+					dateFirstToken = currentToken;
 					dateEnd = TextMapEntry::end(this->dateMap[nextDate]);
 
 					inDate = true;
@@ -3761,8 +3761,8 @@ namespace crawlservpp::Data {
 					inDate = false;
 
 					newDateMap.emplace_back(
-							dateFirstWord,
-							currentWord - dateFirstWord,
+							dateFirstToken,
+							currentToken - dateFirstToken,
 							this->dateMap[nextDate - 1].value
 					);
 
@@ -3800,7 +3800,7 @@ namespace crawlservpp::Data {
 
 			default:
 				if(sentenceEnd) {
-					// end of word and sentence without separating character
+					// end of token and sentence without separating character
 					noSeparator = true;
 				}
 				else {
@@ -3809,17 +3809,17 @@ namespace crawlservpp::Data {
 				}
 			}
 
-			// end word
-			auto wordLength = pos - wordBegin;
+			// end token
+			auto tokenLength{pos - tokenBegin};
 
 			if(noSeparator) {
-				++wordLength;
+				++tokenLength;
 			}
 
-			if(wordLength > 0) {
-				sentence.emplace_back(this->corpus, wordBegin - corpusTrimmed, wordLength);
+			if(tokenLength > 0) {
+				sentence.emplace_back(this->corpus, tokenBegin - corpusTrimmed, tokenLength);
 
-				++currentWord;
+				++currentToken;
 
 				if(appendToArticle) {
 					++TextMapEntry::length(newArticleMap.back());
@@ -3838,7 +3838,7 @@ namespace crawlservpp::Data {
 				corpusTrimmed = pos;
 			}
 
-			wordBegin = pos + 1;
+			tokenBegin = pos + 1;
 
 			if(sentenceEnd && !sentence.empty()) {
 				Corpus::processSentence(
@@ -3846,8 +3846,8 @@ namespace crawlservpp::Data {
 						callback,
 						appendToArticle,
 						appendToDate,
-						currentWord,
-						sentenceFirstWord,
+						currentToken,
+						sentenceFirstToken,
 						newArticleMap,
 						newDateMap,
 						this->sentenceMap,
@@ -3884,8 +3884,8 @@ namespace crawlservpp::Data {
 			inArticle = false;
 
 			newArticleMap.emplace_back(
-					articleFirstWord,
-					currentWord - articleFirstWord,
+					articleFirstToken,
+					currentToken - articleFirstToken,
 					this->articleMap[nextArticle - 1].value
 			);
 
@@ -3902,20 +3902,20 @@ namespace crawlservpp::Data {
 			inDate = false;
 
 			newDateMap.emplace_back(
-					dateFirstWord,
-					currentWord - dateFirstWord,
+					dateFirstToken,
+					currentToken - dateFirstToken,
 					this->dateMap[nextDate - 1].value
 			);
 
 			endOfLastDate = true;
 		}
 
-		// add last word if not added yet
-		if(wordBegin - corpusTrimmed < this->corpus.size()) {
+		// add last token if not added yet
+		if(tokenBegin - corpusTrimmed < this->corpus.size()) {
 			sentence.emplace_back(
 					this->corpus,
-					wordBegin - corpusTrimmed,
-					this->corpus.size() + corpusTrimmed - wordBegin
+					tokenBegin - corpusTrimmed,
+					this->corpus.size() + corpusTrimmed - tokenBegin
 			);
 
 			if(endOfLastArticle) {
@@ -3934,8 +3934,8 @@ namespace crawlservpp::Data {
 					callback,
 					endOfLastArticle,
 					endOfLastDate,
-					currentWord,
-					sentenceFirstWord,
+					currentToken,
+					sentenceFirstToken,
 					newArticleMap,
 					newDateMap,
 					this->sentenceMap,
@@ -4024,10 +4024,10 @@ namespace crawlservpp::Data {
 	}
 
 	// get all tokens that belong to a specific date or article
-	inline std::vector<std::string> Corpus::getTokensForEntry(
+	inline Corpus::Tokens Corpus::getTokensForEntry(
 			const TextMap& map,
 			const std::string& id,
-			const std::vector<std::string>& tokens
+			const Tokens& tokens
 	) {
 		const auto& found{
 			std::find_if(
@@ -4040,12 +4040,12 @@ namespace crawlservpp::Data {
 		};
 
 		if(found == map.cend()) {
-			return std::vector<std::string>();
+			return Tokens{};
 		}
 
 		const auto entryEnd{TextMapEntry::end(*found)};
 
-		std::vector<std::string> copy;
+		Tokens copy;
 
 		copy.reserve(found->l);
 
@@ -4057,7 +4057,7 @@ namespace crawlservpp::Data {
 	}
 
 	// remove empty tokens
-	inline void Corpus::removeEmpty(std::vector<std::string>& from) {
+	inline void Corpus::removeEmpty(Tokens& from) {
 		from.erase(
 				std::remove_if(
 						from.begin(),
@@ -4179,7 +4179,7 @@ namespace crawlservpp::Data {
 	}
 
 	// check whether any token contains a newline
-	inline void Corpus::checkTokensForChunking(const std::vector<std::string>& tokens) {
+	inline void Corpus::checkTokensForChunking(const Tokens& tokens) {
 		if(
 				std::any_of(tokens.begin(), tokens.end(), [](const auto& token) {
 					return std::any_of(token.begin(), token.end(), [](const auto c) {
@@ -4198,8 +4198,8 @@ namespace crawlservpp::Data {
 	// reserve memory for chunks
 	inline void Corpus::reserveChunks(
 			std::size_t chunks,
-			std::vector<std::string>& to,
-			std::vector<std::size_t>& wordNumsTo,
+			Tokens& to,
+			Sizes& tokenNumsTo,
 			std::vector<TextMap>& articleMapsTo,
 			std::vector<TextMap>& dateMapsTo,
 			std::vector<SentenceMap>& sentenceMapsTo,
@@ -4217,7 +4217,7 @@ namespace crawlservpp::Data {
 		}
 
 		sentenceMapsTo.reserve(sentenceMapsTo.size() + chunks);
-		wordNumsTo.reserve(wordNumsTo.size() + chunks);
+		tokenNumsTo.reserve(tokenNumsTo.size() + chunks);
 	}
 
 	// check current sentence for map entry while filling tokenized chunk
@@ -4284,8 +4284,8 @@ namespace crawlservpp::Data {
 	inline void Corpus::finishChunk(
 			std::string& contentFrom,
 			SentenceMap& sentencesFrom,
-			std::vector<std::string>& contentTo,
-			std::vector<std::size_t>& wordNumTo,
+			Tokens& contentTo,
+			Sizes& tokenNumTo,
 			std::vector<SentenceMap>& sentencesTo,
 			std::size_t chunkTokens,
 			std::size_t& chunkOffset,
@@ -4306,8 +4306,8 @@ namespace crawlservpp::Data {
 
 		sentencesFrom.clear();
 
-		// add word count
-		wordNumTo.push_back(chunkTokens + (splitToken ? 1 : 0));
+		// add token count
+		tokenNumTo.push_back(chunkTokens + (splitToken ? 1 : 0));
 
 		// update chunk offset
 		chunkOffset += chunkTokens;
@@ -4358,7 +4358,7 @@ namespace crawlservpp::Data {
 	// check that the specified value is not set, throw an exception otherwise
 	inline void Corpus::notUsed(
 			std::string_view type,
-			const std::vector<std::string>& values,
+			const Tokens& values,
 			std::size_t index
 	) {
 		if(!values.at(index).empty()) {
@@ -4378,18 +4378,6 @@ namespace crawlservpp::Data {
 					+ std::to_string(index + 1)
 			);
 		}
-	}
-
-	// return the number of bytes in a vector of strings
-	inline std::size_t Corpus::bytes(const std::vector<std::string>& words) {
-		return std::accumulate(
-				words.begin(),
-				words.end(),
-				std::size_t{},
-				[](std::size_t bytes, const auto& word) {
-					return bytes + word.size();
-				}
-		);
 	}
 
 	// add map from chunk to (tokenized) corpus
@@ -4595,30 +4583,30 @@ namespace crawlservpp::Data {
 
 	// process sentence for tokenization of the corpus
 	inline void Corpus::processSentence(
-			std::vector<std::string>& sentence,
+			Tokens& sentence,
 			const std::optional<SentenceFunc>& callback,
 			bool inArticle,
 			bool inDate,
-			std::size_t& currentWord,
-			std::size_t& sentenceFirstWord,
+			std::size_t& currentToken,
+			std::size_t& sentenceFirstToken,
 			TextMap& articleMap,
 			TextMap& dateMap,
 			SentenceMap& sentenceMap,
-			std::vector<std::string>& tokens,
+			Tokens& tokens,
 			std::size_t& tokenBytes
 	) {
 		if(callback) {
 			// modify sentence (or its tokens), if necessary
-			(*callback)(sentence);
+			(*callback)(sentence.begin(), sentence.end());
 		}
 
-		// modify words of the sentence, do not keep emptied words
-		for(auto wordIt{sentence.begin()}; wordIt != sentence.end(); ) {
-			if(wordIt->empty()) {
-				// remove empty word
-				wordIt = sentence.erase(wordIt);
+		// modify tokens of the sentence, do not keep emptied tokens
+		for(auto tokenIt{sentence.begin()}; tokenIt != sentence.end(); ) {
+			if(tokenIt->empty()) {
+				// remove empty token
+				tokenIt = sentence.erase(tokenIt);
 
-				--currentWord;
+				--currentToken;
 
 				// shrink article and date, if necessary
 				if(inArticle) {
@@ -4638,26 +4626,26 @@ namespace crawlservpp::Data {
 				}
 			}
 			else {
-				tokenBytes += wordIt->size();
+				tokenBytes += tokenIt->size();
 
-				++wordIt;
+				++tokenIt;
 			}
 		}
 
 		if(!sentence.empty()) {
 			// add sentence to map
 			sentenceMap.emplace_back(
-					sentenceFirstWord,
+					sentenceFirstToken,
 					sentence.size()
 			);
 
-			// move the words in the finished sentence into the tokens of the corpus
+			// move the tokens in the finished sentence into the tokens of the corpus
 			Helper::Container::moveInto(tokens, sentence);
 		}
 
 		sentence.clear();
 
-		sentenceFirstWord = currentWord; /* (= already next word) */
+		sentenceFirstToken = currentToken; /* (= already next token) */
 	}
 
 	// add corpus to combined corpus, return whether thread is still running
@@ -4708,7 +4696,7 @@ namespace crawlservpp::Data {
 		std::size_t statusCounter{};
 		std::string article;
 		std::string date;
-		std::vector<std::vector<std::string>> content;
+		std::vector<Tokens> content;
 
 		// go through all sentences
 		for(auto& sentence : from.sentenceMap) {
@@ -4802,7 +4790,7 @@ namespace crawlservpp::Data {
 
 	// append  or add article to combined corpus
 	inline void Corpus::finishArticle(
-			std::vector<std::vector<std::string>>& from,
+			std::vector<Tokens>& from,
 			DateArticleSentenceMap& to,
 			const std::string& date,
 			const std::string& article
@@ -4844,7 +4832,7 @@ namespace crawlservpp::Data {
 			std::size_t& chunkTokens,
 			std::string& chunkContent,
 			SentenceMap& chunkSentences,
-			const std::vector<std::string>& tokens,
+			const Tokens& tokens,
 			std::size_t& tokensComplete,
 			std::size_t& additionalBytes
 	) {
@@ -5166,7 +5154,7 @@ namespace crawlservpp::Data {
 			const TextMapEntry& entry,
 			const TextMap& map,
 			const TextMap::const_iterator& next,
-			const std::vector<std::string>& words
+			const Tokens& tokens
 	) {
 		std::ostringstream exception;
 
@@ -5188,9 +5176,9 @@ namespace crawlservpp::Data {
 		exception << "): ";
 		exception << sentenceEnd;
 
-		if(sentenceEnd > 0 && sentenceEnd <= words.size()) {
+		if(sentenceEnd > 0 && sentenceEnd <= tokens.size()) {
 			exception << " ['";
-			exception << words.at(sentenceEnd - 1);
+			exception << tokens.at(sentenceEnd - 1);
 			exception << "']";
 		}
 		else if(sentenceEnd == 0) {
@@ -5203,9 +5191,9 @@ namespace crawlservpp::Data {
 		exception << " > ";
 		exception << entryEnd;
 
-		if(entryEnd > 0 && entryEnd <= words.size()) {
+		if(entryEnd > 0 && entryEnd <= tokens.size()) {
 			exception << " ['";
-			exception << words.at(entryEnd - 1);
+			exception << tokens.at(entryEnd - 1);
 			exception << "']";
 		}
 		else if(entryEnd == 0) {
@@ -5220,8 +5208,8 @@ namespace crawlservpp::Data {
 
 		bool addSpace{false};
 
-		for(std::size_t word{TextMapEntry::pos(sentence)}; word < sentenceEnd; ++word) {
-			if(word < words.size()) {
+		for(std::size_t token{TextMapEntry::pos(sentence)}; token < sentenceEnd; ++token) {
+			if(token < tokens.size()) {
 				if(addSpace) {
 					exception << ' ';
 				}
@@ -5229,7 +5217,7 @@ namespace crawlservpp::Data {
 					addSpace = true;
 				}
 
-				exception << words[word];
+				exception << tokens.at(token);
 			}
 		}
 
