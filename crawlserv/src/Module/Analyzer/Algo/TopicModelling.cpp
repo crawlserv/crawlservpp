@@ -569,16 +569,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			return;
 		}
 
-		if(!(this->algoConfig.isNumberOfTopicsFixed)) {
-			TopicModelling::addTopicColumns(
-					this->database,
-					this->getTargetTableName(),
-					this->model.getNumberOfTopics()
-			);
-		}
-
-		this->saveArticleData(statusSetter);
 		this->saveTopicData(statusSetter);
+		this->saveArticleData(statusSetter);
 	}
 
 	/*
@@ -820,6 +812,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				+ this->config.generalTargetTable
 				+ "'..."
 		);
+
+		if(!(this->algoConfig.isNumberOfTopicsFixed)) {
+			TopicModelling::addTopicColumns(
+					this->database,
+					this->getTargetTableName(),
+					this->model.getNumberOfTopics()
+			);
+		}
 
 		const auto topics{this->model.getTopics()};
 		const auto resultTable{this->getTargetTableName()};
