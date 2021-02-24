@@ -60,7 +60,6 @@
 #ifdef __clang__
 
 #include <cstddef>		// std::size_t
-#include <functional>	// std::ref
 
 /* fix clang casting bug in tomotopy */
 
@@ -72,10 +71,8 @@ namespace tomoto::serializer {
 	template<std::size_t _n>
 	constexpr Key<_n> to_keyz(const char(&a)[_n]);
 
-	template<std::size_t _n>
-	constexpr Key<_n> to_keyz(const char a[_n]) {
-		return to_keyz<_n>(std::ref(a).get());
-	}
+	template<typename T, std::size_t _n>
+	constexpr Key<_n> to_keyz(const T(&a)[_n]);
 
 } /* namespace tomoto::serializer */
 
