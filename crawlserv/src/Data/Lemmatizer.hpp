@@ -83,7 +83,7 @@ namespace crawlservpp::Data {
 
 	//! Lemmatizer.
 	class Lemmatizer {
-		// property of a dictionary entry (each entry, i.e. word, may have multiple such properties)
+		// property of a dictionary entry (each entry, i.e. token, may have multiple such properties)
 		struct DictionaryProperty {
 			std::string tag;
 			std::string lemma;
@@ -98,7 +98,7 @@ namespace crawlservpp::Data {
 		///@name Lemmatization
 		///@{
 
-		void lemmatize(std::string& word, const std::string& dictionary);
+		void lemmatize(std::string& token, const std::string& dictionary);
 
 		///@}
 		///@name Cleanup
@@ -129,15 +129,15 @@ namespace crawlservpp::Data {
 	 * LEMMATIZATION
 	 */
 
-	//! Lemmatizes a word.
+	//! Lemmatizes a token.
 	/*!
-	 * \param word Reference to a string
-	 *   containing the word to be lemmazized.
+	 * \param token Reference to a string
+	 *   containing the token to be lemmazized.
 	 * \param dictionary View of a string containing
 	 *   the name of the dictionary to be used
-	 *   for lemmatizing the word.
+	 *   for lemmatizing the token.
 	 */
-	inline void Lemmatizer::lemmatize(std::string& word, const std::string& dictionary) {
+	inline void Lemmatizer::lemmatize(std::string& token, const std::string& dictionary) {
 		// get dictionary or build it if necessary
 		DictionaryIterator dict{
 			this->dictionaries.find(dictionary)
@@ -147,25 +147,25 @@ namespace crawlservpp::Data {
 			dict = build(dictionary);
 		}
 
-		// get length of word and look it up in dictionary
-		std::size_t wordLength{word.find(' ')};
+		// get length of token and look it up in dictionary
+		std::size_t tokenLength{token.find(' ')};
 
-		if(wordLength > word.length()) {
-			wordLength = word.length();
+		if(tokenLength > token.length()) {
+			tokenLength = token.length();
 		}
 
 		const auto entry{
-			dict->second.find(word.substr(0, wordLength))
+			dict->second.find(token.substr(0, tokenLength))
 		};
 
 		if(entry == dict->second.end() || entry->second.empty()) {
-			// word not in dictionary
+			/* token not in dictionary */
 			return;
 		}
 
 		if(entry->second.size() == 1) {
-			// exactly one entry
-			word = entry->second[0].lemma;
+			/* exactly one entry in dictionary */
+			token = entry->second[0].lemma;
 
 			return;
 		}
@@ -176,7 +176,7 @@ namespace crawlservpp::Data {
 
 		for(const auto& property : entry->second) {
 			const std::size_t count{
-				countEqualChars(word, wordLength + 1, property.tag)
+				countEqualChars(token, tokenLength + 1, property.tag)
 			};
 
 			equalChars.push_back(count);
@@ -201,7 +201,7 @@ namespace crawlservpp::Data {
 		// return lemma with most equal characters in tag and most occurences
 		for(const auto& property : entry->second) {
 			if(property.count == max) {
-				word = property.lemma;
+				token = property.lemma;
 
 				return;
 			}
