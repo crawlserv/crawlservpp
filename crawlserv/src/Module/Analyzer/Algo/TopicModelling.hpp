@@ -92,7 +92,6 @@
 #include <sstream>			// std::ostringstream
 #include <string>			// std::string, std::to_string
 #include <string_view>		// std::string_view, std::string_view_literals
-#include <unordered_map>	// std::unordered_map
 #include <unordered_set>	// std::unordered_set
 #include <utility>			// std::pair
 #include <vector>			// std::vector
@@ -274,7 +273,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using ThreadStatus = Struct::ThreadStatus;
 
 		using StringString = std::pair<std::string, std::string>;
-		using TopicMap = std::unordered_map<std::size_t, std::size_t>;
 
 	public:
 		///@name Construction
@@ -403,18 +401,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		void logSave(const std::string& name, const std::string& time, std::size_t size);
 		void finishUp();
 		void classifyQueue(std::queue<std::string>& toClassify, StatusSetter& statusSetter);
-		[[nodiscard]] TopicMap createTopicMap() const;
-		void saveArticleData(StatusSetter& statusSetter, const TopicMap& topicMap);
-		void saveTopicData(StatusSetter& statusSetter, const TopicMap& topicMap);
+		void saveArticleData(StatusSetter& statusSetter);
+		void saveTopicData(StatusSetter& statusSetter);
 
 		[[nodiscard]] Data::InsertFieldsMixed getTopicData(
 				const std::string& tableName,
-				const std::pair<std::size_t, std::size_t>& topic,
-				std::size_t	aliveTopicId
+				const std::pair<std::size_t, std::size_t>& topic
 		) const;
-		[[nodiscard]] std::string getTopicTopDescription(
+		[[nodiscard]] std::string getArticleTopDescription(
 				const std::vector<float>& probabilities,
-				const TopicMap& topicMap
+				const std::vector<std::size_t>& topics
 		) const;
 		[[nodiscard]] std::string getTopicDescription(
 				std::size_t topicId
@@ -459,12 +455,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				const std::vector<std::string>& names,
 				const std::vector<std::vector<float>>& topics,
 				std::vector<std::pair<std::string, std::vector<float>>>& to
-		);
-
-		[[nodiscard]] static std::size_t toAliveTopicIndex(
-				std::string_view function,
-				std::size_t topicId,
-				const TopicMap& topicMap
 		);
 	};
 

@@ -577,10 +577,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			);
 		}
 
-		const auto topicMap{this->createTopicMap()};
-
-		this->saveArticleData(statusSetter, topicMap);
-		this->saveTopicData(statusSetter, topicMap);
+		this->saveArticleData(statusSetter);
+		this->saveTopicData(statusSetter);
 	}
 
 	/*
@@ -810,28 +808,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		statusSetter.finish();
 	}
 
-	// create map for mapping topic indices to alive topic indices
-	TopicModelling::TopicMap TopicModelling::createTopicMap() const {
-		const auto topics{this->model.getTopics()};
-		TopicMap map;
-		std::size_t index{};
-
-		for(const auto topic : topics) {
-			map[topic] = index;
-
-			++index;
-		}
-
-		return map;
-	}
-
 	// save article data to target table
-	void TopicModelling::saveArticleData(StatusSetter& statusSetter, const TopicMap& topicMap) {
-		const auto numberOfColumns{
-			topicModellingTargetColumns
-			+ this->model.getNumberOfTopics()
-		};
-
+	void TopicModelling::saveArticleData(StatusSetter& statusSetter) {
 		if(!statusSetter.change("Saving article data...")) {
 			return;
 		}
@@ -843,9 +821,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				+ "'..."
 		);
 
-		const auto resultTable{
-			this->getTargetTableName()
-		};
+		const auto topics{this->model.getTopics()};
+		const auto resultTable{this->getTargetTableName()};
+		const auto numberOfColumns{topicModellingTargetColumns + topics.size()};
 
 		std::size_t resultCount{};
 		std::size_t updateCount{};
@@ -856,10 +834,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 							resultTable,
 							numberOfColumns,
 							result,
-							this->getTopicTopDescription(
-									result.second,
-									topicMap
-							)
+							this->getArticleTopDescription(result.second, topics)
 					)
 			);
 
@@ -881,7 +856,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	// save topic data to additional table
-	void TopicModelling::saveTopicData(StatusSetter& statusSetter, const TopicMap& topicMap) {
+	void TopicModelling::saveTopicData(StatusSetter& statusSetter) {
 		if(!statusSetter.change("Saving topic data...")) {
 			return;
 		}
@@ -893,8 +868,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				+ "'..."
 		);
 
-		// get topics
-		const auto topics{this->model.getTopics()};
+		// get topics sorted
 		const auto topicsSorted{this->model.getTopicsSorted()};
 		const auto fullTableName{
 			this->database.getAdditionalTableName(
@@ -903,24 +877,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		};
 
 		// insert topic data
-		std::size_t topicIndex{};
+		std::size_t topicCount{};
 
 		for(const auto& topic : topicsSorted) {
 			this->database.insertCustomData(
 					TopicModelling::getTopicData(
 							fullTableName,
-							topic,
-							TopicModelling::toAliveTopicIndex(
-									"saveTopicData",
-									topic.first,
-									topicMap
-							)
+							topic
 					)
 			);
 
-			++topicIndex;
+			++topicCount;
 
-			if(!statusSetter.update(topicIndex, topicsSorted.size(), true)) {
+			if(!statusSetter.update(topicCount, topicsSorted.size(), true)) {
 				return;
 			}
 		}
@@ -933,8 +902,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// get topic data
 	Data::InsertFieldsMixed TopicModelling::getTopicData(
 			const std::string& tableName,
-			const std::pair<std::size_t, std::size_t>& topic,
-			std::size_t aliveTopicId
+			const std::pair<std::size_t, std::size_t>& topic
 	) const {
 		Data::InsertFieldsMixed result;
 
@@ -949,7 +917,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		result.columns_types_values.emplace_back(
 				"analyzed__topic_id",
 				Data::Type::_uint64,
-				aliveTopicId
+				topic.first
 		);
 		result.columns_types_values.emplace_back(
 				"analyzed__topic_count",
@@ -1009,9 +977,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	// get the description of the top topic(s) for the article with the given topic probabilities
-	std::string TopicModelling::getTopicTopDescription(
+	std::string TopicModelling::getArticleTopDescription(
 			const std::vector<float>& probabilities,
-			const TopicMap& topicMap
+			const std::vector<std::size_t>& topics
 	) const {
 		// count topics with highest probability
 		const auto max{*std::max_element(probabilities.begin(), probabilities.end())};
@@ -1065,13 +1033,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				isAppend = true;
 			}
 
-			result += this->getTopicDescription(
-					TopicModelling::toAliveTopicIndex(
-							"saveArticleData",
-							index,
-							topicMap
-					)
-			);
+			result += this->getTopicDescription(topics.at(index));
 		}
 
 		return result;
@@ -1276,26 +1238,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		for(std::size_t current{}; current < n; ++current) {
 			to.emplace_back(names[current], topics[current]);
 		}
-	}
-
-	// convert topic ID to alive topic ID, throws TopicModelling::Exception
-	std::size_t TopicModelling::toAliveTopicIndex(
-			std::string_view function,
-			std::size_t topicId,
-			const TopicMap& topicMap
-	) {
-		const auto it{topicMap.find(topicId)};
-
-		if(it == topicMap.end()) {
-			throw Exception(
-					"TopicModelling::"
-					+ std::string(function)
-					+ "():"
-					" Invalid topic ID"
-			);
-		}
-
-		return it->second;
 	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */
