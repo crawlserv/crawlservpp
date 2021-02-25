@@ -2,13 +2,6 @@
 	"label": "Labeling",
 	"open": false,
 	
-	"lamda": {
-		"type": "number",
-		"default": 0.2,
-		"description": "Empirically set parameter for calculating the maximum marginal relevance of labels. Should be 0.2 according to the original paper, although it's set to 0.1 in the Python implementation.",
-		"simple": true,
-		"position": 8
-	},
 	"max.candidates": {
 		"type": "number",
 		"min": 1,
