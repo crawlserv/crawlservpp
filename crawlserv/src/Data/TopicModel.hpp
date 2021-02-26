@@ -262,8 +262,10 @@ namespace crawlservpp::Data {
 		using HDPModelIDF = tomoto::HDPModel<tomoto::TermWeight::idf, tomoto::RandGen>;
 		using LDAModel = tomoto::LDAModel<tomoto::TermWeight::one, tomoto::RandGen>;
 		using LDAModelIDF = tomoto::LDAModel<tomoto::TermWeight::idf, tomoto::RandGen>;
-		using PMIExtractor = tomoto::label::PMIExtractor;
+
 		using FoRelevance = tomoto::label::FoRelevance;
+		using ITopicModel = tomoto::ITopicModel;
+		using PMIExtractor = tomoto::label::PMIExtractor;
 
 	public:
 		///@name Getters
@@ -319,7 +321,7 @@ namespace crawlservpp::Data {
 				std::size_t fixedNumberOfTopTokens
 		);
 		void setInitialParameters(
-				std::size_t numberOfInitialTopics,
+				std::size_t initialTopics,
 				float alpha,
 				float eta,
 				float gamma
@@ -468,7 +470,7 @@ namespace crawlservpp::Data {
 				const tomoto::DocumentBase * doc
 		) const;
 
-		[[nodiscard]] const tomoto::ITopicModel& getModelInterface(bool isHdp, bool isIdf) const;
+		[[nodiscard]] const void * get(bool isHdp, bool isIdf) const;
 
 		// internal static helper functions (definitions only)
 		[[nodiscard]] static tomoto::RawDoc createDocument(
@@ -1466,12 +1468,12 @@ namespace crawlservpp::Data {
 
 	//! Sets the initial parameters for the model.
 	/*!
-	 * \param numberOfInitialTopics The initial number
-	 *   of topics between 2 and 32767. The number of
-	 *   topics will be adjusted for the data during
-	 *   training, if the HDP algorithm is used. Will be
-	 *   ignored if a fixed number of topics is set, i.e.
-	 *   the LDA algorithm is used.
+	 * \param initialTopics The initial number of topics
+	 *   between 2 and 32767. The number of topics will
+	 *   be adjusted for the data during training, if the
+	 *   HDP algorithm is used. Will be ignored if a
+	 *   fixed number of topics is set, i.e. the LDA
+	 *   algorithm is used.
 	 * \param alpha The initial concentration coeficient
 	 *   of the Dirichlet Process for document-table.
 	 * \param eta The Dirichlet prior on the per-topic
@@ -1485,7 +1487,7 @@ namespace crawlservpp::Data {
 	 *   already been initialized.
 	 */
 	inline void TopicModel::setInitialParameters(
-			std::size_t numberOfInitialTopics,
+			std::size_t initialTopics,
 			float alpha,
 			float eta,
 			float gamma
@@ -1495,7 +1497,7 @@ namespace crawlservpp::Data {
 				"Cannot set initial parameters"
 		);
 
-		this->numberOfInitialTopics = numberOfInitialTopics;
+		this->numberOfInitialTopics = initialTopics;
 		this->initialAlpha = alpha;
 		this->initialEta = eta;
 		this->initialGamma = gamma;
@@ -1551,6 +1553,11 @@ namespace crawlservpp::Data {
 	 *   with a high score on a specific topic and with
 	 *   a low score on other topics get a higher final
 	 *   score when this value is larger.
+	 * \param windowSize The size of the sliding window
+	 *   for calculating co-occurrence. If it is equal or
+	 *   exceeds the length of a document, the whole
+	 *   document is used. Should be between 50 and 100
+	 *   for long documents.
 	 *
 	 * \sa label
 	 */
@@ -1732,21 +1739,19 @@ namespace crawlservpp::Data {
 				this->labelingMaxCandidates
 		);
 
-		const auto& modelInterface{
-			this->getModelInterface(isHdp, isIdf)
+		const auto * interfacePtr{
+			static_cast<const ITopicModel *>(this->get(isHdp, isIdf))
 		};
 
-		const auto candidates{
-			extractor.extract(&modelInterface)
-		};
+		auto labelCandidates{extractor.extract(interfacePtr)};
 
 		// create labeler
 		constexpr auto LAMBDA{0.2F};
 
 		this->labeler = std::make_unique<FoRelevance>(
-				&modelInterface,
-				candidates.begin(),
-				candidates.end(),
+				interfacePtr,
+				labelCandidates.begin(),
+				labelCandidates.end(),
 				this->labelingMinDf,
 				this->labelingSmoothing,
 				LAMBDA, /* not used yet */
@@ -2337,21 +2342,21 @@ namespace crawlservpp::Data {
 		);
 	}
 
-	// get constant reference to the interface of the currently active topic model
-	inline const tomoto::ITopicModel& TopicModel::getModelInterface(bool isHdp, bool isIdf) const {
+	// get const pointer to the model used
+	inline const void * TopicModel::get(bool isHdp, bool isIdf) const {
 		if(isHdp) {
 			if(isIdf) {
-				return *(this->hdpModelIdf);
+				return this->hdpModelIdf.get();
 			}
 
-			return *(this->hdpModel);
+			return this->hdpModel.get();
 		}
 
 		if(isIdf) {
-			return *(this->ldaModelIdf);
+			return this->ldaModelIdf.get();
 		}
 
-		return *(this->ldaModel);
+		return this->ldaModel.get();
 	}
 
 	// create document for underlying API
