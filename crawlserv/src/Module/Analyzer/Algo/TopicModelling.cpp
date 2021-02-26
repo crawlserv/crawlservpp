@@ -561,6 +561,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->log(generalLoggingDefault, "labeling topics...");
 
 		this->model.label(this->algoConfig.workers);
+
+		const auto topics{this->model.getTopics()};
+
+		this->labels.clear();
+
+		for(auto topic : topics) {
+			this->labels[topic] = this->model.getTopicTopNLabels(
+					topic, this->algoConfig.labelNumber
+			);
+		}
 	}
 
 	// save the resulting data
@@ -741,8 +751,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->logModelInfo();
 
 		// finish
-		this->saveModel(statusSetter);
 		this->labelTopics(statusSetter);
+		this->saveModel(statusSetter);
 		this->classifyArticles(statusSetter);
 		this->saveData(statusSetter);
 
@@ -855,7 +865,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		statusSetter.finish();
 	}
 
-	// save topic data to additional table
+	// save topic data to additional table, throws TopicModelling::Exception
 	void TopicModelling::saveTopicData(StatusSetter& statusSetter) {
 		if(!statusSetter.change("Saving topic data...")) {
 			return;
@@ -926,27 +936,31 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		// add top N labels
-		const auto labelPairs{
-			this->model.getTopicTopNLabels(
-					topic.first,
-					this->algoConfig.labelNumber
-			)
-		};
+		const auto topNLabels{this->labels.find(topic.first)};
 		std::size_t label{1};
 
-		for(const auto& labelPair : labelPairs) {
-			result.columns_types_values.emplace_back(
-					"analyzed__label" + std::to_string(label),
-					Data::Type::_string,
-					labelPair.first
-			);
-			result.columns_types_values.emplace_back(
-					"analyzed__label" + std::to_string(label) + "_prob",
-					Data::Type::_double,
-					labelPair.second
-			);
+		if(topNLabels != this->labels.end()) {
+			for(const auto& labelPair : topNLabels->second) {
+				result.columns_types_values.emplace_back(
+						"analyzed__label" + std::to_string(label),
+						Data::Type::_string,
+						labelPair.first
+				);
+				result.columns_types_values.emplace_back(
+						"analyzed__label" + std::to_string(label) + "_prob",
+						Data::Type::_double,
+						labelPair.second
+				);
 
-			++label;
+				++label;
+			}
+		}
+		else {
+			throw Exception(
+					"TopicModelling:getTopicData():"
+					" Could not get labels for topic #"
+					+ std::to_string(topic.first)
+			);
 		}
 
 		// add top N tokens

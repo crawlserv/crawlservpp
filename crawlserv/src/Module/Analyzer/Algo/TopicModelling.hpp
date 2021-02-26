@@ -92,6 +92,7 @@
 #include <sstream>			// std::ostringstream
 #include <string>			// std::string, std::to_string
 #include <string_view>		// std::string_view, std::string_view_literals
+#include <unordered_map>	// std::unordered_map
 #include <unordered_set>	// std::unordered_set
 #include <utility>			// std::pair
 #include <vector>			// std::vector
@@ -358,7 +359,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			float labelSmoothing{topicModellingDefaultLabelSmoothing};
 			float labelMu{topicModellingDefaultLabelMu};
 			std::uint64_t labelWindowSize{};
-
 		} algoConfig;
 
 		// topic model
@@ -376,6 +376,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// results
 		std::unordered_set<std::string> articlesDone;
 		std::vector<std::pair<std::string, std::vector<float>>> results;
+		std::unordered_map<
+				std::size_t,
+				std::vector<std::pair<std::string, float>>
+		> labels;
 
 		// algorithm functions
 		void initModel();
