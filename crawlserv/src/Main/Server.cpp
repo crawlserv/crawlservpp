@@ -5885,6 +5885,13 @@ namespace crawlservpp::Main {
 					isColumnNamesTo
 			);
 
+			if(isColumnNamesTo) {
+				Server::cmdExportRemoveColumnPrefixes(
+						type,
+						contentTo
+				);
+			}
+
 			// write to log
 			Server::cmdExportLog(db, "row", "rows", "table", contentTo.size());
 
@@ -5994,6 +6001,41 @@ namespace crawlservpp::Main {
 
 		// get table columns and content
 		db.readTableAsStrings(fullTableName, contentTo, isIncludeColumnNames);
+	}
+
+	// remove column prefixes
+	inline void Server::cmdExportRemoveColumnPrefixes(
+			std::string_view type,
+			std::vector<std::vector<std::string>>& content
+	) {
+		if(content.empty()) {
+			return;
+		}
+
+		const auto prefixShort{
+			std::string(type)
+			+ std::string(dataTypeColumnNameSeparatorShort)
+		};
+		const auto prefixLong{
+			std::string(type)
+			+ std::string(dataTypeColumnNameSeparatorLong)
+		};
+
+		for(auto& columnName : content[0]) {
+			if(columnName.length() <= type.length()) {
+				continue;
+			}
+
+			if(columnName.substr(0, prefixLong.length()) == prefixLong) {
+				columnName.erase(0, prefixLong.length());
+
+				continue;
+			}
+
+			if(columnName.substr(0, prefixShort.length()) == prefixShort) {
+				columnName.erase(0, prefixShort.length());
+			}
+		}
 	}
 
 	// log number of entries to export

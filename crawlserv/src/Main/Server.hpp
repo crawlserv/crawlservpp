@@ -203,6 +203,12 @@ namespace crawlservpp::Main {
 	//! The number of XML warnings by default.
 	inline constexpr auto xmlWarningsDefault{25};
 
+	//! The (short) separator used between data type and column name.
+	inline constexpr auto dataTypeColumnNameSeparatorShort{"_"sv};
+
+	//! The (long) separator used between data type and column name.
+	inline constexpr auto dataTypeColumnNameSeparatorLong{"__"sv};
+
 	///@}
 
 	/*
@@ -626,6 +632,10 @@ namespace crawlservpp::Main {
 				std::string& nameTo,
 				std::vector<std::vector<std::string>>& contentTo,
 				bool isIncludeColumnNames
+		);
+		static void cmdExportRemoveColumnPrefixes(
+				std::string_view type,
+				std::vector<std::vector<std::string>>& content
 		);
 		static void cmdExportLog(
 				Module::Database& db,
