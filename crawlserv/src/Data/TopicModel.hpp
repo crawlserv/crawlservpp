@@ -116,18 +116,18 @@
 #define DATA_TOPICMODEL_RETRIEVE_NOARGS(x, isHdp, isIdf, function) \
 	if(isHdp) { \
 		if(isIdf) { \
-			x = this->hdpModelIdf->function(); \
+			(x) = this->hdpModelIdf->function(); \
 		} \
 		else { \
-			x = this->hdpModel->function(); \
+			(x) = this->hdpModel->function(); \
 		} \
 	} \
 	else { \
 		if(isIdf) { \
-			x = this->ldaModelIdf->function(); \
+			(x) = this->ldaModelIdf->function(); \
 		} \
 		else { \
-			x = this->ldaModel->function(); \
+			(x) = this->ldaModel->function(); \
 		} \
 	}
 
@@ -135,18 +135,18 @@
 #define DATA_TOPICMODEL_RETRIEVE(x, isHdp, isIdf, function, ...) \
 	if(isHdp) { \
 		if(isIdf) { \
-			x = this->hdpModelIdf->function(__VA_ARGS__); \
+			(x) = this->hdpModelIdf->function(__VA_ARGS__); \
 		} \
 		else { \
-			x = this->hdpModel->function(__VA_ARGS__); \
+			(x) = this->hdpModel->function(__VA_ARGS__); \
 		} \
 	} \
 	else { \
 		if(isIdf) { \
-			x = this->ldaModelIdf->function(__VA_ARGS__); \
+			(x) = this->ldaModelIdf->function(__VA_ARGS__); \
 		} \
 		else { \
-			x = this->ldaModel->function(__VA_ARGS__); \
+			(x) = this->ldaModel->function(__VA_ARGS__); \
 		} \
 	}
 
