@@ -233,8 +233,8 @@ namespace crawlservpp::Module::Analyzer {
 		std::size_t addAdditionalTable(
 				const std::string& name,
 				const std::vector<StringString>& fields,
-				bool compressed,
-				bool clear
+				bool isCompressed,
+				bool isDelete
 		);
 		const std::string& getAdditionalTableName(std::size_t id) const;
 		void updateAdditionalTable(std::size_t id);
