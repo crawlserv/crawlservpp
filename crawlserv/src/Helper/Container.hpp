@@ -69,9 +69,23 @@ namespace crawlservpp::Helper::Container {
 	template<typename T> static void append(
 			T& to,
 			const T& from,
-			typename T::size_type startAt = 0
+			typename T::size_type startAt
 	) {
 		to.insert(std::end(to), std::begin(from) + startAt, std::end(from));
+	}
+
+	//! Appends an iterable container to another iterable container.
+		/*!
+	 * \param to The container to append
+	 *   elements to.
+	 * \param from The container to append
+	 *   elements from.
+	 */
+	template<typename T> static void append(
+			T& to,
+			const T& from
+	) {
+		to.insert(std::end(to), std::begin(from), std::end(from));
 	}
 
 	//! Moves the elements of an iterable container into another iterable container.
