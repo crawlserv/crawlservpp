@@ -372,11 +372,11 @@ namespace crawlservpp::Data {
 		void reTokenize();
 
 		[[nodiscard]] bool tokenizeTokenized(
-				std::optional<SentenceFunc> callback,
+				const std::optional<SentenceFunc>& callback,
 				StatusSetter& statusSetter
 		);
 		[[nodiscard]] bool tokenizeContinuous(
-				std::optional<SentenceFunc> callback,
+				const std::optional<SentenceFunc>& callback,
 				std::uint64_t freeMemoryEvery,
 				StatusSetter& statusSetter
 		);
@@ -440,7 +440,7 @@ namespace crawlservpp::Data {
 				std::size_t nextChunkSize
 		);
 		static void splitEntry(
-				TextMap& entry,
+				TextMap& map,
 				std::size_t token,
 				bool splitToken,
 				TextMapEntry& remainingTo
@@ -3517,7 +3517,7 @@ namespace crawlservpp::Data {
 
 	// tokenize already tokenized corpus, return whether thread is still running
 	inline bool Corpus::tokenizeTokenized(
-			std::optional<SentenceFunc> callback,
+			const std::optional<SentenceFunc>& callback,
 			StatusSetter& statusSetter
 	) {
 		// run manipulators on already tokenized corpus
@@ -3669,7 +3669,7 @@ namespace crawlservpp::Data {
 
 	// tokenize still continuous corpus
 	inline bool Corpus::tokenizeContinuous(
-			std::optional<SentenceFunc> callback,
+			const std::optional<SentenceFunc>& callback,
 			std::uint64_t freeMemoryEvery,
 			StatusSetter& statusSetter
 	) {
