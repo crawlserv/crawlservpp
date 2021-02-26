@@ -583,8 +583,8 @@ namespace crawlservpp::Helper::Bytes {
 
 		result.reserve(resultSize);
 
-		result.push_back(hexChars.at(((byte & hex240) >> hexShift)));
-		result.push_back(hexChars.at(byte & hex15));
+		result.push_back(hexChars.at(((byte & hex240) >> hexShift)));	//NOLINT(hicpp-signed-bitwise)
+		result.push_back(hexChars.at(byte & hex15));					//NOLINT(hicpp-signed-bitwise)
 
 		return result;
 	}
