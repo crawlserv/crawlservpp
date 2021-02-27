@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,17 +42,22 @@ namespace crawlservpp::Wrapper {
 
 	//! RAII wrapper for Perl-compatible regular expressions.
 	/*!
-	 * Sets an empty pointer on construction and clears the RegEx
-	 *  on destruction if necessary, avoiding memory leaks.
+	 * Sets an empty pointer on
+	 *  construction and clears the RegEx
+	 *  on destruction if necessary,
+	 *  avoiding memory leaks.
 	 *
-	 * At the moment, this class is used exclusively by the
-	 *  Query::Regex class.
+	 * At the moment, this class is used
+	 *  exclusively by the Query::Regex
+	 *  class.
 	 *
-	 * For more information about the %PCRE library used, visit its
+	 * For more information about the %PCRE
+	 *  library used, visit its
 	 *  <a href="https://www.pcre.org/">website</a>.
 	 *
-	 * \note The class does not own the underlying pointer,
-	 *   but takes care of its deletion via API call.
+	 * \note The class does not own the
+	 *   underlying pointer, but takes
+	 *   care of its deletion via API call.
 	 */
 	class PCRE {
 	public:
@@ -87,7 +92,8 @@ namespace crawlservpp::Wrapper {
 
 		///@}
 		/**@name Copy and Move
-		 * The class is both copyable and moveable.
+		 * The class is both copyable and
+		 *  moveable.
 		 */
 		///@{
 
@@ -113,10 +119,14 @@ namespace crawlservpp::Wrapper {
 
 	//! Constructor setting the underlying pointer.
 	/*!
-	 * \param regExPtr The address to which the underlying pointer should be set.
-	 *   Can either be @c nullptr or a valid pointer to a compiled regular expression.
+	 * \param regExPtr The address to which
+	 *   the underlying pointer should be
+	 *   set. Can either be @c nullptr or
+	 *   a valid pointer to a compiled
+	 *   regular expression.
 	 *
-	 * \note The underlying pointer will be cleared in-class via API call.
+	 * \note The underlying pointer will be
+	 *   cleared in-class via API call.
 	 *
 	 * \sa set
 	 */
@@ -133,8 +143,9 @@ namespace crawlservpp::Wrapper {
 
 	//! Gets a pointer to the underlying regular expression.
 	/*!
-	 * \returns A pointer to the underlying regular expression
-	 *   or @c nullptr if none is set.
+	 * \returns A pointer to the
+	 *   underlying regular expression or
+	 *   @c nullptr if none is set.
 	 */
 	inline pcre2_code * PCRE::get() noexcept {
 		return this->ptr;
@@ -142,8 +153,9 @@ namespace crawlservpp::Wrapper {
 
 	//! Gets a const pointer to the underlying regular expression.
 	/*!
-	 * \returns A const pointer to the underlying regular expression
-	 *   or @c nullptr if none is set.
+	 * \returns A const pointer to the
+	 *   underlying regular expression or
+	 *   @c nullptr if none is set.
 	 */
 	inline const pcre2_code * PCRE::getc() const noexcept {
 		return this->ptr;
@@ -151,8 +163,10 @@ namespace crawlservpp::Wrapper {
 
 	//! Checks whether the underlying regular expression is valid.
 	/*!
-	 * \returns True, if the regular expression is valid,
-	 *   i.e. a pointer has been set. False otherwise.
+	 * \returns True, if the regular
+	 *   expression is valid, i.e. a
+	 *   pointer has been set. False
+	 *   otherwise.
 	 *
 	 * \sa clear
 	 */
@@ -166,13 +180,17 @@ namespace crawlservpp::Wrapper {
 
 	//! Sets a PERL-compatibe regular expression.
 	/*!
-	 * If another expression is already managed by the class,
-	 *  it will be cleared.
+	 * If another expression is already
+	 *  managed by the class, it will be
+	 *  cleared.
 	 *
-	 * \param regExPtr A pointer to the new regular expression to be
-	 *  stored or @c nullptr to just clear the old expression if necessary.
+	 * \param regExPtr A pointer to the new
+	 *  regular expression to be stored or
+	 *  @c nullptr to just clear the old
+	 *  expression if necessary.
 	 *
-	 *  \note The underlying pointer will be cleared in-class via API call.
+	 *  \note The underlying pointer will
+	 *    be cleared in-class via API call.
 	 */
 	inline void PCRE::set(pcre2_code * regExPtr) {
 		this->clear();
@@ -186,11 +204,12 @@ namespace crawlservpp::Wrapper {
 
 	//! Clears the underlying regular expression if necessary.
 	/*!
-	 * The regular expression will be invalid and valid()
-	 *  will return false afterwards.
+	 * The regular expression will be
+	 *  invalid and valid() will return
+	 *  false afterwards.
 	 *
-	 * \note Does nothing if the underlying regular expression
-	 *   is not valid.
+	 * \note Does nothing if the underlying
+	 *   regular expression is not valid.
 	 *
 	 * \sa valid
 	 */
@@ -208,20 +227,27 @@ namespace crawlservpp::Wrapper {
 
 	//! Copy constructor.
 	/*!
-	 * Creates a copy of the underlying regular expression
-	 *  in the given instance, saving it in this instance.
+	 * Creates a copy of the underlying
+	 *  regular expression in the given
+	 *  instance, saving it in this
+	 *  instance.
 	 *
-	 * Both pattern code points and character tables are copied.
+	 * Both pattern code points and
+	 *  character tables are copied.
 	 *
-	 * If the other regular expression is invalid, the
-	 *  current instance will also be invalid.
+	 * If the other regular expression is
+	 *  invalid, the current instance will
+	 *  also be invalid.
 	 *
-	 * \note Uses the same allocator used in other.
+	 * \note Uses the same allocator used
+	 *   in @p other.
 	 *
-	 * \warning JIT (jut-in-time) information cannot be copied
-	 *   and needs to be re-compiled if needed.
+	 * \warning JIT (just-in-time)
+	 *   information cannot be copied and
+	 *   needs to be re-compiled if needed.
 	 *
-	 * \param other The regular expression to copy from.
+	 * \param other The regular expression
+	 *   to copy from.
 	 */
 	inline PCRE::PCRE(const PCRE& other) {
 		this->ptr = pcre2_code_copy_with_tables(other.getc());
@@ -229,21 +255,28 @@ namespace crawlservpp::Wrapper {
 
 	//! Copy assignment operator.
 	/*!
-	 * Clears the existing regular expression if necessary
-	 *  and creates a copy of the underlying regular expression
-	 *  in the given instance, saving it in this instance.
+	 * Clears the existing regular
+	 *  expression if necessary and creates
+	 *  a copy of the underlying regular
+	 *  expression in the given instance,
+	 *  saving it in this instance.
 	 *
-	 * \note Uses the same allocator used in other.
+	 * \note Uses the same allocator used
+	 *   in @p other.
 	 *
-	 * \note Nothing will be done if used on itself.
+	 * \note Nothing will be done if used
+	 *   on itself.
 	 *
-	 * \warning JIT (jut-in-time) information cannot be copied
-	 *   and needs to be re-compiled if needed.
+	 * \warning JIT (jut-in-time)
+	 *   information cannot be copied and
+	 *   needs to be re-compiled if needed.
 	 *
-	 * \param other The regular expression to copy from.
+	 * \param other The regular expression
+	 *   to copy from.
 	 *
-	 * \returns A reference to the class containing
-	 *   the copy of the regular expression (i.e. *this).
+	 * \returns A reference to the class
+	 *   containing the copy of the regular
+	 *   expression (i.e. @c *this).
 	 */
 	inline PCRE& PCRE::operator=(const PCRE& other) {
 		if(&other != this) {
@@ -257,12 +290,15 @@ namespace crawlservpp::Wrapper {
 
 	//! Move constructor.
 	/*!
-	 * Moves the regular expression from the specified
-	 *  location into this instance of the class.
+	 * Moves the regular expression from
+	 *  the specified location into this
+	 *  instance of the class.
 	 *
-	 * \note The other expression will be invalidated by this move.
+	 * \note The other expression will be
+	 *   invalidated by this move.
 	 *
-	 * \param other The regular expression to move from.
+	 * \param other The regular expression
+	 *   to move from.
 	 *
 	 * \sa valid
 	 */
@@ -272,18 +308,22 @@ namespace crawlservpp::Wrapper {
 
 	//! Move assignment operator.
 	/*!
-	 * Moves the regular expression from the specified
-	 *  location into this instance of the class.
+	 * Moves the regular expression from
+	 *  the specified location into this
+	 *  instance of the class.
 	 *
-	 * \note The other expression will be invalidated by this move.
+	 * \note The other expression will be
+	 *   invalidated by this move.
 	 *
-	 * \note Nothing will be done if used on itself.
+	 * \note Nothing will be done if used
+	 *   on itself.
 	 *
-	 * \param other The regular expression to move from.
+	 * \param other The regular expression
+	 *   to move from.
 	 *
-	 * \returns A reference to the instance containing
-	 *   the regular expression after moving
-	 *   (i.e. @c *this).
+	 * \returns A reference to the instance
+	 *   containing the regular expression
+	 *   after moving (i.e. @c *this).
 	 *
 	 * \sa valid
 	 */
