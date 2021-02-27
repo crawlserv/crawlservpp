@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,12 +39,16 @@ namespace crawlservpp::Wrapper {
 
 	//! Template class for safe in-scope database locks.
 	/*!
-	 * Locks the database for specific actions on construction,
-	 *  unlocks it on destruction.
+	 * Locks the database for specific
+	 *  actions on construction, unlocks
+	 *  it on destruction.
 	 *
-	 * @tparam DB Database connection to be used for the lock.
-	 *   Must implement the member functions addDatabaseLock(...)
-	 *   and removeDatabaseLock(), i.e. inherit from Main::Database.
+	 * @tparam DB Database connection to
+	 *   be used for the lock. Must
+	 *   implement the member functions
+	 *   addDatabaseLock() and
+	 *   removeDatabaseLock(), i.e.
+	 *   inherit from Main::Database.
 	 */
 	template<class DB>
 	class DatabaseLock {
@@ -58,18 +62,29 @@ namespace crawlservpp::Wrapper {
 
 		//! Constructor locking the database after waiting for another lock if necessary.
 		/*!
-		 * If no other lock with the same name is active, the database will be locked
-		 *  by calling an implementation of Main::Database::addDatabaseLock.
+		 * If no other lock with the same
+		 *  name is active, the database
+		 *  will be locked by calling an
+		 *  implementation of
+		 *  Main::Database::addDatabaseLock.
 		 *
-		 * Otherwise, the constructor will wait for the other lock to be released.
+		 * Otherwise, the constructor
+		 *  will wait for the other lock
+		 *  to be released.
 		 *
-		 * @param db The database connection to use.
-		 *
-		 * @param lockName The name of the lock. If there is another DatabaseLock active
-		 *   with the same name, the constructor will wait until it is destructed.
-		 *
-		 * @param isRunningCallback A function that returns whether both the current
-		 *   thread and program are still running.
+		 * \param db The database
+		 *  connection to use.
+		 * \param lockName The name of
+		 *   the lock. If there is
+		 *   another DatabaseLock active
+		 *   with the same name, the
+		 *   constructor will wait until
+		 *   it is destructed.
+		 * \param isRunningCallback A
+		 *   function that returns
+		 *   whether both the current
+		 *   thread and program are still
+		 *   running.
 		 */
 		DatabaseLock(DB& db, const std::string& lockName, IsRunningCallback isRunningCallback)
 				: ref(db), name(lockName), locked(false) {
@@ -80,8 +95,11 @@ namespace crawlservpp::Wrapper {
 
 		//! Destructor unlocking the database.
 		/*!
-		 * If the constructor was successful in locking the database, the lock
-		 *  will be removed by calling an implementation of
+		 * If the constructor was
+		 *  successful in locking the
+		 *  database, the lock will be
+		 *  removed by calling an
+		 *  implementation of
 		 *  Main::Database::removeDatabaseLock.
 		 */
 		virtual ~DatabaseLock() {
@@ -98,7 +116,8 @@ namespace crawlservpp::Wrapper {
 
 		//! Checks the status of the database lock.
 		/*!
-		 * \returns True if the lock is active. False if not.
+		 * \returns True if the lock is
+		 *   active. False otherwise.
 		 */
 		[[nodiscard]] bool isActive() const noexcept {
 			return this->locked;
@@ -106,7 +125,8 @@ namespace crawlservpp::Wrapper {
 
 		///@}
 		/**@name Copy and Move
-		 * The class is not copyable, only moveable.
+		 * The class is not copyable,
+		 *  only moveable.
 		 */
 		///@{
 
@@ -118,12 +138,15 @@ namespace crawlservpp::Wrapper {
 
 		//! Move constructor.
 		/*!
-		 * Moves the database lock from the specified location
-		 *  into this instance of the class.
+		 * Moves the database lock from
+		 *  the specified location into
+		 *  this instance of the class.
 		 *
-		 * \note The other lock will be invalidated by this move.
+		 * \note The other lock will be
+		 *   invalidated by this move.
 		 *
-		 * \param other The database lock to move from.
+		 * \param other The database lock
+		 *   to move from.
 		 */
 		DatabaseLock(DatabaseLock&& other) noexcept
 				: ref(other.ref), name(other.name), locked(other.locked) {
@@ -132,20 +155,29 @@ namespace crawlservpp::Wrapper {
 
 		//! Move assignment operator.
 		/*!
-		 * Moves the database lock from the specified location
-		 *  into this instance of the class.
+		 * Moves the database lock from
+		 *  the specified location into
+		 *  this instance of the class.
 		 *
-		 * If the current instance already holds a database lock,
-		 *  it will be released before moving in the other lock.
+		 * If the current instance
+		 *  already holds a database
+		 *  lock, it will be released
+		 *  before moving in the other
+		 *  lock.
 		 *
-		 * \note The other lock will be invalidated by this move.
+		 * \note The other lock will be
+		 *   invalidated by this move.
 		 *
-		 * \note Nothing will be done if used on itself.
+		 * \note Nothing will be done if
+		 *   used on itself.
 		 *
-		 * \param other The database lock to move from.
+		 * \param other The database lock
+		 *   to move from.
 		 *
-		 * \returns A reference to the instance containing
-		 *   the database lock after moving (i.e. *this).
+		 * \returns A reference to the
+		 *   instance containing the
+		 *   database lock after moving
+		 *   (i.e. @c *this).
 		 */
 		DatabaseLock& operator=(DatabaseLock&& other) noexcept {
 			if(&other != this) {

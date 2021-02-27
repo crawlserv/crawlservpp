@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -53,17 +53,23 @@ namespace crawlservpp::Wrapper {
 	 * DECLARATION
 	 */
 
-	//! RAII wrapper for lists used by the libcurl API.
+	//! RAII wrapper for lists used by the @c libcurl API.
 	/*!
-	 * Sets the list to @c nullptr on construction and automatically
-	 *  clears it on destruction, avoiding memory leaks.
+	 * Sets the list to @c nullptr on
+	 *  construction and automatically
+	 *  clears it on destruction, avoiding
+	 *  memory leaks.
 	 *
-	 * At the moment, this class is used exclusively by Network::Curl.
+	 * At the moment, this class is used
+	 *  exclusively by Network::Curl.
 	 *
-	 * For more information about the libcurl API, see its
+	 * For more information about the
+	 *  @c libcurl API, see its
 	 *  <a href="https://curl.haxx.se/libcurl/c/">website</a>.
 	 *
-	 * \note This class does not have ownership of the underlying pointer.
+	 * \note This class does not have
+	 *   ownership of the underlying
+	 *   pointer.
 	 *
 	 */
 	class CurlList {
@@ -97,7 +103,8 @@ namespace crawlservpp::Wrapper {
 
 		///@}
 		/**@name Copy and Move
-		 * The class is both copyable and moveable.
+		 * The class is both copyable and
+		 *  moveable.
 		 */
 		///@{
 
@@ -131,9 +138,10 @@ namespace crawlservpp::Wrapper {
 
 	//! Gets a pointer to the underlying list.
 	/*!
-	 * \returns A pointer to the underlying libcurl list
-	 *   or @c nullptr if no list has been created or
-	 *   the list has already been resetted.
+	 * \returns A pointer to the underlying
+	 *   @c libcurl list or @c nullptr if
+	 *   no list has been created or the
+	 *   list has already been resetted.
 	 */
 	inline curl_slist * CurlList::get() noexcept {
 		return this->ptr;
@@ -141,9 +149,11 @@ namespace crawlservpp::Wrapper {
 
 	//! Gets a const pointer to the underlying list.
 	/*!
-	 * \returns A const pointer to the underlying libcurl list
-	 *   or @c nullptr if no list has been created or
-	 *   the list has already been resetted.
+	 * \returns A const pointer to the
+	 *   underlying @c libcurl list or
+	 *   @c nullptr if no list has been
+	 *   created or the list has already
+	 *   been resetted.
 	 */
 	inline const curl_slist * CurlList::getc() const noexcept {
 		return this->ptr;
@@ -151,7 +161,8 @@ namespace crawlservpp::Wrapper {
 
 	//! Checks whether the underlying list is valid.
 	/*!
-	 * \returns True, if a list has been created and not been resetted.
+	 * \returns True, if a list has been
+	 *   created and not been resetted.
 	 *   False otherwise.
 	 */
 	inline bool CurlList::valid() const noexcept {
@@ -160,11 +171,11 @@ namespace crawlservpp::Wrapper {
 
 	//! Gets the current number of elements in the list.
 	/*!
-	 * \returns The number of elements
-	 *  in the underlying list.
+	 * \returns The number of elements in
+	 *   the underlying list.
 	 *
-	 * \note The return value is zero
-	 *  if the list has not been initialized.
+	 * \note The return value is zero if
+	 *   the list has not been initialized.
 	 */
 	inline std::size_t CurlList::size() const noexcept {
 		std::size_t count{};
@@ -183,7 +194,8 @@ namespace crawlservpp::Wrapper {
 
 	//! Checks whether the list is empty.
 	/*!
-	 * \returns True, if the list is empty or invalid. False otherwise.
+	 * \returns True, if the list is empty
+	 *   or invalid. False otherwise.
 	 *
 	 * \sa valid
 	 */
@@ -205,13 +217,15 @@ namespace crawlservpp::Wrapper {
 
 	//! Appends another list to the list.
 	/*!
-	 * \note Calling this function with an invalid list
-	 *   or on itself has no effect.
+	 * \note Calling this function on
+	 *   itself has no effect.
 	 *
-	 * \param other A const reference to the list which
-	 *   elements should be appended.
+	 * \param other A const reference to
+	 *   the list which elements should be
+	 *   appended.
 	 *
-	 * \throws std::runtime_error if appending to the list failed.
+	 * \throws std::runtime_error if
+	 *   appending to the list failed.
 	 */
 	inline void CurlList::append(const CurlList& other) {
 		if(this == &other) {
@@ -229,10 +243,12 @@ namespace crawlservpp::Wrapper {
 
 	//! Appends the elements of a vector to the list.
 	/*!
-	 * \param newElements A const reference to the vector of strings
-	 *   that should be appended to the list.
+	 * \param newElements A const reference
+	 *   to the vector of strings that
+	 *   should be appended to the list.
 	 *
-	 * \throws std::runtime_error if appending to the list failed.
+	 * \throws std::runtime_error if
+	 *   appending to the list failed.
 	 */
 	inline void CurlList::append(const std::vector<std::string>& newElements) {
 		for(const auto& element : newElements) {
@@ -244,14 +260,17 @@ namespace crawlservpp::Wrapper {
 	/*!
 	 * A new list will be created if no list already exists.
 	 *
-	 * \note String views cannot be used, because the
-	 *   underlying API requires a null-terminated string.
+	 * \note String views cannot be used,
+	 *   because the underlying API
+	 *   requires a null-terminated string.
 	 *
-	 * \param newElement A const reference to a string
-	 *   that should be appended at the end of the list.
+	 * \param newElement A const reference
+	 *   to a string that should be
+	 *   appended at the end of the list.
 	 *
-	 * \throws std::runtime_error if the element
-	 *   could not be appended by the underlying API.
+	 * \throws std::runtime_error if the
+	 *   element could not be appended by
+	 *   the underlying API.
 	 */
 	inline void CurlList::append(const std::string& newElement) {
 		auto * const temp{
@@ -267,9 +286,13 @@ namespace crawlservpp::Wrapper {
 
 	//! Resets the list and frees its memory.
 	/*!
-	 * The list will be invalid and valid() will return false afterwards.
+	 * The list will be invalid and valid()
+	 *  will return false afterwards.
 	 *
-	 * \note Does nothing if the underlying list is not initialized.
+	 * \note Does nothing if the underlying
+	 *   list is not initialized.
+	 *
+	 * \sa valid
 	 */
 	inline void CurlList::clear() noexcept {
 		if(this->ptr != nullptr) {
@@ -285,17 +308,18 @@ namespace crawlservpp::Wrapper {
 
 	//! Copy constructor.
 	/*!
-	 * Creates a new list and copies all elements
-	 *  of the given list into it.
+	 * Creates a new list and copies all
+	 *  elements of the given list into it.
 	 *
-	 * \note Calling this function with an invalid
-	 *  list has no effect.
+	 * \note Calling this function with an
+	 *  invalid list has no effect.
 	 *
 	 * \param other The list to copy from.
 	 *
-	 * \throws std::runtime_error if the new list could
-	 *   not be created or any of the elements could not
-	 *   be appended to it.
+	 * \throws std::runtime_error if the new
+	 *    list could not be created or any
+	 *    of the elements could not be
+	 *    appended to it.
 	 */
 	inline CurlList::CurlList(const CurlList& other) {
 		this->append(other);
@@ -303,19 +327,23 @@ namespace crawlservpp::Wrapper {
 
 	//! Copy assignment operator.
 	/*!
-	 * Clears the existing list, creates a new one and
-	 *  copies all elements of the given list into it.
+	 * Clears the existing list, creates a
+	 *  new one and copies all elements of
+	 *  the given list into it.
 	 *
-	 * \note Nothing will be done if used on itself.
+	 * \note Nothing will be done if used
+	 *   on itself.
 	 *
 	 * \param other The buffer to copy from.
 	 *
-	 * \returns A reference to the class containing
-	 *   the copy of the list (i.e. *this).
+	 * \returns A reference to the class
+	 *   containing the copy of the list
+	 *   (i.e. @c *this).
 	 *
-	 * \throws std::runtime_error if the new list could
-	 *   not be created or any of the elements could not
-	 *   be appended to it.
+	 * \throws std::runtime_error if the new
+	 *   list could not be created or any of
+	 *   the elements could not be appended
+	 *   to it.
 	 */
 	inline CurlList& CurlList::operator=(const CurlList& other) {
 		if(&other != this) {
@@ -329,10 +357,12 @@ namespace crawlservpp::Wrapper {
 
 	//! Move constructor.
 	/*!
-	 * Moves the list from the specified location
-	 *  into this instance of the class.
+	 * Moves the list from the specified
+	 *  location into this instance of the
+	 *  class.
 	 *
-	 * \note The other list will be invalidated by this move.
+	 * \note The other list will be
+	 *   invalidated by this move.
 	 *
 	 * \param other The list to move from.
 	 *
@@ -344,17 +374,21 @@ namespace crawlservpp::Wrapper {
 
 	//! Move assignment operator.
 	/*!
-	 * Moves the list from the specified location
-	 *  into this instance of the class.
+	 * Moves the list from the specified
+	 *  location into this instance of the
+	 *  class.
 	 *
-	 * \note The other list will be invalidated by this move.
+	 * \note The other list will be
+	 *   invalidated by this move.
 	 *
-	 * \note Nothing will be done if used on itself.
+	 * \note Nothing will be done if used on
+	 *   itself.
 	 *
 	 * \param other The list to move from.
 	 *
-	 * \returns A reference to the instance containing
-	 *   the list after moving (i.e. *this).
+	 * \returns A reference to the instance
+	 *   containing the list after moving
+	 *   (i.e. @c *this).
 	 *
 	 * \sa valid
 	 */

@@ -42,17 +42,21 @@ namespace crawlservpp::Wrapper {
 
 	//! RAII wrapper for Perl-compatible regular expression matches.
 	/*!
-	 * Sets the RegEx match on construction and clears it
-	 *  on destruction, avoiding memory leaks.
+	 * Sets the RegEx match on construction
+	 *  and clears it on destruction,
+	 *  avoiding memory leaks.
 	 *
-	 * At the moment, this class is used exclusively by the
-	 *  Query::Regex class.
+	 * At the moment, this class is used
+	 *  exclusively by the Query::Regex
+	 *  class.
 	 *
-	 * For more information about the %PCRE library used, visit its
+	 * For more information about the %PCRE
+	 *  library used, visit its
 	 *  <a href="https://www.pcre.org/">website</a>.
 	 *
-	 * \note The class does not own the underlying pointer,
-	 *   but takes care of its deletion via API call.
+	 * \note The class does not own the
+	 *   underlying pointer, but takes care
+	 *   of its deletion via API call.
 	 */
 	class PCREMatch {
 	public:
@@ -78,7 +82,8 @@ namespace crawlservpp::Wrapper {
 
 		///@}
 		/**@name Copy and Move
-		 * The class is not copyable, only moveable.
+		 * The class is not copyable, only
+		 *  moveable.
 		 */
 		///@{
 
@@ -108,10 +113,13 @@ namespace crawlservpp::Wrapper {
 
 	//! Constructor setting the underlying regular expression.
 	/*!
-	 * \param setPtr The pointer to a regular expression match to be used
-	 *   or @c nullptr to create an invalid match.
+	 * \param setPtr The pointer to a
+	 *   regular expression match to be
+	 *   used or @c nullptr to create an
+	 *   invalid match.
 	 *
-	 * \note The underlying pointer will be cleared in-class via API call.
+	 * \note The underlying pointer will be
+	 *   cleared in-class via API call.
 	 */
 	inline PCREMatch::PCREMatch(pcre2_match_data * setPtr) noexcept : ptr(setPtr) {}
 
@@ -126,7 +134,8 @@ namespace crawlservpp::Wrapper {
 
 	//! Gets a pointer to the underlying regular expression match.
 	/*!
-	 * \returns A pointer to the underlying regular expression match.
+	 * \returns A pointer to the underlying
+	 *   regular expression match.
 	 */
 	inline pcre2_match_data * PCREMatch::get() noexcept {
 		return this->ptr;
@@ -134,7 +143,9 @@ namespace crawlservpp::Wrapper {
 
 	//! Gets a const pointer to the underlying regular expression match.
 	/*!
-	 * \returns A const pointer to the underlying regular expression match.
+	 * \returns A const pointer to the
+	 *   underlying regular expression
+	 *   match.
 	 */
 	inline const pcre2_match_data * PCREMatch::getc() const noexcept {
 		return this->ptr;
@@ -142,8 +153,9 @@ namespace crawlservpp::Wrapper {
 
 	//! Checks whether the underlying regular expression match is valid.
 	/*!
-	 * \returns True, if the regular expression match is valid.
-	 *   False otherwise.
+	 * \returns True, if the regular
+	 *   expression match is valid. False
+	 *   otherwise.
 	 */
 	inline bool PCREMatch::valid() const noexcept {
 		return this->ptr != nullptr;
@@ -168,12 +180,15 @@ namespace crawlservpp::Wrapper {
 
 	//! Move constructor.
 	/*!
-	 * Moves the regular expression match from the
-	 *  specified location into this instance of the class.
+	 * Moves the regular expression match
+	 *  from the specified location into
+	 *  this instance of the class.
 	 *
-	 * \note The other match will be invalidated by this move.
+	 * \note The other match will be
+	 *   invalidated by this move.
 	 *
-	 * \param other The regular expression match to move from.
+	 * \param other The regular expression
+	 *   match to move from.
 	 *
 	 * \sa valid
 	 */
@@ -183,17 +198,22 @@ namespace crawlservpp::Wrapper {
 
 	//! Move assignment operator.
 	/*!
-	 * Moves the regular expression match from the
-	 *  specified location into this instance of the class.
+	 * Moves the regular expression match
+	 *  from the specified location into
+	 *  this instance of the class.
 	 *
-	 * \note The other match will be invalidated by this move.
+	 * \note The other match will be
+	 *   invalidated by this move.
 	 *
-	 * \note Nothing will be done if used on itself.
+	 * \note Nothing will be done if used on
+	 *   itself.
 	 *
-	 * \param other The regular expression match to move from.
+	 * \param other The regular expression
+	 *   match to move from.
 	 *
-	 * \returns A reference to the instance containing the
-	 *   regular expression match after moving (i.e. *this).
+	 * \returns A reference to the instance
+	 *   containing the regular expression
+	 *   match after moving (i.e. @c *this).
 	 *
 	 * \sa valid
 	 */
