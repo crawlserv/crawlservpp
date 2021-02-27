@@ -72,8 +72,8 @@ namespace tomoto::serializer {
 	template<std::size_t _n>
 	constexpr Key<_n> to_keyz(const char(&a)[_n]);
 
-	template <typename TSize, unsigned int N>
-	constexpr Key<N> to_keyz(TSize (&a)[N]) {
+	template <typename T, unsigned int N>
+	constexpr Key<N> to_keyz(T const (&a)[N]) {
 		return to_keyz(static_cast<const char[N]>(a));
 	}
 
