@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -96,7 +96,7 @@ namespace crawlservpp::Wrapper {
 
 	private:
 		// underlying pointer to regular expression match
-		pcre2_match_data * ptr;
+		pcre2_match_data * ptr{nullptr};
 	};
 
 	/*
