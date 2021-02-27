@@ -66,7 +66,6 @@ namespace crawlservpp::Wrapper {
 		///@name Getters
 		///@{
 
-		// getters
 		[[nodiscard]] pcre2_match_data * get() noexcept;
 		[[nodiscard]] const pcre2_match_data * getc() const noexcept;
 		[[nodiscard]] bool valid() const noexcept;
