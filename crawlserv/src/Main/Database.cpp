@@ -10552,6 +10552,11 @@ namespace crawlservpp::Main {
 			);
 		}
 
+		// do nothing if the table does not exist
+		if(!(this->isTableExists(name))) {
+			return;
+		}
+
 		// clear table before deleting
 		this->clearTable(name);
 
@@ -10565,7 +10570,7 @@ namespace crawlservpp::Main {
 			// execute SQL statement
 			Database::sqlExecute(
 					sqlStatement,
-					"DROP TABLE IF EXISTS `"
+					"DROP TABLE `"
 					+ name
 					+ "`"
 			);
