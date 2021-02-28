@@ -57,30 +57,6 @@
 
 #endif
 
-#ifdef __clang__
-
-#include <cstddef>		// std::size_t
-#include <iterator>
-
-/* try to work around clang casting bug in tomotopy */
-
-namespace tomoto::serializer {
-
-	template<std::size_t _len>
-	struct Key;
-
-	template<std::size_t _n>
-	constexpr Key<_n> to_keyz(const char(&a)[_n]);
-
-	template <typename T, unsigned int N>
-	constexpr Key<N> to_keyz(T const (&a)[N]) {
-		return to_keyz(static_cast<const char[N]>(a));
-	}
-
-} /* namespace tomoto::serializer */
-
-#endif
-
 #include "../../_extern/tomotopy/src/Labeling/FoRelevance.h"
 #include "../../_extern/tomotopy/src/TopicModel/HDPModel.hpp"
 #include "../../_extern/tomotopy/src/TopicModel/LDAModel.hpp"
