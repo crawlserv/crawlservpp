@@ -39,6 +39,7 @@
 #include "Stemmer/English.hpp"
 #include "Stemmer/German.hpp"
 #include "Tagger.hpp"
+#include "TokenCorrect.hpp"
 #include "TokenRemover.hpp"
 
 #include "../Helper/Container.hpp"
@@ -57,6 +58,7 @@
 #include <iterator>		// std::distance
 #include <locale>		// std::locale
 #include <map>			// std::map
+#include <memory>		// std::make_unique, std::unique_ptr
 #include <numeric>		// std::accumulate
 #include <optional>		// std::optional, std::nullopt
 #include <ostream>		// std::ostream
@@ -2829,10 +2831,10 @@ namespace crawlservpp::Data {
 
 		// prepare manipulators and check their configurations
 		std::vector<Data::Tagger> taggers;
-		Lemmatizer lemmatizer;
-		TokenRemover tokenRemover;
+		std::unique_ptr<Lemmatizer> lemmatizer;
+		std::unique_ptr<TokenRemover> tokenRemover;
+		std::vector<TokenCorrect> tokenCorrectors;
 		std::size_t manipulatorIndex{};
-		std::size_t taggerIndex{};
 
 		for(const auto& manipulator : manipulators) {
 			switch(manipulator) {
@@ -2863,11 +2865,6 @@ namespace crawlservpp::Data {
 
 				taggers.emplace_back();
 
-				taggers.back().loadModel(models.at(manipulatorIndex));
-				taggers.back().setPosteriorDecoding(manipulator == corpusManipTaggerPosterior);
-
-				++taggerIndex;
-
 				break;
 
 			case corpusManipLemmatizer:
@@ -2882,6 +2879,10 @@ namespace crawlservpp::Data {
 
 				Corpus::notUsed("model", models, manipulatorIndex);
 				Corpus::notUsed("language", languages, manipulatorIndex);
+
+				if(!lemmatizer) {
+					lemmatizer = std::make_unique<Lemmatizer>();
+				}
 
 				break;
 
@@ -2898,11 +2899,17 @@ namespace crawlservpp::Data {
 				Corpus::notUsed("model", models, manipulatorIndex);
 				Corpus::notUsed("language", languages, manipulatorIndex);
 
+				if(!tokenRemover) {
+					tokenRemover = std::make_unique<TokenRemover>();
+				}
+
 				break;
 
 			case corpusManipCorrect:
 				Corpus::notUsed("model", models, manipulatorIndex);
 				Corpus::notUsed("dictionary", dictionaries, manipulatorIndex);
+
+				tokenCorrectors.emplace_back(languages.at(manipulatorIndex));
 
 				break;
 
@@ -2925,13 +2932,15 @@ namespace crawlservpp::Data {
 							   &dictionaries,
 							   &languages,
 							   &lemmatizer,
-							   &tokenRemover
+							   &tokenRemover,
+							   &tokenCorrectors
 		](
 				Tokens::iterator sentenceBegin,
 				Tokens::iterator sentenceEnd
 		) {
 			std::size_t manipulatorIndex{};
 			std::size_t taggerIndex{};
+			std::size_t correctIndex{};
 
 			for(const auto& manipulator : manipulators) {
 				switch(manipulator) {
@@ -2962,20 +2971,24 @@ namespace crawlservpp::Data {
 
 				case corpusManipLemmatizer:
 					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
-						lemmatizer.lemmatize(*tokenIt, dictionaries.at(manipulatorIndex));
+						lemmatizer->lemmatize(*tokenIt, dictionaries.at(manipulatorIndex));
 					}
 
 					break;
 
 				case corpusManipRemove:
 					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
-						tokenRemover.remove(*tokenIt, dictionaries.at(manipulatorIndex));
+						tokenRemover->remove(*tokenIt, dictionaries.at(manipulatorIndex));
 					}
 
 					break;
 
 				case corpusManipCorrect:
-					//TODO
+					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
+						tokenCorrectors.at(correctIndex).correct(*tokenIt);
+					}
+
+					++correctIndex;
 
 					break;
 
