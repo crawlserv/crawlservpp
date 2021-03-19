@@ -2693,6 +2693,7 @@ jQuery(function($) {
 				
 				if($("#table-select").length) {
 					args["source"] = parseInt($("#table-select").val(), 10);
+					props["table"] = $("#table-select").find(":selected").data("table");
 				}
 				
 				// (URL list name and namespace)
@@ -2803,8 +2804,13 @@ jQuery(function($) {
 									var downloadAs =
 										props["website-namespace"]
 										+ "_"
-										+ props["urllist-namespace"]
-										+ props["ending"];
+										+ props["urllist-namespace"];
+									
+									if(props["table"]) {
+										downloadAs += "_" + props["table"];
+									}
+									
+									downloadAs += props["ending"];
 									
 									runCmd(
 											"download",

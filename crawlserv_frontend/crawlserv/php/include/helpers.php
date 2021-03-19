@@ -468,7 +468,7 @@ function rowTableSelect($type, $delete = false) {
             $name = $row["name"];
             $updated = $row["updated"];
             
-            $html .= "<option value=\"".$id."\">$name – last updated on ".$updated."</option>\n";
+            $html .= "<option value=\"".$id."\" data-table=\"".$name."\">$name – last updated on ".$updated."</option>\n";
         }
     }
     
