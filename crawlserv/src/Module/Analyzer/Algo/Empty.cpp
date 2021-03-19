@@ -176,7 +176,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 //			if(this->isRunning()) {
 //				throw Exception("<algo>::onAlgoInit(): Corpus is empty");
 //				throw Exception(
-//						"<algo>::onAlgoInit():
+//						"<algo>::onAlgoInit():"
 //						" No non-empty corpus has been added."
 //				);
 //			}
