@@ -24,7 +24,7 @@
 		"type": "string",
 		"default": "",
 		"label": "Topic table:",
-		"description": "The name of the table into which the most common words for each topic and their probability will be written to.",
+		"description": "The name of the table into which the most common words for each topic and their probability will be written.",
 		"simple": true,
 		"position": 3
 	},
