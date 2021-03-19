@@ -124,8 +124,11 @@ namespace crawlservpp::Data {
 	//! Remove single tokens found in a dictionary.
 	inline constexpr std::uint16_t corpusManipRemove{6};
 
+	//! Trim tokens by tokens found in a dictionary.
+	inline constexpr std::uint16_t corpusManipTrim{7};
+
 	//! Correct single tokens using a @c aspell dictionary.
-	inline constexpr std::uint16_t corpusManipCorrect{7};
+	inline constexpr std::uint16_t corpusManipCorrect{8};
 
 	//TODO(ans): add corpusManipReplace (by dictionary)
 
@@ -2887,10 +2890,11 @@ namespace crawlservpp::Data {
 				break;
 
 			case corpusManipRemove:
+			case corpusManipTrim:
 				if(dictionaries.at(manipulatorIndex).empty()) {
 					throw Exception(
 						"Corpus::tokenize():"
-						" No dictionary set for token remover (manipulator #"
+						" No dictionary set for token remover/trimmer (manipulator #"
 						+ std::to_string(manipulatorIndex + 1)
 						+ ")"
 					);
@@ -2979,6 +2983,13 @@ namespace crawlservpp::Data {
 				case corpusManipRemove:
 					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
 						tokenRemover->remove(*tokenIt, dictionaries.at(manipulatorIndex));
+					}
+
+					break;
+
+				case corpusManipTrim:
+					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
+						tokenRemover->trim(*tokenIt, dictionaries.at(manipulatorIndex));
 					}
 
 					break;

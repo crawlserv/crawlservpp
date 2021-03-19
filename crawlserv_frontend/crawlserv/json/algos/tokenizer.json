@@ -37,8 +37,9 @@
 			"[token-based] English stemmer (porter2)",
 			"[token-based] German stemmer (cistem)",
 			"[token-based] Multilingual lemmatizer (from dictionary)",
-			"[token-based] Remove words (from dictionary)",
-			"[token-based] Correct words (aspell, specify language)"
+			"[token-based] Remove tokens (from dictionary)",
+			"[token-based] Trim tokens (by tokens from dictionary)",
+			"[token-based] Correct tokens (aspell, specify language)"
 		],
 		"default": [],
 		"label": "Manipulators:",
