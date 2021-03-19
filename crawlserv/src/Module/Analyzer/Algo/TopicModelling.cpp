@@ -275,7 +275,18 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	//! Checks the configuration options for the algorithm.
+	/*!
+	 * \throws Analyzer::Thread::Exception if no
+	 *   topic table has been specified.
+	 */
 	void TopicModelling::checkAlgoOptions() {
+		if(this->algoConfig.topicTable.empty()) {
+			throw Exception(
+					"TopicModelling::checkAlgoOptions():"
+					" No topic table has been specified"
+			);
+		}
+
 		if(this->algoConfig.threads != 1) {
 			this->log(
 					generalLoggingDefault,
