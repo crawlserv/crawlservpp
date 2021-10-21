@@ -38,6 +38,7 @@
  */
 
 // <ADD HEADER OF ALGORITHM HERE>
+#include "AllTokens.hpp"
 #include "AssocOverTime.hpp"
 #include "CorpusGenerator.hpp"
 #include "SentimentOverTime.hpp"
@@ -82,6 +83,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		REGISTER_ALGORITHM(43, SentimentOverTime);	// NOLINT(cppcoreguidelines-macro-usage)
 		REGISTER_ALGORITHM(44, WordsOverTime);		// NOLINT(cppcoreguidelines-macro-usage)
 		REGISTER_ALGORITHM(45, TopicModelling);		// NOLINT(cppcoreguidelines-macro-usage)
+		REGISTER_ALGORITHM(46, AllTokens);			// NOLINT(cppcoreguidelines-macro-usage)
 		// </ADD REGISTRATION OF ALGORITHM HERE>
 
 		return nullptr;

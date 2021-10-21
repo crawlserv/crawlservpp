@@ -287,6 +287,7 @@ add_executable(${PROJECT_NAME}
 		src/Main/Server.cpp
 		src/Main/WebServer.cpp
 		src/Module/Analyzer/Algo/All.cpp
+		src/Module/Analyzer/Algo/AllTokens.cpp
 		src/Module/Analyzer/Algo/AssocOverTime.cpp
 		src/Module/Analyzer/Algo/CorpusGenerator.cpp
 		src/Module/Analyzer/Algo/SentimentOverTime.cpp
