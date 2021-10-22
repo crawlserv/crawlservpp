@@ -271,13 +271,19 @@ namespace crawlservpp::Main {
 		// add CORS headers
 		std::string headers{this->getCorsHeaders()};
 
+		// set options
+		struct mg_http_serve_opts options{};
+
+		options.root_dir = "";
+		options.mime_types = "application/octet-stream";
+		options.extra_headers = headers.c_str();
+
 		// serve file from file cache
 		mg_http_serve_file(
 				connection,
 				static_cast<mg_http_message *>(data),
 				fullFileName.c_str(),
-				"application/octet-stream",
-				headers.c_str()
+				&options
 		);
 
 		this->onLog(
