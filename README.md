@@ -26,7 +26,7 @@ You may _not_ use this software
 
 ## Building crawlserv++ on Linux
 
-[![](https://travis-ci.org/crawlserv/crawlservpp.svg?branch=master)](https://travis-ci.org/crawlserv/crawlservpp) &mdash; *See [`.travis.yml`](.travis.yml) for example build environments.*
+[![](https://travis-ci.com/crawlserv/crawlservpp.svg?branch=master)](https://travis-ci.com/crawlserv/crawlservpp) &mdash; *See [`.travis.yml`](.travis.yml) for example build environments.*
 
 You can clone the complete source code into a sub-folder named `crawlserv` using [`git`](https://git-scm.com/):
 
@@ -48,7 +48,7 @@ The following additional components are required to build crawlserv++ on your sy
 * the [Eigen](https://eigen.tuxfamily.org/) library (`libeigen-dev`)
 * the [GNU Aspell](http://aspell.net/) library (`libaspell-dev`)
 * the [`libcurl`](https://curl.haxx.se/libcurl/) library (e.g. `libcurl4-openssl-dev`)
-* the [`libzip`](https://libzip.org/) library (`libzip-dev`)
+* the [`libzip`](https://libzip.org/) library (`libzip-dev`, `zipcmp`, `zipmerge`, and `ziptool`)
 * the [MySQL Connector/C++](https://dev.mysql.com/doc/dev/connector-cpp/8.0/) library (`libmysqlcppconn-dev`)
 * the [`PCRE`](https://www.pcre.org/) library, version 2 (`libpcre2-dev`)
 * the [`pugixml`](https://pugixml.org/) library (`libpugixml-dev`)
@@ -374,6 +374,6 @@ See the source code of the `addUrlList(...)` function in [`Main::Database`](http
 
 At the moment, this software has been developed for and tested on **Linux only**.
 
-Developed with Eclipse 2020-03 (4.15.0), Eclipse CDT 9.11.0, Eclipse PDT 7.1.0 and Eclipse Web Tools Platform 0.6.100. Compiled and linked with GNU Make 4.2.1, cmake/ccmake 3.16.3, gcc 9.3.0. Tested with Apache/2.4.41 and MySQL 8.0.21 on Ubuntu 20.04.1 LTS [focal] (64-bit).
+Developed with Eclipse 2020-03 (4.15.0), Eclipse CDT 9.11.0, Eclipse PDT 7.1.0 and Eclipse Web Tools Platform 0.6.100. Compiled and linked with GNU Make 4.2.1, cmake/ccmake 3.16.3, gcc 9.3.0. Tested with Apache/2.4.41 and MySQL 8.0.21 on Ubuntu 20.04.1 LTS [focal] and Ubuntu 21.10 [impish] (both 64-bit).
 
 The frontend is optimized for current versions of Mozilla Firefox (e.g. v79.0), but should also run on Chromium (e.g. v84.0), and other modern browsers.
