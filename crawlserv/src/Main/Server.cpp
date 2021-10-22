@@ -4735,8 +4735,8 @@ namespace crawlservpp::Main {
 	// start logging
 	void Server::initStartLogging() {
 		this->database.log(
-				"successfully started and connected to database [MySQL v"
-				+ this->database.getMysqlVersion()
+				"successfully started and connected to database [MySQL Connector/C++ v"
+				+ this->database.getDriverVersion()
 				+ "; datadir='"
 				+ this->database.getDataDir()
 				+ "'; maxAllowedPacketSize="

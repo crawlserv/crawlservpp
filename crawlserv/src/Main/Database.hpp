@@ -138,8 +138,8 @@ namespace crawlservpp::Main {
 	//! Sleep time in milliseconds before re-attempting to add a database lock.
 	inline constexpr auto sleepOnLockMs{250};
 
-	//! Recommended major MySQL version.
-	inline constexpr auto recommendedMySqlMajorVer{8};
+	//! Recommended major MySQL Connector/C++ version.
+	inline constexpr auto recommendedMySqlDriverMajorVer{8};
 
 	//! Maximum size of database content in bytes (= 1 GiB).
 	inline constexpr auto maxContentSize{1073741824};
@@ -421,7 +421,7 @@ namespace crawlservpp::Main {
 		///@{
 
 		[[nodiscard]] const DatabaseSettings& getSettings() const;
-		[[nodiscard]] const std::string& getMysqlVersion() const;
+		[[nodiscard]] const std::string& getDriverVersion() const;
 		[[nodiscard]] const std::string& getDataDir() const;
 		[[nodiscard]] std::uint64_t getMaxAllowedPacketSize() const;
 		[[nodiscard]] std::uint64_t getConnectionId() const;
@@ -1077,7 +1077,7 @@ namespace crawlservpp::Main {
 		std::uint64_t connectionId{};			// MySQL connection ID
 		std::uint64_t maxAllowedPacketSize{};	// maximum packet size
 		std::uint64_t sleepOnError{};			// number of seconds to sleep on database error
-		std::string mysqlVersion;				// MySQL version
+		std::string driverVersion;				// MySQL Connector/C++ version
 		std::string dataDir;					// main data directory
 		std::vector<std::string> dirs;			// all known data directories
 		std::string module;						// module for which the database connection was established

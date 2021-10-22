@@ -69,23 +69,23 @@ namespace crawlservpp::Main {
 				throw Database::Exception("Could not get database instance");
 			}
 
-			// check MySQL version
-			if(Database::driver->getMajorVersion() < recommendedMySqlMajorVer) {
-				std::cout	<< "\nWARNING: Using MySQL v"
+			// check MySQL Connector/C++ version
+			if(Database::driver->getMajorVersion() < recommendedMySqlDriverMajorVer) {
+				std::cout	<< "\nNOTE: Using MySQL Connector/C++ v"
 							<< Database::driver->getMajorVersion()
 							<< "."
 							<< Database::driver->getMinorVersion()
 							<< "."
 							<< Database::driver->getPatchVersion()
 							<< ", version "
-							<< recommendedMySqlMajorVer
-							<< " or higher is strongly recommended."
+							<< recommendedMySqlDriverMajorVer
+							<< " or higher is recommended."
 							<< std::endl;
 			}
 		}
 
-		// get MySQL version
-		this->mysqlVersion =
+		// get MySQL Connector/C++ version
+		this->driverVersion =
 							std::to_string(Database::driver->getMajorVersion())
 							+ '.'
 							+ std::to_string(Database::driver->getMinorVersion())
@@ -188,14 +188,14 @@ namespace crawlservpp::Main {
 		return this->settings;
 	}
 
-	//! Gets the MySQL version string.
+	//! Gets the MySQL Connector/C++ version string.
 	/*!
 	 * \returns A constant reference to
 	 *   the string containing the version
-	 *   of the MySQL driver.
+	 *   of the MySQL Connector/C++ driver.
 	 */
-	const std::string& Database::getMysqlVersion() const {
-		return this->mysqlVersion;
+	const std::string& Database::getDriverVersion() const {
+		return this->driverVersion;
 	}
 
 	//! Gets the default data directory.
