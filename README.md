@@ -303,7 +303,19 @@ It provides the following menu structure:
 * **~~Statistics:~~** Show specific statistics derived from the database.
 * **Logs**: Show and delete log entries.
 
-### Configuration
+### Third-party Code
+
+The frontend uses the following third-party JavaScript code (to be found in [`crawlserv_frontend/crawlserv/js/external`](crawlserv_frontend/crawlserv/js/external):
+
+* [Array.prototype.equals](https://stackoverflow.com/a/14853974) by Rob Bednak
+* [jQuery](https://jquery.com/)
+* [jQuery Form](http://jquery.malsup.com/form/)
+* [jQuery Redirect](https://github.com/mgalante/jquery.redirect/)
+* [jQuery UI](https://jqueryui.com/)
+* [Prism](https://prismjs.com/)
+* [Tippy.js](https://atomiks.github.io/tippyjs/)
+
+## Configuration
 
 The server needs a configuration file as argument, the test configuration can be found at [`crawlserv/config`](crawlserv/config). Replace the values in this file with those for your own database and server settings. The password for granting the server (full) access to the database will be prompted when starting the server.
 
@@ -322,18 +334,6 @@ max_allowed_packet = 1G
 On the client side, crawlserv++ will set these values automatically.
 
 Using some algorithms on large corpora may require a large amount of memory. Consider [adjusting the size of your swap](https://bogdancornianu.com/change-swap-size-in-ubuntu/) if memory usage reaches its limit to avoid the server from being killed by the operating system.
-
-### Third-party Code
-
-The frontend uses the following third-party JavaScript code (to be found in [`crawlserv_frontend/crawlserv/js/external`](crawlserv_frontend/crawlserv/js/external):
-
-* [Array.prototype.equals](https://stackoverflow.com/a/14853974) by Rob Bednak
-* [jQuery](https://jquery.com/)
-* [jQuery Form](http://jquery.malsup.com/form/)
-* [jQuery Redirect](https://github.com/mgalante/jquery.redirect/)
-* [jQuery UI](https://jqueryui.com/)
-* [Prism](https://prismjs.com/)
-* [Tippy.js](https://atomiks.github.io/tippyjs/)
 
 ## Database
 
