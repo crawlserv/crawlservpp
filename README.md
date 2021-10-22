@@ -258,7 +258,7 @@ The following third-party libraries are used by the command-and-control server:
 
 * [Asio C++ Library](http://think-async.com/Asio/) (included in `crawlserv/src/_extern/asio`)
 * [Boost C++ Libraries](https://www.boost.org/) (`Boost.Core`, `Boost.Iostreams`, `Boost.LexicalCast` and `Boost.Strings`)
-* [Eigen](https://eigen.tuxfamily.org/) (`libeigen-dev`)
+* [Eigen](https://eigen.tuxfamily.org/) (`libeigen3-dev`)
 * [EigenRand](https://github.com/bab2min/EigenRand) (included in `crawlserv/src/_extern/EigenRand`)
 * [GNU Aspell](http://aspell.net/)
 * [Howard E. Hinnant's date.h library](https://howardhinnant.github.io/date/date.html) (included in `crawlserv/src/_extern/date`)
