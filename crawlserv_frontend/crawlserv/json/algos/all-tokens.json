@@ -1,0 +1,13 @@
+{
+	"label": "Count All Tokens",
+	"open": true,
+	
+	"table": {
+		"type": "string",
+		"default": "",
+		"label": "Token count table:",
+		"description": "The name of the table into which the token counts will be written.",
+		"simple": true,
+		"position": 1
+	}
+}
