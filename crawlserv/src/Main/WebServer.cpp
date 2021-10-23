@@ -545,13 +545,6 @@ namespace crawlservpp::Main {
 	 * INTERNAL HELPER FUNCTIONS (private)
 	 */
 
-	// generate CORS headers
-	std::string WebServer::getCorsHeaders() {
-		return	"Access-Control-Allow-Origin: *\r\n"
-				"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
-				"Access-Control-Allow-Headers: Content-Type\r\n";
-	}
-
 	// save received file and send new file name
 	void WebServer::fileReceived(ConnectionPtr from, const std::string& name, const std::string& content) {
 		std::string newName;
@@ -905,6 +898,13 @@ namespace crawlservpp::Main {
 		}
 
 		return true;
+	}
+
+	// generate CORS headers
+	std::string WebServer::getCorsHeaders() {
+		return	"Access-Control-Allow-Origin: *\r\n"
+				"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+				"Access-Control-Allow-Headers: Content-Type\r\n";
 	}
 
 	// convert mongoose string to C++ string
