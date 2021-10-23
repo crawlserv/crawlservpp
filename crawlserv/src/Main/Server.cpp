@@ -4685,7 +4685,7 @@ namespace crawlservpp::Main {
 		);
 	}
 
-	// initialize mongoose embedded web server, bind it to port and set CORS string
+	// initialize mongoose embedded web server and bind it to port
 	void Server::initWebServer(const std::string& port) {
 		this->webServer.initHTTP(port);
 
