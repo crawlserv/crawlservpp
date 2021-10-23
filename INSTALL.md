@@ -435,4 +435,13 @@ You can check whether the Apache server is serving the frontend by opening [http
 
 ## 3.3 Configuring the Frontend
 
-[…]
+To edit the configuration of the frontend, change into the directory into which the source code has been downloaded in step 2.1, and edit the file `config.php` in the sub-directory `crawlserv_frontend/crawlserv/`:
+
+```
+cd ~/server
+nano crawlserv_frontend/crawlserv/config.php
+```
+
+Search for the line starting with `$db_password = ` and replace the fake password with the one that you have set for the frontend user in the database back in step `1.2 Adding Users to the Database`.
+
+If you followed this guide closely, you do not need to change any other options for the frontend to be able to function.

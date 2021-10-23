@@ -6,6 +6,8 @@ _**WARNING!** This application is under development. It is neither complete nor 
 
 **crawlserv++** is an application for crawling websites and analyzing textual content on these websites.
 
+For setting up **crawlserv++** on Ubuntu 20+, follow the extensive [step-by-step installation guide](https://github.com/crawlserv/crawlservpp/blob/master/INSTALL.md).
+
 The architecture of **crawlserv++** consists of three distinct components:
 
 * The **command-and-control server**, written in C++ (source code in [`crawlserv/src`](crawlserv/src)),
