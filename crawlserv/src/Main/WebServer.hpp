@@ -172,7 +172,6 @@ namespace crawlservpp::Main {
 		///@name Setters
 		///@{
 
-		void setCORS(const std::string& allowed);
 		void setAcceptCallback(AcceptCallback callback);
 		void setLogCallback(LogCallback callback);
 		void setRequestCallback(RequestCallback callback);
@@ -235,7 +234,6 @@ namespace crawlservpp::Main {
 	private:
 		const std::string fileCache;
 		mg_mgr eventManager{};
-		std::string cors;
 		bool isShutdown{false};
 
 		// callback functions
@@ -258,7 +256,6 @@ namespace crawlservpp::Main {
 		void uploadHandler(ConnectionPtr connection, mg_http_message * msg);
 
 		// internal helper functions
-		std::string getCorsHeaders();
 		void fileReceived(ConnectionPtr from, const std::string& name, const std::string& content);
 
 		// static internal helper functions
@@ -292,6 +289,7 @@ namespace crawlservpp::Main {
 
 		static bool checkFileName(bool inFile, const std::string& currentFile, std::string& fileName);
 
+		[[nodiscard]] static std::string getCorsHeaders();
 		[[nodiscard]] static std::string toString(const struct mg_str& str);
 		static void removeQuotes(std::string& str);
 	};

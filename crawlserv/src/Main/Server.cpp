@@ -82,7 +82,7 @@ namespace crawlservpp::Main {
 		// initialize server
 		this->initDatabase(serverSettings.sleepOnSqlErrorS);
 		this->initCallbacks();
-		this->initWebServer(serverSettings.port, serverSettings.corsOrigins);
+		this->initWebServer(serverSettings.port);
 		this->initThreads();
 		this->initStartLogging();
 	}
@@ -4686,10 +4686,8 @@ namespace crawlservpp::Main {
 	}
 
 	// initialize mongoose embedded web server, bind it to port and set CORS string
-	void Server::initWebServer(const std::string& port, const std::string& corsOrigins) {
+	void Server::initWebServer(const std::string& port) {
 		this->webServer.initHTTP(port);
-
-		this->webServer.setCORS(corsOrigins);
 
 		// set initial status
 		this->setStatus("crawlserv++ is ready");

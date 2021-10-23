@@ -107,16 +107,6 @@ namespace crawlservpp::Main {
 	 * SETTERS
 	 */
 
-	//! Configures cross-origin resource sharing (CORS).
-	/*!
-	 * \param allowed Constant reference to a string
-	 *   containing the origins from which access is
-	 *   allowed via CORS.
-	 */
-	void WebServer::setCORS(const std::string& allowed) {
-		this->cors = allowed;
-	}
-
 	//! Sets callback function for accepted connections.
 	/*!
 	 * \param callback A callback function that will
@@ -198,7 +188,7 @@ namespace crawlservpp::Main {
 			headers += "Content-Type: " + type + "\r\n";
 		}
 
-		headers += this->getCorsHeaders();
+		headers += WebServer::getCorsHeaders();
 
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 		mg_http_reply(connection, code, headers.c_str(), "%s", content.c_str());
@@ -269,7 +259,7 @@ namespace crawlservpp::Main {
 		}
 
 		// add CORS headers
-		std::string headers{this->getCorsHeaders()};
+		std::string headers{WebServer::getCorsHeaders()};
 
 		// set options
 		struct mg_http_serve_opts options{};
@@ -557,7 +547,7 @@ namespace crawlservpp::Main {
 
 	// generate CORS headers
 	std::string WebServer::getCorsHeaders() {
-		return	"Access-Control-Allow-Origin: " + this->cors + "\r\n"
+		return	"Access-Control-Allow-Origin: *\r\n"
 				"Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
 				"Access-Control-Allow-Headers: Content-Type\r\n";
 	}
@@ -590,7 +580,7 @@ namespace crawlservpp::Main {
 
 		// send new file name in reply
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
-		mg_http_reply(from, httpOk, this->getCorsHeaders().c_str(), newName.c_str());
+		mg_http_reply(from, httpOk, WebServer::getCorsHeaders().c_str(), newName.c_str());
 
 		this->onLog(
 				"received '"

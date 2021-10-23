@@ -447,7 +447,7 @@ namespace crawlservpp::Main {
 		static void initDebuggingDir(bool isEnabled, std::string_view directory);
 		void initDatabase(std::uint16_t sleepOnSqlErrorS);
 		void initCallbacks();
-		void initWebServer(const std::string& port, const std::string& corsOrigins);
+		void initWebServer(const std::string& port);
 		void initThreads();
 		void initStartLogging();
 

@@ -340,7 +340,6 @@ namespace crawlservpp::Main {
 
 		configFile.getValue("server_port", serverSettings.port);
 		configFile.getValue("server_allow", serverSettings.allowedClients);
-		configFile.getValue("server_cors_origins", serverSettings.corsOrigins);
 		configFile.getValue("server_mysql_timeout_s", serverSettings.sleepOnSqlErrorS);
 		configFile.getValue("server_logs_deletable", serverSettings.logsDeletable);
 		configFile.getValue("server_data_deletable", serverSettings.dataDeletable);

@@ -58,9 +58,6 @@ namespace crawlservpp::Struct {
 		//! A list of allowed IP addresses, separated by commas.
 		std::string allowedClients;
 
-		//! A list of allowed origins for CORS requests, separated by commas.
-		std::string corsOrigins{"*"};
-
 		//! Indicates whether the deletion of logs is allowed using the frontend, i.e. server commands.
 		bool logsDeletable{false};
 
