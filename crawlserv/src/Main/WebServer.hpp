@@ -69,7 +69,7 @@ namespace crawlservpp::Main {
 	/*!
 	 * The specified port will be appended.
 	 */
-	inline constexpr auto listenToAddress{"tcp://127.0.0.1:"sv};
+	inline constexpr auto listenToAddress{"tcp://0.0.0.0:"sv};
 
 	//! The name of a (lower-case) content type header.
 	inline constexpr auto headerContentType{"content-type"sv};
