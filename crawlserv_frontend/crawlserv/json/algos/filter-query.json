@@ -20,7 +20,7 @@
 	"all": {
 		"type": "bool",
 		"default": false,
-		"label": "Must fulfill all queries (AND):",
+		"label": "All queries must be fulfilled (AND)",
 		"description": "Specifies whether articles must contain a word fulfilling all of the above queries instead of only of one of them.",
 		"simple": true,
 		"position": 2
