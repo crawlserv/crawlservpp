@@ -215,6 +215,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// count tokens
 	void WordsOverTime::count() {
+		// check for corpora
+		if(this->corpora.empty()) {
+			throw Exception(
+					"WordsOverTime::count():"
+					" No corpus set"
+			);
+		}
+
 		// set status message and reset progress
 		this->setStatusMessage("Counting occurrences...");
 		this->setProgress(0.F);
@@ -234,8 +242,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					"WordsOverTime::count():"
 					" Corpus has no date map"
 			);
-
-			return;
 		}
 
 		const auto firstDatePos{TextMapEntry::pos(dateMap[0])};
