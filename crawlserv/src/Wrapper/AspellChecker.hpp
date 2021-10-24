@@ -29,7 +29,7 @@
  *      Author: ans
  */
 
-#ifndef WRAPPER_ASPELLCCHECKER_HPP_
+#ifndef WRAPPER_ASPELLCHECKER_HPP_
 #define WRAPPER_ASPELLCHECKER_HPP_
 
 #include "AspellConfig.hpp"
