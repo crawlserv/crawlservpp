@@ -17,7 +17,7 @@
 		"max": 255,
 		"default": 5,
 		"label": "Max. length (in words):",
-		"description": "The maximum length of topic labels, in words.",
+		"description": "The maximum length of a topic label, in words.",
 		"simple": true,
 		"position": 5
 	},
@@ -47,7 +47,7 @@
 		"max": 255,
 		"default": 2,
 		"label": "Min. length (in words):",
-		"description": "The minimum length of topic labels, in words. If set to one, single words will be included in possible labels, although they are excluded in counting the maximum number of candidates.",
+		"description": "The minimum length of a topic label, in words. If set to one, single words will be included in possible labels, although they are excluded in counting the maximum number of candidates.",
 		"simple": true,
 		"position": 4
 	},
