@@ -75,7 +75,7 @@ namespace crawlservpp::Data::Compression::Zip {
 
 	//! Compresses files using zip.
 	/*!
-	 * \param content A const reference to a vector
+	 * \param fileContents A const reference to a vector
 	 * 	 containing pairs of strings containing the
 	 * 	 file names and contents of all the files
 	 * 	 to be compressed.
