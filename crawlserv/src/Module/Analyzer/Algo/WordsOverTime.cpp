@@ -338,7 +338,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					sentenceEnd = 0;
 				}
 
-				if(!(tokens[tokenIndex].empty())) {
+				if(tokenIndex < tokens.size() && !(tokens[tokenIndex].empty())) {
 					++(dateIt->second.words);
 
 					if(articleEnd > 0) {
@@ -352,7 +352,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 
 			if(articleContent) {
-				dateIt->second.articles.emplace(articleMap[articleIndex - 1].value);
+				dateIt->second.articles.emplace(articleMap.at(articleIndex - 1).value);
 			}
 
 			if(sentenceContent) {
