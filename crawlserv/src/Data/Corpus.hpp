@@ -811,8 +811,11 @@ namespace crawlservpp::Data {
 	 * Moves the data out of the previous corpora
 	 *  and frees their memory.
 	 *
-	 * \param sources Reference to a vector containing
-	 *  the tokenized corpora.
+	 * \param others Reference to a vector of corpora from
+	 *   which to move the data into the newly created
+	 *   corpus.
+	 * \param consistencyChecks If true, consistency checks
+	 *   will be performed on the text corpus.
 	 * \param statusSetter Reference to a
 	 *   Struct::StatusSetter to be used for updating
 	 *   the status while combining the sources.
@@ -3043,15 +3046,6 @@ namespace crawlservpp::Data {
 	 *   a copy beforehand if you still need
 	 *   the original corpus.
 	 *
-	 * \param callbackSentence Optional
-	 *   callback function (or lamda)
-	 *   that will be called for each
-	 *   sentence in the corpus, where every
-	 *   every sentence is separated by
-	 *   one of the following punctuations
-	 *   from the others: @c .:!? or by the
-	 *   end of the current article, date,
-	 *   or corpus.
 	 * \param callback Optional callback
 	 *   function (or lambda) that will be used
 	 *   on all sentences in the corpus, where
