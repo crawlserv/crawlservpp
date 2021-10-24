@@ -200,6 +200,9 @@ namespace crawlservpp::Module::Analyzer {
 			 */
 			std::vector<std::uint64_t> filterQueryQueries;
 
+			//! Specifies whether articles must contain a word fulfilling all of the queries instead of only of one of them.
+			bool filterQueryAll{false};
+
 			///@}
 			///@name Corpus Tokenization
 			///@{
@@ -376,6 +379,7 @@ namespace crawlservpp::Module::Analyzer {
 		// filter by query option
 		this->category("filter-query");
 		this->option("queries", this->config.filterQueryQueries);
+		this->option("all", this->config.filterQueryAll);
 
 		// corpus tokenization options
 		this->category("tokenizer");

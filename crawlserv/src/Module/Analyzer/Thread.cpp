@@ -557,24 +557,34 @@ namespace crawlservpp::Module::Analyzer {
 							auto articlePos,
 							auto articleEnd
 					) {
+						auto lambda = [this, &tokens, articlePos, articleEnd, &warnings](const auto& query) {
+							for(std::size_t index{articlePos}; index < articleEnd; ++index) {
+								this->setQueryTarget(tokens.at(index), "");
+
+								bool result{false};
+
+								if(this->getBoolFromQuery(query, result, warnings)) {
+									if(result) {
+										return true;
+									}
+								}
+							}
+
+							return false;
+						};
+
+						if(this->config.filterQueryAll) {
+							return std::all_of(
+									this->queryFilterQueries.begin(),
+									this->queryFilterQueries.end(),
+									lambda
+							);
+						}
+
 						return std::any_of(
 								this->queryFilterQueries.begin(),
 								this->queryFilterQueries.end(),
-								[this, &tokens, articlePos, articleEnd, &warnings](const auto& query) {
-									for(std::size_t index{articlePos}; index < articleEnd; ++index) {
-										this->setQueryTarget(tokens.at(index), "");
-
-										bool result{false};
-
-										if(this->getBoolFromQuery(query, result, warnings)) {
-											if(result) {
-												return true;
-											}
-										}
-									}
-
-									return false;
-								}
+								lambda
 						);
 					},
 					statusSetter
