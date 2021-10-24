@@ -336,7 +336,7 @@ namespace crawlservpp::Helper::Versions {
 	//! Gets the version of the \c tomoto library if available.
 	/*!
 	 * \returns The version of the \c tomoto library
-	 *   as string, or \c <unknown> if not available.
+	 *   as string, or \c \<unknown\> if not available.
 	 */
 	inline std::string getTomotoVersion() {
 		const char pathSeparator{Helper::FileSystem::getPathSeparator()};

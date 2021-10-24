@@ -380,6 +380,10 @@ namespace crawlservpp::Wrapper {
 	 * Does nothing if the column already
 	 *  exists.
 	 *
+	 * \param tableName Constant reference to
+	 *   a string containing the name of the
+	 *   target table to which to add the
+	 *   specified column.
 	 * \param column Constant reference to a
 	 *   structure containing the properties
 	 *   of the column to be added to the

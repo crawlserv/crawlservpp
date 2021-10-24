@@ -7256,7 +7256,7 @@ namespace crawlservpp::Main {
 	 * \param urlListId The ID of the URL list
 	 *   to which the target table should
 	 *   belong.
-	 * \param tableID The ID to be checked for
+	 * \param tableId The ID to be checked for
 	 *   in the database.
 	 *
 	 * \returns True, if a target table of the
@@ -10531,7 +10531,7 @@ namespace crawlservpp::Main {
 	 *  database, the database will not be
 	 *  changed.
 	 *
-	 * \param tableName Constant reference to a
+	 * \param name Constant reference to a
 	 *   string containing the name of the
 	 *   table to be deleted, if it exists.
 	 *

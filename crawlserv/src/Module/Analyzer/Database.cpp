@@ -75,7 +75,7 @@ namespace crawlservpp::Module::Analyzer {
 	 *  the target table of the analyzer.
 	 *
 	 * \param fields Constant reference to a
-	 *   vector of pars of string containing
+	 *   vector of pairs of string containing
 	 *   both the names and the SQL data types
 	 *   of the fields in the target table.
 	 */
@@ -275,7 +275,7 @@ namespace crawlservpp::Module::Analyzer {
 	 * ADDITIONAL TABLE INITIALIZATION AND UPDATE
 	 */
 
-	//! Creates an additioanl table, or adds its field columns, if they do not exist already.
+	//! Creates an additional table, or adds its field columns, if they do not exist already.
 	/*!
 	 * \note Can be called by the algorithm
 	 *   class to create another full table
@@ -283,6 +283,10 @@ namespace crawlservpp::Module::Analyzer {
 	 *
 	 * \param name The name of the additional
 	 *   table.
+	 * \param fields Constant reference to a
+	 *   vector of pairs of string containing
+	 *   both the names and the SQL data types
+	 *   of the fields in the target table.
 	 * \param isCompressed Set whether to
 	 *   compress the data in the table.
 	 * \param isDelete Set whether to delete
