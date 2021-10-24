@@ -54,7 +54,7 @@ namespace crawlservpp::Data {
 		///@name Construction and Destruction
 		///@{
 
-		TokenCorrect(const std::string& language);
+		explicit TokenCorrect(const std::string& language);
 
 		//! Default destructor.
 		virtual ~TokenCorrect() = default;
