@@ -1220,6 +1220,12 @@ namespace crawlservpp::Data {
 	 *   vector containing vectors with the processed
 	 *   tokens of the documents to infer the topics
 	 *   for.
+	 * \param maxIterations The maximum number of
+	 *   iterations to perform for infering the topic
+	 *   distributions.
+	 * \param numberOfWorkers The number of working
+	 *   threads to be used for infering the topic
+	 *   distributions.
 	 *
 	 * \returns A vector containing vectors of floating-
 	 *   point numbers indicating the topic distribution
@@ -1545,6 +1551,18 @@ namespace crawlservpp::Data {
 	 *
 	 * \param activate Sets whether to activate automated
 	 *   topic labeling.
+	 * \param minCf The minimum total occurrence of a
+	 *   collocation to be used as a topic label.
+	 * \param minDf The minimum number of documents in
+	 *   which a collocation needs to occur to be used
+	 *   as a topic label.
+	 * \param minLength The minimum length of a topic
+	 *   label, in words.
+	 * \param maxLength The minimum length of a topic
+	 *   label, in words. If set to one, single words
+	 *   will be included in possible labels, although
+	 *   they are excluded in counting the maximum
+	 *   number of candidates.
 	 * \param maxCandidates Sets the maximum number of
 	 *   label candidates to extract from the topics.
 	 * \param smoothing A small value greater than zero
