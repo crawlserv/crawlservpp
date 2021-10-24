@@ -339,9 +339,11 @@ rm -rd build
 
 To change the configuration, edit the configuration file contained in the subfolder `crawlserv`, e.g. by:
 
-    sudo nano crawlserv/config
+    nano crawlserv/config
 
-If you followed the setup in this guide and you want to use the server only locally, no immediate changes are necessary.
+**Important:** If you do not wish to use TOR (see next step), remove the value after `network_default_proxy=`.
+
+If you followed the setup in this guide and you want to use the command-and-control server only locally, no further changes are necessary.
 
 ### 2.5 (Optional) Installing and Configuring TOR
 
@@ -376,6 +378,25 @@ cd ~/server/crawlserv
 Enter the password for the crawler as set up in step `1.2 Adding Users to the Database`.
 
 Leave the terminal open as long as the server is 'up and running'. (You can shut it down either by clicking on `Kill server` in the frontend, or by pressing `CTRL+C` in the opened terminal.)
+
+For convenience, you can create a short script to run the server instead:
+
+```
+cd ~/server
+echo "#/bin/sh" > run.sh
+echo "cd crawlserv" > run.sh
+echo "./../build/crawlserv config" > run.sh
+chmod +x run.sh
+```
+
+(Make sure `run.sh` does not exist or is empty beforehand.)
+
+You can then run the server by simply changing into its directory and run `./run.sh`, for example:
+
+```
+cd ~/server/crawlserv
+./run.sh
+```
     
 ## 3. Frontend
 
@@ -430,8 +451,6 @@ Find the section containing entries starting with `<Directory`, which set the pe
 Restart the server for the changes to take effect:
 
     sudo service apache2 restart
-    
-You can check whether the Apache server is serving the frontend by opening [http://localhost](http://localhost) on your machine, which should provide you with access to the frontend.
 
 ## 3.3 Configuring the Frontend
 
@@ -445,3 +464,5 @@ nano crawlserv_frontend/crawlserv/config.php
 Search for the line starting with `$db_password = ` and replace the fake password with the one that you have set for the frontend user in the database back in step `1.2 Adding Users to the Database`.
 
 If you followed this guide closely, you do not need to change any other options for the frontend to be able to function.
+
+You can check whether the Apache server is serving the frontend by opening [http://localhost](http://localhost) on your machine, which should provide you with access to the frontend.
