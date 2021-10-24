@@ -347,24 +347,28 @@ If you followed the setup in this guide and you want to use the command-and-cont
 
 ### 2.5 (Optional) Installing and Configuring TOR
 
-If you want to enable anonymization functionality via TOR, just install TOR:
+If you want to enable anonymization functionality via TOR, first you need to install TOR:
 
     sudo apt install tor
     
-If you want the command-and-control server to be able to control TOR, first create a (hashed) control password:
+If you want the command-and-control server to be able to control TOR, create a (hashed) control password:
 
 ```
 tor --hash-password "<password>"
 sudo nano /etc/tor/torrc
 ```
     
-Uncomment (remove the initial `#` the  `HashedControlPassword` entry in the configuration file and replace the original entry with the hashed password.
+Uncomment (remove the initial `#` the  `HashedControlPassword` entry in the configuration file and replace the original entry with the hashed password. Also uncomment the line containing `ControlPort` just above.
+
+For the changes to take effect, restart the TOR service:
+
+    sudo service tor restart
 
 Then, add the original password to the configuration file of the command-and-control server, e.g. by running
 
     sudo nano ~/server/crawlserv/config
     
-and changing the entry starting with `network_tor_control_password`.
+and changing the entry starting with `network_tor_control_password`. Make sure that `network_tor_control_port` points to the same port as the control port set in the TOR configuration file.
 
 ### 2.6 Run the Command-and-Control Server
 
