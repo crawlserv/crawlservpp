@@ -397,6 +397,40 @@ You can then run the server by simply changing into its directory and run `./run
 cd ~/server/crawlserv
 ./run.sh
 ```
+
+### 2.7 (Optional) Creating the Source Code Documentation
+
+To create the documentation for the source code, you first need to install the following packages:
+
+    sudo apt install doxygen graphviz
+
+Then, change into the directory into which you downloaded the code in step 2.1 and generate the documentation according to `Doxyfile`:
+
+```
+cd ~/server
+doxygen Doxyfile
+```
+
+If everything works out, the documentation of the command-and-control server's soure code will be available in the `crawlserv/docs` directory:
+
+    firefox crawlserv/docs/index.html
+
+### 2.8 (Optional) Updating and Re-Building the Command-and-Control Server
+
+As **crawlserv++** is still in development, it will be of advantage to regularly update all source code and re-build the command-and-control server. In order to do so, change into the `build` sub-diretory, update the sources, and re-build the server:
+
+```
+cd ~/server/build
+git pull
+make
+```
+
+The changes will take place after restarting the server (see step 2.6 for the creation of the script used here):
+
+```
+cd ~/server
+./run.sh
+```
     
 ## 3. Frontend
 
