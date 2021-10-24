@@ -273,6 +273,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->log(generalLoggingVerbose, "loops through dates and articles...");
 
+		bool firstDate{true};
+
 		for(const auto& date : dateMap) {
 			// switch date group if necessary
 			std::string dateGroup{date.value};
@@ -282,10 +284,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					this->config.groupDateResolution
 			);
 
-			if(dateGroup != currentDateGroup) {
+			if(firstDate || dateGroup != currentDateGroup) {
 				dateIt = this->addDateGroup(dateGroup);
 
 				currentDateGroup = dateGroup;
+
+				firstDate = false;
 			}
 
 			// do not count empty tokens (and articles/sentences consisting of empty tokens)!
