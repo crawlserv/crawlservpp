@@ -566,7 +566,7 @@ namespace crawlservpp::Helper::Bytes {
 	 *
 	 * \returns The string containing a hexadecimal
 	 *   representation of the byte in the format
-	 *   \c 0xHH where \HH is the hexadecimal value
+	 *   \c 0xHH where \c HH is the hexadecimal value
 	 *   of the byte.
 	 */
 	inline std::string byteToHexString(std::uint8_t byte) {
