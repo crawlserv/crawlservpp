@@ -110,7 +110,7 @@ namespace crawlservpp::Data {
 		this->config.setOption("size", "10"); /* small list size (only first word needed) */
 
 		if(!language.empty()) {
-			this->config.setOption("lang", language.c_str()); /* language, if not default */
+			this->config.setOption("lang", language); /* language, if not default */
 		}
 
 		this->checker.create(this->config);
