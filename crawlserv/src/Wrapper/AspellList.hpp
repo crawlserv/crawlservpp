@@ -58,7 +58,7 @@ namespace crawlservpp::Wrapper {
 		///@name Construction and Destruction
 		///@{
 
-		AspellList(const AspellWordList * source);
+		explicit AspellList(const AspellWordList * source);
 		virtual ~AspellList();
 
 		///@}
