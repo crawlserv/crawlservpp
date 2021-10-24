@@ -10531,7 +10531,7 @@ namespace crawlservpp::Main {
 	 *  database, the database will not be
 	 *  changed.
 	 *
-	 * \param name Constant reference to a
+	 * \param tableName Constant reference to a
 	 *   string containing the name of the
 	 *   table to be deleted, if it exists.
 	 *
@@ -10543,7 +10543,7 @@ namespace crawlservpp::Main {
 	 *   error occured while removing the table
 	 *   from the database.
 	 */
-	void Database::dropTable(const std::string& name) {
+	void Database::dropTable(const std::string& tableName) {
 		// check argument
 		if(name.empty()) {
 			throw Database::Exception(
