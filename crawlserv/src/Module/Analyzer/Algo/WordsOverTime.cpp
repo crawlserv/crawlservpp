@@ -253,7 +253,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t resultCounter{};
 
 		// skip articles and sentences without (i.e. before first) date
-		this->log(generalLoggingVerbose, "skipping articles...");
+		this->log(generalLoggingVerbose, "skips articles...");
 
 		while(
 				articleIndex < articleMap.size()
@@ -262,7 +262,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			++articleIndex;
 		}
 
-		this->log(generalLoggingVerbose, "skipping sentences...");
+		this->log(generalLoggingVerbose, "skips sentences...");
 
 		while(
 				sentenceIndex < sentenceMap.size()
@@ -271,7 +271,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			++sentenceIndex;
 		}
 
-		this->log(generalLoggingVerbose, "looping through dates and articles...");
+		this->log(generalLoggingVerbose, "loops through dates and articles...");
 
 		for(const auto& date : dateMap) {
 			// switch date group if necessary
