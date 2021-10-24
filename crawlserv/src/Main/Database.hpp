@@ -813,8 +813,8 @@ namespace crawlservpp::Main {
 		///@{
 
 		void createTable(const TableProperties& properties);
-		void clearTable(const std::string& name);
-		void dropTable(const std::string& name);
+		void clearTable(const std::string& tableName);
+		void dropTable(const std::string& tableName);
 		void addColumn(const std::string& tableName, const TableColumn& column);
 		void compressTable(const std::string& tableName);
 		std::queue<std::string> cloneTable(

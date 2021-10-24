@@ -10545,7 +10545,7 @@ namespace crawlservpp::Main {
 	 */
 	void Database::dropTable(const std::string& tableName) {
 		// check argument
-		if(name.empty()) {
+		if(tableName.empty()) {
 			throw Database::Exception(
 					"Main::Database::dropTable():"
 					" No table name specified"
@@ -10553,12 +10553,12 @@ namespace crawlservpp::Main {
 		}
 
 		// do nothing if the table does not exist
-		if(!(this->isTableExists(name))) {
+		if(!(this->isTableExists(tableName))) {
 			return;
 		}
 
 		// clear table before deleting
-		this->clearTable(name);
+		this->clearTable(tableName);
 
 		// check connection
 		this->checkConnection();
@@ -10571,7 +10571,7 @@ namespace crawlservpp::Main {
 			Database::sqlExecute(
 					sqlStatement,
 					"DROP TABLE `"
-					+ name
+					+ tableName
 					+ "`"
 			);
 		}
