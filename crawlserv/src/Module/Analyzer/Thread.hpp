@@ -50,8 +50,9 @@
 #include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/Simple.hpp"
 
-#include <algorithm>	// std::remove_if
+#include <algorithm>	// std::all_of, std::any_of, std::remove_if
 #include <cstddef>		// std::size_t
+#include <cstdint>		// std::uint64_t
 #include <locale>		// std::locale
 #include <map>			// std::map
 #include <queue>		// std::queue
