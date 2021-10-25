@@ -136,7 +136,7 @@ namespace crawlservpp::Module::Extractor {
 		this->setUpTimers();
 
 		// extractor is ready
-		this->log(generalLoggingExtended, "is ready.");
+		this->ready();
 	}
 
 	//! Performs an extractor tick.
@@ -683,6 +683,13 @@ namespace crawlservpp::Module::Extractor {
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 
 		this->tickCounter = 0;
+	}
+
+	// extractor is ready
+	void Thread::ready() {
+		this->setStatusMessage("Ready.");
+
+		this->log(generalLoggingExtended, "is ready.");
 	}
 
 	// log warnings received by external function

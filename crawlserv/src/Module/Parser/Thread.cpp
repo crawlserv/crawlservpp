@@ -104,7 +104,7 @@ namespace crawlservpp::Module::Parser {
 		this->setUpTimers();
 
 		// parser is ready
-		this->log(generalLoggingExtended, "is ready.");
+		this->ready();
 	}
 
 	//! Performs a parser tick.
@@ -570,6 +570,12 @@ namespace crawlservpp::Module::Parser {
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 
 		this->tickCounter = 0;
+	}
+
+	void Thread::ready() {
+		this->setStatusMessage("Ready.");
+
+		this->log(generalLoggingExtended, "is ready.");
 	}
 
 	// log warnings received by external function

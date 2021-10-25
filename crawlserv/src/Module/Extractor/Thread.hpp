@@ -270,6 +270,7 @@ namespace crawlservpp::Module::Extractor {
 		void setUpQueries();
 		void checkExtractingTable();
 		void setUpTimers();
+		void ready();
 		void logWarnings(std::queue<std::string>& warnings);
 		void logWarningsUrl(std::queue<std::string>& warnings);
 		void logWarningsSource(std::queue<std::string>& warnings, std::string_view source);

@@ -313,6 +313,7 @@ namespace crawlservpp::Module::Crawler {
 		void setUpQueries();
 		void setUpNetworkingArchives();
 		void setUpTimers();
+		void ready();
 		void logWarnings(std::queue<std::string>& warnings);
 		void initCustomUrls();
 		void initRobotsTxt();

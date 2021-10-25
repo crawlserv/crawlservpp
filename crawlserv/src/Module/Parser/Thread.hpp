@@ -207,6 +207,7 @@ namespace crawlservpp::Module::Parser {
 		void setUpQueries();
 		void checkParsingTable();
 		void setUpTimers();
+		void ready();
 		void logWarnings(std::queue<std::string>& warnings);
 
 		// query functions

@@ -154,7 +154,7 @@ namespace crawlservpp::Module::Crawler {
 		this->penultimateId = this->getLast();
 
 		// crawler is ready
-		this->log(crawlerLoggingExtended, "is ready.");
+		this->ready();
 	}
 
 	//! Performs a crawler tick.
@@ -646,6 +646,13 @@ namespace crawlservpp::Module::Crawler {
 		this->pauseTime = std::chrono::steady_clock::time_point::min();
 
 		this->tickCounter = 0;
+	}
+
+	// crawler is ready
+	void Thread::ready() {
+		this->setStatusMessage("Ready.");
+
+		this->log(crawlerLoggingExtended, "is ready.");
 	}
 
 	// log warnings received by external function
