@@ -555,14 +555,22 @@ jQuery(function($) {
 		
 		let value = $(this).val();
 		
-		navigator.clipboard.writeText(value).then(
-				function() {
-					alert("This log entry has been written to the clipboard:\n\n" + value);
-				},
-				function() {
-					console.log("Could not write to clipboard.");
-				}
-		);
+		if(navigator.clipboard) {		
+			navigator.clipboard.writeText(value).then(
+					function() {
+						alert("This log entry has been written to the clipboard:\n\n" + value);
+					},
+					function() {
+						console.log("Could not write to clipboard.");
+						
+						alert(value);
+					}
+			);
+		}
+		else {
+			// insecure connection -> show as alert only
+			alert(value);
+		}
 	});
 
 	/*
