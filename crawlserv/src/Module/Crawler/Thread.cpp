@@ -1937,7 +1937,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		// skip crawling if only archive needs to be retried
-		if(this->config.crawlerArchives && this->archiveRetry) {
+		if(this->config.crawlerArchives && (this->config.crawlerArchivesOnly || this->archiveRetry)) {
 			this->log(crawlerLoggingExtended, "Retrying archive only [" + url.second + "].");
 
 			return true;

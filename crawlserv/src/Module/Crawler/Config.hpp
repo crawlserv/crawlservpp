@@ -134,6 +134,13 @@ namespace crawlservpp::Module::Crawler {
 			//! Names of archives to crawl.
 			std::vector<std::string> crawlerArchivesNames{"archives.org"};
 
+			//! Specified whether to crawl archived pages ONLY.
+			/*!
+			 * \note Will be ignored if crawling archived
+			 *   pages is disabled.
+			 */
+			bool crawlerArchivesOnly{false};
+
 			//! Memento %URI templates for archives to crawl.
 			/*!
 			 * To be followed by @c YYYYMMDDHHMMSS/URI
@@ -548,6 +555,7 @@ namespace crawlservpp::Module::Crawler {
 		this->category("crawler");
 		this->option("archives", this->config.crawlerArchives);
 		this->option("archives.names", this->config.crawlerArchivesNames);
+		this->option("archives.only", this->config.crawlerArchivesOnly);
 		this->option(
 				"archives.urls.memento",
 				this->config.crawlerArchivesUrlsMemento,

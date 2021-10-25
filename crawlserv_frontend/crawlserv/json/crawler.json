@@ -20,6 +20,12 @@
 			"description": "Names of archives to crawl.",
 			"simple": false
 		},
+		"archives.only": {
+			"type": "bool",
+			"default": false,
+			"description": "Crawl archived pages ONLY. Will be ignored if crawling archived pages is disabled.",
+			"simple": false
+		},
 		"archives.urls.memento": {
 			"type": "array",
 			"item-type": "string",
