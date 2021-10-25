@@ -182,9 +182,7 @@ namespace crawlservpp::Module::Crawler {
 		bool usePost{false};
 
 		// check whether a new TOR identity needs to be requested
-		if(this->torControl.active()) {
-			this->torControl.tick();
-		}
+		this->torControl.tick();
 
 		// check for jump in last ID ("time travel")
 		const auto jump{this->getWarpedOverAndReset()};
