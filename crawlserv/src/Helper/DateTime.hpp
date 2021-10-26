@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -54,6 +54,7 @@
 #include <stdexcept>	// std::runtime_error
 #include <string>		// std::stoi, std::stol, fstd::string, std::to_string
 #include <string_view>	// std::string_view, std::string_view_literals
+#include <vector>		// std::vector
 
 //! Namespace for global date/time helper functions.
 namespace crawlservpp::Helper::DateTime {
@@ -187,7 +188,7 @@ namespace crawlservpp::Helper::DateTime {
 	inline constexpr auto isoMonthPos{5};
 
 	//! The length of the month in an ISO date (@c YYYY-MM-DD).
-	inline constexpr auto isoMonthLen{2};
+	inline constexpr auto isoMonthLength{2};
 
 	//! Consider two-digit years before this year as being in the 2000s.
 	inline constexpr auto minTwoDigitYear{1969};
@@ -195,19 +196,34 @@ namespace crawlservpp::Helper::DateTime {
 	//! Base of decimal numbers.
 	inline constexpr auto base10{10};
 
-	//! Length of date, reduced to months (@c YYYY-MM)
-	inline constexpr auto reducedToMonthsLength{7};
+	//! Length of date, reduced to month (@c YYYY-MM)
+	inline constexpr auto reducedToMonthLength{7};
+
+	//! Number of days in a week.
+	inline constexpr auto daysPerWeek{7};
 
 	//! Group dates by weeks.
+	/*!
+	 * \sa reduceDate, getDateGap
+	 */
 	inline constexpr std::uint8_t dateWeeks{0};
 
 	//! Group dates by days.
+	/*!
+	 * \sa reduceDate, getDateGap
+	 */
 	inline constexpr std::uint8_t dateDays{1};
 
 	//! Group dates by months.
+	/*!
+	 * \sa reduceDate, getDateGap
+	 */
 	inline constexpr std::uint8_t dateMonths{2};
 
 	//! Group dates by years.
+	/*!
+	 * \sa reduceDate, getDateGap
+	 */
 	inline constexpr std::uint8_t dateYears{3};
 
 	///@}
@@ -232,8 +248,7 @@ namespace crawlservpp::Helper::DateTime {
 	void convertTimeStampToSQLTimeStamp(std::string& timeStamp);
 	void convertSQLTimeStampToTimeStamp(std::string& timeStamp);
 	void convert12hTo24h(int& hour, bool isPm);
-	void getWeek(const std::string& date, std::string& weekTo);
-	std::string getYearAndWeek(const std::string& date);
+	[[nodiscard]] std::string getYearAndWeek(const std::string& date);
 	void reduceDate(std::string& date, std::uint8_t resolution);
 
 	///@}
@@ -256,6 +271,20 @@ namespace crawlservpp::Helper::DateTime {
 	///@{
 
 	[[nodiscard]] bool isISODateInRange(std::string_view isoDate, std::string_view rangeFrom, std::string_view rangeTo);
+
+	///@}
+	///@name Gaps inbetween Dates
+	///@{
+
+	[[nodiscard]] std::vector<std::string> getDateGap(
+			const std::string& first,
+			const std::string& second,
+			std::uint8_t resolution
+	);
+	[[nodiscard]] std::vector<std::string> getWeekGap(const std::string& first, const std::string& second);
+	[[nodiscard]] std::vector<std::string> getDayGap(const std::string& first, const std::string& second);
+	[[nodiscard]] std::vector<std::string> getMonthGap(const std::string& first, const std::string& second);
+	[[nodiscard]] std::vector<std::string> getYearGap(const std::string& first, const std::string& second);
 
 	///@}
 	///@name Helpers
@@ -339,13 +368,14 @@ namespace crawlservpp::Helper::DateTime {
 	 * Calling this function with an empty input
 	 *  string will have no consequences.
 	 *
-	 * For more information about the format string,
+	 * For more information on format strings,
 	 *  see
 	 *  <a href="https://howardhinnant.github.io/date/date.html#from_stream_formatting">
 	 *  Howard Hinnant's paper about his date.h
 	 *  library</a>.
 	 *
-	 * Alternatively, @c UNIX, @c UNIX+&lt;offset&gt;, or
+	 * Alternatively, @c UNIX,
+	 *  @c UNIX+&lt;offset&gt;, or
 	 *  @c UNIX&lt;-offset&gt; can be used to convert from
 	 *  a UNIX time plus/minus the given offset.
 	 *
@@ -512,7 +542,7 @@ namespace crawlservpp::Helper::DateTime {
 	 * Calling this function with an empty input
 	 *  string will have no consequences.
 	 *
-	 * For more information about the format string,
+	 * For more information on format strings,
 	 *  see
 	 *  <a href="https://howardhinnant.github.io/date/date.html#from_stream_formatting">
 	 *  Howard Hinnant's paper about his date.h
@@ -723,15 +753,26 @@ namespace crawlservpp::Helper::DateTime {
 		}
 	}
 
-	//! Get the ISO week number for a specific date.
-	/*
+	//! Get the year and the ISO week number for a specific date.
+	/*!
+	 * The year of the ISO week might differ
+	 *  from the week of the specified date.
+	 *
+	 * For more information on ISO week numbers,
+	 *  see
+	 *  https://www.epochconverter.com/weeknumbers.
+	 *
 	 * \param date Constant reference to a string
 	 *   containing the date in the format
 	 *   @c YYYY-MM-DD.
-	 * \param weekTo Reference to a string to
-	 *   be replaced with the number of the week.
+	 *
+	 * \returns The year and the week number in
+	 *   the format @c YYYY-#WW.
+	 *
+	 * \throws DateTime::Exception if the conversion
+	 *   fails.
 	 */
-	inline void getWeek(const std::string& date, std::string& weekTo) {
+	inline std::string getYearAndWeek(const std::string& date) {
 		std::istringstream in(date);
 		date::sys_days tp;
 
@@ -745,41 +786,11 @@ namespace crawlservpp::Helper::DateTime {
 			);
 		}
 
-		weekTo = date::format("%V", tp);
-	}
-
-	//! Get the year and the week number for a specific date.
-	/*
-	 * \param date Constant reference to a string
-	 *   containing the date in the format
-	 *   @c YYYY-MM-DD.
-	 *
-	 * \returns The year and the week number in
-	 *   the format @c YYYY-#WW.
-	 */
-	inline std::string getYearAndWeek(const std::string& date) {
-		std::string week;
-
-		getWeek(date, week);
-
-		std::string result(date, 0, yearLength);
-
-		if(week == "01" && date.substr(isoMonthPos, isoMonthLen) == "12") {
-			auto numericYear{std::stoi(result)};
-
-			++numericYear;
-
-			result = std::to_string(numericYear);
-		}
-
-		result += "-#";
-		result += week;
-
-		return result;
+		return date::format("%G-#%V", tp);
 	}
 
 	//! Reduce a date to the specified resolution.
-	/*
+	/*!
 	 * \param date Reference to a string containing
 	 *   the date in the format @c YYYY-MM-DD that
 	 *   will be reduced to the specified resolution,
@@ -816,7 +827,7 @@ namespace crawlservpp::Helper::DateTime {
 
 		case dateMonths:
 			// reduce to month (YYYY-MM)
-			date = date.substr(0, reducedToMonthsLength);
+			date = date.substr(0, reducedToMonthLength);
 
 			break;
 
@@ -1050,8 +1061,8 @@ namespace crawlservpp::Helper::DateTime {
 	 *   the underlying string stream requires a copy
 	 *   of the string.
 	 *
-	 * \param isoDate A string containing the date to
-	 *   check.
+	 * \param isoDate Constant reference to a string
+	 *   containing the date to check.
 	 *
 	 * \returns True if the given string contains a
 	 *   valid date in ISO format, i.e. a date in the
@@ -1114,6 +1125,318 @@ namespace crawlservpp::Helper::DateTime {
 
 		return isoDate.substr(0, isoDateLength) >= rangeFrom.substr(0, isoDateLength)
 				&& isoDate <= rangeTo.substr(0, isoDateLength);
+	}
+
+	/*
+	 * GAPS INBETWEEN DATES
+	 */
+
+	//! Gets all dates that lies between two dates.
+	/*!
+	 * \param first Constant reference to a string
+	 *   containing the first date.
+	 * \param second Constant reference to a string
+	 *   containing the second date.
+	 * \param resolution Resolution of the dates.
+	 *
+	 * \returns A vector containing all dates that
+	 *   lies inbetween the two dates in the given
+	 *   resolution.
+	 *
+	 * \throws DateTime::Exception if the given dates
+	 *   cannot be converted according to the specified
+	 *   resolution, or the specified resolution is
+	 *   invalid.
+	 *
+	 * \sa dateWeeks, dateDays, dateMonths, dateYears,
+	 *   getWeekGap, getDayGap, getMonthGap, getYearGap
+	 */
+	inline std::vector<std::string> getDateGap(
+			const std::string& first,
+			const std::string& second,
+			std::uint8_t resolution
+	) {
+		// make sure that first date lies before second date
+		switch(resolution) {
+		case dateWeeks:
+			// dates given as weeks (YYYY-#WW)
+			return getWeekGap(first, second);
+
+		case dateDays:
+			// dates given as days, i.e. in ISO format (YYYY-MM-DD)
+			return getDayGap(first, second);
+
+		case dateMonths:
+			// dates given as month (YYYY-MM)
+			return getMonthGap(first, second);
+
+		case dateYears:
+			// dates given as year (YYYY)
+			return getYearGap(first, second);
+
+		default:
+			throw Exception("Invalid date resolution: " + std::to_string(resolution));
+		}
+	}
+
+	//! Gets all ISO week numbers that lie inbetween two week numbers.
+	/*!
+	 * For more information on ISO week numbers,
+	 *  see
+	 *  https://www.epochconverter.com/weeknumbers.
+	 *
+	 * \param first Constant reference to a string
+	 *   containing the first week in the format
+	 *   @c YYYY-\#WW.
+	 * \param second Constant reference to a string
+	 *  containing the second week in the format
+	 *   @c YYYY-\#WW.
+	 *
+	 * \returns A vector containing all weeks that
+	 *   lie inbetween the first and the second week,
+	 *   in the format @c YYYY-\#WW. An empty vector
+	 *   if the given weeks are equal or follow each
+	 *   other.
+	 *
+	 * \throws DateTime::Exception if the given weeks
+	 *   cannot be converted, i.e. their format is
+	 *   invalid.
+	 *
+	 * \sa getDateGap, getMonthGap, getDayGap, getYearGap
+	 */
+	inline std::vector<std::string> getWeekGap(const std::string& first, const std::string& second) {
+		// make sure the first month lies before the second week
+		if(first > second) {
+			return getWeekGap(second, first);
+		}
+
+		// convert strings to time points
+		std::istringstream inFirst(first + "-1"); /* use Monday */
+		date::sys_days tpFirst;
+
+		inFirst >> date::parse("%G-#%V-%u", tpFirst);
+
+		if(!bool(inFirst)) {
+			throw Exception("Invalid week: '" + first + "' (expected: YYYY-#WW)");
+		}
+
+		std::istringstream inSecond(second + "-1"); /* use Monday */
+		date::sys_days tpSecond;
+
+		inSecond >> date::parse("%G-#%V-%u", tpSecond);
+
+		if(!bool(inSecond)) {
+			throw Exception("Invalid week: '" + second + "' (expected: YYYY-#WW)");
+		}
+
+		// get distance between time points and reserve memory
+		std::vector<std::string> result;
+		const auto distance{static_cast<std::size_t>((tpSecond - tpFirst).count()) / 7};
+
+		if(distance > 1) {
+			result.reserve(distance - 1);
+		}
+
+		// get and return result
+		for(std::size_t week{1}; week < distance; ++week) {
+			tpFirst += date::days{daysPerWeek};
+
+			result.emplace_back(getYearAndWeek(date::format("%F", tpFirst)));
+		}
+
+		return result;
+	}
+
+	//! Gets all days that lie inbetween two dates.
+	/*!
+	 * \param first Constant reference to a string
+	 *   containing the first date in the ISO format,
+	 *   i.e. @c YYYY-MM-DD.
+	 * \param second Constant reference to a string
+	 *   containing the second date in the ISO format,
+	 *   i.e. @c YYYY-MM-DD.
+	 *
+	 * \returns A vector containing all dates that
+	 *   lie inbetween the first and the second date
+	 *   in ISO format, i.e. @c YYYY-MM-DD. An empty
+	 *   vector if the given dates are equal or follow
+	 *   each other.
+	 *
+	 * \throws DateTime::Exception if the given dates
+	 *   cannot be converted, i.e. their format is
+	 *   invalid.
+	 *
+	 * \sa getDateGap, getWeekGap, getMonthGap, getYearGap
+	 */
+	inline std::vector<std::string> getDayGap(const std::string& first, const std::string& second) {
+		// make sure the first date lies before the second date
+		if(first > second) {
+			return getDayGap(second, first);
+		}
+
+		// convert strings to time points
+		std::istringstream inFirst(first);
+		date::sys_days tpFirst;
+
+		inFirst >> date::parse("%F", tpFirst);
+
+		if(!bool(inFirst)) {
+			throw Exception("Invalid date: '" + first + "' (expected: YYYY-MM-DD)");
+		}
+
+		std::istringstream inSecond(second);
+		date::sys_days tpSecond;
+
+		inSecond >> date::parse("%F", tpSecond);
+
+		if(!bool(inSecond)) {
+			throw Exception("Invalid date: '" + second + "' (expected: YYYY-MM-DD)");
+		}
+
+		// get distance between time points and reserve memory
+		std::vector<std::string> result;
+		const auto distance{static_cast<std::size_t>((tpSecond - tpFirst).count())};
+
+		if(distance > 1) {
+			result.reserve(distance - 1);
+		}
+
+		// get and return result
+		for(std::size_t day{1}; day < distance; ++day) {
+			tpFirst += date::days{1};
+
+			result.emplace_back(date::format("%F", tpFirst));
+		}
+
+		return result;
+	}
+
+	//! Gets all months that lie inbetween two months.
+	/*!
+	 * \param first Constant reference to a string
+	 *   containing the first month in the format
+	 *   @c YYYY-MM.
+	 * \param second Constant reference to a string
+	 *  containing the second month in the format
+	 *   @c YYYY-MM.
+	 *
+	 * \returns A vector containing all months that
+	 *   lie inbetween the first and the second month,
+	 *   in the format @c YYYY-MM. An empty vector if
+	 *   the given months are equal or follow each
+	 *   other.
+	 *
+	 * \throws DateTime::Exception if the given months
+	 *   cannot be converted, i.e. their format is
+	 *   invalid.
+	 *
+	 * \sa getDateGap, getWeekGap, getDayGap, getYearGap
+	 */
+	inline std::vector<std::string> getMonthGap(const std::string& first, const std::string& second) {
+		// make sure the first month lies before the second month
+		if(first > second) {
+			return getMonthGap(second, first);
+		}
+
+		// convert strings to time points
+		std::istringstream inFirst(first);
+		date::year_month tpFirst;
+
+		inFirst >> date::parse("%Y-%m", tpFirst);
+
+		if(!bool(inFirst)) {
+			throw Exception("Invalid month: '" + first + "' (expected: YYYY-MM)");
+		}
+
+		std::istringstream inSecond(second);
+		date::year_month tpSecond;
+
+		inSecond >> date::parse("%Y-%m", tpSecond);
+
+		if(!bool(inSecond)) {
+			throw Exception("Invalid month: '" + second + "' (expected: YYYY-MM)");
+		}
+
+		// get distance between time points and reserve memory
+		std::vector<std::string> result;
+		const auto distance{static_cast<std::size_t>((tpSecond - tpFirst).count())};
+
+		if(distance > 1) {
+			result.reserve(distance - 1);
+		}
+
+		// get and return result
+		for(std::size_t month{1}; month < distance; ++month) {
+			tpFirst += date::months{1};
+
+			result.emplace_back(date::format("%Y-%m", tpFirst));
+		}
+
+		return result;
+	}
+
+	//! Gets all years that lies inbetween two years.
+	/*!
+	 * \param first Constant reference to a string
+	 *   containing the first year in the format
+	 *   @c YYYY.
+	 * \param second Constant reference to a string
+	 *   containing the second year in the format
+	 *   @c YYYY.
+	 *
+	 * \returns A vector containing all years that
+	 *   lie inbetween the first and the second year,
+	 *   in the format @c YYYY. An empty vector if
+	 *   the given years are equal or follow each
+	 *   other.
+	 *
+	 * \throws DateTime::Exception if the given years
+	 *   cannot be converted, i.e. their format is
+	 *   invalid.
+	 *
+	 * \sa getDateGap, getWeekGap, getDayGap, getMonthGap
+	 */
+	inline std::vector<std::string> getYearGap(const std::string& first, const std::string& second) {
+		// make sure the first year lies before the second month
+		if(first > second) {
+			return getYearGap(second, first);
+		}
+
+		// convert strings to time points
+		std::istringstream inFirst(first);
+		date::year tpFirst;
+
+		inFirst >> date::parse("%Y", tpFirst);
+
+		if(!bool(inFirst)) {
+			throw Exception("Invalid year: '" + first + "' (expected: YYYY)");
+		}
+
+		std::istringstream inSecond(second);
+		date::year tpSecond;
+
+		inSecond >> date::parse("%Y", tpSecond);
+
+		if(!bool(inSecond)) {
+			throw Exception("Invalid year: '" + second + "' (expected: YYYY)");
+		}
+
+		// get distance between time points and reserve memory
+		std::vector<std::string> result;
+		const auto distance{static_cast<std::size_t>((tpSecond - tpFirst).count())};
+
+		if(distance > 1) {
+			result.reserve(distance - 1);
+		}
+
+		// get and return result
+		for(std::size_t year{1}; year < distance; ++year) {
+			tpFirst += date::years{1};
+
+			result.emplace_back(date::format("%Y", tpFirst));
+		}
+
+		return result;
 	}
 
 	/*
