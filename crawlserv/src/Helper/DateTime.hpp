@@ -767,7 +767,7 @@ namespace crawlservpp::Helper::DateTime {
 	 *   @c YYYY-MM-DD.
 	 *
 	 * \returns The year and the week number in
-	 *   the format @c YYYY-#WW.
+	 *   the format @c YYYY-\#WW.
 	 *
 	 * \throws DateTime::Exception if the conversion
 	 *   fails.
