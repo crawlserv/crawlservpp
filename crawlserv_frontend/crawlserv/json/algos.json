@@ -14,7 +14,7 @@
 			"algo-id": 44,
 			"config-cats": [ "tokenizer", "group-date", "filter-date", "filter-query" ]
 		},
-		"Count Terms over Time": {
+		"Count Terms over Time [unimplemented]": {
 			"algo-id": 41,
 			"config-cats": [ "tokenizer", "terms", "group-date", "filter-date", "filter-query" ]
 		},
