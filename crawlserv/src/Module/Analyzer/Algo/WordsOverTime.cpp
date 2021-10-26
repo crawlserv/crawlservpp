@@ -171,7 +171,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			return;
 		}
 
+		// done: proces and save results
+		this->process();
 		this->save();
+
+		// clear corpora
+		this->corpora.clear();
 
 		// sleep forever (i.e. until the thread is terminated)
 		this->finished();
@@ -392,6 +397,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				return;
 			}
 		}
+	}
+
+	// process results
+	void WordsOverTime::process() {
+
 	}
 
 	// save counts to database

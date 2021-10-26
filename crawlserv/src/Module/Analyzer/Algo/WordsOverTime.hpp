@@ -145,6 +145,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// algorithm functions
 		void count();
+		void process();
 		void save();
 
 		// internal helper functions
