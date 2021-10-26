@@ -12,7 +12,7 @@
 		},
 		"Count Words over Time": {
 			"algo-id": 44,
-			"config-cats": [ "tokenizer", "filter-date", "group-date", "filter-query" ]
+			"config-cats": [ "tokenizer", "group-date", "filter-date", "filter-query" ]
 		},
 		"Count Terms over Time": {
 			"algo-id": 41,
