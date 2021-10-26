@@ -211,6 +211,11 @@ div.checking-server-status {
 	color:#808080;
 }
 
+/* THREADS INVALID */
+div.threads-invalid {
+	color:#808080;
+}
+
 /* SMALL TEXT DIV */
 div.small-text {
 	display:inline-block;

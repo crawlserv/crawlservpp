@@ -200,13 +200,26 @@ function refreshData() {
 	}
 	
 	if($("#threads").length > 0) {
+		let oldContent = "";
+		
+		if($("#threads-ping").length > 0) {
+			oldContent = $("#threads").html();
+		}
+		
 		$("#threads").load("php/include/threads.php", function(response, status, xhr) {
 			if(status == "error") {
-				$("#threads").html("<div class='no-server-status'>Failed to load threads.</div>");
+				if(oldContent.length > 0) {
+					$("#threads").html(oldContent);
+					$("#threads").addClass("threads-invalid");
+				}
+				else {
+					$("#threads").html("<div class='no-server-status'>Failed to load threads.</div>");
+				}
 				
 				setTimeout(refreshData, 2500);
 			}
 			else {
+				$("#threads").removeClass("threads-invalid");
 				$("#threads-ping").
 					html("<span id='_ping1'>&bull;</span><span id='_ping2'>&bull;</span><span id='_ping3'>&bull;</span>");
 				
