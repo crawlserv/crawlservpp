@@ -226,6 +226,10 @@ namespace crawlservpp::Module::Analyzer {
 	 *  finished.
 	 */
 	void Thread::finished() {
+		// clear corpora and queries (if necessary)
+		this->cleanUpCorpora();
+		this->cleanUpQueries();
+
 		// set status and progress
 		this->setStatusMessage("IDLE Finished.");
 		this->setProgress(1.F);

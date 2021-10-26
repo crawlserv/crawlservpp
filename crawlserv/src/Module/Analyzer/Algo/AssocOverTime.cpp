@@ -185,9 +185,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->saveAssociations();
 
-		// clear corpora
-		this->corpora.clear();
-
 		// sleep forever (i.e. until the thread is terminated)
 		this->finished();
 		this->sleep(std::numeric_limits<std::uint64_t>::max());
