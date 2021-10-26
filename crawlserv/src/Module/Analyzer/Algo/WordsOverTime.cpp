@@ -411,6 +411,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// go through all results
 		std::size_t statusCounter{};
 		std::size_t resultCounter{};
+		bool updated{false};
 
 		for(const auto& result : this->dateResults) {
 			// fill gap between previous and current date, if necessary
@@ -432,9 +433,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				statusCounter = 0;
 			}
 
+			updated = true;
+
 			if(!(this->isRunning())) {
-				return;
+				break;
 			}
+		}
+
+		if(updated) {
+			// target table updated
+			this->database.updateTargetTable();
 		}
 	}
 
@@ -507,9 +515,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		this->database.insertCustomData(data);
-
-		// target table updated
-		this->database.updateTargetTable();
 	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

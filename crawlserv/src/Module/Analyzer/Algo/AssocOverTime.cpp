@@ -500,6 +500,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::size_t statusCounter{};
 		std::size_t resultCounter{};
+		bool updated{false};
 
 		this->previousDate.clear();
 
@@ -528,15 +529,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				statusCounter = 0;
 			}
 
+			updated = true;
+
 			if(!(this->isRunning())) {
 				return;
 			}
 		}
 
-		Helper::Memory::free(this->associations);
+		if(updated) {
+			// target table updated
+			this->database.updateTargetTable();
+		}
 
-		// target table updated
-		this->database.updateTargetTable();
+		Helper::Memory::free(this->associations);
 	}
 
 	/*

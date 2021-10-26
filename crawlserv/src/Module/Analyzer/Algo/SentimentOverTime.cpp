@@ -541,6 +541,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		std::size_t statusCounter{};
 		std::size_t resultCounter{};
+		bool updated{false};
 
 		for(const auto& result : this->dateData) {
 			// check for empty date
@@ -567,9 +568,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				statusCounter = 0;
 			}
 
+			updated = true;
+
 			if(!(this->isRunning())) {
-				return;
+				break;
 			}
+		}
+
+		if(updated) {
+			// target table updated
+			this->database.updateTargetTable();
 		}
 	}
 
@@ -912,9 +920,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		this->database.insertCustomData(data);
-
-		// target table updated
-		this->database.updateTargetTable();
 	}
 
 	/*
