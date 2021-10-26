@@ -185,6 +185,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		this->saveAssociations();
 
+		// clear corpora
+		this->corpora.clear();
+
 		// sleep forever (i.e. until the thread is terminated)
 		this->finished();
 		this->sleep(std::numeric_limits<std::uint64_t>::max());
@@ -458,6 +461,19 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setStatusMessage("Calculating associations...");
 		this->setProgress(0.F);
 
+		// process dates
+		auto results{this->processDates()};
+
+		// set status message and reset progress
+		this->setStatusMessage("Writing results to database...");
+		this->setProgress(0.F);
+
+		// save results to target table
+		this->saveResults(results);
+	}
+
+	// process dates in order to save associations
+	AssocOverTime::Results AssocOverTime::processDates() {
 		std::vector<std::pair<std::string, std::vector<std::uint64_t>>> results;
 
 		this->processedDates = 0;
@@ -471,10 +487,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			return a.first < b.first;
 		});
 
-		// save results to target table
-		this->setStatusMessage("Writing results to database...");
-		this->setProgress(0.F);
+		return results;
+	}
 
+	// save results to database
+	void AssocOverTime::saveResults(const Results& results) {
 		const auto resultNumColumns{
 			assocResultMinNumColumns
 			+ this->algoConfig.categoryLabels.size()

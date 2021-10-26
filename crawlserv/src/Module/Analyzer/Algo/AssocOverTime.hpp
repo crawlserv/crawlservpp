@@ -93,6 +93,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		using Exception = Module::Analyzer::Thread::Exception;
 
 		using StringString = std::pair<std::string, std::string>;
+		using Results = std::vector<std::pair<std::string, std::vector<std::uint64_t>>>;
 
 	public:
 		///@name Construction
@@ -177,6 +178,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// algorithm functions
 		void addCurrent();
 		void saveAssociations();
+		[[nodiscard]] Results processDates();
+		void saveResults(const Results& results);
 
 		// query functions
 		void initQueries() override;
