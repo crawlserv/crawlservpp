@@ -100,6 +100,9 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	 *   is empty.
 	 */
 	void TermsOverTime::onAlgoInit() {
+		//TODO
+		throw Exception("This algorithm is not implemented yet.");
+
 		StatusSetter statusSetter(
 				"Initializing algorithm...",
 				1.F,
