@@ -117,7 +117,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	//! Sentiment analysis using the VADER algorithm.
 	/*!
-	 * Calculate the average sentiment over time
+	 * Calculates the average sentiment over time
 	 *  associated with specific categories
 	 *  using the VADER algorithm.
 	 *
@@ -224,6 +224,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::size_t currentCorpus{};
 		DateData dateData;
 		ArticleData articleData;
+		std::string previousDate;
 
 		// algorithm functions
 		void addCurrent();
@@ -250,6 +251,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 		[[nodiscard]] DoubleUInt calculateArticle(
 				const std::string& article
+		);
+		void fillGap(const std::string& table, const std::string& date, std::size_t numColumns);
+		void insertDataSet(
+				const std::string& table,
+				const std::string& date,
+				const std::vector<DateCategoryData>& dataSet,
+				std::size_t numColumns
 		);
 
 		// internal static helper functions

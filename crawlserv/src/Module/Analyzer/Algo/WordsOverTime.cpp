@@ -171,12 +171,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			return;
 		}
 
-		// done: proces and save results
-		this->process();
+		// done: save results
 		this->save();
-
-		// clear corpora
-		this->corpora.clear();
 
 		// sleep forever (i.e. until the thread is terminated)
 		this->finished();
@@ -399,61 +395,31 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 	}
 
-	// process results
-	void WordsOverTime::process() {
-
-	}
-
 	// save counts to database
 	void WordsOverTime::save() {
+		// update status and write to log
 		this->setStatusMessage("Saving results...");
 		this->setProgress(0.F);
 
 		this->log(generalLoggingDefault, "saves results...");
 
-		const auto resultTable{
+		// get target table to store results in
+		const auto targetTable{
 			this->getTargetTableName()
 		};
 
+		// go through all results
 		std::size_t statusCounter{};
 		std::size_t resultCounter{};
 
-		for(const auto& date : this->dateResults) {
-			Data::InsertFieldsMixed data;
+		for(const auto& result : this->dateResults) {
+			// fill gap between previous and current date, if necessary
+			this->fillGap(targetTable, result.first);
 
-			data.columns_types_values.reserve(wordsNumberOfColumns);
+			// insert actual data set
+			this->insertDataSet(targetTable, result.first, result.second);
 
-			data.table = resultTable;
-
-			data.columns_types_values.emplace_back(
-					"analyzed__date",
-					Data::Type::_string,
-					Data::Value(date.first)
-			);
-
-			data.columns_types_values.emplace_back(
-					"analyzed__articles",
-					Data::Type::_uint64,
-					Data::Value(date.second.articles.size())
-			);
-
-			data.columns_types_values.emplace_back(
-					"analyzed__sentences",
-					Data::Type::_uint64,
-					Data::Value(date.second.sentences)
-			);
-
-			data.columns_types_values.emplace_back(
-					"analyzed__tokens",
-					Data::Type::_uint64,
-					Data::Value(date.second.words)
-			);
-
-			this->database.insertCustomData(data);
-
-			// target table updated
-			this->database.updateTargetTable();
-
+			// update status if necessary
 			++statusCounter;
 			++resultCounter;
 
@@ -477,6 +443,73 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			const std::string& group
 	) {
 		return this->dateResults.insert({group, {}}).first;
+	}
+
+	// fill gap between previous and current date, if necessary
+	void WordsOverTime::fillGap(const std::string& table, const std::string& date) {
+		if(!(this->config.groupDateFillGaps)) {
+			return; /* filling gaps is disabled */
+		}
+
+		if(this->previousDate.empty()) {
+			// first date: store date and return
+			this->previousDate = date;
+
+			return;
+		}
+
+		// retrieve and fill gap between previous and current date
+		const auto missingDates{
+			Helper::DateTime::getDateGap(
+					this->previousDate,
+					date,
+					this->config.groupDateResolution
+			)
+		};
+
+		for(const auto& missingDate : missingDates) {
+			this->insertDataSet(table, missingDate, {});
+		}
+
+		this->previousDate = date;
+	}
+
+	// insert dataset into the target table
+	void WordsOverTime::insertDataSet(const std::string& table, const std::string& date, const DateResults& results) {
+		Data::InsertFieldsMixed data;
+
+		data.columns_types_values.reserve(wordsNumberOfColumns);
+
+		data.table = table;
+
+		data.columns_types_values.emplace_back(
+				"analyzed__date",
+				Data::Type::_string,
+				Data::Value(date)
+		);
+
+		data.columns_types_values.emplace_back(
+				"analyzed__articles",
+				Data::Type::_uint64,
+				Data::Value(results.articles.size())
+		);
+
+		data.columns_types_values.emplace_back(
+				"analyzed__sentences",
+				Data::Type::_uint64,
+				Data::Value(results.sentences)
+		);
+
+		data.columns_types_values.emplace_back(
+				"analyzed__tokens",
+				Data::Type::_uint64,
+				Data::Value(results.words)
+		);
+
+		this->database.insertCustomData(data);
+
+		// target table updated
+		this->database.updateTargetTable();
 	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

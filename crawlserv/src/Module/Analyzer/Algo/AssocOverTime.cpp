@@ -305,7 +305,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		Helper::Memory::free(this->queriesCategories);
 		Helper::Memory::free(this->associations);
-		Helper::Memory::free(this->lastDate);
+		Helper::Memory::free(this->previousDate);
 
 		this->currentCorpus = 0;
 		this->dateCounter = 0;
@@ -356,7 +356,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->articleIndex = 0;
 		this->tokenIndex = 0;
 
-		Helper::Memory::free(this->lastDate);
+		Helper::Memory::free(this->previousDate);
 
 		auto dateIt{this->associations.begin()};
 
@@ -494,56 +494,26 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			+ this->algoConfig.categoryLabels.size()
 		};
 
-		const auto resultTable{
+		const auto targetTable{
 			this->getTargetTableName()
 		};
 
 		std::size_t statusCounter{};
 		std::size_t resultCounter{};
 
+		this->previousDate.clear();
+
 		for(const auto& result : results) {
-			Data::InsertFieldsMixed data;
-
-			data.columns_types_values.reserve(resultNumColumns);
-
-			data.table = resultTable;
-
-			data.columns_types_values.emplace_back(
-					"analyzed__date",
-					Data::Type::_string,
-					Data::Value(result.first)
-			);
-
-			std::size_t n{};
-
-			for(const auto& number : result.second) {
-				std::string column;
-
-				switch(n) {
-				case 0:
-					column = "analyzed__n";
-
-					break;
-
-				case 1:
-					column = "analyzed__occurrences";
-
-					break;
-
-				default:
-					column = "analyzed__" + this->algoConfig.categoryLabels.at(n - 2);
-				}
-
-				data.columns_types_values.emplace_back(
-					column,
-					Data::Type::_uint64,
-					Data::Value(number)
-				);
-
-				++n;
+			// check for empty date
+			if(this->algoConfig.ignoreEmptyDate && result.first.empty()) {
+				continue; /* ignore empty date */
 			}
 
-			this->database.insertCustomData(data);
+			// fill gap between previous and current date, if necessary
+			this->fillGap(targetTable, result.first, resultNumColumns);
+
+			// insert actual data set
+			this->insertDataSet(targetTable, result.first, result.second, resultNumColumns);
 
 			// update status if necessary
 			++statusCounter;
@@ -618,10 +588,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 
 		// add date if still necessary, and save its iterator
-		if(!(this->dateSaved) || this->lastDate != reducedDate) {
+		if(!(this->dateSaved) || this->previousDate != reducedDate) {
 			dateIt = this->addDate(reducedDate);
 
-			this->lastDate = reducedDate;
+			this->previousDate = reducedDate;
 			this->dateSaved = true;
 		}
 
@@ -861,6 +831,94 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		return true;
+	}
+
+	// fill gap between previous and current date, if necessary
+	void AssocOverTime::fillGap(const std::string& table, const std::string& date, std::size_t numColumns) {
+		if(!(this->config.groupDateFillGaps)) {
+			return; /* filling gaps is disabled */
+		}
+
+		if(this->previousDate.empty()) {
+			// first date: store date and return
+			this->previousDate = date;
+
+			return;
+		}
+
+		// retrieve and fill gap between previous and current date
+		const auto missingDates{
+			Helper::DateTime::getDateGap(
+					this->previousDate,
+					date,
+					this->config.groupDateResolution
+			)
+		};
+
+		for(const auto& missingDate : missingDates) {
+			this->insertDataSet(
+					table,
+					missingDate,
+					std::vector<std::uint64_t>(
+							this->algoConfig.categoryLabels.size()
+							+ assocResultAdditionalColumns
+					),
+					numColumns
+			);
+		}
+
+		this->previousDate = date;
+	}
+
+	// insert dataset into target table
+	void AssocOverTime::insertDataSet(
+			const std::string& table,
+			const std::string& date,
+			const std::vector<std::uint64_t>& dataSet,
+			std::size_t numColumns
+	) {
+		Data::InsertFieldsMixed data;
+
+		data.columns_types_values.reserve(numColumns);
+
+		data.table = table;
+
+		data.columns_types_values.emplace_back(
+				"analyzed__date",
+				Data::Type::_string,
+				Data::Value(date)
+		);
+
+		std::size_t n{};
+
+		for(const auto& number : dataSet) {
+			std::string column;
+
+			switch(n) {
+			case 0:
+				column = "analyzed__n";
+
+				break;
+
+			case 1:
+				column = "analyzed__occurrences";
+
+				break;
+
+			default:
+				column = "analyzed__" + this->algoConfig.categoryLabels.at(n - assocResultAdditionalColumns);
+			}
+
+			data.columns_types_values.emplace_back(
+				column,
+				Data::Type::_uint64,
+				Data::Value(number)
+			);
+
+			++n;
+		}
+
+		this->database.insertCustomData(data);
 	}
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

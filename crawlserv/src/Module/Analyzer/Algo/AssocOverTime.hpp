@@ -67,8 +67,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Indicates, while saving, after how many rows the progress of the thread will be updated.
 	inline constexpr auto assocUpdateProgressEvery{100};
 
+	//! Number of extra columns included in a dataset
+	inline constexpr auto assocResultAdditionalColumns{2};
+
 	//! Number of default columns to be written to the target table.
-	inline constexpr auto assocResultMinNumColumns{3};
+	inline constexpr auto assocResultMinNumColumns{1 /* date */ + assocResultAdditionalColumns};
 
 	//@}
 
@@ -161,19 +164,23 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// algorithm queries
 		QueryStruct queryKeyWord;
+
 		std::vector<QueryStruct> queriesCategories;
 
 		// algorithm state
-		std::size_t currentCorpus{};
 		DateAssociationMap associations;
+
+		std::string previousDate;
+
+		std::size_t currentCorpus{};
 		std::size_t dateCounter{};
 		std::size_t firstDatePos{};
-		bool dateSaved{false};
 		std::size_t dateMapSize{};
-		std::string lastDate;
 		std::size_t articleIndex{};
 		std::size_t tokenIndex{};
 		std::size_t processedDates{};
+
+		bool dateSaved{false};
 
 		// algorithm functions
 		void addCurrent();
@@ -230,6 +237,14 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				std::size_t catIndex,
 				std::vector<std::uint64_t>& catsCountersTo
 		) const;
+
+		void fillGap(const std::string& table, const std::string& date, std::size_t numColumns);
+		void insertDataSet(
+				const std::string& table,
+				const std::string& date,
+				const std::vector<std::uint64_t>& dataSet,
+				std::size_t numColumns
+		);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

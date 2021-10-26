@@ -142,14 +142,16 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		// results
 		std::map<std::string, DateResults> dateResults;
+		std::string previousDate;
 
 		// algorithm functions
 		void count();
-		void process();
 		void save();
 
 		// internal helper functions
 		ResultMap::iterator addDateGroup(const std::string& group);
+		void fillGap(const std::string& table, const std::string& date);
+		void insertDataSet(const std::string& table, const std::string& date, const DateResults& results);
 	};
 
 } /* namespace crawlservpp::Module::Analyzer::Algo */

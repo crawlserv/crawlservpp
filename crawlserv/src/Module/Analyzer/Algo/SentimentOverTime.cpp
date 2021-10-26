@@ -523,7 +523,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->log(generalLoggingDefault, "calculates and saves results...");
 
 		auto resultNumColumns{
-			sentimentMinNumColumns
+			sentimentMinNumColumns /* date */
 		};
 
 		if(this->algoConfig.addArticleSentiment) {
@@ -535,89 +535,26 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					* sentimentMinColumnsPerCategory;
 		}
 
-		const auto resultTable{
+		const auto targetTable{
 			this->getTargetTableName()
 		};
 
 		std::size_t statusCounter{};
 		std::size_t resultCounter{};
 
-		for(const auto& date : this->dateData) {
-			if(date.first.empty() && this->algoConfig.ignoreEmptyDate) {
-				continue;
+		for(const auto& result : this->dateData) {
+			// check for empty date
+			if(this->algoConfig.ignoreEmptyDate && result.first.empty()) {
+				continue; /* ignore empty date */
 			}
 
-			Data::InsertFieldsMixed data;
+			// fill gap between previous and current date, if necessary
+			this->fillGap(targetTable, result.first, resultNumColumns);
 
-			data.columns_types_values.reserve(resultNumColumns);
+			// insert actual data set
+			this->insertDataSet(targetTable, result.first, result.second, resultNumColumns);
 
-			data.table = resultTable;
-
-			data.columns_types_values.emplace_back(
-					"analyzed__date",
-					Data::Type::_string,
-					Data::Value(date.first)
-			);
-
-			std::size_t categoryIndex{};
-
-			for(const auto& category : date.second) {
-				const auto& label{
-					"analyzed__"
-					+ this->algoConfig.categoryLabels[categoryIndex]
-				};
-
-				// calculate sentence-based sentiment
-				double sentiment{};
-
-				if(category.sentimentCount > 0) {
-					sentiment = category.sentimentSum / category.sentimentCount;
-				}
-
-				data.columns_types_values.emplace_back(
-					label + "_N",
-					Data::Type::_uint64,
-					Data::Value(category.sentimentCount)
-				);
-
-				data.columns_types_values.emplace_back(
-					label,
-					Data::Type::_double,
-					Data::Value(sentiment)
-				);
-
-				if(this->algoConfig.addArticleSentiment) {
-					const auto& articleData{
-						this->calculateArticleSentiment(category.articles)
-					};
-
-					double articleSentiment{};
-
-					if(articleData.second > 0) {
-						articleSentiment = articleData.first / articleData.second;
-					}
-
-					data.columns_types_values.emplace_back(
-						label + "_a_N",
-						Data::Type::_uint64,
-						Data::Value(articleData.second)
-					);
-
-					data.columns_types_values.emplace_back(
-						label + "_a",
-						Data::Type::_double,
-						Data::Value(articleSentiment)
-					);
-				}
-
-				++categoryIndex;
-			}
-
-			this->database.insertCustomData(data);
-
-			// target table updated
-			this->database.updateTargetTable();
-
+			// update status if necessary
 			++statusCounter;
 			++resultCounter;
 
@@ -686,7 +623,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		for(std::size_t category{}; category < this->algoConfig.categoryLabels.size(); ++category) {
-			bool found{false};
+			bool skip{true};
 
 			for(auto token{TextMapEntry::pos(sentence)}; token < end; ++token) {
 				bool result{false};
@@ -701,37 +638,39 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						&& result
 				) {
 					// found category
-					found = true;
+					skip = false;
 
 					break;
 				}
 			}
 
-			if(found) {
-				if(toAnalyze) {
-					sentiment = this->getSentenceScore(sentence, tokens);
+			if(skip) {
+				continue; /* category not found */
+			}
 
-					if(this->algoConfig.useThreshold) {
-						meetsThreshold = SentimentOverTime::meetsThreshold(
-								sentiment,
-								this->algoConfig.threshold
-						);
-					}
+			if(toAnalyze) {
+				sentiment = this->getSentenceScore(sentence, tokens);
 
-					toAnalyze = false;
+				if(this->algoConfig.useThreshold) {
+					meetsThreshold = SentimentOverTime::meetsThreshold(
+							sentiment,
+							this->algoConfig.threshold
+					);
 				}
 
-				auto& data{dateIt->second[category]};
+				toAnalyze = false;
+			}
 
-				if(!(this->algoConfig.useThreshold) || meetsThreshold) {
-					// add sentiment to category
-					data.sentimentSum += sentiment;
-					data.sentimentCount++;
-				}
+			auto& data{dateIt->second[category]};
 
-				if(!article.empty()) {
-					data.articles.emplace(article);
-				}
+			if(!(this->algoConfig.useThreshold) || meetsThreshold) {
+				// add sentiment to category
+				data.sentimentSum += sentiment;
+				data.sentimentCount++;
+			}
+
+			if(!article.empty()) {
+				data.articles.emplace(article);
 			}
 		}
 
@@ -863,6 +802,119 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		return result;
+	}
+
+	// fill gap between previous and current date, if necessary
+	void SentimentOverTime::fillGap(const std::string& table, const std::string& date, std::size_t numColumns) {
+		if(!(this->config.groupDateFillGaps)) {
+			return; /* filling gaps is disabled */
+		}
+
+		if(this->previousDate.empty()) {
+			// first date: store date and return
+			this->previousDate = date;
+
+			return;
+		}
+
+		// retrieve and fill gap between previous and current date
+		const auto missingDates{
+			Helper::DateTime::getDateGap(
+					this->previousDate,
+					date,
+					this->config.groupDateResolution
+			)
+		};
+
+		for(const auto& missingDate : missingDates) {
+			this->insertDataSet(
+					table,
+					missingDate,
+					std::vector<DateCategoryData>(this->algoConfig.categoryLabels.size()),
+					numColumns
+			);
+		}
+
+		this->previousDate = date;
+	}
+
+	// insert dataset into target table
+	void SentimentOverTime::insertDataSet(
+			const std::string& table,
+			const std::string& date,
+			const std::vector<DateCategoryData>& dataSet,
+			std::size_t numColumns
+	) {
+		Data::InsertFieldsMixed data;
+
+		data.columns_types_values.reserve(numColumns);
+
+		data.table = table;
+
+		data.columns_types_values.emplace_back(
+				"analyzed__date",
+				Data::Type::_string,
+				Data::Value(date)
+		);
+
+		std::size_t categoryIndex{};
+
+		for(const auto& category : dataSet) {
+			const auto& label{
+				"analyzed__"
+				+ this->algoConfig.categoryLabels.at(categoryIndex)
+			};
+
+			// calculate sentence-based sentiment
+			double sentiment{};
+
+			if(category.sentimentCount > 0) {
+				sentiment = category.sentimentSum / category.sentimentCount;
+			}
+
+			data.columns_types_values.emplace_back(
+				label + "_N",
+				Data::Type::_uint64,
+				Data::Value(category.sentimentCount)
+			);
+
+			data.columns_types_values.emplace_back(
+				label,
+				Data::Type::_double,
+				Data::Value(sentiment)
+			);
+
+			if(this->algoConfig.addArticleSentiment) {
+				const auto& articleData{
+					this->calculateArticleSentiment(category.articles)
+				};
+
+				double articleSentiment{};
+
+				if(articleData.second > 0) {
+					articleSentiment = articleData.first / articleData.second;
+				}
+
+				data.columns_types_values.emplace_back(
+					label + "_a_N",
+					Data::Type::_uint64,
+					Data::Value(articleData.second)
+				);
+
+				data.columns_types_values.emplace_back(
+					label + "_a",
+					Data::Type::_double,
+					Data::Value(articleSentiment)
+				);
+			}
+
+			++categoryIndex;
+		}
+
+		this->database.insertCustomData(data);
+
+		// target table updated
+		this->database.updateTargetTable();
 	}
 
 	/*

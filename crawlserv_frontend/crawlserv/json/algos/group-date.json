@@ -2,6 +2,14 @@
 	"label": "Group by date",
 	"open": true,
 	
+	"fill.gaps": {
+		"type": "bool",
+		"default": true,
+		"label": "Fill gaps",
+		"description": "Fills the gaps inbetween dates with empty data.",
+		"simple": true,
+		"position": 2
+	},
 	"resolution": {
 		"type": "enum",
 		"enum-values": [

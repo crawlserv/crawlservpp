@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -164,6 +164,9 @@ namespace crawlservpp::Module::Analyzer {
 			///@}
 			///@name Group by Date
 			///@{
+
+			//! Enables filling the gaps inbetween dates.
+			bool groupDateFillGaps{true};
 
 			//! The resolution to be used when grouping dates.
 			/*!
@@ -368,6 +371,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		// group by date option
 		this->category("group-date");
+		this->option("fill.gaps", this->config.groupDateFillGaps);
 		this->option("resolution", this->config.groupDateResolution);
 
 		// filter by date options
