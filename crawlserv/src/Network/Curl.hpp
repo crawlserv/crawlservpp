@@ -351,6 +351,7 @@ namespace crawlservpp::Network {
 		void checkResult(const std::array<char, CURL_ERROR_SIZE>& errorBuffer);
 		void checkResponseCode(const std::vector<std::uint32_t>& errors);
 		void retrieveContentType();
+		void processContentType();
 		void checkCompression();
 		void repairEncoding();
 	};
@@ -1167,7 +1168,7 @@ namespace crawlservpp::Network {
 
 		/*
 		 * NOTE:	The following string needs to be available until after the request,
-		 * 			because libcurl does not create its own copy of it by default!
+		 * 			because libcurl does not create its own copy of it!
 		 */
 		std::string postFields;
 
@@ -1196,10 +1197,11 @@ namespace crawlservpp::Network {
 			throw Curl::Exception(e.what());
 		}
 
-		// process result
+		// process reply
 		this->checkResult(errorBuffer);
 		this->checkResponseCode(errors);
 		this->retrieveContentType();
+		this->processContentType();
 		this->checkCompression();
 		this->repairEncoding();
 
@@ -1904,12 +1906,35 @@ namespace crawlservpp::Network {
 
 		this->checkCode();
 
-		if(cString != nullptr) {
-			this->contentType = cString;
-		}
-		else {
+		if(cString == nullptr) {
 			this->contentType = std::string{};
+
+			return;
 		}
+		this->contentType = cString;
+	}
+
+	// transform content type to lower case and remove spaces
+	inline void Curl::processContentType() {
+		std::transform(
+				this->contentType.begin(),
+				this->contentType.end(),
+				this->contentType.begin(),
+				[](const auto c) {
+					return std::tolower(c);
+				}
+		);
+
+		this->contentType.erase(
+				std::remove_if(
+						this->contentType.begin(),
+						this->contentType.end(),
+						[](const auto c) {
+							return std::isspace(c);
+						}
+				),
+				this->contentType.end()
+		);
 	}
 
 	// check for gzipped content that has not been detected by curl
@@ -1933,26 +1958,6 @@ namespace crawlservpp::Network {
 	//  (convert ISO-8859-1 to UTF-8, remove invalid UTF-8 characters)
 	inline void Curl::repairEncoding() {
 		std::string repairedContent;
-
-		std::transform(
-				this->contentType.begin(),
-				this->contentType.end(),
-				this->contentType.begin(),
-				[](const auto c) {
-					return std::tolower(c);
-				}
-		);
-
-		this->contentType.erase(
-				std::remove_if(
-						this->contentType.begin(),
-						this->contentType.end(),
-						[](const auto c) {
-							return std::isspace(c);
-						}
-				),
-				this->contentType.end()
-		);
 
 		if(this->contentType.find("charset=iso-8859-1") != std::string::npos) {
 			this->content = Helper::Utf8::iso88591ToUtf8(this->content);
