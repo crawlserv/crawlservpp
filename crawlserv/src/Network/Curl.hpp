@@ -1942,10 +1942,10 @@ namespace crawlservpp::Network {
 		// check for gzipped content that curl could not decompress
 		if(
 				this->content.size() >= gzipMagicNumber.size()
-				&& this->contentType == "gzip"
+				&& this->contentType.find("gzip") != std::string::npos
 		) {
 			for(std::size_t byte{}; byte < gzipMagicNumber.size(); ++byte) {
-				if(this->content[byte] != gzipMagicNumber[byte]) {
+				if(static_cast<unsigned char>(this->content[byte]) != gzipMagicNumber[byte]) {
 					return;
 				}
 			}
