@@ -35,6 +35,7 @@
 
 #include "Config.hpp"
 
+#include "../Data/Compression/Gzip.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Utf8.hpp"
 #include "../Main/Exception.hpp"
@@ -142,6 +143,9 @@ namespace crawlservpp::Network {
 	//! Length of the @c X-ts header name, in bytes.
 	inline constexpr auto xTsHeaderNameLen{6};
 
+	//! GZIP magic number
+	inline constexpr std::array gzipMagicNumber{0x1f, 0x8b};
+
 	///@}
 
 	/*
@@ -163,7 +167,7 @@ namespace crawlservpp::Network {
 	 */
 	class Curl {
 		// for convenience
-		using NetworkOptions = Struct::NetworkSettings;
+		using NetworkSettings = Struct::NetworkSettings;
 
 		using CurlList = Wrapper::CurlList;
 
@@ -175,7 +179,7 @@ namespace crawlservpp::Network {
 
 		Curl(
 				std::string_view cookieDirectory,
-				const NetworkOptions& setNetworkOptions
+				const NetworkSettings& setNetworkSettings
 		);
 
 		//! Default destructor.
@@ -307,7 +311,7 @@ namespace crawlservpp::Network {
 		bool post{false};
 		std::string tmpCookies;
 		std::string oldCookies;
-		const NetworkOptions networkOptions;
+		const NetworkSettings networkSettings;
 		int features{};
 		unsigned int version{};
 
@@ -336,8 +340,19 @@ namespace crawlservpp::Network {
 		void setOption(CURLoption option, long longValue);
 		void setOption(CURLoption option, CurlList& list);
 		void setOption(CURLoption option, void * pointer);
+
 		[[nodiscard]] bool hasFeature(int feature) const noexcept;
+
 		void checkCode();
+
+		void clearContent();
+		[[nodiscard]] std::string preparePost(std::string_view url, std::string& postFieldsTo);
+		[[nodiscard]] std::string prepareGet(std::string_view url);
+		void checkResult(const std::array<char, CURL_ERROR_SIZE>& errorBuffer);
+		void checkResponseCode(const std::vector<std::uint32_t>& errors);
+		void retrieveContentType();
+		void checkCompression();
+		void repairEncoding();
 	};
 
 	/*
@@ -354,19 +369,19 @@ namespace crawlservpp::Network {
 	 *  which is used to handle incoming network traffic (and is provided by the class).
 	 *
 	 * \param cookieDirectory The path to the directory where cookies will be saved in.
-	 * \param setNetworkOptions The network options for the connection represented by this instance.
+	 * \param setNetworkSettings The network options for the connection represented by this instance.
 	 *
 	 * \throws Curl::Exception if the API could not be initalized,
 	 *   the used @c libcurl library does not support SSL,
 	 *   or the initial options not be set.
 	 *
-	 * \sa writer, writerInClass, NetworkOptions
+	 * \sa writer, writerInClass, NetworkSettings
 	 */
 	inline Curl::Curl(
 			std::string_view cookieDirectory,
-			const NetworkOptions& setNetworkOptions
+			const NetworkSettings& setNetworkSettings
 	)		:	cookieDir(cookieDirectory),
-				networkOptions(setNetworkOptions) {
+				networkSettings(setNetworkSettings) {
 		// check pointer to libcurl instance
 		if(!(this->curl.valid())) {
 			throw Curl::Exception("Could not initialize the libcurl library");
@@ -767,9 +782,9 @@ namespace crawlservpp::Network {
 		this->setOption(CURLOPT_FORBID_REUSE, globalConfig.networkConfig.noReUse);
 
 		if(globalConfig.networkConfig.proxy.empty()) {
-			if(!(this->networkOptions.defaultProxy.empty())) {
+			if(!(this->networkSettings.defaultProxy.empty())) {
 				// no proxy is given, but default proxy is set: use default proxy
-				this->setOption(CURLOPT_PROXY, this->networkOptions.defaultProxy);
+				this->setOption(CURLOPT_PROXY, this->networkSettings.defaultProxy);
 			}
 		}
 		else {
@@ -1148,8 +1163,7 @@ namespace crawlservpp::Network {
 			std::string& contentTo,
 			const std::vector<std::uint32_t>& errors
 	) {
-		std::string escapedUrl;
-		std::array<char, CURL_ERROR_SIZE> errorBuffer{};
+		this->clearContent();
 
 		/*
 		 * NOTE:	The following string needs to be available until after the request,
@@ -1157,193 +1171,37 @@ namespace crawlservpp::Network {
 		 */
 		std::string postFields;
 
-		this->content.clear();
-		this->contentType.clear();
-
-		this->responseCode = 0;
-
-		// check whether the explicit setting of the HTTP method is needed
-		if(usePost) {
-			const auto delim{url.find('?')};
-
-			if(delim == std::string::npos) {
-				// no POST data found: escape whole URL
-				escapedUrl = this->escapeUrl(url);
-
-				if(!(this->post)) {
-					// set POST method
-					this->setOption(CURLOPT_POST, true);
-
-					this->post = true;
-				}
-
-				// set POST field size to zero
-				this->setOption(CURLOPT_POSTFIELDSIZE, 0);
-			}
-			else {
-				// split POST data from URL (and escape the latter)
-				postFields = url.substr(delim + 1);
-
-				escapedUrl = this->escapeUrl(url.substr(0, delim));
-
-				// set POST data and its size
-				this->setOption(CURLOPT_POSTFIELDSIZE, postFields.size());
-				this->setOption(CURLOPT_POSTFIELDS, postFields);
-
-				this->post = true;
-			}
-		}
-		else {
-			// using GET: escape whole URL
-			escapedUrl = this->escapeUrl(url);
-
-			if(this->post) {
-				// unset POST method
-				this->setOption(CURLOPT_POST, false);
-
-				this->post = false;
-			}
-		}
+		const auto escapedUrl{
+			usePost ? this->preparePost(url, postFields) : this->prepareGet(url)
+		};
 
 		// set URL
 		this->setOption(CURLOPT_URL, escapedUrl);
 
 		// set error buffer
-		errorBuffer[0] = 0;
+		std::array<char, CURL_ERROR_SIZE> errorBuffer{};
+
+		errorBuffer.at(0) = 0;
 
 		this->setOption(CURLOPT_ERRORBUFFER, errorBuffer.data());
 
-		// reset 'X-ts' header value
-		this->xTsHeaderValue = 0;
-
 		// perform request
-		CURLcode result{CURLE_OK};
-
 		try {
-			result = curl_easy_perform(this->curl.get());
+			this->curlCode = curl_easy_perform(this->curl.get());
 		}
-		catch(const std::exception& e) {
+		catch(const std::exception& e) { /* handle exception */
 			// reset error buffer
 			this->setOption(CURLOPT_ERRORBUFFER, nullptr);
 
 			throw Curl::Exception(e.what());
 		}
 
-		if(result != CURLE_OK) {
-			std::string curlError{curl_easy_strerror(result)};
-
-			if(errorBuffer[0] > 0) {
-				curlError += " [";
-				curlError += errorBuffer.data();
-				curlError += "]";
-			}
-
-			// reset error buffer
-			this->setOption(CURLOPT_ERRORBUFFER, nullptr);
-
-			// save resulting error code
-			this->curlCode = result;
-
-			throw Curl::Exception(curlError);
-		}
-
-		// reset error buffer
-		this->setOption(CURLOPT_ERRORBUFFER, nullptr);
-
-		// success
-		this->curlCode = CURLE_OK;
-
-		// get response code
-		//NOLINTNEXTLINE(google-runtime-int)
-		long responseCodeL{};
-
-		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
-		this->curlCode = curl_easy_getinfo(
-				this->curl.get(),
-				CURLINFO_RESPONSE_CODE,
-				&responseCodeL
-		);
-
-		this->checkCode();
-
-		if(
-				responseCodeL < 0
-				|| responseCodeL > std::numeric_limits<std::uint32_t>::max()
-		) {
-			throw Curl::Exception("Invalid HTTP response code");
-		}
-
-		this->responseCode = static_cast<std::uint32_t>(responseCodeL);
-
-		// check response code for errors that should throw an exception
-		if(
-				std::find(
-						errors.cbegin(),
-						errors.cend(),
-						this->responseCode
-				) != errors.cend()
-				&& (
-						this->xTsHeaderValue == 0
-						|| this->responseCode != this->xTsHeaderValue
-				)
-		) {
-			std::string exceptionString{"HTTP error "};
-
-			exceptionString += std::to_string(this->responseCode);
-
-			throw Curl::Exception(exceptionString);
-		}
-
-		// get content type
-		char * cString{nullptr};
-
-		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
-		this->curlCode = curl_easy_getinfo(
-				this->curl.get(),
-				CURLINFO_CONTENT_TYPE,
-				&cString
-		);
-
-		this->checkCode();
-
-		if(cString != nullptr) {
-			this->contentType = cString;
-		}
-		else {
-			this->contentType = std::string();
-		}
-
-		// perform character encoding operations
-		//  (convert ISO-8859-1 to UTF-8, remove invalid UTF-8 characters)
-		std::string repairedContent;
-
-		std::transform(
-				this->contentType.begin(),
-				this->contentType.end(),
-				this->contentType.begin(),
-				[](const auto c) {
-					return std::tolower(c);
-				}
-		);
-
-		this->contentType.erase(
-				std::remove_if(
-						this->contentType.begin(),
-						this->contentType.end(),
-						[](const auto c) {
-							return std::isspace(c);
-						}
-				),
-				this->contentType.end()
-		);
-
-		if(this->contentType.find("charset=iso-8859-1") != std::string::npos) {
-			this->content = Helper::Utf8::iso88591ToUtf8(this->content);
-		}
-
-		if(Helper::Utf8::repairUtf8(this->content, repairedContent)) {
-			this->content.swap(repairedContent);
-		}
+		// process result
+		this->checkResult(errorBuffer);
+		this->checkResponseCode(errors);
+		this->retrieveContentType();
+		this->checkCompression();
+		this->repairEncoding();
 
 		contentTo.swap(this->content);
 	}
@@ -1898,10 +1756,210 @@ namespace crawlservpp::Network {
 		return (this->features & feature) == feature; //NOLINT(hicpp-signed-bitwise)
 	}
 
-	// check return code of libcurl function calls
+	// check the return code of ANY libcurl function call
 	inline void Curl::checkCode() {
 		if(this->curlCode != CURLE_OK) {
 			throw Curl::Exception(curl_easy_strerror(this->curlCode));
+		}
+	}
+
+	// clear previously received content, including type, response code, and 'X-ts' header value
+	inline void Curl::clearContent() {
+		this->content.clear();
+		this->contentType.clear();
+
+		this->responseCode = 0;
+		this->xTsHeaderValue = 0;
+	}
+
+	// prepare POST request and fill POST fields, if necessary, returns escaped URL
+	inline std::string Curl::preparePost(std::string_view url, std::string& postFieldsTo) {
+		const auto delim{url.find('?')};
+		const bool noFields{delim == std::string::npos};
+
+		if(noFields) {
+			// set POST method if necessary
+			if(!(this->post)) {
+				this->setOption(CURLOPT_POST, true);
+
+				this->post = true;
+			}
+
+			// set POST field size to zero
+			this->setOption(CURLOPT_POSTFIELDSIZE, 0);
+
+			// escape whole URL
+			return this->escapeUrl(url);
+		}
+
+		// split POST data from URL (and escape the latter)
+		postFieldsTo = url.substr(delim + 1);
+
+		// set POST data and its size
+		this->setOption(CURLOPT_POSTFIELDSIZE, postFieldsTo.size());
+		this->setOption(CURLOPT_POSTFIELDS, postFieldsTo);
+
+		this->post = true;
+
+		return this->escapeUrl(url.substr(0, delim));
+	}
+
+	// prepare GET request, returns escaped URL
+	inline std::string Curl::prepareGet(std::string_view url) {
+		if(this->post) {
+			// unset POST method
+			this->setOption(CURLOPT_POST, false);
+
+			this->post = false;
+		}
+
+		// escape whole URL
+		return this->escapeUrl(url);
+	}
+
+	// check the result of performing a HTTP request, throws Curl::Exception
+	inline void Curl::checkResult(const std::array<char, CURL_ERROR_SIZE>& errorBuffer) {
+		// store result
+		const auto result{this->curlCode};
+
+		if(result == CURLE_OK) {
+			// reset error buffer
+			this->setOption(CURLOPT_ERRORBUFFER, nullptr);
+
+			return;
+		}
+
+		std::string curlError{curl_easy_strerror(result)};
+
+		if(errorBuffer.at(0) > 0) {
+			curlError += " [";
+			curlError += errorBuffer.data();
+			curlError += "]";
+		}
+
+		// reset error buffer
+		this->setOption(CURLOPT_ERRORBUFFER, nullptr);
+
+		// restore result (might have been changed by call to setOption())
+		this->curlCode = result;
+
+		throw Curl::Exception(curlError);
+	}
+
+	// check the response code after performing a HTTP request
+	inline void Curl::checkResponseCode(const std::vector<std::uint32_t>& errors) {
+		// get response code
+		//NOLINTNEXTLINE(google-runtime-int)
+		long responseCodeL{};
+
+		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+		this->curlCode = curl_easy_getinfo(
+				this->curl.get(),
+				CURLINFO_RESPONSE_CODE,
+				&responseCodeL
+		);
+
+		this->checkCode();
+
+		if(
+				responseCodeL < 0
+				|| responseCodeL > std::numeric_limits<std::uint32_t>::max()
+		) {
+			throw Curl::Exception("Invalid HTTP response code");
+		}
+
+		this->responseCode = static_cast<std::uint32_t>(responseCodeL);
+
+		// check response code for errors that should throw an exception
+		if(
+				std::find(
+						errors.cbegin(),
+						errors.cend(),
+						this->responseCode
+				) != errors.cend()
+				&& (
+						this->xTsHeaderValue == 0
+						|| this->responseCode != this->xTsHeaderValue
+				)
+		) {
+			std::string exceptionString{"HTTP error "};
+
+			exceptionString += std::to_string(this->responseCode);
+
+			throw Curl::Exception(exceptionString);
+		}
+	}
+
+	// get the content type after performing a HTTP request
+	inline void Curl::retrieveContentType() {
+		// get content type
+		char * cString{nullptr};
+
+		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+		this->curlCode = curl_easy_getinfo(
+				this->curl.get(),
+				CURLINFO_CONTENT_TYPE,
+				&cString
+		);
+
+		this->checkCode();
+
+		if(cString != nullptr) {
+			this->contentType = cString;
+		}
+		else {
+			this->contentType = std::string{};
+		}
+	}
+
+	// check for gzipped content that has not been detected by curl
+	inline void Curl::checkCompression() {
+		// check for gzipped content that curl could not decompress
+		if(
+				this->content.size() >= gzipMagicNumber.size()
+				&& this->contentType == "gzip"
+		) {
+			for(std::size_t byte{}; byte < gzipMagicNumber.size(); ++byte) {
+				if(this->content[byte] != gzipMagicNumber[byte]) {
+					return;
+				}
+			}
+
+			this->content = Data::Compression::Gzip::decompress(this->content);
+		}
+	}
+
+	// perform character encoding operations
+	//  (convert ISO-8859-1 to UTF-8, remove invalid UTF-8 characters)
+	inline void Curl::repairEncoding() {
+		std::string repairedContent;
+
+		std::transform(
+				this->contentType.begin(),
+				this->contentType.end(),
+				this->contentType.begin(),
+				[](const auto c) {
+					return std::tolower(c);
+				}
+		);
+
+		this->contentType.erase(
+				std::remove_if(
+						this->contentType.begin(),
+						this->contentType.end(),
+						[](const auto c) {
+							return std::isspace(c);
+						}
+				),
+				this->contentType.end()
+		);
+
+		if(this->contentType.find("charset=iso-8859-1") != std::string::npos) {
+			this->content = Helper::Utf8::iso88591ToUtf8(this->content);
+		}
+
+		if(Helper::Utf8::repairUtf8(this->content, repairedContent)) {
+			this->content.swap(repairedContent);
 		}
 	}
 
