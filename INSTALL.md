@@ -322,6 +322,8 @@ make
 cd ..
 ```
 
+**Note:** You can use `make -jN` instead of `make` in order to use multiple threads. Replace `N` with the number of threads you want to use.
+
 Finally, to make sure that the command-and-control server has been build (and see its version, licens, and components) run:
 
     ./build/crawlserv -v
