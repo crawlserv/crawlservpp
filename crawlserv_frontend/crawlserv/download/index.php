@@ -4,7 +4,7 @@
  *  
  * ---
  * 
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  * 
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +37,26 @@ function isJSON($str) {
     }
     
     return false;
+}
+
+// function to get content type from file name
+function getContentType($filename) {
+    $ending =  substr($filename, -4);
+    
+    switch($ending) {
+        case ".css":
+            return "text/css";
+            
+        case ".ods":
+            return "application/vnd.oasis.opendocument.spreadsheet";
+            
+        case ".odt":
+            return "application/vnd.oasis.opendocument.text";
+            
+        default:
+            /* assume plain text by default */
+            return "text/plain";
+    }
 }
 
 // <DEBUG>
@@ -661,7 +681,7 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
 }
 
 if(isset($_SESSION["crawlserv_data"]) && isset($_SESSION["crawlserv_filename"])) {
-    header('Content-Type: text/plain; charset=utf-8');
+    header('Content-Type: '.getContentType($_SESSION["crawlserv_filename"]).'; charset=utf-8');    
     header("Content-Disposition: attachment; filename=".$_SESSION["crawlserv_filename"]);
     
     echo $_SESSION["crawlserv_data"];
