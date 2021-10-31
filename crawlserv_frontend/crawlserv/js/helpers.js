@@ -3,7 +3,7 @@
  * 
  * ---
  * 
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  * 
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -279,8 +279,9 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 						
 						a.href = window.URL.createObjectURL(xhttp.response);
 						
-						if(cmdArgs["as"])
+						if(cmdArgs["as"]) {
 							a.download = cmdArgs["as"];
+						}
 						
 						a.style.display = "none";
 						
