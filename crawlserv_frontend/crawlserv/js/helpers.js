@@ -132,6 +132,25 @@ function htmlentities(string) {
 	);
 }
 
+// get content type from file name
+function getContentType(filename) {
+	var ending =  filename.substr(filename.length - 4);
+    
+    switch(ending) {
+        case ".css":
+            return "text/css";
+            
+        case ".ods":
+            return "application/vnd.oasis.opendocument.spreadsheet";
+            
+        case ".odt":
+            return "application/vnd.oasis.opendocument.text";
+            
+        default:
+            /* assume plain text by default */
+            return "text/plain";
+    }
+}
 
 /*
  * FRONTEND
@@ -281,6 +300,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 						
 						if(cmdArgs["as"]) {
 							a.download = cmdArgs["as"];
+							a.type = getContentType(a.download);							
 						}
 						
 						a.style.display = "none";
