@@ -300,7 +300,7 @@ function runCmd(cmd, cmdArgs, doReload, reloadArgs, getReloadArgFrom, saveReload
 						
 						if(cmdArgs["as"]) {
 							a.download = cmdArgs["as"];
-							a.type = getContentType(a.download);							
+							a.type = getContentType(a.download);
 						}
 						
 						a.style.display = "none";
