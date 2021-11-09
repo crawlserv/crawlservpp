@@ -780,7 +780,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			std::vector<std::uint64_t>& catsCountersTo
 	) {
 		for(const auto& occurrence : article.second.keywordPositions) {
-			processTermOccurrence(article, occurrence, occurrencesTo, catsCountersTo);
+			this->processTermOccurrence(article, occurrence, occurrencesTo, catsCountersTo);
 		}
 	}
 
@@ -794,7 +794,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		++occurrencesTo;
 
 		for(std::size_t cat{}; cat < this->algoConfig.categoryLabels.size(); ++cat) {
-			processCategory(article, occurrence, cat, catsCountersTo);
+			this->processCategory(article, occurrence, cat, catsCountersTo);
 		}
 	}
 
