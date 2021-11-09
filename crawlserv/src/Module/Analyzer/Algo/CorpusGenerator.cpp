@@ -303,17 +303,17 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					DataValue(sd2SentenceLength)
 			);
 
-			Helper::Memory::free(this->corpora);
-
 			// save results
 			this->database.insertCustomData(data);
 
-			this->database.updateTargetTable();
+			this->log(generalLoggingDefault, "created corpus statistics for '" + source + "'");
 
 			if(!(this->isRunning())) {
 				return;
 			}
 		}
+
+		this->database.updateTargetTable();
 
 		/*
 		 * NOTE: The status will be saved in-class and not set here, because
