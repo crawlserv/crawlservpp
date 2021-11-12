@@ -761,6 +761,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		result.articleId = article.first;
 		result.date = date;
+		result.catCounters = std::vector<std::uint64_t>(this->algoConfig.categoryLabels.size(), 0);
 
 		for(const auto& occurrence : article.second.keywordPositions) {
 			this->processTermOccurrence(article, occurrence, result.nOccurences, result.catCounters);
