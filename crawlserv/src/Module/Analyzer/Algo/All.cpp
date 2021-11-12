@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -39,6 +39,7 @@
 
 // <ADD HEADER OF ALGORITHM HERE>
 #include "AllTokens.hpp"
+#include "Assoc.hpp"
 #include "AssocOverTime.hpp"
 #include "CorpusGenerator.hpp"
 #include "SentimentOverTime.hpp"
@@ -84,6 +85,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		REGISTER_ALGORITHM(44, WordsOverTime);		// NOLINT(cppcoreguidelines-macro-usage)
 		REGISTER_ALGORITHM(45, TopicModelling);		// NOLINT(cppcoreguidelines-macro-usage)
 		REGISTER_ALGORITHM(46, AllTokens);			// NOLINT(cppcoreguidelines-macro-usage)
+		REGISTER_ALGORITHM(47, Assoc);				// NOLINT(cppcoreguidelines-macro-usage)
 		// </ADD REGISTRATION OF ALGORITHM HERE>
 
 		return nullptr;

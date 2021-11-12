@@ -18,6 +18,10 @@
 			"algo-id": 41,
 			"config-cats": [ "tokenizer", "terms", "group-date", "filter-date", "filter-query" ]
 		},
+		"Associations": {
+			"algo-id": 47,
+			"config-cats": [ "tokenizer", "associations", "filter-date", "filter-query" ]
+		},
 		"Associations over Time": {
 			"algo-id": 42,
 			"config-cats": [ "tokenizer", "associations", "group-date", "filter-date", "filter-query" ]
