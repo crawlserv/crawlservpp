@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,9 @@
  *
  * Registration of implemented algorithms.
  *
- * NOTE: Algorithms need also to be included in 'json/algos.json' in 'crawlserv_frontend' in order to be usable by the frontend.
+ * NOTE: Algorithms need to be included in 'All.cpp'
+ *  and 'json/algos.json' (located in 'crawlserv_frontend')
+ *  in order to be usable by the frontend.
  *
  *  Created on: Jan 13, 2019
  *      Author: ans
