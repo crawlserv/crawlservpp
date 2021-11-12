@@ -91,7 +91,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::vector<StringString> fields;
 
 		const auto numFields{
-			assocResultMinNumColumns
+			assocOverTimeMinColumns
 			+ this->algoConfig.categoryLabels.size()
 		};
 
@@ -490,7 +490,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	// save results to database
 	void AssocOverTime::saveResults(const Results& results) {
 		const auto resultNumColumns{
-			assocResultMinNumColumns
+			assocOverTimeMinColumns
 			+ this->algoConfig.categoryLabels.size()
 		};
 
@@ -520,7 +520,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			++statusCounter;
 			++resultCounter;
 
-			if(statusCounter == assocUpdateProgressEvery) {
+			if(statusCounter == assocOverTimeUpdateProgressEvery) {
 				this->setProgress(
 						static_cast<float>(resultCounter)
 						/ results.size()
@@ -862,8 +862,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 					table,
 					missingDate,
 					std::vector<std::uint64_t>(
-							this->algoConfig.categoryLabels.size()
-							+ assocResultAdditionalColumns
+							assocOverTimeAddColumns
+							+ this->algoConfig.categoryLabels.size()
 					),
 					numColumns
 			);
@@ -908,7 +908,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				break;
 
 			default:
-				column = "analyzed__" + this->algoConfig.categoryLabels.at(n - assocResultAdditionalColumns);
+				column = "analyzed__" + this->algoConfig.categoryLabels.at(n - assocOverTimeAddColumns);
 			}
 
 			data.columns_types_values.emplace_back(

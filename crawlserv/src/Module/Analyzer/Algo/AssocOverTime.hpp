@@ -65,13 +65,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	///@{
 
 	//! Indicates, while saving, after how many rows the progress of the thread will be updated.
-	inline constexpr auto assocUpdateProgressEvery{100};
+	inline constexpr auto assocOverTimeUpdateProgressEvery{100};
+	
+	//! Number of extra columns included in a dataset (except date).
+	inline constexpr auto assocOverTimeAddColumns{2}; /* number of articles, occurrences */
 
-	//! Number of extra columns included in a dataset.
-	inline constexpr auto assocResultAdditionalColumns{2};
-
-	//! Number of default columns to be written to the target table.
-	inline constexpr auto assocResultMinNumColumns{1 /* date */ + assocResultAdditionalColumns};
+	//! Minimum number of columns included in a dataset (including date).
+	inline constexpr auto assocOverTimeMinColumns{assocOverTimeAddColumns + 1 /* date */};
 
 	//@}
 
