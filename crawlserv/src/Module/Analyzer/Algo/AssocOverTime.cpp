@@ -459,7 +459,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->setProgress(0.F);
 
 		// process dates
-		auto results{this->processDates()};
+		const auto results{this->processDates()};
 
 		// set status message and reset progress
 		this->setStatusMessage("Writing results to database...");
