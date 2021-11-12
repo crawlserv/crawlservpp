@@ -471,7 +471,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	// process dates in order to save associations
 	AssocOverTime::Results AssocOverTime::processDates() {
-		std::vector<std::pair<std::string, std::vector<std::uint64_t>>> results;
+		Results results;
 
 		this->processedDates = 0;
 
@@ -739,10 +739,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	}
 
 	// process date
-	void AssocOverTime::processDate(
-			const DateAssociation& date,
-			std::vector<std::pair<std::string, std::vector<std::uint64_t>>>& resultsTo
-	) {
+	void AssocOverTime::processDate(const DateAssociation& date, Results& resultsTo) {
 		std::uint64_t occurrences{};
 		std::vector<std::uint64_t> catsCounters(this->algoConfig.categoryLabels.size(), 0);
 

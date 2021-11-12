@@ -212,7 +212,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		);
 		void processDate(
 				const DateAssociation& date,
-				std::vector<std::pair<std::string, std::vector<std::uint64_t>>>& resultsTo
+				Results& resultsTo
 		);
 		void processArticle(
 				const ArticleAssociation& article,
