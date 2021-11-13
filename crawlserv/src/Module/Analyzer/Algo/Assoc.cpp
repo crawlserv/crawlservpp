@@ -343,7 +343,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->log(generalLoggingDefault, "identifies " + status);
 
 		// set current corpus
-		const auto& corpus = this->corpora[this->currentCorpus];
+		const auto& corpus = this->corpora.at(this->currentCorpus);
 		const auto& dateMap = corpus.getcDateMap();
 		const auto& articleMap = corpus.getcArticleMap();
 		const auto& tokens = corpus.getcTokens();
@@ -580,14 +580,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				++(this->articleIndex);
 			}
 		}
-
-		// reduce date for grouping
-		std::string reducedDate{date.value};
-
-		Helper::DateTime::reduceDate(
-				reducedDate,
-				this->config.groupDateResolution
-		);
 
 		// add date if still necessary, and save its iterator
 		if(!(this->dateSaved) || this->previousDate != reducedDate) {
