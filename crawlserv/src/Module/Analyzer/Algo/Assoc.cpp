@@ -97,8 +97,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		fields.reserve(numFields);
 
+		fields.emplace_back("id", "TEXT COLLATE utf8mb4_unicode_ci");
 		fields.emplace_back("date", "VARCHAR(10)");
-		fields.emplace_back("n", "BIGINT UNSIGNED");
 		fields.emplace_back("occurrences", "BIGINT UNSIGNED");
 
 		for(const auto& label : this->algoConfig.categoryLabels) {
