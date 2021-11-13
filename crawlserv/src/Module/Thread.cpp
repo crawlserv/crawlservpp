@@ -387,7 +387,7 @@ namespace crawlservpp::Module {
 	 * \warning May not be used by the thread itself!
 	 */
 	void Thread::end() {
-		if(this->shutdown.load()) {
+		if(this->shutdown.load() || this->finished.load()) {
 			// if thread exists and has been interrupted, wait for thread and join
 			if(this->thread.joinable()) {
 				this->thread.join();
