@@ -343,7 +343,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->log(generalLoggingDefault, "identifies " + status);
 
 		// set current corpus
-		const auto& corpus = this->corpora[this->currentCorpus];
+		const auto& corpus = this->corpora.at(this->currentCorpus);
 		const auto& dateMap = corpus.getcDateMap();
 		const auto& articleMap = corpus.getcArticleMap();
 		const auto& tokens = corpus.getcTokens();
