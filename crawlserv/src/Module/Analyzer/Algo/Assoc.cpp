@@ -582,10 +582,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		}
 
 		// add date if still necessary, and save its iterator
-		if(!(this->dateSaved) || this->previousDate != reducedDate) {
-			dateIt = this->addDate(reducedDate);
+		if(!(this->dateSaved) || this->previousDate != date.value) {
+			dateIt = this->addDate(date.value);
 
-			this->previousDate = reducedDate;
+			this->previousDate = date.value;
 			this->dateSaved = true;
 		}
 
