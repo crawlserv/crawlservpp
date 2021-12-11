@@ -148,7 +148,7 @@ namespace crawlservpp::Main {
 	 * - runs the command-and-control server
 	 * - handles signals by the operating system
 	 */
-	class App final : protected SignalHandler {
+	class App final : SignalHandler {
 		// for convenience
 		using DatabaseSettings = Struct::DatabaseSettings;
 		using NetworkSettings = Struct::NetworkSettings;
@@ -168,12 +168,7 @@ namespace crawlservpp::Main {
 		int run() noexcept;
 
 		///@}
-		///@name Signal Handling
-		///@{
 
-		void shutdown(std::sig_atomic_t signal);
-
-		///@}
 		/**@name Copy and Move
 		 * The class is neither copyable, nor moveable.
 		 */
@@ -197,6 +192,9 @@ namespace crawlservpp::Main {
 		std::atomic<bool> running{true};
 		std::unique_ptr<Server> server;
 		bool showVersionsOnly{false};
+
+		// signal handling
+		void shutdown(std::sig_atomic_t signal);
 
 		// helper functions
 		bool getPassword(DatabaseSettings& dbSettings);
