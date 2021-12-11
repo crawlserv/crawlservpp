@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,8 +32,6 @@
 #include "App.hpp"
 
 namespace crawlservpp::Main {
-	volatile std::sig_atomic_t App::interruptionSignal{};
-
 	//! Constructor.
 	/*!
 	 * Writes the application header to @c stdout,
@@ -53,25 +51,6 @@ namespace crawlservpp::Main {
 			ServerSettings serverSettings;
 			DatabaseSettings dbSettings;
 			NetworkSettings networkSettings;
-
-			std::string error;
-
-#ifdef _WIN32
-			signal(SIGINT, App::signal);
-			signal(SIGTERM, App::signal);
-#else
-			// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init, hicpp-member-init)
-			struct sigaction sigIntHandler;
-
-			sigIntHandler.sa_handler = App::signal;
-
-			sigemptyset(&sigIntHandler.sa_mask);
-
-			sigIntHandler.sa_flags = 0;
-
-			sigaction(SIGINT, &sigIntHandler, nullptr);
-			sigaction(SIGTERM, &sigIntHandler, nullptr);
-#endif
 
 			// check number of arguments
 			App::checkArgumentNumber(args.size());
@@ -167,9 +146,7 @@ namespace crawlservpp::Main {
 		if(this->server) {
 			try {
 				while(this->server->tick() && this->running.load()) {
-					if(App::interruptionSignal != 0) {
-						this->shutdown();
-					}
+					this->SignalHandler::tick();
 				}
 
 				return EXIT_SUCCESS;
@@ -185,16 +162,9 @@ namespace crawlservpp::Main {
 		return EXIT_FAILURE;
 	}
 
-	//! Static signal handler forwarding a signal to the class.
-	void App::signal(const int signalNumber) {
-		App::interruptionSignal = signalNumber;
-	}
-
 	//! In-class signal handler shutting down the application.
-	void App::shutdown() {
+	void App::shutdown(std::sig_atomic_t signal) {
 		std::cout << "\n[SHUTDOWN] ";
-
-		const auto signal{App::interruptionSignal};
 
 		switch(signal) {
 		case SIGINT:

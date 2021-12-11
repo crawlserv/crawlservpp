@@ -285,6 +285,7 @@ add_executable(${PROJECT_NAME}
 		src/Main/App.cpp
 		src/Main/Database.cpp
 		src/Main/Server.cpp
+		src/Main/SignalHandler.cpp
 		src/Main/WebServer.cpp
 		src/Module/Analyzer/Algo/All.cpp
 		src/Module/Analyzer/Algo/AllTokens.cpp

@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@
 #include "ConfigFile.hpp"
 #include "Exception.hpp"
 #include "Server.hpp"
+#include "SignalHandler.hpp"
 #include "Version.hpp"
 
 #include "../Helper/DateTime.hpp"
@@ -46,7 +47,7 @@
 #include "../Struct/ServerSettings.hpp"
 
 #include <atomic>		// std::atomic
-#include <csignal>		// sigaction, sigemptyset/signal, SIGINT, SIGTERM, std::sig_atomic_t
+#include <csignal>		// SIGINT, SIGTERM, std::sig_atomic_t
 #include <exception>	// std::exception
 #include <iostream>		// std::cout, std::endl, std::flush
 #include <memory>		// std::make_unique, std::unique_ptr
@@ -147,7 +148,7 @@ namespace crawlservpp::Main {
 	 * - runs the command-and-control server
 	 * - handles signals by the operating system
 	 */
-	class App final {
+	class App final : protected SignalHandler {
 		// for convenience
 		using DatabaseSettings = Struct::DatabaseSettings;
 		using NetworkSettings = Struct::NetworkSettings;
@@ -170,11 +171,7 @@ namespace crawlservpp::Main {
 		///@name Signal Handling
 		///@{
 
-		//! Received signal, or zero if none has been received.
-		static volatile std::sig_atomic_t interruptionSignal;
-
-		static void signal(int signalNumber);
-		void shutdown();
+		void shutdown(std::sig_atomic_t signal);
 
 		///@}
 		/**@name Copy and Move
