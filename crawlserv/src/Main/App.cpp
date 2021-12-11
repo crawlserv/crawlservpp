@@ -32,6 +32,11 @@
 #include "App.hpp"
 
 namespace crawlservpp::Main {
+
+	/*
+	 * CONSTRUCTION AND DESTRUCTION
+	 */
+
 	//! Constructor.
 	/*!
 	 * Writes the application header to @c stdout,
@@ -137,6 +142,10 @@ namespace crawlservpp::Main {
 		std::cout << "\nBye bye." << std::endl;
 	}
 
+	/*
+	 * EXECUTION
+	 */
+
 	//! Runs the application.
 	int App::run() noexcept {
 		if(this->showVersionsOnly) {
@@ -162,7 +171,11 @@ namespace crawlservpp::Main {
 		return EXIT_FAILURE;
 	}
 
-	//! In-class signal handler shutting down the application.
+	/*
+	 * SIGNAL HANDLING (private)
+	 */
+
+	// shut down application after an interrupting signal has been received
 	void App::shutdown(std::sig_atomic_t signal) {
 		std::cout << "\n[SHUTDOWN] ";
 
@@ -186,7 +199,11 @@ namespace crawlservpp::Main {
 		this->running.store(false);
 	}
 
-	// helper function: get database password from user, return false on cancel
+	/*
+	 * HELPER FUNCTIONS (private)
+	 */
+
+	// get database password from user, return false on cancel
 	bool App::getPassword(DatabaseSettings& dbSettings) {
 		// prompt password for database
 
@@ -207,7 +224,7 @@ namespace crawlservpp::Main {
 		return !inputCancel;
 	}
 
-	// helper function: process a character from user input
+	// process a character from user input
 	bool App::inputLoop(DatabaseSettings& dbSettings, bool& isCancelTo) {
 		// get next character from user input
 		char input{Helper::Portability::getch()};
@@ -261,7 +278,11 @@ namespace crawlservpp::Main {
 		return this->running.load();
 	}
 
-	// static helper function: show version (and library versions if necessary)
+	/*
+	 * STATIC HELPER FUNCTIONS (private)
+	 */
+
+	// show version (and library versions if necessary)
 	void App::outputHeader(const bool showLibraryVersions) {
 		std::cout
 				<< descName << "\n"
@@ -278,14 +299,14 @@ namespace crawlservpp::Main {
 		std::cout << std::endl;
 	}
 
-	// static helper function: check number of command line arguments, throws Main::Exception
+	// check number of command line arguments, throws Main::Exception
 	inline void App::checkArgumentNumber(const int args) {
 		if(args != argsRequired) {
 			throw Exception(descUsage);
 		}
 	}
 
-	// static helper function: load database and server settings from configuration file, throws Main::Exception
+	// load database and server settings from configuration file, throws Main::Exception
 	void App::loadConfig(
 			const std::string& fileName,
 			ServerSettings& serverSettings,
