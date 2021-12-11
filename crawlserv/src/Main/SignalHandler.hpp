@@ -44,6 +44,8 @@ namespace crawlservpp::Main {
 		virtual ~SignalHandler();
 
 		///@}
+
+	protected:
 		///@name Tick
 		///@{
 
@@ -54,6 +56,8 @@ namespace crawlservpp::Main {
 		///@{
 
 		static void signal(int signalNumber);
+
+		//! In-class signal handler shutting down the application.
 		virtual void shutdown(std::sig_atomic_t signal) = 0;
 
 		///@}
