@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -215,7 +215,7 @@ namespace crawlservpp::Query {
 		// evaluate query with string result
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
-				const pugi::xpath_node_set nodeSet(this->query.evaluate_node_set(*(doc.doc)));
+				const auto nodeSet{this->query.evaluate_node_set(*(doc.doc))};
 
 				if(nodeSet.empty()) {
 					resultTo = "";
@@ -264,9 +264,7 @@ namespace crawlservpp::Query {
 		// evaluate query with multiple string results
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
-				const pugi::xpath_node_set nodeSet(
-						this->query.evaluate_node_set(*(doc.doc))
-				);
+				const auto nodeSet{this->query.evaluate_node_set(*(doc.doc))};
 
 				resultTo.reserve(nodeSet.size());
 
