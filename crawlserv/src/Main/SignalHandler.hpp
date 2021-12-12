@@ -41,7 +41,9 @@ namespace crawlservpp::Main {
 		///@{
 
 		SignalHandler();
-		virtual ~SignalHandler();
+
+		//! Destructor.
+		virtual ~SignalHandler() = default;
 
 		///@}
 

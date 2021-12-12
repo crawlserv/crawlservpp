@@ -57,9 +57,6 @@ namespace crawlservpp::Main {
 #endif
 	}
 
-	//! Destructor.
-	SignalHandler::~SignalHandler() {}
-
 	//! Checks for interrupting signal.
 	/*!
 	 * Shuts the program down if an interrupting signal
