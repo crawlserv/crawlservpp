@@ -682,7 +682,7 @@ if(isset($_POST["type"]) && isset($_POST["filename"])) {
 
 if(isset($_SESSION["crawlserv_data"]) && isset($_SESSION["crawlserv_filename"])) {
     header('Content-Type: '.getContentType($_SESSION["crawlserv_filename"]).'; charset=utf-8');    
-    header("Content-Disposition: attachment; filename=".$_SESSION["crawlserv_filename"]);
+    header('Content-Disposition: attachment; filename="'.$_SESSION["crawlserv_filename"].'"');
     
     echo $_SESSION["crawlserv_data"];
     
