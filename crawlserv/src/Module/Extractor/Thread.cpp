@@ -1138,7 +1138,6 @@ namespace crawlservpp::Module::Extractor {
 			);
 		}
 
-		// update status
 		this->setStatusMessage("Checking URLs...");
 
 		// check whether URLs have been fetched
@@ -1157,6 +1156,7 @@ namespace crawlservpp::Module::Extractor {
 			return;
 		}
 
+		this->setStatusMessage("Ready.");
 
 		// reset idling status
 		this->idle = false;

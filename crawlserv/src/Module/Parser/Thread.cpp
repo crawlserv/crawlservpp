@@ -760,7 +760,6 @@ namespace crawlservpp::Module::Parser {
 			);
 		}
 
-		// update status
 		this->setStatusMessage("Checking URLs...");
 
 		// check whether URLs have been fetched
@@ -781,6 +780,8 @@ namespace crawlservpp::Module::Parser {
 
 			return;
 		}
+
+		this->setStatusMessage("Ready.");
 
 		// reset idling status
 		this->idle = false;
