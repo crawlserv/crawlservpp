@@ -98,9 +98,6 @@ namespace crawlservpp::Module::Analyzer {
 	 * \sa onAlgoTick
 	 */
 	void Thread::onTick() {
-		// algorithm tick
-		this->onAlgoTick();
-
 		// has algorithm been finished?
 		if(this->idleStart > std::chrono::time_point<std::chrono::steady_clock>{}) {
 			// restart algorithm?
@@ -119,6 +116,9 @@ namespace crawlservpp::Module::Analyzer {
 				this->sleep(this->config.generalSleepWhenFinished);
 			}
 		}
+
+		// algorithm tick
+		this->onAlgoTick();
 	}
 
 	//! Pauses the analyzer.
