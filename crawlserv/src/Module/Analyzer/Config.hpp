@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
 #include "../Config.hpp"
 
 #include <algorithm>	// std::min
-#include <cstdint>		// std::uint8_t, std::std::uint64_t
+#include <cstdint>		// std::int32_t, std::uint8_t, std::std::uint64_t
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -71,6 +71,9 @@ namespace crawlservpp::Module::Analyzer {
 
 	//! Verbose logging is enabled.
 	inline constexpr std::uint8_t generalLoggingVerbose{3};
+
+	//! Default time (in s) after which to restart analysis once it has been completed (-1=deactivated).
+	inline constexpr std::int32_t defaultRestartAfter{-1};
 
 	//! Default time (in s) to wait before last try to re-connect to MySQL server.
 	inline constexpr std::uint64_t defaultSleepMySqlS{60};
@@ -151,6 +154,9 @@ namespace crawlservpp::Module::Analyzer {
 
 			//! Level of logging activity.
 			std::uint8_t generalLogging{generalLoggingDefault};
+
+			//! Time (in s) after which to restart analysis once it has been completed (-1=deactivated).
+			std::int32_t generalRestartAfter{defaultRestartAfter};
 
 			//! Time (in s) to wait before last try to re-connect to mySQL server.
 			std::uint64_t generalSleepMySql{defaultSleepMySqlS};

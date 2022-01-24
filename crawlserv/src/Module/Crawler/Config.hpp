@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@
 
 #include <algorithm>	// std::min
 #include <cstddef>		// std::size_t
-#include <cstdint>		// std::int64_t, std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
+#include <cstdint>		// std::int32_t, std::int64_t, std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
 #include <string>		// std::string
 #include <vector>		// std::vector
 
@@ -73,6 +73,9 @@ namespace crawlservpp::Module::Crawler {
 
 	//! Default number of URLs to be processed in one MySQL query.
 	inline constexpr std::uint16_t defaultMaxBatchSize{500};
+
+	//! Default time (in s) after which to re-crawl custom URLs once crawling has been completed (-1=deactivated).
+	inline constexpr std::int32_t defaultRestartAfter{-1};
 
 	//! Default number of re-tries on connection errors.
 	inline constexpr std::int64_t defaultReTries{720};
@@ -308,6 +311,9 @@ namespace crawlservpp::Module::Crawler {
 
 			//! Specifies whether to remove XML processing instructions (@c <?xml:...>) before parsing HTML content.
 			bool crawlerRemoveXmlInstructions{true};
+
+			//! Time (in s) after which to re-crawl custom URLs once crawling has been completed (-1=deactivated).
+			std::int32_t crawlerRestartAfter{defaultRestartAfter};
 
 			//! Number of re-tries on connection errors (-1=infinite).
 			std::int64_t crawlerReTries{defaultReTries};

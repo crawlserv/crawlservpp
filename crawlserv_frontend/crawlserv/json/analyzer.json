@@ -63,6 +63,16 @@
 			"simple": true,
 			"position": 5
 		},
+		"restart.after": {
+			"type": "number",
+			"default": -1,
+			"min": -1,
+			"max": 8640000,
+			"label": "Re-analyze after (s):",
+			"description": "Time (in s) after which to re-start the analysis once it has been completed (-1=deactivated).",
+			"position": 6,
+			"simple": true
+		},
 		"sleep.mysql": {
 			"type": "number",
 			"default": 60,
