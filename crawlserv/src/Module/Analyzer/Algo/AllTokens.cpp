@@ -215,26 +215,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	void AllTokens::onAlgoUnpause() {}
 
-	//! Clear the state of the algorithm.
-	void AllTokens::onAlgoClear() {
-		this->orderBy = NONE;
-
-		this->total = 0;
-		this->articleCount = 0;
-		this->count = 0;
-		this->updateCount = 0;
-		this->countsTable = 0;
-		this->hasArticles = 0;
-
-		this->done = false;
-		this->firstTick = true;
-
-		this->tokens.clear();
-		this->tokenCounts.clear();
-		this->singleMap.clear();
-		this->doubleMap.clear();
-
-	}
+	//! Does nothing.
+	void AllTokens::onAlgoClear() {}
 
 	//! Parses a configuration option for the algorithm.
 	void AllTokens::parseAlgoOption() {
@@ -265,11 +247,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Resets the algorithm.
 	void AllTokens::resetAlgo() {
 		this->orderBy = NONE;
+
 		this->total = 0;
 		this->articleCount = 0;
 		this->count = 0;
 		this->updateCount = 0;
 		this->countsTable = 0;
+
 		this->hasArticles = false;
 		this->done = false;
 		this->firstTick = true;

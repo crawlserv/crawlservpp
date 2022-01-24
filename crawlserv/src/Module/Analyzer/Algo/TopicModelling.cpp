@@ -220,22 +220,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void TopicModelling::onAlgoUnpause() {}
 
-	//! Resets the state of the algorithm.
-	void TopicModelling::onAlgoClear() {
-		this->model.clear(true);
-		this->timer.clear();
-
-		this->firstTick = true;
-		this->isTrained = false;
-
-		this->iteration = 0;
-		this->topicTable = 0;
-
-		// results
-		this->articlesDone.clear();
-		this->results.clear();
-		this->labels.clear();
-	}
+	//! Does nothing.
+	void TopicModelling::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS
@@ -321,10 +307,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->algoConfig = {};
 
 		this->model.clear(true);
+		this->timer.clear();
 
 		this->firstTick = true;
-		this->iteration = 0;
 		this->isTrained = false;
+
+		this->iteration = 0;
 		this->topicTable = 0;
 
 		Helper::Memory::free(this->articlesDone);

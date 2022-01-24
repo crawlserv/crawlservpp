@@ -193,21 +193,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void AssocOverTime::onAlgoUnpause() {}
 
-	//! Resets the state of the algorithm.
-	void AssocOverTime::onAlgoClear() {
-		this->associations.clear();
-		this->previousDate.clear();
-
-		this->currentCorpus = 0;
-		this->dateCounter = 0;
-		this->firstDatePos = 0;
-		this->dateMapSize = 0;
-		this->articleIndex = 0;
-		this->tokenIndex = 0;
-		this->processedDates = 0;
-
-		this->dateSaved = false;
-	}
+	//! Does nothing.
+	void AssocOverTime::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS
@@ -320,11 +307,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->currentCorpus = 0;
 		this->dateCounter = 0;
 		this->firstDatePos = 0;
-		this->dateSaved = false;
 		this->dateMapSize = 0;
 		this->articleIndex = 0;
 		this->tokenIndex = 0;
 		this->processedDates = 0;
+
+		this->dateSaved = false;
 	}
 
 	/*

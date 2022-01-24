@@ -193,21 +193,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void Assoc::onAlgoUnpause() {}
 
-	//! Reset the state of the algorithm.
-	void Assoc::onAlgoClear() {
-		this->associations.clear();
-		this->previousDate.clear();
-
-		this->currentCorpus = 0;
-		this->dateCounter = 0;
-		this->firstDatePos = 0;
-		this->dateMapSize = 0;
-		this->articleIndex = 0;
-		this->tokenIndex = 0;
-		this->processedDates = 0;
-
-		this->dateSaved = false;
-	}
+	//! Does nothing.
+	void Assoc::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS

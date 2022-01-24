@@ -351,10 +351,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void CorpusGenerator::onAlgoUnpause() {}
 
-	//! Resets the state of the algorithm.
-	void CorpusGenerator::onAlgoClear() {
-		this->status.clear();
-	}
+	//! Does nothing.
+	void CorpusGenerator::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS

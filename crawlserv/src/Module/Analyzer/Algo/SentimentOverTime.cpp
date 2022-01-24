@@ -236,14 +236,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void SentimentOverTime::onAlgoUnpause() {}
 
-	//! Resets the state of the algorithm.
-	void SentimentOverTime::onAlgoClear() {
-		this->dateData.clear();
-		this->articleData.clear();
-		this->previousDate.clear();
-
-		this->currentCorpus = 0;
-	}
+	//! Does nothing.
+	void SentimentOverTime::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS

@@ -181,13 +181,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void WordsOverTime::onAlgoUnpause() {}
 
-	//! Resets the state of the algorithm.
-	void WordsOverTime::onAlgoClear() {
-		this->firstTick = true;
-
-		this->dateResults.clear();
-		this->previousDate.clear();
-	}
+	//! Does nothing
+	void WordsOverTime::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS
@@ -209,6 +204,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->firstTick = true;
 
 		Helper::Memory::free(this->dateResults);
+		Helper::Memory::free(this->previousDate);
 	}
 
 	/*

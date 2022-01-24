@@ -267,12 +267,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-	//! Resets the state of the algorithm.
-	void Empty::onAlgoClear() {
-		/*
-		 * TODO: reset all variables used for the algorithm state
-		 */
-	}
+	//! Does nothing.
+	void Empty::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS

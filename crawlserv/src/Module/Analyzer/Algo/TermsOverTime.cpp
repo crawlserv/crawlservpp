@@ -175,12 +175,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void TermsOverTime::onAlgoUnpause() {}
 
-	//! Resets the state of the algorithm.
-	void TermsOverTime::onAlgoClear() {
-		this->firstTick = true;
-
-		this->dateCounts.clear();
-	}
+	//! Does nothing.
+	void TermsOverTime::onAlgoClear() {}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS
