@@ -767,10 +767,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		this->classifyArticles(statusSetter);
 		this->saveData(statusSetter);
 
-		// finished: sleep forever (i.e. until the thread is terminated)
 		this->finished();
-
-		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
 	// classify a queue of articles, multiple at a time

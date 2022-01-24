@@ -327,9 +327,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			this->status = "IDLE Corpus created.";
 		}
 
-		// algorithm has finished
 		this->finished();
-		this->sleep(std::numeric_limits<std::uint64_t>::max());
 	}
 
 	//! Sleeps until the thread is terminated.
