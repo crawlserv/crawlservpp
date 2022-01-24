@@ -1570,13 +1570,23 @@ namespace crawlservpp::Module::Crawler {
 		if(this->manualUrl.first == 0) {
 			// check whether manual crawling mode was already set off
 			if(!(this->manualOff)) {
-				// start manual crawling with start page
+				// start automatic crawling
 				this->log(crawlerLoggingDefault, "switches to recoverable AUTOMATIC mode.");
 
 				this->manualOff = true;
 
 				// reset last URL (start from the beginning)
 				this->nextUrl = IdString();
+
+				// restore last finish, if necessary
+				if(this->restore > 0) {
+					this->setLast(this->restore);
+
+					// adjust tick counter
+					this->tickCounter += this->restore;
+
+					this->restore = 0;
+				}
 			}
 
 			// check for retry
