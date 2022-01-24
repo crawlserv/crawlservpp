@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -288,13 +288,17 @@ namespace crawlservpp::Module::Crawler {
 
 		// timing
 		std::uint64_t tickCounter{};
-		std::chrono::steady_clock::time_point startTime{std::chrono::steady_clock::time_point::min()};
-		std::chrono::steady_clock::time_point pauseTime{std::chrono::steady_clock::time_point::min()};
-		std::chrono::steady_clock::time_point idleTime{std::chrono::steady_clock::time_point::min()};
+		std::chrono::steady_clock::time_point startTime{};
+		std::chrono::steady_clock::time_point pauseTime{};
+		std::chrono::steady_clock::time_point idleTime{};
 		/*
 		 * time of last HTTP request – only used when HTTP sleep is enabled
 		 */
-		std::chrono::steady_clock::time_point httpTime{std::chrono::steady_clock::time_point::min()};
+		std::chrono::steady_clock::time_point httpTime{};
+
+		// restart timer and URL to restore after re-crawling the manual URLs
+		std::chrono::time_point<std::chrono::steady_clock> idleStart{};
+		std::uint64_t restore{};
 
 		// initializing functions
 		void setUpConfig(std::queue<std::string>& warningsTo);

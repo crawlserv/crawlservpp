@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -345,7 +345,31 @@ namespace crawlservpp::Module::Crawler {
 				this->idleTime = std::chrono::steady_clock::now();
 			}
 
-			this->sleep(this->config.crawlerSleepIdle);
+			if(this->idleStart == std::chrono::time_point<std::chrono::steady_clock>{}) {
+				this->idleStart = std::chrono::steady_clock::now();
+			}
+
+			// re-crawl custom URLs?
+			if(
+					this->config.crawlerRestartAfter >= 0
+					&& std::chrono::duration_cast<std::chrono::seconds>(
+							std::chrono::steady_clock::now()
+							- this->idleStart
+					).count() >= this->config.crawlerRestartAfter
+			) {
+				this->restore = this->getLast();
+				this->setLast(0);
+
+				// reset
+				this->manualUrl = IdString();
+				this->nextUrl = IdString();
+				this->tickCounter = 0;
+				this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
+			}
+			else {
+				// sleep
+				this->sleep(this->config.crawlerSleepIdle);
+			}
 		}
 	}
 
@@ -1633,13 +1657,16 @@ namespace crawlservpp::Module::Crawler {
 		// set thread status
 		if(result) {
 			this->setStatusMessage(urlTo.second);
-		}
-		else {
-			this->setStatusMessage("IDLE Waiting for new URLs to crawl.");
-			this->setProgress(1.F);
+
+			return true;
 		}
 
-		return result;
+		this->setStatusMessage("IDLE Waiting for new URLs to crawl.");
+		this->setProgress(1.F);
+
+		this->log(crawlerLoggingDefault, "is done.");
+
+		return false;
 	}
 
 	// replace token variables in custom URL

@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@
 #include "../../Timer/Simple.hpp"
 
 #include <algorithm>	// std::all_of, std::any_of, std::remove_if
+#include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint64_t
 #include <locale>		// std::locale
@@ -239,6 +240,9 @@ namespace crawlservpp::Module::Analyzer {
 		 *  -> setUpQueries(), cleanUpQueries()
 		 */
 		std::vector<QueryStruct> queryFilterQueries;
+
+		// restart timer
+		std::chrono::time_point<std::chrono::steady_clock> idleStart{};
 
 		// initialization functions
 		void setUpConfig(std::queue<std::string>& warningsTo);

@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -236,8 +236,26 @@ namespace crawlservpp::Module::Analyzer {
 
 		this->log(generalLoggingDefault, "is done.");
 
-		// sleep
-		this->sleep(this->config.generalSleepWhenFinished);
+		if(this->idleStart == std::chrono::time_point<std::chrono::steady_clock>{}) {
+			this->idleStart = std::chrono::steady_clock::now();
+		}
+
+		// restart the analysis?
+		if(
+				this->config.generalRestartAfter >= 0
+				&& std::chrono::duration_cast<std::chrono::seconds>(
+						std::chrono::steady_clock::now()
+						- this->idleStart
+				).count() >= this->config.generalRestartAfter
+		) {
+			this->onReset();
+
+			this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
+		}
+		else {
+			// sleep
+			this->sleep(this->config.generalSleepWhenFinished);
+		}
 	}
 
 	//! Pauses the thread.
