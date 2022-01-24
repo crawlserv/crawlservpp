@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,8 +22,9 @@
  *
  * Thread.cpp
  *
- * Interface for a thread which implements all module-independent thread functionality like connecting to the database,
- *  managing the thread status (including pausing the thread), run the thread ticks and catching exceptions thrown by the thread.
+ * Interface for a thread which implements all module-independent thread functionality
+ *  like connecting to the database, managing the thread status (including pausing the thread),
+ *  run the thread ticks and catching exceptions thrown by the thread.
  *
  *  Created on: Oct 10, 2018
  *      Author: ans
