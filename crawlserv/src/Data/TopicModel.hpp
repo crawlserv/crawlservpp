@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1943,6 +1943,9 @@ namespace crawlservpp::Data {
 	 */
 
 	//! Clears the model, resets its settings and frees memory.
+	/*!
+	 * \param labelingOptions If true, labeling options will also be cleared.
+	 */
 	inline void TopicModel::clear(bool labelingOptions) {
 		this->hdpModel.reset();
 		this->hdpModelIdf.reset();
