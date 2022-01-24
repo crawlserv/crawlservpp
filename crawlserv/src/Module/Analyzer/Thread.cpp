@@ -100,6 +100,25 @@ namespace crawlservpp::Module::Analyzer {
 	void Thread::onTick() {
 		// algorithm tick
 		this->onAlgoTick();
+
+		// has algorithm been finished?
+		if(this->idleStart > std::chrono::time_point<std::chrono::steady_clock>{}) {
+			// restart algorithm?
+			if(
+					this->config.generalRestartAfter >= 0
+					&& std::chrono::duration_cast<std::chrono::seconds>(
+								std::chrono::steady_clock::now()
+								- this->idleStart
+					).count() >= this->config.generalRestartAfter
+			) {
+				this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
+
+				this->onReset();
+			}
+			else {
+				this->sleep(this->config.generalSleepWhenFinished);
+			}
+		}
 	}
 
 	//! Pauses the analyzer.
@@ -236,26 +255,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		this->log(generalLoggingDefault, "is done.");
 
-		if(this->idleStart == std::chrono::time_point<std::chrono::steady_clock>{}) {
-			this->idleStart = std::chrono::steady_clock::now();
-		}
-
-		// restart the analysis?
-		if(
-				this->config.generalRestartAfter >= 0
-				&& std::chrono::duration_cast<std::chrono::seconds>(
-						std::chrono::steady_clock::now()
-						- this->idleStart
-				).count() >= this->config.generalRestartAfter
-		) {
-			this->onReset();
-
-			this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
-		}
-		else {
-			// sleep
-			this->sleep(this->config.generalSleepWhenFinished);
-		}
+		this->idleStart = std::chrono::steady_clock::now();
 	}
 
 	//! Pauses the thread.
