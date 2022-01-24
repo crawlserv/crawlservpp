@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -220,8 +220,22 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void TopicModelling::onAlgoUnpause() {}
 
-	//! Does nothing.
-	void TopicModelling::onAlgoClear() {}
+	//! Resets the state of the algorithm.
+	void TopicModelling::onAlgoClear() {
+		this->model.clear(true);
+		this->timer.clear();
+
+		this->firstTick = true;
+		this->isTrained = false;
+
+		this->iteration = 0;
+		this->topicTable = 0;
+
+		// results
+		this->articlesDone.clear();
+		this->results.clear();
+		this->labels.clear();
+	}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS

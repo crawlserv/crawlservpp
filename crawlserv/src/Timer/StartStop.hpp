@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -69,6 +69,12 @@ namespace crawlservpp::Timer {
 		///@{
 
 		std::string totalStr();
+
+		///@}
+		///@name Reset
+		///@{
+
+		void clear();
 
 		///@}
 
@@ -166,6 +172,12 @@ namespace crawlservpp::Timer {
 						this->duration
 				).count()
 		);
+	}
+
+	//! Resets the internal state of the timer.
+	inline void StartStop::clear() {
+		this->timePoint = std::chrono::steady_clock::time_point{};
+		this->duration = std::chrono::steady_clock::duration{};
 	}
 
 } /* namespace crawlservpp::Timer */

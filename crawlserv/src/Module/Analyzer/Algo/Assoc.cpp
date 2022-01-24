@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -193,8 +193,21 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void Assoc::onAlgoUnpause() {}
 
-	//! Does nothing.
-	void Assoc::onAlgoClear() {}
+	//! Reset the state of the algorithm.
+	void Assoc::onAlgoClear() {
+		this->associations.clear();
+		this->previousDate.clear();
+
+		this->currentCorpus = 0;
+		this->dateCounter = 0;
+		this->firstDatePos = 0;
+		this->dateMapSize = 0;
+		this->articleIndex = 0;
+		this->tokenIndex = 0;
+		this->processedDates = 0;
+
+		this->dateSaved = false;
+	}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS

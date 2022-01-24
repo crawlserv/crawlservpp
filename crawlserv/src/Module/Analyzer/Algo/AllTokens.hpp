@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -155,11 +155,13 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			ARTICLES,
 			DATES
 		} orderBy{NONE};
+
 		std::size_t total{};
 		std::size_t articleCount{};
 		std::size_t count{};
 		std::size_t updateCount{};
 		std::size_t countsTable{};
+
 		bool hasArticles{false};
 		bool done{false};
 		bool firstTick{true};

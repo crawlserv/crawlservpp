@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -221,10 +221,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		std::vector<QueryStruct> queriesCategories;
 
 		// algorithm state
-		std::size_t currentCorpus{};
 		DateData dateData;
 		ArticleData articleData;
+
 		std::string previousDate;
+
+		std::size_t currentCorpus{};
 
 		// algorithm functions
 		void addCurrent();

@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -175,8 +175,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	//! Does nothing.
 	void TermsOverTime::onAlgoUnpause() {}
 
-	//! Does nothing.
-	void TermsOverTime::onAlgoClear() {}
+	//! Resets the state of the algorithm.
+	void TermsOverTime::onAlgoClear() {
+		this->firstTick = true;
+
+		this->dateCounts.clear();
+	}
 
 	/*
 	 * IMPLEMENTED CONFIGURATION FUNCTIONS

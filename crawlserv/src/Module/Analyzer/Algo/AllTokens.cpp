@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -215,8 +215,26 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 	void AllTokens::onAlgoUnpause() {}
 
-	//! Does nothing.
-	void AllTokens::onAlgoClear() {}
+	//! Clear the state of the algorithm.
+	void AllTokens::onAlgoClear() {
+		this->orderBy = NONE;
+
+		this->total = 0;
+		this->articleCount = 0;
+		this->count = 0;
+		this->updateCount = 0;
+		this->countsTable = 0;
+		this->hasArticles = 0;
+
+		this->done = false;
+		this->firstTick = true;
+
+		this->tokens.clear();
+		this->tokenCounts.clear();
+		this->singleMap.clear();
+		this->doubleMap.clear();
+
+	}
 
 	//! Parses a configuration option for the algorithm.
 	void AllTokens::parseAlgoOption() {

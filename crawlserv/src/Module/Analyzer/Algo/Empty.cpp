@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -267,13 +267,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		 */
 	}
 
-	/*
-	 * TODO: add description to the function, if necessary.
-	 */
-	//! Does nothing.
+	//! Resets the state of the algorithm.
 	void Empty::onAlgoClear() {
 		/*
-		 * TODO: [OPTIONAL] clear algorithm
+		 * TODO: reset all variables used for the algorithm state
 		 */
 	}
 

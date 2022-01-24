@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -365,10 +365,12 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		TopicModel model;
 
 		// algorithm state
-		bool firstTick{true};
-		std::size_t iteration{};
-		bool isTrained{false};
 		Timer::Simple timer;
+
+		bool firstTick{true};
+		bool isTrained{false};
+
+		std::size_t iteration{};
 
 		// second target table
 		std::size_t topicTable{};
