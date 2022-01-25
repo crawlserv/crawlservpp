@@ -115,6 +115,8 @@ namespace crawlservpp::Module::Analyzer {
 			else {
 				this->sleep(this->config.generalSleepWhenFinished);
 			}
+
+			return;
 		}
 
 		// algorithm tick
