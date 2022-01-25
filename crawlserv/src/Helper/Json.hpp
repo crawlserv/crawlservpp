@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -256,7 +256,7 @@ namespace crawlservpp::Helper::Json {
 		return stringify(std::string(stringToStringify));
 	}
 
-	//! Converts a vector of vectors of string pairs into a JSON array with corresponding objects containing [key, value] pairs
+	//! Converts a vector of vectors of string pairs into a JSON array with corresponding objects containing [key, value] pairs.
 	/*!
 	 * Uses @c RapidJSON for conversion into JSON.
 	 *  For more information about @c RapidJSON,
@@ -323,7 +323,7 @@ namespace crawlservpp::Helper::Json {
 		return std::string(buffer.GetString(), buffer.GetSize());
 	}
 
-	//! Converts a text map into a JSON array with corresponding objects containing [key, value] pairs
+	//! Converts a text map into a JSON array with corresponding objects containing [key, value] pairs.
 	/*!
 	 * Uses @c RapidJSON for conversion into JSON.
 	 *  For more information about @c RapidJSON,
