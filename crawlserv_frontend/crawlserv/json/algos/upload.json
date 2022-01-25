@@ -2,14 +2,6 @@
 	"label": "FTP upload",
 	"open": false,
 	
-	"target.column": {
-		"type": "string",
-		"default": "",
-		"label": "Resulting column:",
-		"description": "Name of the column in the target table to create the JSON file for uploading from.",
-		"simple": true,
-		"position": 1
-	},
 	"ftp": {
 		"type": "string",
 		"default": "",
@@ -25,5 +17,13 @@
 		"description": "URL of proxy to use while uploading the JSON file containing the result (if empty, no proxy will be used).",
 		"simple": true,
 		"position": 3
-	}
+	},
+	"target.column": {
+		"type": "string",
+		"default": "",
+		"label": "Resulting column:",
+		"description": "Name of the column in the target table to create the JSON file for uploading from.",
+		"simple": true,
+		"position": 1
+	},
 }
