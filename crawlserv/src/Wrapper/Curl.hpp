@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -43,6 +43,7 @@
 
 #endif
 
+#include <atomic>		// std::atomic
 #include <stdexcept>	// std::runtime_error
 
 namespace crawlservpp::Wrapper {
@@ -110,11 +111,8 @@ namespace crawlservpp::Wrapper {
 		// underlying pointer to the libcurl API
 		CURL * ptr{nullptr};
 
-		// stores whether the current instance has initialized libcurl globally
-		bool localInit;
-
 		// global initialization state of the libcurl API
-		static bool globalInit;
+		static std::atomic<unsigned int> globalInitCounter;
 	};
 
 	/*
@@ -137,20 +135,13 @@ namespace crawlservpp::Wrapper {
 	 */
 	inline Curl::Curl() {
 		// initialize global instance of libcurl if necessary
-		if(globalInit) {
-			this->localInit = false;
-		}
-		else {
+		if(Curl::globalInitCounter.fetch_add(1) == 0) {
 			//NOLINTNEXTLINE(hicpp-signed-bitwise)
 			const auto curlCode{curl_global_init(CURL_GLOBAL_ALL)};
 
 			if(curlCode != CURLE_OK) {
 				throw std::runtime_error(curl_easy_strerror(curlCode));
 			}
-
-			globalInit = true;
-
-			this->localInit = true;
 		}
 
 		// initialize local instance of libcurl
@@ -158,14 +149,8 @@ namespace crawlservpp::Wrapper {
 			this->init();
 		}
 		catch(...) {
-			if(this->localInit) {
-				if(globalInit) {
-					curl_global_cleanup();
-
-					globalInit = false;
-				}
-
-				this->localInit = false;
+			if(Curl::globalInitCounter.fetch_sub(1) == 1) {
+				curl_global_cleanup();
 			}
 
 			throw;
@@ -189,14 +174,8 @@ namespace crawlservpp::Wrapper {
 		this->clear();
 
 		// cleanup global instance if necessary
-		if(this->localInit) {
-			if(globalInit) {
-				curl_global_cleanup();
-
-				globalInit = false;
-			}
-
-			this->localInit = false;
+		if(Curl::globalInitCounter.fetch_sub(1) == 1) {
+			curl_global_cleanup();
 		}
 	}
 
@@ -303,10 +282,6 @@ namespace crawlservpp::Wrapper {
 		this->ptr = other.ptr;
 
 		other.ptr = nullptr;
-
-		this->localInit = other.localInit;
-
-		other.localInit = false;
 	}
 
 	//! Move assignment operator.
@@ -341,13 +316,6 @@ namespace crawlservpp::Wrapper {
 			this->ptr = other.ptr;
 
 			other.ptr = nullptr;
-
-			// take, but also keep responsibility for global cleanup
-			if(other.localInit) {
-				this->localInit = true;
-
-				other.localInit = false;
-			}
 		}
 
 		return *this;

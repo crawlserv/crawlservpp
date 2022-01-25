@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,6 +36,6 @@
 namespace crawlservpp::Wrapper {
 
 	// set the libcurl API to not initialized
-	bool Curl::globalInit{false};
+	std::atomic<unsigned int> Curl::globalInitCounter{};
 
 } /* namespace crawlservpp::Wrapper */
