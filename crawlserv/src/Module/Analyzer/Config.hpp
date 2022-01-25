@@ -367,6 +367,7 @@ namespace crawlservpp::Module::Analyzer {
 				StringParsingOption::SQL
 		);
 		this->option("logging", this->config.generalLogging);
+		this->option("restart.after", this->config.generalRestartAfter);
 		this->option("sleep.mysql", this->config.generalSleepMySql);
 		this->option("sleep.when.finished", this->config.generalSleepWhenFinished);
 		this->option(

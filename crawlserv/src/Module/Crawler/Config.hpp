@@ -594,6 +594,7 @@ namespace crawlservpp::Module::Crawler {
 		this->option("remove.xml.instructions", this->config.crawlerRemoveXmlInstructions);
 		this->option("repair.cdata", this->config.crawlerRepairCData);
 		this->option("repair.comments", this->config.crawlerRepairComments);
+		this->option("restart.after", this->config.crawlerRestartAfter);
 		this->option("retries", this->config.crawlerReTries);
 		this->option("retry.archive", this->config.crawlerRetryArchive);
 		this->option("retry.empty", this->config.crawlerRetryEmpty);
