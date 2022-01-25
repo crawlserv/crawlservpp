@@ -95,34 +95,5 @@
 			"simple": true,
 			"position": 4
 		}
-	},
-	"upload": {
-		"label": "FTP Upload of Result",
-		"open": false,
-		
-		"target.column": {
-			"type": "string",
-			"default": "",
-			"label": "Resulting column:",
-			"description": "Name of the column in the target table to create the JSON file for uploading from.",
-			"simple": true,
-			"position": 1
-		},
-		"ftp": {
-			"type": "string",
-			"default": "",
-			"label": "FTP target URL:",
-			"description": "URL to upload the JSON file containing the result to (starts with 'ftp://' or 'sftp://'; might include username, password, and path on the server).",
-			"simple": true,
-			"position": 2
-		},
-		"proxy": {
-			"type": "string",
-			"default": "",
-			"label": "FTP proxy",
-			"description": "URL of proxy to use while uploading the JSON file containing the result (if empty, no proxy will be used).",
-			"simple": true,
-			"position": 3
-		}
 	}
 }

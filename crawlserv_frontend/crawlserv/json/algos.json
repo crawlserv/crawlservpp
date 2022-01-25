@@ -8,31 +8,31 @@
 		},
 		"Count All Tokens": {
 			"algo-id": 46,
-			"config-cats": [ "all-tokens", "tokenizer", "filter-date", "filter-query" ]
+			"config-cats": [ "all-tokens", "tokenizer", "filter-date", "filter-query", "upload" ]
 		},
 		"Count Words over Time": {
 			"algo-id": 44,
-			"config-cats": [ "tokenizer", "group-date", "filter-date", "filter-query" ]
+			"config-cats": [ "tokenizer", "group-date", "filter-date", "filter-query", "upload" ]
 		},
 		"Count Terms over Time [unimplemented]": {
 			"algo-id": 41,
-			"config-cats": [ "tokenizer", "terms", "group-date", "filter-date", "filter-query" ]
+			"config-cats": [ "tokenizer", "terms", "group-date", "filter-date", "filter-query", "upload" ]
 		},
 		"Associations": {
 			"algo-id": 47,
-			"config-cats": [ "tokenizer", "associations", "filter-date", "filter-query" ]
+			"config-cats": [ "tokenizer", "associations", "filter-date", "filter-query", "upload" ]
 		},
 		"Associations over Time": {
 			"algo-id": 42,
-			"config-cats": [ "tokenizer", "associations", "group-date", "filter-date", "filter-query" ]
+			"config-cats": [ "tokenizer", "associations", "group-date", "filter-date", "filter-query", "upload" ]
 		},
 		"Sentiment over Time": {
 			"algo-id": 43,
-			"config-cats": [ "tokenizer", "sentiment", "group-date", "filter-date", "filter-query" ]
+			"config-cats": [ "tokenizer", "sentiment", "group-date", "filter-date", "filter-query", "upload" ]
 		},
 		"Topic Modelling": {
 			"algo-id": 45,
-			"config-cats": [ "tokenizer", "topic", "topic-training", "topic-model", "topic-labeling", "filter-date", "filter-query" ]
+			"config-cats": [ "tokenizer", "topic", "topic-training", "topic-model", "topic-labeling", "filter-date", "filter-query", "upload" ]
 		}
 	},
 	"Network Analyses": {
