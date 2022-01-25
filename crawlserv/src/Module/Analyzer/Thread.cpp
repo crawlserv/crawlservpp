@@ -110,6 +110,8 @@ namespace crawlservpp::Module::Analyzer {
 			) {
 				this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
 
+				this->setProgress(0.f);
+
 				this->onReset();
 			}
 			else {

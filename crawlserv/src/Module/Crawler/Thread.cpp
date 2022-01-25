@@ -358,7 +358,9 @@ namespace crawlservpp::Module::Crawler {
 					).count() >= this->config.crawlerRestartAfter
 			) {
 				this->restore = this->getLast();
+
 				this->setLast(0);
+				this->setProgress(0.f);
 
 				// reset
 				this->manualUrl = IdString();
