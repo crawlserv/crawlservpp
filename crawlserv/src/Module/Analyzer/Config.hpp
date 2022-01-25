@@ -283,6 +283,8 @@ namespace crawlservpp::Module::Analyzer {
 			 * Needs to start with 'ftp://' or 'sftp://'.
 			 *  Might include username, password, and path
 			 *  on the FTP server.
+			 *
+			 * If empty, no result will be uploaded.
 			 */
 			std::string uploadFTP;
 
