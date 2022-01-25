@@ -6,7 +6,7 @@
 		"type": "string",
 		"default": "",
 		"label": "FTP target URL:",
-		"description": "URL to upload the JSON file containing the result to (starts with 'ftp://' or 'sftp://'; might include username, password, and path on the server).",
+		"description": "URL to upload the JSON file containing the result to (starts with 'ftp://' or 'sftp://'; might include username, password, and path on the server). If empty, no result will be uploaded.",
 		"simple": true,
 		"position": 2
 	},
@@ -25,5 +25,5 @@
 		"description": "Name of the column in the target table to create the JSON file for uploading from.",
 		"simple": true,
 		"position": 1
-	},
+	}
 }
