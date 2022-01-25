@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -63,8 +63,7 @@ namespace crawlservpp::Network {
 		///@name Construction and Destruction
 		///@{
 
-		Downloader(const std::string& url, const std::string& proxy);
-		Downloader(const std::string& url);
+		Downloader(const std::string& url, const std::string& proxy = std::string{});
 		~Downloader();
 
 		///@}
@@ -112,13 +111,6 @@ namespace crawlservpp::Network {
 	 */
 	inline Downloader::Downloader(const std::string& url, const std::string& proxy)
 		: thread(&Downloader::threadFunction, this, url, proxy) {}
-
-	//! Constructor starting to download a URL.
-	/*!
-	 * \param url The URL to download.
-	 */
-	inline Downloader::Downloader(const std::string& url)
-		: thread(&Downloader::threadFunction, this, url, std::string{}) {}
 
 	//! Destructor.
 	/*!
