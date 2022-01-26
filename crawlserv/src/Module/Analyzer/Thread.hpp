@@ -39,6 +39,9 @@
 #include "../Thread.hpp"
 
 #include "../../Data/Corpus.hpp"
+#include "../../Data/Data.hpp"
+#include "../../Helper/DateTime.hpp"
+#include "../../Helper/Json.hpp"
 #include "../../Helper/Memory.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Network/FTPUpload.hpp"
@@ -50,6 +53,8 @@
 #include "../../Struct/ThreadOptions.hpp"
 #include "../../Struct/ThreadStatus.hpp"
 #include "../../Timer/Simple.hpp"
+
+#include "../../_extern/rapidjson/include/rapidjson/document.h"
 
 #include <algorithm>	// std::all_of, std::any_of, std::remove_if
 #include <chrono>		// std::chrono
@@ -96,6 +101,7 @@ namespace crawlservpp::Module::Analyzer {
 				const ThreadOptions& threadOptions,
 				const ThreadStatus& threadStatus
 		);
+
 		Thread(Main::Database& dbBase, const ThreadOptions& threadOptions);
 
 		///@}
@@ -226,6 +232,7 @@ namespace crawlservpp::Module::Analyzer {
 		///@name Helper Functions for Clean-up
 		///@{
 
+		void uploadResult();
 		void cleanUpCorpora();
 		void cleanUpQueries();
 
@@ -259,6 +266,59 @@ namespace crawlservpp::Module::Analyzer {
 		void addCorpus(std::size_t index, StatusSetter& statusSetter);
 		void combineCorpora(StatusSetter& statusSetter);
 		void filterCorpusByQuery(std::size_t index, StatusSetter& statusSetter);
+
+		// internal static helper template
+		template<typename Allocator>
+		[[nodiscard]] static rapidjson::Value createJSONValue(
+				Data::Type type,
+				Data::Value value,
+				const std::string& originalType,
+				Allocator& allocator
+		) {
+			rapidjson::Value result;
+
+			switch(type) {
+			case Data::Type::_bool:
+				result.SetBool(value._b);
+
+				break;
+
+			case Data::Type::_int32:
+				result.SetInt(value._i32);
+
+				break;
+
+			case Data::Type::_uint32:
+				result.SetUint(value._ui32);
+
+				break;
+
+			case Data::Type::_int64:
+				result.SetUint(value._i64);
+
+				break;
+
+			case Data::Type::_uint64:
+				result.SetUint(value._ui64);
+
+				break;
+
+			case Data::Type::_double:
+				result.SetDouble(value._d);
+
+				break;
+
+			case Data::Type::_string:
+				result.SetString(value._s, allocator);
+
+				break;
+
+			default:
+				throw Thread::Exception("Cannot write unknown data type '" + originalType + "' to JSON");
+			}
+
+			return {};
+		}
 
 		// hide other functions not to be used by the thread
 		void start();

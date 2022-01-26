@@ -243,12 +243,18 @@ namespace crawlservpp::Module::Analyzer {
 	 * THREAD CONTROL FOR ALGORITHMS (protected)
 	 */
 
-	//! Sets the status of the analyzer to finished, and sleeps.
+	//! Sets the status of the analyzer to finished.
 	/*!
 	 * Call this function when the algorithm has
 	 *  finished.
+	 *
+	 * Uploads the indicated result, if FTP upload
+	 *  is enabled.
 	 */
 	void Thread::finished() {
+		// upload result
+		this->uploadResult();
+
 		// clear corpora and queries (if necessary)
 		this->cleanUpCorpora();
 		this->cleanUpQueries();
@@ -360,6 +366,94 @@ namespace crawlservpp::Module::Analyzer {
 	/*
 	 * CLEANUP FUNCTIONS (protected)
 	 */
+
+	//! Upload the specified result via FTP.
+	void Thread::uploadResult() {
+		if(this->config.uploadFTP.empty()) {
+			return;
+		}
+
+		if(this->config.uploadTargetColumn.empty()) {
+			this->warning("Cannot upload result, because no target table column has been specified.");
+
+			return;
+		}
+
+		const auto targetTable{this->getTargetTableName()};
+		const auto targetColumn{"analyzed__" + this->config.uploadTargetColumn};
+		const auto targetType{this->database.getColumnType(targetTable, targetColumn)};
+		const auto parsedType{Data::parseSQLType(targetType)};
+		const auto targetUpdated{this->database.getTargetTableUpdated()};
+
+		// create JSON document and fill it with results
+		rapidjson::Document json;
+
+		json.SetObject();
+
+		auto& allocator = json.GetAllocator();
+
+		json.AddMember("lastUpdate", targetUpdated, allocator);
+
+		rapidjson::Value jsonResults;
+
+		// check whether target table contains date strings
+		if(this->database.isColumnExists(targetTable, "analyzed_date")) {
+
+			// get result with date string
+			Data::GetColumnsMixed getColumnsMixed;
+
+			getColumnsMixed.columns_types.emplace_back("analyzed__date", Data::Type::_string);
+			getColumnsMixed.columns_types.emplace_back(targetColumn, parsedType);
+			getColumnsMixed.order.emplace_back("analyzed__date");
+
+			this->database.getCustomData(getColumnsMixed);
+
+			jsonResults.SetObject();
+
+			for(std::size_t index{}; index < getColumnsMixed.values.at(0).size(); ++index) {
+				rapidjson::Value key;
+
+				key.SetString(getColumnsMixed.values.at(0).at(index)._s, allocator);
+
+				jsonResults.AddMember(
+						key,
+						Thread::createJSONValue(
+								parsedType,
+								getColumnsMixed.values.at(1).at(index),
+								targetType,
+								allocator
+						),
+						allocator
+				);
+			}
+		}
+		else {
+			// get result without date string
+			Data::GetColumn getColumn;
+
+			getColumn.table = targetTable;
+			getColumn.column = targetColumn;
+			getColumn.type = parsedType;
+
+			this->database.getCustomData(getColumn);
+
+			jsonResults.SetArray();
+
+			for(const auto& value : getColumn.values) {
+				jsonResults.PushBack(Thread::createJSONValue(parsedType, value, targetType, allocator), allocator);
+			}
+		}
+
+		json.AddMember("results", jsonResults, allocator);
+		json.AddMember("written", Helper::DateTime::now(), allocator);
+
+		// upload resulting JSON
+		Network::FTPUpload::write(
+				Helper::Json::stringify(json),
+				this->config.uploadFTP,
+				this->config.uploadProxy
+		);
+	}
 
 	//! Clean up all corpora and free their memory.
 	void Thread::cleanUpCorpora() {
