@@ -317,7 +317,7 @@ namespace crawlservpp::Module::Analyzer {
 				throw Thread::Exception("Cannot write unknown data type '" + originalType + "' to JSON");
 			}
 
-			return {};
+			return result;
 		}
 
 		// hide other functions not to be used by the thread
