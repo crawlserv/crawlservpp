@@ -271,6 +271,48 @@ namespace crawlservpp::Module::Analyzer {
 		}
 	}
 
+	//! Gets the date/time when the target table has been updated last.
+	/*!
+	 * \returns The date/time when the target table has been updated last.
+	 */
+	std::string Database::getTargetTableUpdated() {
+		// check connection
+		this->checkConnection();
+
+		// check prepared SQL statement
+		if(this->ps.getTargetTableUpdated == 0) {
+			throw Exception(
+					"Analyzer::Database::getTargetTableUpdated():"
+					" Missing prepared SQL statement"
+			);
+		}
+
+		// get prepared SQL statement
+		auto& sqlStatement{this->getPreparedStatement(this->ps.getTargetTableUpdated)};
+
+		std::string result;
+
+		try {
+			// execute SQL query
+			SqlResultSetPtr sqlResultSet{Database::sqlExecuteQuery(sqlStatement)};
+
+			// check result
+			if(!sqlResultSet || !(sqlResultSet->next())) {
+				throw Exception(
+						"Analyzer::Database::getTargetTableUpdated():"
+						" Could not get last update date/time of the target table"
+				);
+			}
+
+			result = sqlResultSet->getString("updated");
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Analyzer::Database::getTargetTableUpdated", e);
+		}
+
+		return result;
+	}
+
 	/*
 	 * ADDITIONAL TABLE INITIALIZATION AND UPDATE
 	 */
@@ -808,6 +850,16 @@ namespace crawlservpp::Module::Analyzer {
 					" WHERE id = " + std::to_string(this->targetTableId) +
 					" LIMIT 1",
 					this->ps.updateTargetTable
+			);
+
+			this->log(verbose, "prepares getTargetTableUpdated()...");
+
+			this->addPreparedStatement(
+					"SELECT updated"
+					" FROM crawlserv_analyzedtables"
+					" WHERE id = " + std::to_string(this->targetTableId) +
+					" LIMIT 1",
+					this->ps.getTargetTableUpdated
 			);
 
 			this->log(verbose, "prepares updateAdditionalTable()...");

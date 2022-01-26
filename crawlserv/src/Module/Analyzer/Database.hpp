@@ -225,6 +225,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		void initTargetTable(bool isCompressed, bool isDelete);
 		void updateTargetTable();
+		[[nodiscard]] std::string getTargetTableUpdated();
 
 		///@}
 		///@name Additional Tables
@@ -322,6 +323,7 @@ namespace crawlservpp::Module::Analyzer {
 			std::size_t measureChunk{};
 			std::size_t measureCorpus{};
 			std::size_t updateTargetTable{};
+			std::size_t getTargetTableUpdated{};
 			std::size_t updateAdditionalTable{};
 		} ps;
 
