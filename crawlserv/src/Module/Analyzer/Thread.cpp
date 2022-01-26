@@ -450,7 +450,8 @@ namespace crawlservpp::Module::Analyzer {
 		Network::FTPUpload::write(
 				Helper::Json::stringify(json),
 				this->config.uploadFTP,
-				this->config.uploadProxy
+				this->config.uploadProxy,
+				this->config.uploadVerbose
 		);
 	}
 

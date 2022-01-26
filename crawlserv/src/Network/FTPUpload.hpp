@@ -45,7 +45,12 @@ namespace crawlservpp::Network::FTPUpload {
 	 *   used. If the string is empty, no proxy server
 	 *   will be used.
 	 */
-	void write(const std::string& content, const std::string& url, const std::string& proxy = std::string{});
+	void write(
+			const std::string& content,
+			const std::string& url,
+			const std::string& proxy = std::string{},
+			bool verbose = false
+	);
 
 	//! Custom reader function for FTP transfers.
 	/*!
@@ -104,7 +109,12 @@ namespace crawlservpp::Network::FTPUpload {
 	 * IMPLEMENTATION
 	 */
 
-	void inline write(const std::string& content, const std::string& url, const std::string& proxy) {
+	void inline write(
+			const std::string& content,
+			const std::string& url,
+			const std::string& proxy,
+			bool verbose
+	) {
 		Wrapper::Curl curl;
 		State state;
 
@@ -120,7 +130,6 @@ namespace crawlservpp::Network::FTPUpload {
 		FTPUpload::check(curl_easy_setopt(curl.get(), CURLOPT_UPLOAD, 1L));
 		FTPUpload::check(curl_easy_setopt(curl.get(), CURLOPT_READFUNCTION, FTPUpload::read));
 		FTPUpload::check(curl_easy_setopt(curl.get(), CURLOPT_READDATA, &state));
-		FTPUpload::check(curl_easy_setopt(curl.get(), CURLOPT_VERBOSE, 1L));
 		FTPUpload::check(
 				curl_easy_setopt(
 						curl.get(),
@@ -131,6 +140,10 @@ namespace crawlservpp::Network::FTPUpload {
 
 		if(!proxy.empty()) {
 			FTPUpload::check(curl_easy_setopt(curl.get(), CURLOPT_PROXY, proxy.c_str()));
+		}
+
+		if(verbose) {
+			FTPUpload::check(curl_easy_setopt(curl.get(), CURLOPT_VERBOSE, 1L));
 		}
 
 		FTPUpload::check(curl_easy_perform(curl.get()));

@@ -25,5 +25,11 @@
 		"description": "Name of the column in the target table to create the JSON file for uploading from.",
 		"simple": true,
 		"position": 1
+	},
+	"verbose": {
+		"type": "bool",
+		"default": false,
+		"description": "Write FTP network information to the server console while uploading the results.",
+		"simple": false
 	}
 }

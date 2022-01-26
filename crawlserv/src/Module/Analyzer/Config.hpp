@@ -278,7 +278,7 @@ namespace crawlservpp::Module::Analyzer {
 			 */
 			std::vector<std::uint16_t> tokenizerSavePoints{};
 
-			//! URL to upload the JSON file containing the result to.
+			//! URL to upload a JSON file containing the results to.
 			/*!
 			 * Needs to start with 'ftp://' or 'sftp://'.
 			 *  Might include username, password, and path
@@ -288,7 +288,7 @@ namespace crawlservpp::Module::Analyzer {
 			 */
 			std::string uploadFTP;
 
-			//! URL of proxy to use while uploading the JSON file containing the result.
+			//! URL of proxy to use while uploading a JSON file containing the results.
 			/*!
 			 * If empty, no proxy will be used.
 			 */
@@ -299,6 +299,9 @@ namespace crawlservpp::Module::Analyzer {
 			 * May not include the prefix ('analyzed_' or 'analyzed__')
 			 */
 			std::string uploadTargetColumn;
+
+			//! Specified whether FTP network information will be printed to the server console while uploading the results.
+			bool uploadVerbose{false};
 
 			///@}
 		}
@@ -428,6 +431,7 @@ namespace crawlservpp::Module::Analyzer {
 		this->option("ftp", this->config.uploadFTP);
 		this->option("proxy", this->config.uploadProxy);
 		this->option("target.column", this->config.uploadTargetColumn);
+		this->option("verbose", this->config.uploadVerbose);
 
 		// parse algo options
 		this->parseAlgoOption();
