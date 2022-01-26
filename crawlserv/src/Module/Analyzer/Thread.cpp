@@ -379,6 +379,8 @@ namespace crawlservpp::Module::Analyzer {
 			return;
 		}
 
+		this->setStatusMessage("Uploading results...");
+
 		const auto targetTable{this->getTargetTableName()};
 		const auto targetColumn{"analyzed__" + this->config.uploadTargetColumn};
 		const auto targetType{this->database.getColumnType(targetTable, targetColumn)};
@@ -445,7 +447,7 @@ namespace crawlservpp::Module::Analyzer {
 
 		json.AddMember("results", jsonResults, allocator);
 		json.AddMember("created", targetUpdated, allocator);
-		json.AddMember("udated", sourcesUpdated, allocator);
+		json.AddMember("updated", sourcesUpdated, allocator);
 
 		// upload resulting JSON
 		Network::FTPUpload::write(
@@ -454,6 +456,9 @@ namespace crawlservpp::Module::Analyzer {
 				this->config.uploadProxy,
 				this->config.uploadVerbose
 		);
+
+		this->setStatusMessage("Results uploaded.");
+		this->log(generalLoggingDefault, "uploaded results.");
 	}
 
 	//! Clean up all corpora and free their memory.
