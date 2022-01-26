@@ -396,8 +396,7 @@ namespace crawlservpp::Module::Analyzer {
 		rapidjson::Value jsonResults;
 
 		// check whether target table contains date strings
-		if(this->database.isColumnExists(targetTable, "analyzed_date")) {
-
+		if(this->database.isColumnExists(targetTable, "analyzed__date")) {
 			// get result with date string
 			Data::GetColumnsMixed getColumnsMixed;
 
