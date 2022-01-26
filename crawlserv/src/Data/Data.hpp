@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,12 +31,15 @@
 #ifndef DATA_DATA_HPP_
 #define DATA_DATA_HPP_
 
-#include <cstddef>	// std::size_t
-#include <cstdint>	// std::int32_t, std::int64_t, std::uint32_t, std::uint64_t
-#include <string>	// std::string
-#include <tuple>	// std::tuple
-#include <utility>	// std::pair, std::swap
-#include <vector>	// std::vector
+#include <algorithm>	// std::transform
+#include <array>		// std::array
+#include <cctype>		// std::tolower
+#include <cstddef>		// std::size_t
+#include <cstdint>		// std::int32_t, std::int64_t, std::uint32_t, std::uint64_t
+#include <string>		// std::string
+#include <tuple>		// std::tuple
+#include <utility>		// std::pair, std::swap
+#include <vector>		// std::vector
 
 namespace crawlservpp::Data {
 
@@ -415,6 +418,121 @@ namespace crawlservpp::Data {
 		//! The condition to be added to the SQL query updating the value.
 		std::string condition;
 	};
+
+	/*
+	 * HELPER FUNCTION
+	 */
+
+	///@name Helper Function
+	///@{
+
+	//! Parses the given SQL data type.
+	/*!
+	 * \param sqlType Constant reference to a string
+	 *   containing the SQL data type to parse.
+	 *
+	 * \returns The parsed data type.
+	 *
+	 * \sa Type
+	 */
+	[[nodiscard]] inline Type parseSQLType(std::string sqlType) {
+		// constants classifying SQL types
+		constexpr std::array boolTypes{"bool", "boolean"};
+		constexpr std::array int32Types{"bit", "tinyint", "smallint", "mediumint", "int", "integer"};
+		constexpr std::array int64Types{"bigint"};
+		constexpr std::array doubleTypes{"float", "double", "double precision", "decimal", "dec"};
+		constexpr std::array stringTypes{
+			"char",
+			"varchar",
+			"binary",
+			"varbinary",
+			"tinyblob",
+			"tinytext",
+			"text",
+			"blob",
+			"mediumtext",
+			"longtext",
+			"longblob",
+			"enum",
+			"set"
+		};
+
+		// convert data type to lower case
+		std::transform(
+				sqlType.begin(),
+				sqlType.end(),
+				sqlType.begin(),
+				[](const auto c) {
+					return std::tolower(c);
+				}
+		);
+
+		// remove size from retrieved data type
+		const auto bracketPos{sqlType.find_first_of('(')};
+
+		if(bracketPos != std::string::npos) {
+			const auto bracketEnd{sqlType.find_first_of(')', bracketPos + 1)};
+
+			if(bracketEnd != std::string::npos) {
+				sqlType = sqlType.substr(0, bracketPos) + sqlType.substr(bracketEnd + 1);
+			}
+		}
+
+		// detect types (unsigned ones first)
+		for(const auto& type : boolTypes) {
+			const std::string typeString{type};
+
+			if(sqlType.substr(0, typeString.length()) == typeString) {
+				return Type::_bool;
+			}
+		}
+
+		for(const auto& type : int32Types) {
+			const std::string typeString{type};
+			const auto unsignedType{typeString + " unsigned"};
+
+			if(sqlType.substr(0, unsignedType.length()) == unsignedType) {
+				return Type::_uint32;
+			}
+
+			if(sqlType.substr(0, typeString.length()) == typeString) {
+				return Type::_int32;
+			}
+		}
+
+		for(const auto& type : int64Types) {
+			const std::string typeString{type};
+			const auto unsignedType{typeString + " unsigned"};
+
+			if(sqlType.substr(0, unsignedType.length()) == unsignedType) {
+				return Type::_uint64;
+			}
+
+			if(sqlType.substr(0, typeString.length()) == typeString) {
+				return Type::_int64;
+			}
+		}
+
+		for(const auto& type : doubleTypes) {
+			const std::string typeString{type};
+
+			if(sqlType.substr(0, typeString.length()) == typeString) {
+				return Type::_double;
+			}
+		}
+
+		for(const auto& type : stringTypes) {
+			const std::string typeString{type};
+
+			if(sqlType.substr(0, typeString.length()) == typeString) {
+				return Type::_string;
+			}
+		}
+
+		return Type::_unknown;
+	}
+
+	///@}
 
 	/*
 	 * TEMPLATE FUNCTIONS
