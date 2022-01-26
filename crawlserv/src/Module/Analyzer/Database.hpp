@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -258,6 +258,7 @@ namespace crawlservpp::Module::Analyzer {
 				std::size_t& sourcesTo,
 				StatusSetter& statusSetter
 		);
+		[[nodiscard]] std::string getCorporaLastUpdated() const;
 
 		///@}
 		///@name Analyzer-specific Helpers
@@ -329,6 +330,9 @@ namespace crawlservpp::Module::Analyzer {
 
 		// function for checking whether the parent thread is still running
 		IsRunningCallback isRunning;
+
+		// last update date/time over all corpus sources
+		std::string corporaLastUpdated;
 
 		// internal helper function
 		bool checkSource(

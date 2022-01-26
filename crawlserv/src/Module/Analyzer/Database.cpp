@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1012,6 +1012,17 @@ namespace crawlservpp::Module::Analyzer {
 		return statusSetter.isRunning();
 	}
 
+	//! Gets the last update date/time over the sources of all corpora.
+	/*!
+	 * \returns A string containing the last
+	 *   update date/time over the sources of
+	 *   all corpora. If no corpus was created,
+	 *   the resulting string will be empty.
+	 */
+	std::string Database::getCorporaLastUpdated() const {
+		return this->corporaLastUpdated;
+	}
+
 	/*
 	 * PUBLIC HELPERS
 	 */
@@ -1290,6 +1301,11 @@ namespace crawlservpp::Module::Analyzer {
 			// get result
 			if(sqlResultSet && sqlResultSet->next()) {
 				const std::string updateTime{sqlResultSet->getString("updated")};
+
+				// store the latest update time of all corpora
+				if(updateTime > this->corporaLastUpdated) {
+					this->corporaLastUpdated = updateTime;
+				}
 
 				// execute SQL query for comparing the creation time of the corpus with the update time of the table
 				corpusStatement.setUInt(sqlArg1, properties.sourceType);
