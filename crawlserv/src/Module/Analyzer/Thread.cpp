@@ -400,6 +400,7 @@ namespace crawlservpp::Module::Analyzer {
 			// get result with date string
 			Data::GetColumnsMixed getColumnsMixed;
 
+			getColumnsMixed.table = targetTable;
 			getColumnsMixed.columns_types.emplace_back("analyzed__date", Data::Type::_string);
 			getColumnsMixed.columns_types.emplace_back(targetColumn, parsedType);
 			getColumnsMixed.order.emplace_back("analyzed__date");
