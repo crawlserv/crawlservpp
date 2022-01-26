@@ -383,6 +383,7 @@ namespace crawlservpp::Module::Analyzer {
 		const auto targetColumn{"analyzed__" + this->config.uploadTargetColumn};
 		const auto targetType{this->database.getColumnType(targetTable, targetColumn)};
 		const auto parsedType{Data::parseSQLType(targetType)};
+		const auto sourcesUpdated{this->database.getCorporaLastUpdated()};
 		const auto targetUpdated{this->database.getTargetTableUpdated()};
 
 		// create JSON document and fill it with results
@@ -391,8 +392,6 @@ namespace crawlservpp::Module::Analyzer {
 		json.SetObject();
 
 		auto& allocator = json.GetAllocator();
-
-		json.AddMember("lastUpdate", targetUpdated, allocator);
 
 		rapidjson::Value jsonResults;
 
@@ -445,7 +444,8 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		json.AddMember("results", jsonResults, allocator);
-		json.AddMember("written", Helper::DateTime::now(), allocator);
+		json.AddMember("created", targetUpdated, allocator);
+		json.AddMember("udated", sourcesUpdated, allocator);
 
 		// upload resulting JSON
 		Network::FTPUpload::write(
