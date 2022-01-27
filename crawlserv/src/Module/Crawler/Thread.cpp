@@ -368,8 +368,7 @@ namespace crawlservpp::Module::Crawler {
 				this->nextUrl = IdString();
 				this->tickCounter = 0;
 				this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
-
-				std::cout << "\nRESET" << std::flush;
+				this->startCrawled = false;
 			}
 			else {
 				// sleep
@@ -1425,8 +1424,6 @@ namespace crawlservpp::Module::Crawler {
 
 		// MANUAL CRAWLING MODE (get URL from configuration)
 		if(this->getLast() == 0) {
-			std::cout << "\nMANUAL FIRST=" << this->manualUrl.first << std::flush;
-
 			if(this->manualUrl.first > 0) {
 				// renew URL lock on manual URL (custom URL or start page) for retry
 				this->lockTime = this->database.lockUrlIfOk(
