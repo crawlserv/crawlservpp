@@ -369,6 +369,7 @@ namespace crawlservpp::Module::Crawler {
 				this->tickCounter = 0;
 				this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
 				this->startCrawled = false;
+				this->manualOff = false;
 			}
 			else {
 				// sleep
