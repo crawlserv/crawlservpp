@@ -364,6 +364,7 @@ namespace crawlservpp::Module::Crawler {
 
 				// reset
 				this->manualUrl = IdString();
+				this->manualCounter = 0;
 				this->nextUrl = IdString();
 				this->tickCounter = 0;
 				this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
