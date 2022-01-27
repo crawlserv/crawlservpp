@@ -368,6 +368,8 @@ namespace crawlservpp::Module::Crawler {
 				this->nextUrl = IdString();
 				this->tickCounter = 0;
 				this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
+
+				std::cout << "\nRESET" << std::flush;
 			}
 			else {
 				// sleep
@@ -1422,6 +1424,8 @@ namespace crawlservpp::Module::Crawler {
 		usePostTo = false;
 
 		// MANUAL CRAWLING MODE (get URL from configuration)
+		std::cout << "\nLAST=" << this->getLast() << std::flush;
+
 		if(this->getLast() == 0) {
 			if(this->manualUrl.first > 0) {
 				// renew URL lock on manual URL (custom URL or start page) for retry
