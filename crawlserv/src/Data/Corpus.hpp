@@ -4852,14 +4852,7 @@ namespace crawlservpp::Data {
 			return;
 		}
 
-		std::cout << "\nfinishArticle()" << std::flush;
-		std::cout << " to.size()=" << to.size()  << std::flush;
-		std::cout << " to[date].size()=" << to.at(date).size()  << std::flush;
-		std::cout << " to[date][article].size()=" << to.at(date).at(article).size();
-		std::cout << std::flush;
-		auto& articleSentences{to.at(date).at(article)};
-
-		Helper::Container::moveInto(articleSentences, from);
+		Helper::Container::moveInto(to[date][article], from); /* (inserts date/article if necessary) */
 		Helper::Memory::free(from);
 	}
 
