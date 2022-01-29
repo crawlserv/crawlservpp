@@ -2730,6 +2730,8 @@ namespace crawlservpp::Data {
 		}
 
 		// remove emptied dates, articles, and tokens
+		statusSetter.change("Cleaning corpus...");
+
 		this->reTokenize();
 
 		// check consistency, if necessary
