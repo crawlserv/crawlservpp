@@ -672,7 +672,6 @@ namespace crawlservpp::Data {
 				size_t entryIndex,
 				size_t pos
 		) {
-			std::cout << "\nentryBeginsAt()" << std::flush;
 			return entryIndex < map.size() && TextMapEntry::pos(map.at(entryIndex)) == pos;
 		}
 
@@ -693,7 +692,6 @@ namespace crawlservpp::Data {
 										tokenIndex < end;
 										++tokenIndex
 								) {
-									std::cout << "\nremoveEmptyEntries" << std::endl;
 									if(!(tokens.at(tokenIndex).empty())) {
 										return false;
 									}
@@ -729,7 +727,6 @@ namespace crawlservpp::Data {
 		) {
 			if(pos == 0) {
 				/* first token: set origin to first map entry */
-				std::cout << "\nskipEntriesBefore" << std::flush;
 				origin.first = TextMapEntry::pos(map.at(0));
 				origin.second = TextMapEntry::end(map.at(0));
 			}
@@ -766,7 +763,6 @@ namespace crawlservpp::Data {
 				return;
 			}
 
-			std::cout << "\nupdatePosition()" << std::flush;
 			if(removed > TextMapEntry::pos(map.at(entryIndex))) {
 				Corpus::exceptionPositionTooSmall(
 						TextMapEntry::pos(map.at(entryIndex)),
@@ -1075,7 +1071,6 @@ namespace crawlservpp::Data {
 			);
 		}
 
-		std::cout << "\nget()" << std::flush;
 		const auto& articleEntry{this->articleMap.at(index)};
 
 		return this->corpus.substr(
@@ -1212,7 +1207,6 @@ namespace crawlservpp::Data {
 			);
 		}
 
-		std::cout << "\ngetTokenized() #1" << std::flush;
 		const auto& articleEntry{this->articleMap.at(index)};
 		const auto articleEnd{TextMapEntry::end(articleEntry)};
 
@@ -1220,7 +1214,6 @@ namespace crawlservpp::Data {
 
 		copy.reserve(TextMapEntry::length(articleEntry));
 
-		std::cout << "\ngetTokenized() #2" << std::flush;
 		for(auto tokenIndex{TextMapEntry::pos(articleEntry)}; tokenIndex < articleEnd; ++tokenIndex) {
 			copy.emplace_back(this->tokens.at(tokenIndex));
 		}
@@ -1313,7 +1306,6 @@ namespace crawlservpp::Data {
 
 			const auto articleEnd{TextMapEntry::end(article)};
 
-			std::cout << "\ngetArticles()" << std::flush;
 			for(auto tokenIndex{TextMapEntry::pos(article)}; tokenIndex < articleEnd; ++tokenIndex) {
 				copy.back().emplace_back(this->tokens.at(tokenIndex));
 			}
@@ -1727,7 +1719,6 @@ namespace crawlservpp::Data {
 		std::size_t chunkIndex{};
 		bool splitToken{false};
 
-		std::cout << "\ncombineTokenized()" << std::flush;
 		for(auto& chunk : chunks) {
 			this->addChunk(
 					chunk,
@@ -2706,7 +2697,6 @@ namespace crawlservpp::Data {
 							articleEnd
 					)
 			) {
-				std::cout << "\nfilterArticles()" << std::flush;
 				// empty all tokens belonging to the article that has been filtered out
 				for(
 						std::size_t tokenIndex{TextMapEntry::pos(article)};
@@ -2867,7 +2857,6 @@ namespace crawlservpp::Data {
 
 			case corpusManipTagger:
 			case corpusManipTaggerPosterior:
-				std::cout << "\ntokenize() #1" << std::flush;
 				if(models.at(manipulatorIndex).empty()) {
 					throw Exception(
 						"Corpus::tokenize():"
@@ -2885,7 +2874,6 @@ namespace crawlservpp::Data {
 				break;
 
 			case corpusManipLemmatizer:
-				std::cout << "\ntokenize() #2" << std::flush;
 				if(dictionaries.at(manipulatorIndex).empty()) {
 					throw Exception(
 						"Corpus::tokenize():"
@@ -2906,7 +2894,6 @@ namespace crawlservpp::Data {
 
 			case corpusManipRemove:
 			case corpusManipTrim:
-				std::cout << "\ntokenize() #3" << std::flush;
 				if(dictionaries.at(manipulatorIndex).empty()) {
 					throw Exception(
 						"Corpus::tokenize():"
@@ -2929,7 +2916,6 @@ namespace crawlservpp::Data {
 				Corpus::notUsed("model", models, manipulatorIndex);
 				Corpus::notUsed("dictionary", dictionaries, manipulatorIndex);
 
-				std::cout << "\ntokenize() #4" << std::flush;
 				tokenCorrectors.emplace_back(languages.at(manipulatorIndex));
 
 				break;
@@ -2970,7 +2956,6 @@ namespace crawlservpp::Data {
 
 				case corpusManipTagger:
 				case corpusManipTaggerPosterior:
-					std::cout << "\ntokenize() #5" << std::flush;
 					taggers.at(taggerIndex).label(sentenceBegin, sentenceEnd);
 
 					++taggerIndex;
@@ -2992,7 +2977,6 @@ namespace crawlservpp::Data {
 					break;
 
 				case corpusManipLemmatizer:
-					std::cout << "\ntokenize() #6" << std::flush;
 					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
 						lemmatizer->lemmatize(*tokenIt, dictionaries.at(manipulatorIndex));
 					}
@@ -3000,7 +2984,6 @@ namespace crawlservpp::Data {
 					break;
 
 				case corpusManipRemove:
-					std::cout << "\ntokenize() #7" << std::flush;
 					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
 						tokenRemover->remove(*tokenIt, dictionaries.at(manipulatorIndex));
 					}
@@ -3008,7 +2991,6 @@ namespace crawlservpp::Data {
 					break;
 
 				case corpusManipTrim:
-					std::cout << "\ntokenize() #8" << std::flush;
 					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
 						tokenRemover->trim(*tokenIt, dictionaries.at(manipulatorIndex));
 					}
@@ -3016,7 +2998,6 @@ namespace crawlservpp::Data {
 					break;
 
 				case corpusManipCorrect:
-					std::cout << "\ntokenize() #9" << std::flush;
 					for(auto& tokenIt{sentenceBegin}; tokenIt != sentenceEnd; ++tokenIt) {
 						tokenCorrectors.at(correctIndex).correct(*tokenIt);
 					}
@@ -3608,7 +3589,6 @@ namespace crawlservpp::Data {
 				inDate = true;
 
 				// update beginning of date
-				std::cout << "\ntokenizeTokenized() #1" << std::flush;
 				TextMapEntry::pos(this->dateMap.at(dateIndex)) -= numDeletedTokens;
 			}
 
@@ -3622,7 +3602,6 @@ namespace crawlservpp::Data {
 				inArticle = true;
 
 				// update beginning of article
-				std::cout << "\ntokenizeTokenized() #2" << std::flush;
 				TextMapEntry::pos(this->articleMap.at(articleIndex)) -= numDeletedTokens;
 			}
 
@@ -3641,7 +3620,6 @@ namespace crawlservpp::Data {
 				);
 			}
 
-			std::cout << "\ntokenizeTokenized() #3" << std::flush;
 			for(auto tokenIndex{sentenceBegin}; tokenIndex < sentenceEnd; ++tokenIndex) {
 				const auto& token{this->tokens.at(tokenIndex)};
 
@@ -3767,8 +3745,6 @@ namespace crawlservpp::Data {
 				) {
 					inArticle = false;
 
-					std::cout << "\ntokenizeContinuous() #1" << std::flush;
-
 					newArticleMap.emplace_back(
 							articleFirstToken,
 							currentToken - articleFirstToken,
@@ -3782,7 +3758,6 @@ namespace crawlservpp::Data {
 
 			if(!(this->dateMap.empty())) {
 				// check for beginning of date
-				std::cout << "\ntokenizeContinuous() #2" << std::flush;
 				if(
 						!inDate
 						&& nextDate < this->dateMap.size()
@@ -3803,7 +3778,6 @@ namespace crawlservpp::Data {
 				) {
 					inDate = false;
 
-					std::cout << "\ntokenizeContinuous() #3" << std::flush;
 					newDateMap.emplace_back(
 							dateFirstToken,
 							currentToken - dateFirstToken,
@@ -3816,7 +3790,6 @@ namespace crawlservpp::Data {
 			}
 
 			// check for end of sentence
-			std::cout << "\ntokenizeContinuous() #4" << std::flush;
 			switch(this->corpus.at(pos - corpusTrimmed)) {
 			case '.':
 			case ':':
@@ -3928,7 +3901,6 @@ namespace crawlservpp::Data {
 		) {
 			inArticle = false;
 
-			std::cout << "\ntokenizeContinuous() #5" << std::flush;
 			newArticleMap.emplace_back(
 					articleFirstToken,
 					currentToken - articleFirstToken,
@@ -3947,7 +3919,6 @@ namespace crawlservpp::Data {
 		) {
 			inDate = false;
 
-			std::cout << "\ntokenizeContinuous() #6" << std::flush;
 			newDateMap.emplace_back(
 					dateFirstToken,
 					currentToken - dateFirstToken,
@@ -3994,7 +3965,6 @@ namespace crawlservpp::Data {
 		Helper::Memory::free(this->corpus);
 
 		// check consistency
-		std::cout << "\ntokenizeContinuous() #7" << std::flush;
 		if(this->checkConsistency) {
 			if(inArticle) {
 				throw Exception(
@@ -4097,7 +4067,6 @@ namespace crawlservpp::Data {
 
 		copy.reserve(found->l);
 
-		std::cout << "\ngetTokensForEntry()" << std::flush;
 		for(auto tokenIndex{found->p}; tokenIndex < entryEnd; ++tokenIndex) {
 			copy.emplace_back(tokens.at(tokenIndex));
 		}
@@ -4121,7 +4090,6 @@ namespace crawlservpp::Data {
 
 	// remove token from an article or date map
 	inline void Corpus::removeToken(TextMap& map, std::size_t entryIndex, bool& emptiedTo) {
-		std::cout << "\nremoveToken()" << std::flush;
 		if(TextMapEntry::length(map.at(entryIndex)) == 0) {
 			throw Exception(
 					"Corpus::removeToken():"
@@ -4292,7 +4260,6 @@ namespace crawlservpp::Data {
 			return;
 		}
 
-		std::cout << "\ncheckForEntry()" << std::flush;
 		while(
 				TextMapEntry::pos(map.at(nextIndex))
 				== TextMapEntry::pos(sentence)
@@ -4412,7 +4379,6 @@ namespace crawlservpp::Data {
 			const Tokens& values,
 			std::size_t index
 	) {
-		std::cout << "\nnotUsed()" << std::flush;
 		if(!values.at(index).empty()) {
 			std::string typeCapitalized(type);
 
@@ -4449,7 +4415,6 @@ namespace crawlservpp::Data {
 
 		bool skip{false};
 
-		std::cout << "\naddChunkMap" << std::flush;
 		if(!to.empty() && to.back().value == from.value().get().at(0).value) {
 			/* combine last with current map */
 			TextMapEntry::length(to.back()) += TextMapEntry::length(from.value().get().at(0));
@@ -4899,7 +4864,6 @@ namespace crawlservpp::Data {
 				TextMapEntry::length(sentence) - sentenceOffset
 		);
 
-		std::cout << "\npushSentence()" << std::flush;
 		// add tokens to chunk
 		for(std::size_t token{tokensComplete}; token < TextMapEntry::end(sentence); ++token) {
 			// get (remaining) token
