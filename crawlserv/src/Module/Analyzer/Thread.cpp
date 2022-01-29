@@ -154,6 +154,9 @@ namespace crawlservpp::Module::Analyzer {
 		// clean up corpora and queries
 		this->cleanUpCorpora();
 		this->cleanUpQueries();
+
+		// reset idle time
+		this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
 	}
 
 	//! Resets the algorithm.
