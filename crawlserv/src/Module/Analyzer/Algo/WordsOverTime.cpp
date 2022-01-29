@@ -255,7 +255,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		while(
 				articleIndex < articleMap.size()
-				&& TextMapEntry::pos(articleMap[articleIndex]) < firstDatePos
+				&& TextMapEntry::pos(articleMap.at(articleIndex)) < firstDatePos
 		) {
 			++articleIndex;
 		}
@@ -304,7 +304,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				) {
 					// new article
 					if(articleContent) {
-						dateIt->second.articles.emplace(articleMap[articleIndex - 1].value);
+						dateIt->second.articles.emplace(articleMap.at(articleIndex - 1).value);
 
 						articleContent = false;
 					}
@@ -317,7 +317,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				if(tokenIndex == articleEnd) {
 					// end of article
 					if(articleContent) {
-						dateIt->second.articles.emplace(articleMap[articleIndex - 1].value);
+						dateIt->second.articles.emplace(articleMap.at(articleIndex - 1).value);
 
 						articleContent = false;
 					}

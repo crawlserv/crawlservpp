@@ -1323,15 +1323,15 @@ namespace crawlservpp::Module::Analyzer {
 						lastSavePoint += '[';
 
 						if(properties.models.size() > n) {
-							lastSavePoint += properties.models[n];
+							lastSavePoint += properties.models.at(n);
 						}
 
 						if(properties.dictionaries.size() > n) {
-							lastSavePoint += properties.dictionaries[n];
+							lastSavePoint += properties.dictionaries.at(n);
 						}
 
 						if(properties.languages.size() > n) {
-							lastSavePoint += properties.languages[n];
+							lastSavePoint += properties.languages.at(n);
 						}
 
 						lastSavePoint += ']';

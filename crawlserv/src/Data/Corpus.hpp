@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -672,7 +672,7 @@ namespace crawlservpp::Data {
 				size_t entryIndex,
 				size_t pos
 		) {
-			return entryIndex < map.size() && TextMapEntry::pos(map[entryIndex]) == pos;
+			return entryIndex < map.size() && TextMapEntry::pos(map.at(entryIndex)) == pos;
 		}
 
 		// remove empty entries from map (checking all of their tokens)
@@ -692,7 +692,7 @@ namespace crawlservpp::Data {
 										tokenIndex < end;
 										++tokenIndex
 								) {
-									if(!(tokens[tokenIndex].empty())) {
+									if(!(tokens.at(tokenIndex).empty())) {
 										return false;
 									}
 								}
@@ -727,8 +727,8 @@ namespace crawlservpp::Data {
 		) {
 			if(pos == 0) {
 				/* first token: set origin to first map entry */
-				origin.first = TextMapEntry::pos(map[0]);
-				origin.second = TextMapEntry::end(map[0]);
+				origin.first = TextMapEntry::pos(map.at(0));
+				origin.second = TextMapEntry::end(map.at(0));
 			}
 
 			while(
@@ -763,15 +763,15 @@ namespace crawlservpp::Data {
 				return;
 			}
 
-			if(removed > TextMapEntry::pos(map[entryIndex])) {
+			if(removed > TextMapEntry::pos(map.at(entryIndex))) {
 				Corpus::exceptionPositionTooSmall(
-						TextMapEntry::pos(map[entryIndex]),
+						TextMapEntry::pos(map.at(entryIndex)),
 						removed,
 						type
 				);
 			}
 
-			TextMapEntry::pos(map[entryIndex]) -= removed;
+			TextMapEntry::pos(map.at(entryIndex)) -= removed;
 		}
 
 		// decrease the length of the current entry
@@ -1215,7 +1215,7 @@ namespace crawlservpp::Data {
 		copy.reserve(TextMapEntry::length(articleEntry));
 
 		for(auto tokenIndex{TextMapEntry::pos(articleEntry)}; tokenIndex < articleEnd; ++tokenIndex) {
-			copy.emplace_back(this->tokens[tokenIndex]);
+			copy.emplace_back(this->tokens.at(tokenIndex));
 		}
 
 		return copy;
@@ -1307,7 +1307,7 @@ namespace crawlservpp::Data {
 			const auto articleEnd{TextMapEntry::end(article)};
 
 			for(auto tokenIndex{TextMapEntry::pos(article)}; tokenIndex < articleEnd; ++tokenIndex) {
-				copy.back().emplace_back(this->tokens[tokenIndex]);
+				copy.back().emplace_back(this->tokens.at(tokenIndex));
 			}
 		}
 
@@ -2703,9 +2703,9 @@ namespace crawlservpp::Data {
 						tokenIndex < articleEnd;
 						++tokenIndex
 				) {
-					this->tokenBytes -= this->tokens[tokenIndex].size();
+					this->tokenBytes -= this->tokens.at(tokenIndex).size();
 
-					Helper::Memory::free(this->tokens[tokenIndex]);
+					Helper::Memory::free(this->tokens.at(tokenIndex));
 				}
 
 				++removed;
@@ -3589,7 +3589,7 @@ namespace crawlservpp::Data {
 				inDate = true;
 
 				// update beginning of date
-				TextMapEntry::pos(this->dateMap[dateIndex]) -= numDeletedTokens;
+				TextMapEntry::pos(this->dateMap.at(dateIndex)) -= numDeletedTokens;
 			}
 
 			if(
@@ -3602,7 +3602,7 @@ namespace crawlservpp::Data {
 				inArticle = true;
 
 				// update beginning of article
-				TextMapEntry::pos(this->articleMap[articleIndex]) -= numDeletedTokens;
+				TextMapEntry::pos(this->articleMap.at(articleIndex)) -= numDeletedTokens;
 			}
 
 			// store unchanged sentence data
@@ -3748,7 +3748,7 @@ namespace crawlservpp::Data {
 					newArticleMap.emplace_back(
 							articleFirstToken,
 							currentToken - articleFirstToken,
-							this->articleMap[nextArticle - 1].value
+							this->articleMap.at(nextArticle - 1).value
 					);
 
 					sentenceEnd = true;
@@ -3761,10 +3761,10 @@ namespace crawlservpp::Data {
 				if(
 						!inDate
 						&& nextDate < this->dateMap.size()
-						&& pos == TextMapEntry::pos(this->dateMap[nextDate])
+						&& pos == TextMapEntry::pos(this->dateMap.at(nextDate))
 				) {
 					dateFirstToken = currentToken;
-					dateEnd = TextMapEntry::end(this->dateMap[nextDate]);
+					dateEnd = TextMapEntry::end(this->dateMap.at(nextDate));
 
 					inDate = true;
 
@@ -3781,7 +3781,7 @@ namespace crawlservpp::Data {
 					newDateMap.emplace_back(
 							dateFirstToken,
 							currentToken - dateFirstToken,
-							this->dateMap[nextDate - 1].value
+							this->dateMap.at(nextDate - 1).value
 					);
 
 					sentenceEnd = true;
@@ -3790,7 +3790,7 @@ namespace crawlservpp::Data {
 			}
 
 			// check for end of sentence
-			switch(this->corpus[pos - corpusTrimmed]) {
+			switch(this->corpus.at(pos - corpusTrimmed)) {
 			case '.':
 			case ':':
 			case ';':
@@ -3904,7 +3904,7 @@ namespace crawlservpp::Data {
 			newArticleMap.emplace_back(
 					articleFirstToken,
 					currentToken - articleFirstToken,
-					this->articleMap[nextArticle - 1].value
+					this->articleMap.at(nextArticle - 1).value
 			);
 
 			endOfLastArticle = true;
@@ -3922,7 +3922,7 @@ namespace crawlservpp::Data {
 			newDateMap.emplace_back(
 					dateFirstToken,
 					currentToken - dateFirstToken,
-					this->dateMap[nextDate - 1].value
+					this->dateMap.at(nextDate - 1).value
 			);
 
 			endOfLastDate = true;
@@ -3970,7 +3970,7 @@ namespace crawlservpp::Data {
 				throw Exception(
 						"Corpus::tokenizeContinuous():"
 						" Last article '"
-						+ this->articleMap[nextArticle - 1].value
+						+ this->articleMap.at(nextArticle - 1).value
 						+ "' has not been finished"
 				);
 			}
@@ -3979,7 +3979,7 @@ namespace crawlservpp::Data {
 				throw Exception(
 						"Corpus::tokenizeContinuous():"
 						" Last date '"
-						+ this->dateMap[nextDate - 1].value
+						+ this->dateMap.at(nextDate - 1).value
 						+ "' has not been finished"
 				);
 			}
@@ -3988,7 +3988,7 @@ namespace crawlservpp::Data {
 				throw Exception(
 						"Corpus::tokenizeContinuous():"
 						" Unexpected article '"
-						+ this->articleMap[nextArticle].value
+						+ this->articleMap.at(nextArticle).value
 						+ "' after end of corpus"
 				);
 			}
@@ -3997,7 +3997,7 @@ namespace crawlservpp::Data {
 				throw Exception(
 						"Corpus::tokenizeContinuous():"
 						" Unexpected date '"
-						+ this->dateMap[nextDate].value
+						+ this->dateMap.at(nextDate).value
 						+ "' after end of corpus"
 				);
 			}
@@ -4068,7 +4068,7 @@ namespace crawlservpp::Data {
 		copy.reserve(found->l);
 
 		for(auto tokenIndex{found->p}; tokenIndex < entryEnd; ++tokenIndex) {
-			copy.emplace_back(tokens[tokenIndex]);
+			copy.emplace_back(tokens.at(tokenIndex));
 		}
 
 		return copy;
@@ -4090,7 +4090,7 @@ namespace crawlservpp::Data {
 
 	// remove token from an article or date map
 	inline void Corpus::removeToken(TextMap& map, std::size_t entryIndex, bool& emptiedTo) {
-		if(TextMapEntry::length(map[entryIndex]) == 0) {
+		if(TextMapEntry::length(map.at(entryIndex)) == 0) {
 			throw Exception(
 					"Corpus::removeToken():"
 					" Could not remove token from map:"
@@ -4099,10 +4099,10 @@ namespace crawlservpp::Data {
 		}
 
 		// update length of map entry
-		--TextMapEntry::length(map[entryIndex]);
+		--TextMapEntry::length(map.at(entryIndex));
 
 		// check whether map entry is empty
-		if(TextMapEntry::length(map[entryIndex]) == 0) {
+		if(TextMapEntry::length(map.at(entryIndex)) == 0) {
 			emptiedTo = true;
 		}
 	}
@@ -4382,7 +4382,7 @@ namespace crawlservpp::Data {
 		if(!values.at(index).empty()) {
 			std::string typeCapitalized(type);
 
-			if(!type.empty()) {
+			if(!typeCapitalized.empty()) {
 				typeCapitalized[0] = std::toupper(typeCapitalized[0]);
 			}
 
@@ -4415,9 +4415,9 @@ namespace crawlservpp::Data {
 
 		bool skip{false};
 
-		if(!to.empty() && to.back().value == from.value().get()[0].value) {
+		if(!to.empty() && to.back().value == from.value().get().at(0).value) {
 			/* combine last with current map */
-			TextMapEntry::length(to.back()) += TextMapEntry::length(from.value().get()[0]);
+			TextMapEntry::length(to.back()) += TextMapEntry::length(from.value().get().at(0));
 
 			if(splitToken) {
 				/* remove second part of splitted token from length */
@@ -4817,7 +4817,7 @@ namespace crawlservpp::Data {
 			return;
 		}
 
-		auto& articleSentences{to[date][article]};
+		auto& articleSentences{to.at(date).at(article)};
 
 		Helper::Container::moveInto(articleSentences, from);
 		Helper::Memory::free(from);

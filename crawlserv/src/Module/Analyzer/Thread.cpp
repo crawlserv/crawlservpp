@@ -736,7 +736,7 @@ namespace crawlservpp::Module::Analyzer {
 			}
 
 			logStrStr	<< " (by query) to "
-						<< this->corpora[index].size()
+						<< this->corpora.at(index).size()
 						<< " bytes (removed ";
 
 			if(removed == 1) {
