@@ -4841,7 +4841,7 @@ namespace crawlservpp::Data {
 		return true;
 	}
 
-	// append  or add article to combined corpus
+	// append or add article to combined corpus
 	inline void Corpus::finishArticle(
 			std::vector<Tokens>& from,
 			DateArticleSentenceMap& to,
@@ -4853,8 +4853,8 @@ namespace crawlservpp::Data {
 		}
 
 		std::cout << "\nfinishArticle()" << std::flush;
-		std::cout << " to.size()=" << to.size();
-		std::cout << " to[date].size()=" << to.at(date).size();
+		std::cout << " to.size()=" << to.size()  << std::flush;
+		std::cout << " to[date].size()=" << to.at(date).size()  << std::flush;
 		std::cout << " to[date][article].size()=" << to.at(date).at(article).size();
 		std::cout << std::flush;
 		auto& articleSentences{to.at(date).at(article)};
