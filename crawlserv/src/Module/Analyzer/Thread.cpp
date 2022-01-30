@@ -453,12 +453,17 @@ namespace crawlservpp::Module::Analyzer {
 		json.AddMember("updated", sourcesUpdated, allocator);
 
 		// upload resulting JSON
-		Network::FTPUpload::write(
-				Helper::Json::stringify(json),
-				this->config.uploadFTP,
-				this->config.uploadProxy,
-				this->config.uploadVerbose
-		);
+		try {
+			Network::FTPUpload::write(
+					Helper::Json::stringify(json),
+					this->config.uploadFTP,
+					this->config.uploadProxy,
+					this->config.uploadVerbose
+			);
+		}
+		catch(const std::runtime_error& error) {
+			this->warning(std::string{"Could not upload result: "} + error.what() + ".");
+		}
 
 		this->setStatusMessage("Results uploaded.");
 		this->log(generalLoggingDefault, "uploaded results.");

@@ -64,7 +64,7 @@
 #include <map>			// std::map
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream
-#include <stdexcept>	// std::logic_error
+#include <stdexcept>	// std::logic_error, std::runtime_error
 #include <string>		// std::string
 #include <string_view>	// std::string_view
 #include <utility>		// std::swap
