@@ -377,7 +377,10 @@ namespace crawlservpp::Module::Analyzer {
 		}
 
 		if(this->config.uploadTargetColumn.empty()) {
-			this->warning("Cannot upload result, because no target table column has been specified.");
+			this->log(
+					generalLoggingDefault,
+					"WARNING: Cannot upload result, because no target table column has been specified."
+			);
 
 			return;
 		}
@@ -462,7 +465,12 @@ namespace crawlservpp::Module::Analyzer {
 			);
 		}
 		catch(const std::runtime_error& error) {
-			this->warning(std::string{"Could not upload result: "} + error.what() + ".");
+			this->log(
+					generalLoggingDefault,
+					std::string{"WARNING: Could not upload result: "}
+					+ error.what()
+					+ "."
+			);
 		}
 
 		this->setStatusMessage("Results uploaded.");
