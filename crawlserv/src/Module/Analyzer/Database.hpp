@@ -36,6 +36,7 @@
 
 #include "../../Data/Corpus.hpp"
 #include "../../Data/Data.hpp"
+#include "../../Helper/CommaLocale.hpp"
 #include "../../Helper/Container.hpp"
 #include "../../Helper/Json.hpp"
 #include "../../Helper/Memory.hpp"
@@ -62,7 +63,6 @@
 #include <cstddef>			// std::size_t
 #include <cstdint>			// std::uint8_t, std::uint16_t, std::uint64_t
 #include <functional>		// std::function
-#include <locale>			// std::locale
 #include <queue>			// std::queue
 #include <sstream>			// std::ostringstream
 #include <string>			// std::string, std::to_string

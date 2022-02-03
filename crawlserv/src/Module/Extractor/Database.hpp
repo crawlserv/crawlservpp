@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,9 @@
 #ifndef MODULE_EXTRACTOR_DATABASE_HPP_
 #define MODULE_EXTRACTOR_DATABASE_HPP_
 
-#include "../../Helper/Portability/mysqlcppconn.h"
+#include "Config.hpp"
+
+#include "../../Helper/CommaLocale.hpp"
 #include "../../Main/Exception.hpp"
 #include "../../Struct/DataEntry.hpp"
 #include "../../Struct/StatusSetter.hpp"
@@ -40,7 +42,7 @@
 #include "../../Struct/TargetTableProperties.hpp"
 #include "../../Wrapper/Database.hpp"
 
-#include "Config.hpp"
+#include "../../Helper/Portability/mysqlcppconn.h"
 
 #include <cppconn/exception.h>
 #include <cppconn/prepared_statement.h>

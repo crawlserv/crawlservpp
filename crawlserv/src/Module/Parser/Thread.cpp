@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -273,7 +273,7 @@ namespace crawlservpp::Module::Parser {
 			if(this->isLogLevel(logLevel)) {
 				std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(Helper::CommaLocale::locale());
 
 				if(parsed > 1) {
 					logStrStr << "parsed " << parsed << " versions of ";
@@ -357,7 +357,8 @@ namespace crawlservpp::Module::Parser {
 				).count()
 			};
 
-			tpsStrStr.imbue(std::locale(""));
+			tpsStrStr.imbue(Helper::CommaLocale::locale());
+			tpsStrStr.imbue(Helper::DotLocale::locale());
 
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
 
@@ -553,7 +554,7 @@ namespace crawlservpp::Module::Parser {
 			default:
 				std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(Helper::CommaLocale::locale());
 
 				logStrStr << "WARNING: Deleted "
 							<< deleted
@@ -971,7 +972,7 @@ namespace crawlservpp::Module::Parser {
 
 						std::ostringstream statusStrStr;
 
-						statusStrStr.imbue(std::locale(""));
+						statusStrStr.imbue(Helper::CommaLocale::locale());
 
 						statusStrStr	<< "["
 										<< contentCounter

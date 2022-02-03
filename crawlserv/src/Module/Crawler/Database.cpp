@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1144,7 +1144,7 @@ namespace crawlservpp::Module::Crawler {
 						logStrStr << "value for one URL.";
 					}
 					else {
-						logStrStr.imbue(std::locale(""));
+						logStrStr.imbue(Helper::CommaLocale::locale());
 
 						logStrStr << "values for " << updated << " URLs.";
 					}
@@ -1676,7 +1676,7 @@ namespace crawlservpp::Module::Crawler {
 
 				std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(Helper::CommaLocale::locale());
 
 				logStrStr	<< "WARNING: Some content could not be saved to the database, because its size ("
 							<< content.size()
@@ -1780,7 +1780,7 @@ namespace crawlservpp::Module::Crawler {
 				bool adjustServerSettings{false};
 				std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(Helper::CommaLocale::locale());
 
 				logStrStr	<< "WARNING: Some content could not be saved to the database, because its size ("
 							<< content.size()

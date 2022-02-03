@@ -68,6 +68,8 @@
 #include "../../../Data/Corpus.hpp"
 #include "../../../Data/Data.hpp"
 #include "../../../Data/TopicModel.hpp"
+#include "../../../Helper/CommaLocale.hpp"
+#include "../../../Helper/DotLocale.hpp"
 #include "../../../Helper/FileSystem.hpp"
 #include "../../../Helper/Math.hpp"
 #include "../../../Helper/Memory.hpp"
@@ -86,7 +88,6 @@
 #include <iomanip>			// std::setprecision
 #include <ios>				// std::fixed
 #include <limits>			// std::numeric_limits
-#include <locale>			// std::locale
 #include <queue>			// std::queue
 #include <random>			// std::random_device
 #include <sstream>			// std::ostringstream

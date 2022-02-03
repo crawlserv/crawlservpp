@@ -285,7 +285,7 @@ namespace crawlservpp::Module::Crawler {
 					if(this->isLogLevel(logLevel)) {
 						std::ostringstream logStrStr;
 
-						logStrStr.imbue(std::locale(""));
+						logStrStr.imbue(Helper::CommaLocale::locale());
 
 						logStrStr << "finished " << url.second;
 
@@ -432,7 +432,8 @@ namespace crawlservpp::Module::Crawler {
 				).count()
 			};
 
-			tpsStrStr.imbue(std::locale(""));
+			tpsStrStr.imbue(Helper::CommaLocale::locale());
+			tpsStrStr.imbue(Helper::DotLocale::locale());
 
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
 
@@ -889,7 +890,7 @@ namespace crawlservpp::Module::Crawler {
 				if(counter % updateCustomUrlCountEvery == 0) {
 					std::ostringstream statusStrStr;
 
-					statusStrStr.imbue(std::locale(""));
+					statusStrStr.imbue(Helper::CommaLocale::locale());
 
 					statusStrStr	<< "Getting IDs of custom URLs ["
 									<< counter
@@ -3247,7 +3248,7 @@ namespace crawlservpp::Module::Crawler {
 		if(expecting) {
 			std::ostringstream expectedStrStr;
 
-			expectedStrStr.imbue(std::locale(""));
+			expectedStrStr.imbue(Helper::CommaLocale::locale());
 
 			if(urls.size() < expected) {
 				// number of URLs is smaller than expected
@@ -3591,7 +3592,7 @@ namespace crawlservpp::Module::Crawler {
 			if(urls.size() > this->config.crawlerUrlChunks) {
 				std::ostringstream statusStrStr;
 
-				statusStrStr.imbue(std::locale(""));
+				statusStrStr.imbue(Helper::CommaLocale::locale());
 
 				statusStrStr << "[URLs: "
 						<< pos
@@ -3749,7 +3750,7 @@ namespace crawlservpp::Module::Crawler {
 								// set status
 								std::ostringstream statusStrStr;
 
-								statusStrStr.imbue(std::locale(""));
+								statusStrStr.imbue(Helper::CommaLocale::locale());
 
 								statusStrStr << "[";
 								statusStrStr << this->config.crawlerArchivesNames.at(n);
@@ -4442,7 +4443,7 @@ namespace crawlservpp::Module::Crawler {
 				if(this->mCache.size() > this->config.crawlerArchivesUrlsSkip.size() + 1) {
 					std::ostringstream logStrStr;
 
-					logStrStr.imbue(std::locale(""));
+					logStrStr.imbue(Helper::CommaLocale::locale());
 
 					logStrStr 	<< "removes "
 								<< this->mCache.size() - this->config.crawlerArchivesUrlsSkip.size()

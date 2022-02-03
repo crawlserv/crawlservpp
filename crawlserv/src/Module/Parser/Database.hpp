@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -52,7 +52,6 @@
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint8_t, std::uint16_t, std::uint32_t, std::uint64_t
-#include <locale>		// std::locale
 #include <memory>		// std::unique_ptr
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream

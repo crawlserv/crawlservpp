@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -315,7 +315,7 @@ namespace crawlservpp::Module::Extractor {
 					break;
 
 				default:
-					logStrStr.imbue(std::locale(""));
+					logStrStr.imbue(Helper::CommaLocale::locale());
 
 					logStrStr << "extracted " << extracted << " datasets from ";
 				}
@@ -392,7 +392,8 @@ namespace crawlservpp::Module::Extractor {
 				).count()
 			};
 
-			tpsStrStr.imbue(std::locale(""));
+			tpsStrStr.imbue(Helper::CommaLocale::locale());
+			tpsStrStr.imbue(Helper::DotLocale::locale());
 
 			tpsStrStr << std::setprecision(2) << std::fixed << tps;
 
@@ -664,7 +665,7 @@ namespace crawlservpp::Module::Extractor {
 			default:
 				std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(Helper::CommaLocale::locale());
 
 				logStrStr << "WARNING: Deleted "
 						<< deleted
@@ -1416,7 +1417,7 @@ namespace crawlservpp::Module::Extractor {
 			if(this->isLogLevel(generalLoggingExtended)) {
 				std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(Helper::CommaLocale::locale());
 
 				logStrStr
 					<< "fetched "
@@ -1660,7 +1661,7 @@ namespace crawlservpp::Module::Extractor {
 		if(expecting) {
 			std::ostringstream expectedStrStr;
 
-			expectedStrStr.imbue(std::locale(""));
+			expectedStrStr.imbue(Helper::CommaLocale::locale());
 
 			if(extracted < expected) {
 				// number of datasets is smaller than expected

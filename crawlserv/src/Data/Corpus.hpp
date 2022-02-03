@@ -42,6 +42,7 @@
 #include "TokenCorrect.hpp"
 #include "TokenRemover.hpp"
 
+#include "../Helper/CommaLocale.hpp"
 #include "../Helper/Container.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Helper/Memory.hpp"
@@ -56,7 +57,6 @@
 #include <cstdint>		// std::int64_t, std::uint8_t, std::uint16_t
 #include <functional>	// std::function, std::reference_wrapper
 #include <iterator>		// std::distance
-#include <locale>		// std::locale
 #include <map>			// std::map
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <numeric>		// std::accumulate
@@ -4929,7 +4929,7 @@ namespace crawlservpp::Data {
 
 	// set locale for output streams
 	inline void Corpus::locale(std::ostream& os) {
-		os.imbue(std::locale(""));
+		os.imbue(Helper::CommaLocale::locale());
 	}
 
 	/*

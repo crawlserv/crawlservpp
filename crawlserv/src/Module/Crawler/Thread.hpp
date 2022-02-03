@@ -36,8 +36,10 @@
 
 #include "../Thread.hpp"
 
+#include "../../Helper/CommaLocale.hpp"
 #include "../../Helper/Container.hpp"
 #include "../../Helper/DateTime.hpp"
+#include "../../Helper/DotLocale.hpp"
 #include "../../Helper/Strings.hpp"
 #include "../../Helper/Utf8.hpp"
 #include "../../Main/Exception.hpp"
@@ -64,7 +66,6 @@
 #include <cstdint>		// std::int64_t, std::uint32_t, std::uint64_t
 #include <iomanip>		// std::setprecision
 #include <ios>			// std::fixed
-#include <locale>		// std::locale
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <queue>		// std::queue
 #include <sstream>		// std::istringstream, std::ostringstream

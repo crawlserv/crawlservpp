@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -31,10 +31,11 @@
 #ifndef STRUCT_STATUSSETTER_HPP_
 #define STRUCT_STATUSSETTER_HPP_
 
+#include "../Helper/CommaLocale.hpp"
+
 #include <cstddef>		// std::size_t
 #include <functional>	// std::function
 #include <ios>			// std::fixed
-#include <locale>		// std::locale
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string
 #include <utility>		// std::move
@@ -160,7 +161,7 @@ namespace crawlservpp::Struct {
 		bool update(std::size_t done, std::size_t total) const { //NOLINT(modernize-use-nodiscard)
 			std::ostringstream statusStrStr;
 
-			statusStrStr.imbue(std::locale(""));
+			statusStrStr.imbue(Helper::CommaLocale::locale());
 
 			statusStrStr << this->currentStatus;
 			statusStrStr << " [";

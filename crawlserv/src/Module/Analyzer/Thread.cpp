@@ -608,7 +608,7 @@ namespace crawlservpp::Module::Analyzer {
 		if(this->config.generalInputSources.size() > 1) {
 			std::ostringstream corpusStatusStrStr;
 
-			corpusStatusStrStr.imbue(std::locale(""));
+			corpusStatusStrStr.imbue(Helper::CommaLocale::locale());
 
 			corpusStatusStrStr << "Getting text corpus #";
 			corpusStatusStrStr << index + 1;
@@ -647,7 +647,7 @@ namespace crawlservpp::Module::Analyzer {
 			// log corpus statistics
 			std::ostringstream logStrStr;
 
-			logStrStr.imbue(std::locale(""));
+			logStrStr.imbue(Helper::CommaLocale::locale());
 
 			logStrStr << "corpus";
 
@@ -743,7 +743,7 @@ namespace crawlservpp::Module::Analyzer {
 			// log new corpus size
 			std::ostringstream logStrStr;
 
-			logStrStr.imbue(std::locale(""));
+			logStrStr.imbue(Helper::CommaLocale::locale());
 
 			logStrStr << "filtered corpus";
 

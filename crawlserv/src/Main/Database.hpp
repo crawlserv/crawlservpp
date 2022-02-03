@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -45,6 +45,7 @@
 #include "Version.hpp"
 
 #include "../Data/Data.hpp"
+#include "../Helper/CommaLocale.hpp"
 #include "../Helper/Container.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Json.hpp"
@@ -87,7 +88,6 @@
 #include <fstream>		// std::ifstream
 #include <functional>	// std::function
 #include <iostream>		// std::cout, std::endl, std::flush
-#include <locale>		// std::locale
 #include <memory>		// std::unique_ptr
 #include <mutex>		// std::lock_guard, std::mutex
 #include <queue>		// std::queue

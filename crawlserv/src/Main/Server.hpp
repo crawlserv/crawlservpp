@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -89,6 +89,7 @@
 #include "../Data/File.hpp"
 #include "../Data/ImportExport/OpenDocument.hpp"
 #include "../Data/ImportExport/Text.hpp"
+#include "../Helper/CommaLocale.hpp"
 #include "../Helper/DateTime.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Json.hpp"
@@ -129,7 +130,6 @@
 #include <cstdint>		// std::uint16_t, std::uint32_t, std::uint64_t
 #include <exception>	// std::exception
 #include <iostream>		// std::cout, std::flush
-#include <locale>		// std::locale
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <mutex>		// std::lock_guard, std::mutex
 #include <optional>		// std::nullopt, std::optional

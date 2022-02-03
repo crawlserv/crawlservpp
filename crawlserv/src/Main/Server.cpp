@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -758,7 +758,7 @@ namespace crawlservpp::Main {
 			break;
 
 		default:
-			replyStrStr.imbue(std::locale(""));
+			replyStrStr.imbue(Helper::CommaLocale::locale());
 
 			replyStrStr << num << " log entries";
 		}
@@ -2101,7 +2101,7 @@ namespace crawlservpp::Main {
 					break;
 
 				default:
-					confirmationStrStr.imbue(std::locale(""));
+					confirmationStrStr.imbue(Helper::CommaLocale::locale());
 
 					confirmationStrStr << toModify << " URLs will be modified.\n";
 				}
@@ -2116,7 +2116,7 @@ namespace crawlservpp::Main {
 					break;
 
 				default:
-					confirmationStrStr.imbue(std::locale(""));
+					confirmationStrStr.imbue(Helper::CommaLocale::locale());
 
 					confirmationStrStr << toDelete << " URL(s) will be IRRECOVERABLY LOST.\n";
 				}
@@ -3397,7 +3397,7 @@ namespace crawlservpp::Main {
 												logStrStr << "one URL";
 											}
 											else {
-												logStrStr.imbue(std::locale(""));
+												logStrStr.imbue(Helper::CommaLocale::locale());
 
 												logStrStr << urls.size() << " URLs";
 											}
@@ -3431,8 +3431,8 @@ namespace crawlservpp::Main {
 											break;
 
 										default:
-											responseStrStr.imbue(std::locale(""));
-											logStrStr.imbue(std::locale(""));
+											responseStrStr.imbue(Helper::CommaLocale::locale());
+											logStrStr.imbue(Helper::CommaLocale::locale());
 
 											responseStrStr << "Added " << added << " new URLs";
 											logStrStr << added << " new URLs";
@@ -3542,7 +3542,7 @@ namespace crawlservpp::Main {
 								break;
 
 							default:
-								logStrStr.imbue(std::locale(""));
+								logStrStr.imbue(Helper::CommaLocale::locale());
 
 								logStrStr << urls.size() << " URLs";
 							}
@@ -3587,7 +3587,7 @@ namespace crawlservpp::Main {
 							default:
 								std::ostringstream responseStrStr;
 
-								responseStrStr.imbue(std::locale(""));
+								responseStrStr.imbue(Helper::CommaLocale::locale());
 
 								responseStrStr
 										<< added
@@ -5792,7 +5792,7 @@ namespace crawlservpp::Main {
 			break;
 
 		default:
-			logStrStr.imbue(std::locale(""));
+			logStrStr.imbue(Helper::CommaLocale::locale());
 
 			logStrStr << size << " bytes";
 		}
@@ -6060,7 +6060,7 @@ namespace crawlservpp::Main {
 			break;
 
 		default:
-			logStrStr.imbue(std::locale(""));
+			logStrStr.imbue(Helper::CommaLocale::locale());
 
 			logStrStr << entryNum << " " << entryTypes;
 		}
@@ -6336,7 +6336,7 @@ namespace crawlservpp::Main {
 
 		std::ostringstream responseStrStr;
 
-		responseStrStr.imbue(std::locale(""));
+		responseStrStr.imbue(Helper::CommaLocale::locale());
 
 		responseStrStr << numDeleted << " URLs have been deleted.";
 
@@ -6355,7 +6355,7 @@ namespace crawlservpp::Main {
 
 		std::ostringstream responseStrStr;
 
-		responseStrStr.imbue(std::locale(""));
+		responseStrStr.imbue(Helper::CommaLocale::locale());
 
 		responseStrStr	<< "Do you really want to delete "
 						<< number

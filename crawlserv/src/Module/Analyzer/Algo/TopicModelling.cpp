@@ -636,7 +636,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void TopicModelling::logLoad(const std::string& name, const std::string& time, std::size_t size) {
 		std::ostringstream logStrStr;
 
-		logStrStr.imbue(std::locale(""));
+		logStrStr.imbue(Helper::CommaLocale::locale());
 
 		logStrStr << "loaded pre-trained model from '";
 		logStrStr << name;
@@ -668,7 +668,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void TopicModelling::updateTrainingStatus(float ll, std::size_t k) {
 		std::ostringstream tick;
 
-		tick.imbue(std::locale(""));
+		tick.imbue(Helper::CommaLocale::locale());
+		tick.imbue(Helper::DotLocale::locale());
 
 		tick << std::fixed << std::setprecision(topicModellingPrecisionLL);
 
@@ -691,7 +692,8 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void TopicModelling::logTrainingTick(float ll, std::size_t k) {
 		std::ostringstream tick;
 
-		tick.imbue(std::locale(""));
+		tick.imbue(Helper::CommaLocale::locale());
+		tick.imbue(Helper::DotLocale::locale());
 
 		tick << std::fixed << std::setprecision(topicModellingPrecisionLL);
 
@@ -730,7 +732,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 	void TopicModelling::logSave(const std::string& name, const std::string& time, std::size_t size) {
 		std::ostringstream logStrStr;
 
-		logStrStr.imbue(std::locale(""));
+		logStrStr.imbue(Helper::CommaLocale::locale());
 
 		logStrStr << "saved trained model to '";
 		logStrStr << name;

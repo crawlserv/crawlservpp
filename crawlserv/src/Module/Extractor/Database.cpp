@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -2480,7 +2480,7 @@ namespace crawlservpp::Module::Extractor {
 
 			std::ostringstream logStrStr;
 
-			logStrStr.imbue(std::locale(""));
+			logStrStr.imbue(Helper::CommaLocale::locale());
 
 			logStrStr	<<	"WARNING: An entry could not be saved to the database,"
 							" because the size of an extracted value ("

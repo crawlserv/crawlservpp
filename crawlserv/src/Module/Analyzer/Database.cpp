@@ -998,7 +998,7 @@ namespace crawlservpp::Module::Analyzer {
 			// log new corpus size
 			std::ostringstream logStrStr;
 
-			logStrStr.imbue(std::locale(""));
+			logStrStr.imbue(Helper::CommaLocale::locale());
 
 			logStrStr	<< "filtered corpus (by date) to "
 						<< corpusTo.size()
@@ -1729,7 +1729,7 @@ namespace crawlservpp::Module::Analyzer {
 		// write log entry if necessary
 		std::ostringstream logStrStr;
 
-		logStrStr.imbue(std::locale(""));
+		logStrStr.imbue(Helper::CommaLocale::locale());
 
 		logStrStr	<< "compiled text corpus of "
 					<< corpusTo.size()
@@ -1987,7 +1987,7 @@ namespace crawlservpp::Module::Analyzer {
 		// log the size of the combined corpus and the time it took to receive it
 		std::ostringstream logStrStr;
 
-		logStrStr.imbue(std::locale(""));
+		logStrStr.imbue(Helper::CommaLocale::locale());
 
 		logStrStr	<< "got text corpus of "
 					<< corpusTo.size()

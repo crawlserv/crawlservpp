@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -102,7 +102,7 @@ namespace crawlservpp::Main {
 			if(requests > 0) {
 				std::ostringstream logStrStr;
 
-				logStrStr.imbue(std::locale(""));
+				logStrStr.imbue(Helper::CommaLocale::locale());
 
 				logStrStr << "performed " << requests << " SQL requests.";
 
@@ -110,7 +110,7 @@ namespace crawlservpp::Main {
 					this->log(logStrStr.str());
 				}
 				catch(...) { // could not log -> write to stdout
-					std::cout.imbue(std::locale(""));
+					std::cout.imbue(Helper::CommaLocale::locale());
 
 					std::cout	<< '\n'
 								<< requests
@@ -8938,7 +8938,7 @@ namespace crawlservpp::Main {
 						default:
 							std::ostringstream errStrStr;
 
-							errStrStr.imbue(std::locale(""));
+							errStrStr.imbue(Helper::CommaLocale::locale());
 
 							errStrStr	<< "Main::Database::insertCustomData():"
 											" Size ("
@@ -9169,7 +9169,7 @@ namespace crawlservpp::Main {
 						default:
 							std::ostringstream errStrStr;
 
-							errStrStr.imbue(std::locale(""));
+							errStrStr.imbue(Helper::CommaLocale::locale());
 
 							errStrStr	<< "Main::Database::insertCustomData():"
 											" Size ("
@@ -9380,7 +9380,7 @@ namespace crawlservpp::Main {
 							default:
 								std::ostringstream errStrStr;
 
-								errStrStr.imbue(std::locale(""));
+								errStrStr.imbue(Helper::CommaLocale::locale());
 
 								errStrStr	<< "Main::Database::insertCustomData():"
 												" Size ("
@@ -9540,7 +9540,7 @@ namespace crawlservpp::Main {
 						default:
 							std::ostringstream errStrStr;
 
-							errStrStr.imbue(std::locale(""));
+							errStrStr.imbue(Helper::CommaLocale::locale());
 
 							errStrStr	<< "Main::Database::updateCustomData():"
 											" Size ("
@@ -9749,7 +9749,7 @@ namespace crawlservpp::Main {
 						default:
 							std::ostringstream errStrStr;
 
-							errStrStr.imbue(std::locale(""));
+							errStrStr.imbue(Helper::CommaLocale::locale());
 
 							errStrStr	<< "Main::Database::updateCustomData():"
 											" Size ("
@@ -9944,7 +9944,7 @@ namespace crawlservpp::Main {
 							default:
 								std::ostringstream errStrStr;
 
-								errStrStr.imbue(std::locale(""));
+								errStrStr.imbue(Helper::CommaLocale::locale());
 
 								errStrStr	<< "Main::Database::updateCustomData():"
 												" Size ("

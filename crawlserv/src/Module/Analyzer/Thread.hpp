@@ -40,6 +40,7 @@
 
 #include "../../Data/Corpus.hpp"
 #include "../../Data/Data.hpp"
+#include "../../Helper/CommaLocale.hpp"
 #include "../../Helper/DateTime.hpp"
 #include "../../Helper/Json.hpp"
 #include "../../Helper/Memory.hpp"
@@ -60,7 +61,6 @@
 #include <chrono>		// std::chrono
 #include <cstddef>		// std::size_t
 #include <cstdint>		// std::uint64_t
-#include <locale>		// std::locale
 #include <map>			// std::map
 #include <queue>		// std::queue
 #include <sstream>		// std::ostringstream

@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -36,7 +36,9 @@
 
 #include "../Thread.hpp"
 
+#include "../../Helper/CommaLocale.hpp"
 #include "../../Helper/DateTime.hpp"
+#include "../../Helper/DotLocale.hpp"
 #include "../../Helper/Strings.hpp"
 #include "../../Helper/Utf8.hpp"
 #include "../../Main/Exception.hpp"
@@ -63,7 +65,6 @@
 #include <exception>	// std::exception
 #include <iomanip>		// std::setprecision
 #include <ios>			// std::fixed
-#include <locale>		// std::locale
 #include <queue>		// std::queue
 #include <set>			// std::set
 #include <sstream>		// std::ostringstream
