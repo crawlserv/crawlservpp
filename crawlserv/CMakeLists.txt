@@ -11,8 +11,12 @@ message("Source: \"${CMAKE_CURRENT_SOURCE_DIR}/\"")
 # find Multi-threading library
 find_package(Threads REQUIRED)
 
+message(${Threads_FOUND})
+
 if(${Threads_FOUND} AND NOT CMAKE_THREAD_LIBS_INIT STREQUAL "")
 	message("Multi-threading library found: \"${CMAKE_THREAD_LIBS_INIT}\"")
+elseif(${Threads_FOUND})
+	message("Multi-threading library included in system libraries.")
 else()
 	message(WARNING "Multi-threading library not found.")
 endif()
