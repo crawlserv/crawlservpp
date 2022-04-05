@@ -33,8 +33,7 @@ You may _not_ use this software
 You can clone the complete source code into a sub-folder named `crawlserv` using [`git`](https://git-scm.com/):
 
 ```
-git clone https://github.com/crawlserv/crawlservpp crawlserv
-cd crawlserv
+git clone https://github.com/crawlserv/crawlservpp .
 git submodule init
 git submodule update
 ```
