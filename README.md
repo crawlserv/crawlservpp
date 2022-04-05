@@ -34,6 +34,7 @@ You can clone the complete source code into a sub-folder named `crawlserv` using
 
 ```
 git clone https://github.com/crawlserv/crawlservpp crawlserv
+cd crawlserv
 git submodule init
 git submodule update
 ```
