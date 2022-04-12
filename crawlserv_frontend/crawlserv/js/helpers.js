@@ -494,7 +494,7 @@ function reenableInputs() {
  * CONFIG
  */
 
-// are two JSON values are unequal (while value2 can be null)?
+// are two JSON values unequal (while value2 can be null)?
 function areValuesUnequal(value1, value2) {
 	if(value2 === null) {
 		if(!isNaN(value1)) {
