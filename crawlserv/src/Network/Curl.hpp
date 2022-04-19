@@ -883,26 +883,36 @@ namespace crawlservpp::Network {
 		this->setOption(CURLOPT_LOW_SPEED_LIMIT, globalConfig.networkConfig.speedLowLimit);
 		this->setOption(CURLOPT_LOW_SPEED_TIME, globalConfig.networkConfig.speedLowTime);
 		this->setOption(CURLOPT_MAX_SEND_SPEED_LARGE, globalConfig.networkConfig.speedUpLimit);
-		this->setOption(CURLOPT_SSL_VERIFYHOST, globalConfig.networkConfig.sslVerifyHost);
-		this->setOption(CURLOPT_SSL_VERIFYPEER, globalConfig.networkConfig.sslVerifyPeer);
 
-		if(this->version >= versionProxySslVerify) {
-			this->setOption(CURLOPT_PROXY_SSL_VERIFYHOST, globalConfig.networkConfig.sslVerifyProxyHost);
-			this->setOption(CURLOPT_PROXY_SSL_VERIFYPEER, globalConfig.networkConfig.sslVerifyProxyPeer);
+		if(globalConfig.networkConfig.protocol != "http://") {
+			// secure connection: set SSL options
+			this->setOption(CURLOPT_SSL_VERIFYHOST, globalConfig.networkConfig.sslVerifyHost);
+			this->setOption(CURLOPT_SSL_VERIFYPEER, globalConfig.networkConfig.sslVerifyPeer);
+
+			if(this->version >= versionProxySslVerify) {
+				this->setOption(CURLOPT_PROXY_SSL_VERIFYHOST, globalConfig.networkConfig.sslVerifyProxyHost);
+				this->setOption(CURLOPT_PROXY_SSL_VERIFYPEER, globalConfig.networkConfig.sslVerifyProxyPeer);
+			}
+			else {
+				if(
+						globalConfig.networkConfig.sslVerifyProxyHost
+						|| globalConfig.networkConfig.sslVerifyProxyPeer
+				) {
+					warningsTo.emplace(
+							"SSL verification of proxy host and peer currently not supported,"
+							" 'ssl.verify.proxy.host' and  'ssl.verify.proxy.peer' ignored."
+					);
+				}
+			}
+
+			this->setOption(CURLOPT_SSL_VERIFYSTATUS, globalConfig.networkConfig.sslVerifyStatus);
 		}
 		else {
-			if(
-					globalConfig.networkConfig.sslVerifyProxyHost
-					|| globalConfig.networkConfig.sslVerifyProxyPeer
-			) {
-				warningsTo.emplace(
-						"SSL verification of proxy host and peer currently not supported,"
-						" 'ssl.verify.proxy.host' and  'ssl.verify.proxy.peer' ignored."
-				);
-			}
+			// INSECURE connection: ignore SSL options
+			this->setOption(CURLOPT_SSL_VERIFYHOST, false);
+			this->setOption(CURLOPT_SSL_VERIFYPEER, false);
+			this->setOption(CURLOPT_SSL_VERIFYSTATUS, false);
 		}
-
-		this->setOption(CURLOPT_SSL_VERIFYSTATUS, globalConfig.networkConfig.sslVerifyStatus);
 
 		if(this->version >= versionTcpFastOpen) {
 			this->setOption(CURLOPT_TCP_FASTOPEN, globalConfig.networkConfig.tcpFastOpen);
