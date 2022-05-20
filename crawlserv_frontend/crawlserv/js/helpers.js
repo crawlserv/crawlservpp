@@ -234,11 +234,14 @@ function refreshData() {
 				else {
 					$("#threads").html(
 							"<div class='no-server-status'>Failed to load threads: "
-							 + status
+							 + xhr.status
 							 + " "
-							 + response
+							 + xhr.statusText
 							 + "</div>"
 					);
+				}
+				else {
+					
 				}
 				
 				setTimeout(refreshData, 2500);
