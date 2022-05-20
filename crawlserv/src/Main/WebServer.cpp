@@ -194,13 +194,15 @@ namespace crawlservpp::Main {
 			/* send compressed */
 			headers += "Content-Encoding: gzip\r\n";
 
+			const auto compressedContent{Data::Compression::Gzip::compress(content)};
+
 			//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
 			mg_http_reply(
 					connection,
 					code,
 					headers.c_str(),
 					"%s",
-					Data::Compression::Gzip::compress(content).c_str()
+					compressedContent.c_str()
 			);
 		}
 		else {
