@@ -3,7 +3,7 @@
  * 
  * ---
  * 
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  * 
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -232,7 +232,13 @@ function refreshData() {
 					$("#threads").addClass("threads-invalid");
 				}
 				else {
-					$("#threads").html("<div class='no-server-status'>Failed to load threads.</div>");
+					$("#threads").html(
+							"<div class='no-server-status'>Failed to load threads: "
+							 + status
+							 + " "
+							 + response
+							 + "</div>"
+					);
 				}
 				
 				setTimeout(refreshData, 2500);
@@ -484,6 +490,7 @@ function reenableInputs() {
 	$("#config-select").val($("#config-select").data("current"));
 	$("#algo-cat-select").val($("#algo-cat-select").data("current"));
 	$("#algo-select").val($("#algo-select").data("current"));
+	$("#savepoint-select").val($("#algo-select").data("current"));
 	
 	$("select").prop("disabled", false);
 	$("input").prop("disabled", false);
