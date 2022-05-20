@@ -182,13 +182,11 @@ namespace crawlservpp::Main {
 		}
 
 		// send reply
-		std::string headers;
+		std::string headers{WebServer::getDefaultHeaders()};
 
 		if(!type.empty()) {
 			headers += "Content-Type: " + type + "\r\n";
 		}
-
-		headers += WebServer::getCorsHeaders();
 
 		if(content.size() < gzipMinBytes) {
 			/* too small for compression to be needed */
@@ -210,7 +208,7 @@ namespace crawlservpp::Main {
 				connection,
 				"HTTP/1.1 %d %s\r\n%sContent-Length: %d\r\n\r\n",
 				code,
-				statusCodeToString(code),
+				WebServer::statusCodeToString(code),
 				headers.c_str(),
 				compressedSize
 		);
@@ -287,11 +285,10 @@ namespace crawlservpp::Main {
 			);
 		}
 
-		// add CORS headers
-		std::string headers{WebServer::getCorsHeaders()};
+		// set headers
+		std::string headers{WebServer::getDefaultHeaders()};
 
 		if(isGzipped) {
-			// add gzip header
 			headers += "Content-Encoding: gzip\r\n";
 		}
 
@@ -605,9 +602,14 @@ namespace crawlservpp::Main {
 
 		out.close();
 
+		// add general headers
+		auto headers{WebServer::getCorsHeaders()};
+
+
+
 		// send new file name in reply
 		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
-		mg_http_reply(from, httpOk, WebServer::getCorsHeaders().c_str(), newName.c_str());
+		mg_http_reply(from, httpOk, headers.c_str(), newName.c_str());
 
 		this->onLog(
 				"received '"
@@ -932,6 +934,11 @@ namespace crawlservpp::Main {
 		}
 
 		return true;
+	}
+
+	// generate default headers
+	std::string WebServer::getDefaultHeaders() {
+		return WebServer::getCorsHeaders() + "Accept-Encoding: gzip, deflate\r\n";
 	}
 
 	// generate CORS headers

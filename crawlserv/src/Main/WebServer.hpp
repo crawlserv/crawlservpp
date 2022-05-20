@@ -294,6 +294,7 @@ namespace crawlservpp::Main {
 
 		[[nodiscard]] static bool checkFileName(bool inFile, const std::string& currentFile, std::string& fileName);
 
+		[[nodiscard]] static std::string getDefaultHeaders();
 		[[nodiscard]] static std::string getCorsHeaders();
 		[[nodiscard]] static std::string toString(const struct mg_str& str);
 		static void removeQuotes(std::string& str);
