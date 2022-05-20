@@ -240,9 +240,6 @@ function refreshData() {
 							 + "</div>"
 					);
 				}
-				else {
-					
-				}
 				
 				setTimeout(refreshData, 2500);
 			}
