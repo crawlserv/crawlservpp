@@ -211,7 +211,7 @@ namespace crawlservpp::Main {
 				"HTTP/1.1 %d %s\r\n%sContent-Length: %d\r\n\r\n",
 				code,
 				statusCodeToString(code),
-				headers,
+				headers.c_str(),
 				compressedSize
 		);
 
