@@ -259,35 +259,35 @@ namespace crawlservpp::Main {
 		void fileReceived(ConnectionPtr from, const std::string& name, const std::string& content);
 
 		// static internal helper functions
-		static bool parseHttpHeaders(
+		[[nodiscard]] static bool parseHttpHeaders(
 				const std::array<mg_http_header, MG_MAX_HTTP_HEADERS>& headers,
 				std::string& boundaryTo,
 				std::uint64_t& sizeTo
 		);
-		static bool getLine(struct mg_str& str, std::size_t& pos, std::string& to);
-		static bool isBoundary(const std::string& line, const std::string& boundary);
-		static bool isFinalBoundary(const std::string& line, const std::string& boundary);
-		static bool getUploadHeaders(struct mg_str& str, std::size_t& pos, std::vector<StringString>& to);
-		static bool getUploadHeader(const std::string& from, StringString& to);
+		[[nodiscard]] static bool getLine(struct mg_str& str, std::size_t& pos, std::string& to);
+		[[nodiscard]] static bool isBoundary(const std::string& line, const std::string& boundary);
+		[[nodiscard]] static bool isFinalBoundary(const std::string& line, const std::string& boundary);
+		[[nodiscard]] static bool getUploadHeaders(struct mg_str& str, std::size_t& pos, std::vector<StringString>& to);
+		[[nodiscard]] static bool getUploadHeader(const std::string& from, StringString& to);
 
-		static bool parseContentType(
+		[[nodiscard]] static bool parseContentType(
 				const std::string& headerName,
 				const struct mg_str& headerValue,
 				std::string& boundaryTo,
 				bool& isBoundaryFoundTo
 		);
-		static bool parseContentSize(
+		[[nodiscard]] static bool parseContentSize(
 				const std::string& headerName,
 				const struct mg_str& headerValue,
 				std::uint64_t& sizeTo,
 				bool& isFoundSizeTo
 		);
 
-		static bool parseContentTypeHeader(const std::string& value, std::string& boundaryTo);
-		static bool parseUploadHeaders(const std::vector<StringString>& uploadHeaders, std::string& fileNameTo);
-		static bool parseNextHeaderPart(const std::string& value, std::size_t& pos, std::string& to);
+		[[nodiscard]] static bool parseContentTypeHeader(const std::string& value, std::string& boundaryTo);
+		[[nodiscard]] static bool parseUploadHeaders(const std::vector<StringString>& uploadHeaders, std::string& fileNameTo);
+		[[nodiscard]] static bool parseNextHeaderPart(const std::string& value, std::size_t& pos, std::string& to);
 
-		static bool checkFileName(bool inFile, const std::string& currentFile, std::string& fileName);
+		[[nodiscard]] static bool checkFileName(bool inFile, const std::string& currentFile, std::string& fileName);
 
 		[[nodiscard]] static std::string getCorsHeaders();
 		[[nodiscard]] static std::string toString(const struct mg_str& str);
