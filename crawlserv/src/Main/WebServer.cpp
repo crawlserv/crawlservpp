@@ -190,8 +190,25 @@ namespace crawlservpp::Main {
 
 		headers += WebServer::getCorsHeaders();
 
-		//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
-		mg_http_reply(connection, code, headers.c_str(), "%s", content.c_str());
+		if(content.size() >= gzipMinBytes) {
+			/* send compressed */
+			headers += "Content-Encoding: gzip\r\n";
+
+			//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+			mg_http_reply(
+					connection,
+					code,
+					headers.c_str(),
+					"%s",
+					Data::Compression::Gzip::compress(content).c_str()
+			);
+		}
+		else {
+			/* too small for compression to be needed */
+
+			//NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
+			mg_http_reply(connection, code, headers.c_str(), "%s", content.c_str());
+		}
 	}
 
 	//! Sends a file located in the file cache.
@@ -211,6 +228,10 @@ namespace crawlservpp::Main {
 	 * \param fileName Constant reference to a
 	 *   string containing name of the file to be
 	 *   sent.
+	 * \param isGzipped Indicates whether the
+	 *   file to be sent is compressed with gzip.
+	 *   Merely adds the 'Content-Encoding: gzip'
+	 *   header to the HTTP response.
 	 * \param data Pointer to the HTTP message
 	 *   requesting the file, as retrieved by the
 	 *   callback function set via
@@ -225,6 +246,7 @@ namespace crawlservpp::Main {
 	void WebServer::sendFile(
 			ConnectionPtr connection,
 			const std::string& fileName,
+			bool isGzipped,
 			void * data
 	) {
 		// check arguments
@@ -260,6 +282,11 @@ namespace crawlservpp::Main {
 
 		// add CORS headers
 		std::string headers{WebServer::getCorsHeaders()};
+
+		if(isGzipped) {
+			// add gzip header
+			headers += "Content-Encoding: gzip\r\n";
+		}
 
 		// set options
 		struct mg_http_serve_opts options{};

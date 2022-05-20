@@ -320,7 +320,7 @@ namespace crawlservpp::Main {
 
 			// send reply, unless a thread has been started
 			if(fileDownload) {
-				this->webServer.sendFile(connection, reply, data);
+				this->webServer.sendFile(connection, reply, true, data);
 			}
 			else if(!threadStarted) {
 				this->webServer.send(
@@ -5763,7 +5763,7 @@ namespace crawlservpp::Main {
 		fullFileName += fileName;
 
 		// write file
-		Data::File::write(fullFileName, content, true);
+		Data::File::write(fullFileName, Data::Compression::Gzip::compress(content), true);
 
 		// return file name
 		responseTo = ServerCommandResponse(fileName);

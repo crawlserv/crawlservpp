@@ -31,6 +31,7 @@
 #ifndef MAIN_WEBSERVER_HPP_
 #define MAIN_WEBSERVER_HPP_
 
+#include "../Data/Compression/Gzip.hpp"
 #include "../Helper/FileSystem.hpp"
 #include "../Helper/Memory.hpp"
 #include "../Helper/Strings.hpp"
@@ -113,6 +114,9 @@ namespace crawlservpp::Main {
 	//! The length of two encapsulating quotes, in bytes.
 	inline constexpr auto quotesLength{2};
 
+	//! The number of minimum bytes for gzip to be used.
+	inline constexpr auto gzipMinBytes{2000};
+
 	///@}
 
 	/*
@@ -190,6 +194,7 @@ namespace crawlservpp::Main {
 		void sendFile(
 				ConnectionPtr connection,
 				const std::string& fileName,
+				bool isGzipped,
 				void * data
 		);
 		static void sendError(
