@@ -297,6 +297,8 @@ namespace crawlservpp::Main {
 		[[nodiscard]] static std::string getCorsHeaders();
 		[[nodiscard]] static std::string toString(const struct mg_str& str);
 		static void removeQuotes(std::string& str);
+
+		[[nodiscard]] static const char * statusCodeToString(int status_code);
 	};
 
 } /* namespace crawlservpp::Main */
