@@ -140,7 +140,7 @@ if($website && (is_null($domain) || strlen($domain) == 0)) {
 
 <input id="website-externaldir" type="checkbox" <?php
 
-if($website && strlen($dir) > 0) {
+if($website && (is_null($dir) || strlen($dir) > 0)) {
     echo "checked";
 }
 
@@ -155,7 +155,7 @@ if($website && strlen($dir) > 0) {
 
 <input type="text" class="entry-input" id="website-dir" value="<?php
 
-echo ($website && strlen($dir) > 0) ? html($dir) : "[default]";
+echo ($website && (is_null($dir) || strlen($dir) > 0)) ? html($dir) : "[default]";
 
 ?>" />
 
