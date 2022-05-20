@@ -125,7 +125,7 @@ if($website) {
 
 <input id="website-crossdomain" type="checkbox" <?php
 
-if($website && strlen($domain) == 0) {
+if($website && (is_null($domain) || strlen($domain) == 0)) {
     echo "checked";
 }
 
