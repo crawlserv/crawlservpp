@@ -31,6 +31,10 @@
 
 // convert HTML entities (convert both single and double quotes and use UTF-8)
 function html($str) {
+    if(is_null($str)) {
+        return null;    
+    }
+    
     return htmlspecialchars($str, ENT_QUOTES, "UTF-8");
 }
 
