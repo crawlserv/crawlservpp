@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -254,7 +254,7 @@ namespace crawlservpp::Main {
 		catch(const Helper::FileSystem::Exception& e) {
 			throw Exception(
 					"WebServer::sendFile(): "
-					+ std::string(e.view())
+					+ std::string{e.view()}
 			);
 		}
 
