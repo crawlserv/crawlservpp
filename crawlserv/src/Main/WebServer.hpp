@@ -78,6 +78,9 @@ namespace crawlservpp::Main {
 	//! The name of a (lower-case) content size header.
 	inline constexpr auto headerContentSize{"content-length"sv};
 
+	//! The name of a (lower-case) content encoding header.
+	inline constexpr auto headerContentEncoding{"content-encoding"sv};
+
 	//! The expected content type for HTTP multipart requests.
 	inline constexpr auto headerContentTypeValue{"multipart/form-data"sv};
 
@@ -259,15 +262,21 @@ namespace crawlservpp::Main {
 				void * data
 		);
 		void uploadHandler(ConnectionPtr connection, mg_http_message * msg);
+		void requestHandler(ConnectionPtr connection, mg_http_message * msg, void * data);
 
 		// internal helper functions
 		void fileReceived(ConnectionPtr from, const std::string& name, const std::string& content);
 
 		// static internal helper functions
+		static void parseHttpHeaders(
+				const std::array<mg_http_header, MG_MAX_HTTP_HEADERS>& headers,
+				std::string& contentEncodingTo
+		);
 		[[nodiscard]] static bool parseHttpHeaders(
 				const std::array<mg_http_header, MG_MAX_HTTP_HEADERS>& headers,
 				std::string& boundaryTo,
-				std::uint64_t& sizeTo
+				std::uint64_t& sizeTo,
+				std::string& contentEncodingTo
 		);
 		[[nodiscard]] static bool getLine(struct mg_str& str, std::size_t& pos, std::string& to);
 		[[nodiscard]] static bool isBoundary(const std::string& line, const std::string& boundary);
@@ -286,6 +295,11 @@ namespace crawlservpp::Main {
 				const struct mg_str& headerValue,
 				std::uint64_t& sizeTo,
 				bool& isFoundSizeTo
+		);
+		static void parseContentEncoding(
+				const std::string& headerName,
+				const struct mg_str& headerValue,
+				std::string& contentEncodingTo
 		);
 
 		[[nodiscard]] static bool parseContentTypeHeader(const std::string& value, std::string& boundaryTo);

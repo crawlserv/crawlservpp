@@ -472,11 +472,8 @@ namespace crawlservpp::Main {
 				this->uploadHandler(connection, httpMessage);
 			}
 			else {
-				// handle request
-				method = WebServer::toString(httpMessage->method);
-				body = WebServer::toString(httpMessage->body);
-
-				this->onRequest(connection, method, body, data);
+				// check for content encoding
+				this->requestHandler(connection, httpMessage, data);
 			}
 
 			break;
@@ -492,6 +489,7 @@ namespace crawlservpp::Main {
 		std::size_t pos{};
 		std::string boundary;
 		std::uint64_t size{};
+		std::string encoding;
 		std::string line;
 		std::vector<StringString> uploadHeaders;
 		std::array<mg_http_header, MG_MAX_HTTP_HEADERS> headers{};
@@ -499,7 +497,7 @@ namespace crawlservpp::Main {
 		std::copy(std::begin(msg->headers), std::end(msg->headers), headers.begin());
 
 		if(
-				WebServer::parseHttpHeaders(headers, boundary, size)
+				WebServer::parseHttpHeaders(headers, boundary, size, encoding)
 				&& WebServer::getLine(msg->body, pos, line) /* first line of content */
 		) {
 			if(size > MG_MAX_RECV_BUF_SIZE) {
@@ -551,7 +549,12 @@ namespace crawlservpp::Main {
 
 			// get whether finished
 			if(WebServer::isFinalBoundary(line , boundary)) {
-				this->fileReceived(connection, originFile, content);
+				if(encoding == "gzip") {
+					this->fileReceived(connection, originFile, Data::Compression::Gzip::decompress(content));
+				}
+				else {
+					this->fileReceived(connection, originFile, content);
+				}
 			}
 			else {
 				WebServer::sendError(connection, "Incomplete data");
@@ -568,6 +571,34 @@ namespace crawlservpp::Main {
 			this->onLog(
 					"received misformed data from "
 					+ WebServer::getIP(connection)
+			);
+		}
+	}
+
+	// simple HTTP request handler
+	void WebServer::requestHandler(ConnectionPtr connection, mg_http_message * msg, void * data) {
+		std::string encoding;
+		std::array<mg_http_header, MG_MAX_HTTP_HEADERS> headers{};
+
+		std::copy(std::begin(msg->headers), std::end(msg->headers), headers.begin());
+
+		WebServer::parseHttpHeaders(headers, encoding);
+
+		// handle request
+		if(encoding == "gzip") {
+			this->onRequest(
+					connection,
+					WebServer::toString(msg->method),
+					Data::Compression::Gzip::decompress(WebServer::toString(msg->body)),
+					data
+			);
+		}
+		else {
+			this->onRequest(
+					connection,
+					WebServer::toString(msg->method),
+					WebServer::toString(msg->body),
+					data
 			);
 		}
 	}
@@ -626,11 +657,37 @@ namespace crawlservpp::Main {
 	 * STATIC INTERNAL HELPER FUNCTIONS (private)
 	 */
 
-	// get boundary from HTTP request headers
+	// get only content encoding from HTTP request headers
+	void WebServer::parseHttpHeaders(
+			const std::array<mg_http_header, MG_MAX_HTTP_HEADERS>& headers,
+			std::string& contentEncodingTo
+	) {
+		for(std::size_t index{}; index < MG_MAX_HTTP_HEADERS; ++index) {
+			if(headers[index].name.ptr == nullptr) {
+				break;
+			}
+
+			std::string headerName{WebServer::toString(headers[index].name)};
+
+			std::transform(
+					headerName.begin(),
+					headerName.end(),
+					headerName.begin(),
+					[](const auto c)  {
+						return std::tolower(c);
+					}
+			);
+
+			WebServer::parseContentEncoding(headerName, headers[index].value, contentEncodingTo);
+		}
+	}
+
+	// get boundary, size, and content encoding from HTTP request headers
 	bool WebServer::parseHttpHeaders(
 			const std::array<mg_http_header, MG_MAX_HTTP_HEADERS>& headers,
 			std::string& boundaryTo,
-			std::uint64_t& sizeTo
+			std::uint64_t& sizeTo,
+			std::string& contentEncodingTo
 	) {
 		bool isFoundBoundary{false};
 		bool isFoundSize{false};
@@ -652,13 +709,13 @@ namespace crawlservpp::Main {
 			);
 
 			if(
-					!parseContentType(
+					!WebServer::parseContentType(
 							headerName,
 							headers[index].value,
 							boundaryTo,
 							isFoundBoundary
 					)
-					|| !parseContentSize(
+					|| !WebServer::parseContentSize(
 							headerName,
 							headers[index].value,
 							sizeTo,
@@ -667,6 +724,8 @@ namespace crawlservpp::Main {
 			) {
 				return false;
 			}
+
+			WebServer::parseContentEncoding(headerName, headers[index].value, contentEncodingTo);
 		}
 
 		return isFoundBoundary && isFoundSize;
@@ -812,6 +871,16 @@ namespace crawlservpp::Main {
 		catch(const std::logic_error& e) {}
 
 		return false;
+	}
+
+	void WebServer::parseContentEncoding(
+			const std::string& headerName,
+			const struct mg_str& headerValue,
+			std::string& contentEncodingTo
+	) {
+		if(headerName == headerContentEncoding) {
+			contentEncodingTo = WebServer::toString(headerValue);
+		}
 	}
 
 	// parse content type header for multipart HTTP requests
