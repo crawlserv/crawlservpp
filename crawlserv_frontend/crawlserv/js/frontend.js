@@ -873,7 +873,7 @@ jQuery(function($) {
 					"filename": ulfilename
 				},
 				function() {
-					if(!window.open("download/")) {
+					if(!window.open("download/", "crawlserv_download")) {
 						console.error(
 								"Could not open a new window, it has probably been blocked by a popup blocker."
 						);
@@ -1559,7 +1559,7 @@ jQuery(function($) {
 					
 					if($("#query-new-tab").is(":checked")) {
 						// open result in new tab
-						newTab = window.open();
+						newTab = window.open("", "crawlserv_query");
 						
 						if(newTab) {
 							newTab.document.open();
@@ -2434,7 +2434,7 @@ jQuery(function($) {
 		};
 		
 		$.post("download/", args, function() {
-			if(!window.open("download/")) {
+			if(!window.open("download/", "crawlserv_download")) {
 				console.error(
 						"Could not open a new window, it has probably been blocked by a popup blocker."
 				);
