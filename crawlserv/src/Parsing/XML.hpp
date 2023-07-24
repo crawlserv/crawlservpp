@@ -44,7 +44,7 @@
 #include <cstdint>		// std::uint32_t
 #include <memory>		// std::make_unique, std::unique_ptr
 #include <queue>		// std::queue
-#include <sstream>		// std::istringstream, std::ostringstream
+#include <sstream>		// std::ostringstream
 #include <string>		// std::string, std::to_string
 #include <string_view>	// std::string_view, , std::string_view_literals
 
@@ -423,10 +423,8 @@ namespace crawlservpp::Parsing {
 		// create XML document
 		this->doc = std::make_unique<pugi::xml_document>();
 
-		// parse XHTML with pugixml
-		std::istringstream in(xml);
-		
-		XML::checkResult(this->doc->load(in, pugi::parse_full), xml);
+		// parse XHTML with pugixml		
+		XML::checkResult(this->doc->load_buffer(xml.c_str(), xml.size(), pugi::parse_full), xml);
 	}
 
 	/*
