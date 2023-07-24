@@ -198,7 +198,7 @@ if($result->num_rows) {
                 
                 echo "<td>\n";
                 
-                if(!$row[column] || strlen(trim($row[$column])) == 0) {
+                if(!$row[$column] || strlen(trim($row[$column])) == 0) {
                     echo "<i>[empty]</i>";
                 }
                 else if(isJSON($row[$column])) {
