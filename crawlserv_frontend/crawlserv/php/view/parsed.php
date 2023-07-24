@@ -4,7 +4,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020–2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -198,7 +198,7 @@ if($result->num_rows) {
                 
                 echo "<td>\n";
                 
-                if(!strlen(trim($row[$column]))) {
+                if(!$row[column] || strlen(trim($row[$column])) == 0) {
                     echo "<i>[empty]</i>";
                 }
                 else if(isJSON($row[$column])) {
