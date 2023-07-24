@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021–2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -238,6 +238,7 @@ namespace crawlservpp::Parsing {
 		static void replaceInvalidConditionalComments(std::string& content);
 		static void replaceInvalidComments(std::string& content);
 		static void removeXmlProcessingInstructions(std::string& content);
+		static void checkResult(pugi::xml_parse_result result, const std::string& content);
 	};
 
 	/*
@@ -424,50 +425,8 @@ namespace crawlservpp::Parsing {
 
 		// parse XHTML with pugixml
 		std::istringstream in(xml);
-
-		const auto result(
-			this->doc->load(in, pugi::parse_full)
-		);
-
-		if(!result) {
-			// parsing error
-			std::string errorString{"XML parsing error: "};
-
-			errorString += result.description();
-			errorString += " at #";
-			errorString += std::to_string(result.offset);
-			errorString += " (";
-
-			if(result.offset > 0) {
-				errorString += "'[...]";
-
-				if(result.offset > numDebugCharacters) {
-					errorString += xml.substr(
-							result.offset - numDebugCharacters,
-							numDebugCharacters
-					);
-				}
-				else {
-					errorString += xml.substr(0, result.offset);
-				}
-
-				errorString += "[!!!]";
-
-				if(xml.size() > static_cast<std::size_t>(result.offset + numDebugCharacters)) {
-					errorString += "'[...]";
-					errorString += xml.substr(result.offset, numDebugCharacters);
-					errorString += "[...]";
-				}
-				else {
-					errorString += "'[...]";
-					errorString += xml.substr(result.offset);
-				}
-
-				errorString += "').";
-			}
-
-			throw XML::Exception(errorString);
-		}
+		
+		XML::checkResult(this->doc->load(in, pugi::parse_full), xml);
 	}
 
 	/*
@@ -690,6 +649,51 @@ namespace crawlservpp::Parsing {
 				content.erase(pos, tag.length());
 			}
 		}
+	}
+	
+	// internal static helper function: check parsing result
+	inline void XML::checkResult(pugi::xml_parse_result result, const std::string& content) {
+		if(result) {
+			return;
+		}
+		
+		// parsing error
+		std::string errorString{"XML parsing error: "};
+
+		errorString += result.description();
+		errorString += " at #";
+		errorString += std::to_string(result.offset);
+		errorString += " (";
+
+		if(result.offset > 0) {
+			errorString += "'[...]";
+
+			if(result.offset > numDebugCharacters) {
+				errorString += content.substr(
+						result.offset - numDebugCharacters,
+						numDebugCharacters
+				);
+			}
+			else {
+				errorString += content.substr(0, result.offset);
+			}
+
+			errorString += "[!!!]";
+
+			if(content.size() > static_cast<std::size_t>(result.offset + numDebugCharacters)) {
+				errorString += "'[...]";
+				errorString += content.substr(result.offset, numDebugCharacters);
+				errorString += "[...]";
+			}
+			else {
+				errorString += "'[...]";
+				errorString += content.substr(result.offset);
+			}
+
+			errorString += "').";
+		}
+
+		throw XML::Exception(errorString);
 	}
 
 } /* namespace crawlservpp::Parsing */
