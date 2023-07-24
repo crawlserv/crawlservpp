@@ -3,7 +3,7 @@
 
    ***
    
-    Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+    Copyright (C) 2020–2023 Anselm Schmidt (ans[ät]ohai.su)
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ header('Content-Type: text/html; charset=utf-8');
 <link rel="stylesheet" type="text/css" href="css/style.css">
 
 <script src="js/external/array.equals.js"></script>
-<script src="js/external/jquery-3.3.1.min.js"></script>
+<script src="js/external/jquery-3.7.0.min.js"></script>
 <script src="js/external/jquery.redirect.js"></script>
 <script src="js/external/jquery.form.min.js"></script>
 <script src="js/external/jquery-ui.min.js"></script>
