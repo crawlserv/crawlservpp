@@ -142,6 +142,9 @@ namespace crawlservpp::Wrapper {
 		::TidyDoc doc;
 
 		TidyBuffer errors;
+		
+		// static helper function
+		[[nodiscard]] static bool isVersionBelow5_7_18();
 	};
 
 	/*
@@ -161,8 +164,10 @@ namespace crawlservpp::Wrapper {
 	 *   buffer could not be set.
 	 */
 	inline TidyDoc::TidyDoc() {
-		// set language manually to avoid bug (see https://github.com/crawlserv/crawlservpp/issues/164)
-		tidySetLanguage(tidyGetLanguage());
+		// set language manually to avoid locale bug (https://github.com/crawlserv/crawlservpp/issues/164)
+		if(TidyDoc::isVersionBelow5_7_18()) {
+			tidySetLanguage(tidyGetLanguage());
+		}
 		
 		// create document
 		this->doc = tidyCreate();
@@ -534,6 +539,49 @@ namespace crawlservpp::Wrapper {
 
 			throw Exception("Could not clean and repair HTML");
 		}
+	}
+	
+	// static helper function checking whether the library version is below 5.7.18
+	inline bool TidyDoc::isVersionBelow5_7_18() {
+		constexpr auto firstDotPosition{1};
+		constexpr auto secondDotPosition{3};
+		constexpr auto length{6};
+		
+		const std::string version(tidyLibraryVersion());
+		
+		if(version.substr(0, firstDotPosition) > "5") {
+			return false; // version 6.0 or higher
+		}
+		
+		if(version.size() > firstDotPosition && version[firstDotPosition] != '.') {
+			return false; // version 10.0 or higher
+		}
+		
+		if(version.substr(0, secondDotPosition) > "5.7") {
+			return false; // version 5.8 or higher
+		}
+		
+		if(version.substr(0, firstDotPosition) < "5") {
+			return true; // version 4.x or lower
+		}
+		
+		if(version.size() > secondDotPosition && version[secondDotPosition] != '.') {
+			return false; // version 5.10 or higher
+		}
+		
+		if(version >= "5.7.18" && version.size() >= length) {
+			return false; // version 5.7.18 or higher
+		}
+		
+		if(version.substr(0, secondDotPosition) < "5.7") {
+			return true; // version 5.6 or lower
+		}
+		
+		if(version.size() > length) {
+			return false; // version 5.7.100 or higher
+		}
+		
+		return true; // version 5.7.17 or lower
 	}
 
 } /* namespace crawlservpp::Wrapper */
