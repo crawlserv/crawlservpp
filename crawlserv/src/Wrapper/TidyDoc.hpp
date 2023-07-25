@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2020–2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -137,6 +137,8 @@ namespace crawlservpp::Wrapper {
 		///@}
 
 	private:
+		bool created{false};
+		
 		::TidyDoc doc;
 
 		TidyBuffer errors;
@@ -158,7 +160,14 @@ namespace crawlservpp::Wrapper {
 	 * \throws TidyDoc::Exception if the error
 	 *   buffer could not be set.
 	 */
-	inline TidyDoc::TidyDoc() : doc(tidyCreate()) {
+	inline TidyDoc::TidyDoc() {
+		// set language manually to avoid bug (see https://github.com/crawlserv/crawlservpp/issues/164)
+		tidySetLanguage(tidyGetLanguage());
+		
+		// create document
+		this->doc = tidyCreate();
+		this->created = true;
+		
 		// set error buffer
 		if(tidySetErrorBuffer(this->doc, this->errors.get()) != 0) {
 			throw Exception("Could not set error buffer");
@@ -167,7 +176,11 @@ namespace crawlservpp::Wrapper {
 
 	//! Destructor releasing the underlying tidy-html5 document.
 	inline TidyDoc::~TidyDoc() {
-		tidyRelease(this->doc);
+		if(this->created) {
+			tidyRelease(this->doc);
+		}
+		
+		this->created = false;
 	}
 
 	/*

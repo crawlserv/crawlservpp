@@ -38,7 +38,6 @@
 
 #include <pugixml.hpp>
 
-#include <clocale>		// setlocale
 #include <exception>	// std::exception
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string
@@ -111,7 +110,6 @@ namespace crawlservpp::Query {
 
 		// static helper functions
 		[[nodiscard]] static std::string nodeToString(const pugi::xpath_node& node, bool textOnly);
-		static void resetLocale();
 
 		// sub-class for text-only conversion walker
 		class TextOnlyWalker : public pugi::xml_tree_walker {
@@ -226,9 +224,7 @@ namespace crawlservpp::Query {
 					resultTo = XPath::nodeToString(nodeSet[0], this->isTextOnly);
 				}
 			}
-			else {
-				resetLocale();
-				
+			else {				
 				resultTo = this->query.evaluate_string(*(doc.doc));
 			}
 		}
@@ -280,9 +276,7 @@ namespace crawlservpp::Query {
 					}
 				}
 			}
-			else {
-				resetLocale();
-				
+			else {				
 				const auto result{this->query.evaluate_string(*(doc.doc))};
 
 				if(!result.empty()) {
@@ -396,13 +390,6 @@ namespace crawlservpp::Query {
 		}
 
 		return result;
-	}
-
-	// reset C locale if necessary (see https://github.com/crawlserv/crawlservpp/issues/164)
-	inline void XPath::resetLocale() {
-		if(std::string(setlocale(LC_ALL, nullptr)) != "C") {
-			setlocale(LC_ALL, "C");
-		}
 	}
 
 	// XML walker for text-only conversion helper functions
