@@ -108,8 +108,9 @@ namespace crawlservpp::Query {
 		bool compiled;
 		bool isTextOnly;
 
-		// static helper function
+		// static helper functions
 		[[nodiscard]] static std::string nodeToString(const pugi::xpath_node& node, bool textOnly);
+		static void resetLocale();
 
 		// sub-class for text-only conversion walker
 		class TextOnlyWalker : public pugi::xml_tree_walker {
@@ -225,7 +226,7 @@ namespace crawlservpp::Query {
 				}
 			}
 			else {
-				setlocale(LC_ALL, "C"); // see https://github.com/crawlserv/crawlservpp/issues/164
+				resetLocale();
 				
 				resultTo = this->query.evaluate_string(*(doc.doc));
 			}
@@ -279,7 +280,7 @@ namespace crawlservpp::Query {
 				}
 			}
 			else {
-				setlocale(LC_ALL, "C"); // see https://github.com/crawlserv/crawlservpp/issues/164
+				resetLocale();
 				
 				const auto result{this->query.evaluate_string(*(doc.doc))};
 
@@ -394,6 +395,13 @@ namespace crawlservpp::Query {
 		}
 
 		return result;
+	}
+
+	// reset C locale if necessary (see https://github.com/crawlserv/crawlservpp/issues/164)
+	inline void XPath::resetLocale() {
+		if(std::string(setlocale(LC_ALL, nullptr)) != "C") {
+			setlocale(LC_ALL, "C");
+		}
 	}
 
 	// XML walker for text-only conversion helper functions
