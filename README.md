@@ -1,4 +1,4 @@
-_**WARNING!** This application is under development. It is neither complete nor adequately documented or tested._
+_**WARNING!** This application is under development. It is neither complete nor adequately tested._
 
  _~~Strikethrough~~ means a feature is not implemented yet._
 
@@ -71,6 +71,8 @@ mkdir build
 cd build
 cmake ..
 ```
+
+In case of missing source files, make sure that you initialized and updated all submodules (see above).
 
 If `cmake` was successful and shows `Build files have been written to: [...]`, proceed with:
 
