@@ -135,7 +135,7 @@ namespace crawlservpp::Network {
 	inline constexpr auto getPublicIpFrom{"https://myexternalip.com/raw"};
 
 	//! Errors when retrieving the IP of the server.
-	inline constexpr std::array getPublicIpErrors{429, 502, 503, 504, 521, 522, 524};
+	inline constexpr std::array getPublicIpErrors{403, 429, 502, 503, 504, 521, 522, 524};
 
 	//! Name of the @c X-ts header.
 	inline constexpr auto xTsHeaderName{"X-ts: "};
