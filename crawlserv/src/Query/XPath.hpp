@@ -38,6 +38,7 @@
 
 #include <pugixml.hpp>
 
+#include <clocale>		// setlocale
 #include <exception>	// std::exception
 #include <sstream>		// std::ostringstream
 #include <string>		// std::string
