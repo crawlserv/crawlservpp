@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2021–2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -225,6 +225,8 @@ namespace crawlservpp::Query {
 				}
 			}
 			else {
+				setlocale(LC_ALL, "C"); // see https://github.com/crawlserv/crawlservpp/issues/164
+				
 				resultTo = this->query.evaluate_string(*(doc.doc));
 			}
 		}
@@ -269,7 +271,7 @@ namespace crawlservpp::Query {
 				resultTo.reserve(nodeSet.size());
 
 				for(const auto& node : nodeSet) {
-					const std::string result(XPath::nodeToString(node, this->isTextOnly));
+					const auto result{XPath::nodeToString(node, this->isTextOnly)};
 
 					if(!result.empty()) {
 						resultTo.emplace_back(result);
@@ -277,7 +279,9 @@ namespace crawlservpp::Query {
 				}
 			}
 			else {
-				const std::string result(this->query.evaluate_string(*(doc.doc)));
+				setlocale(LC_ALL, "C"); // see https://github.com/crawlserv/crawlservpp/issues/164
+				
+				const auto result{this->query.evaluate_string(*(doc.doc))};
 
 				if(!result.empty()) {
 					resultTo.emplace_back(result);
@@ -323,9 +327,7 @@ namespace crawlservpp::Query {
 		// evaluate query with multiple results
 		try {
 			if(this->query.return_type() == pugi::xpath_type_node_set) {
-				const pugi::xpath_node_set nodeSet(
-						this->query.evaluate_node_set(*(doc.doc))
-				);
+				const auto nodeSet{this->query.evaluate_node_set(*(doc.doc))};
 
 				resultTo.reserve(nodeSet.size());
 
