@@ -160,7 +160,7 @@ if($action != "merge") {
     
     echo "<select id=\"file-type-select\" class=\"entry-input\" data-m=\"$m\">\n";
     
-    if($datatype == "urllist") {
+    if($datatype == "urllist" || $datatype == "corpus") {
         echo "<option value=\"text\"";
         
         if($filetype == "text") {
