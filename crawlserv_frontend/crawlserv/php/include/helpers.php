@@ -555,9 +555,9 @@ function rowCorpusSelect($delete = false) {
             }
             
             $source .= $row["source_table"].".".$row["source_field"];
-            $updated = $row["updated"];
+            $created = $row["created"];
             
-            $html .= "<option value=\"".$id."\">$name – last updated on ".$updated."</option>\n";
+            $html .= "<option value=\"".$id."\">$name – created on ".$created."</option>\n";
         }
     }
     
