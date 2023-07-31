@@ -232,7 +232,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		const auto& articleMap = corpus.getcArticleMap();
 		const auto& tokens = corpus.getcTokens();
 
-		// check date and sentence map
+		// check date map
 		if(dateMap.empty()) {
 			throw Exception(
 					"WordsOverTime::count():"
