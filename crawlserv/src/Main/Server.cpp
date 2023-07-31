@@ -5995,7 +5995,7 @@ namespace crawlservpp::Main {
 		std::string error;
 
 		if(
-				Server::getArgument(json, "first-id", corpusTo, error)
+				Server::getArgument(json, "source", corpusTo, error)
 				&& Server::getArgument(json, "what", whatTo, false, false, error)
 		) {
 			if(whatTo == "text" || whatTo == "articles" || whatTo == "dates") {
