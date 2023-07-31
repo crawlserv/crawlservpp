@@ -283,9 +283,19 @@ if($action != "import") {
         echo rowTableSelect($datatype);
     }
     else if($action == "export" && $datatype == "corpus") {
-	echo rowWebsiteSelect();
+        echo rowWebsiteSelect();
         echo rowUrlListSelect(false, false, false, false);
         echo rowCorpusSelect();
+        
+        echo "<div class=\"entry-row\">\n";
+        echo "<div class=\"entry-label\">Data:</div>";
+        echo "<select id=\"what\" class=\"entry-input\">";
+        echo "<option value=\"text\">Content</option>\n";
+        echo "<option value=\"articles\">IDs</option>\n";
+        echo "<option value=\"dates\">Dates</option>\n";
+        echo "</select>\n";
+        echo "</div>\n";
+        echo "</div>\n";
     } 
     
     echo "</div>\n";
