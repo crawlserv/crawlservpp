@@ -510,7 +510,7 @@ function rowCorpusSelect($delete = false) {
     $html .= "<select id=\"table-select\" class=\"$class\"";
     
     $result = $dbConnection->query(
-        "SELECT id, source_type, source_table, source_field, created".
+        "SELECT id, source_type, source_table, source_field, created, savepoint".
         " FROM crawlserv_corpora".
         " WHERE website=$website".
         " AND urllist=$urllist".
@@ -556,6 +556,10 @@ function rowCorpusSelect($delete = false) {
             
             $name .= $row["source_table"].".".$row["source_field"];
             $created = $row["created"];
+            
+            if(!empty($row["savepoint"])) {
+                $name .= ", used ".$row["savepoint"];
+            }
             
             $html .= "<option value=\"".$id."\">$name – created on ".$created."</option>\n";
         }
