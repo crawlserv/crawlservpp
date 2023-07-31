@@ -341,6 +341,8 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
         $html .= " data-noreload";
     }
     
+    $html .= ">\n";
+    
     $result = $dbConnection->query(
             "SELECT id, name".
             " FROM crawlserv_configs".
@@ -348,8 +350,6 @@ function rowConfigSelect($module, $adddelete = false, $noreload = false) {
             " AND module='".strtolower($module)."'".
             " ORDER BY name"
     );
-    
-    $html .= ">\n";
     
     if(!$result) {
         die("ERROR: Could not get ".strtolower($module)."s from database.");
@@ -449,6 +449,8 @@ function rowTableSelect($type, $delete = false) {
     
     $html .= "<select id=\"table-select\" class=\"$class\"";
     
+    $html .= ">\n";
+    
     $result = $dbConnection->query(
             "SELECT id, name, updated".
             " FROM crawlserv_".$type."tables".
@@ -456,8 +458,6 @@ function rowTableSelect($type, $delete = false) {
             " AND urllist=$urllist".
             " ORDER BY name, updated DESC"
     );
-    
-    $html .= ">\n";
     
     if(!$result) {
         die("ERROR: Could not get $type data from database.");
@@ -507,7 +507,7 @@ function rowCorpusSelect($delete = false) {
     
     $html .= "<div class=\"entry-label\">Table:</div><div class=\"$class\">\n";
     
-    $html .= "<select id=\"table-select\" class=\"$class\"";
+    $html .= "<select id=\"table-select\" class=\"$class\">\n";
     
     $result = $dbConnection->query(
         "SELECT id, source_type, source_table, source_field, created, savepoint".
@@ -517,8 +517,6 @@ function rowCorpusSelect($delete = false) {
         " AND previous IS NULL".
         " ORDER BY source_type, source_table, source_field, created DESC"
         );
-    
-    $html .= ">\n";
     
     if(!$result) {
         die("ERROR: Could not get corpus data from database.");
