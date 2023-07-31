@@ -510,7 +510,7 @@ function rowCorpusSelect($delete = false) {
     $html .= "<select id=\"table-select\" class=\"$class\"";
     
     $result = $dbConnection->query(
-        "SELECT id, source_type, source_table, source_field, updated".
+        "SELECT id, source_type, source_table, source_field, created".
         " FROM crawlserv_corpora".
         " WHERE website=$website".
         " AND urllist=$urllist".
