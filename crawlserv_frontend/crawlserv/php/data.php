@@ -5,7 +5,7 @@
  * 
  * ---
  * 
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -131,6 +131,14 @@ if($action == "export") {
     }
 
     echo ">Analyzed data</option>\n";
+    
+    echo "<option value=\"corpus\" ";
+    
+    if($datatype == "corpus") {
+        echo " selected";
+    }
+    
+    echo ">Corpus data</option>\n";
 }
 ?>
 
@@ -274,6 +282,11 @@ if($action != "import") {
         echo rowUrlListSelect(false, false, false, false);
         echo rowTableSelect($datatype);
     }
+    else if($action == "export" && $datatype == "corpus") {
+	echo rowWebsiteSelect();
+        echo rowUrlListSelect(false, false, false, false);
+        echo rowCorpusSelect();
+    } 
     
     echo "</div>\n";
 }

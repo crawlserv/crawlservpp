@@ -5,7 +5,7 @@
  * 
  * ---
  * 
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  * 
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -482,6 +482,91 @@ function rowTableSelect($type, $delete = false) {
     
     if($delete) {
         $html .= "<a id=\"table-delete\" href=\"#\" class=\"actionlink\" data-m=\"$m\">";
+        $html .= "<span class=\"remove-entry\">X</span>";
+        $html .= "</a>";
+    }
+    
+    $html .= "</div>\n";
+    $html .= "</div>\n";
+    
+    return $html;
+}
+
+// render row with corpus selection
+function rowCorpusSelect($delete = false) {
+    global $m, $dbConnection, $website, $urllist;
+    
+    if($delete) {
+        $class = "entry-x-input";
+    }
+    else {
+        $class = "entry-input";
+    }
+    
+    $html = "<div class=\"entry-row\">\n";
+    
+    $html .= "<div class=\"entry-label\">Table:</div><div class=\"$class\">\n";
+    
+    $html .= "<select id=\"table-select\" class=\"$class\"";
+    
+    $result = $dbConnection->query(
+        "SELECT id, source_type, source_table, source_field, updated".
+        " FROM crawlserv_corpora".
+        " WHERE website=$website".
+        " AND urllist=$urllist".
+        " AND previous=NULL".
+        " ORDER BY source_type, source_table, source_field, updated DESC"
+        );
+    
+    $html .= ">\n";
+    
+    if(!$result) {
+        die("ERROR: Could not get $type data from database.");
+    }
+    
+    if($result->num_rows == 0) {
+        $html .= "<option disabled>No $type data available</option>\n";
+    }
+    else {
+        while($row = $result->fetch_assoc()) {
+            $id = $row["id"];
+            $source = ""
+            
+            switch($row["source_type"]) {
+                case 0:
+                    $source = "parsed from ";
+                    
+                    break;
+                    
+                case 1:
+                    $source = "extracted from ";
+                    
+                    break;
+                    
+                case 2:
+                    $source = "analyzed from ";
+                    
+                    break;
+                    
+                case 3:
+                    $source = "crawled from";
+                    
+                    break;
+            }
+            
+            $source .= $row["source_table"].".".$row["source_field"];
+            $updated = $row["updated"];
+            
+            $html .= "<option value=\"".$id."\">$name – last updated on ".$updated."</option>\n";
+        }
+    }
+    
+    $result->close();
+    
+    $html .= "</select>\n";
+    
+    if($delete) {
+        $html .= "<a id=\"corpus-delete\" href=\"#\" class=\"actionlink\" data-m=\"$m\">";
         $html .= "<span class=\"remove-entry\">X</span>";
         $html .= "</a>";
     }
