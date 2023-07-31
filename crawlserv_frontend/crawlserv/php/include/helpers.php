@@ -493,7 +493,7 @@ function rowTableSelect($type, $delete = false) {
 }
 
 // render row with corpus selection
-function rowCorpusSelect($delete = false) {
+function rowCorpusSelect(&$is_data_to, $delete = false) {
     global $m, $dbConnection, $website, $urllist;
     
     if($delete) {
@@ -523,9 +523,13 @@ function rowCorpusSelect($delete = false) {
     }
     
     if($result->num_rows == 0) {
+        $is_data_to = false;
+        
         $html .= "<option disabled>No corpus data available</option>\n";
     }
     else {
+        $is_data_to = true;
+        
         while($row = $result->fetch_assoc()) {
             $id = $row["id"];
             $name = "";
