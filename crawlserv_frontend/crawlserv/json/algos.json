@@ -36,7 +36,7 @@
 		},
 		"Extract IDs": {
 			"algo-id": 48,
-			"config-cats": [ "tokenizer", "group-date", "filter-date", "filter-query", "upload" ]
+			"config-cats": [ "tokenizer", "filter-date", "filter-query", "upload" ]
 		}
 	},
 	"Network Analyses": {
