@@ -2679,7 +2679,7 @@ jQuery(function($) {
 					}
 				}
 				
-				// (website, source URL list, target URL list, source table)
+				// (website, source URL list, target URL list, source table, data type)
 				if($("#website-select").length) {
 					args["website"] = parseInt($("#website-select").val(), 10);
 					props["website-namespace"] = $("#website-select").find(":selected").data("namespace");
@@ -2702,6 +2702,10 @@ jQuery(function($) {
 				if($("#table-select").length) {
 					args["source"] = parseInt($("#table-select").val(), 10);
 					props["table"] = $("#table-select").find(":selected").data("table");
+				}
+				
+				if($("#what").length) {
+					args["what"] = $("#what").val()
 				}
 				
 				// (URL list name and namespace)
