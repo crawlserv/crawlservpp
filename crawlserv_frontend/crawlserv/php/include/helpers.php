@@ -530,7 +530,7 @@ function rowCorpusSelect($delete = false) {
     else {
         while($row = $result->fetch_assoc()) {
             $id = $row["id"];
-            $source = ""
+            $source = "";
             
             switch($row["source_type"]) {
                 case 0:
