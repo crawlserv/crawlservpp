@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -96,8 +96,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		fields.emplace_back("articles", "BIGINT UNSIGNED");
 		fields.emplace_back("sentences", "BIGINT UNSIGNED");
 		fields.emplace_back("tokens", "BIGINT UNSIGNED");
-
-		this->database.setTargetFields(fields);
 
 		// initialize target table
 		this->database.setTargetFields(fields);

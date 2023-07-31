@@ -86,7 +86,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		// for convenience
 		using Exception = Module::Analyzer::Thread::Exception;
 
-		//using QueryStruct = Struct::QueryStruct;
 		using StatusSetter = Struct::StatusSetter;
 		using TextMapEntry = Struct::TextMapEntry;
 		using ThreadOptions = Struct::ThreadOptions;
