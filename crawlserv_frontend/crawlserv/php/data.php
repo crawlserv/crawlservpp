@@ -382,7 +382,7 @@ if($action != "merge" || $datatype != "urllist") {
     }
     else if($action == "export") {
         // export options
-        if($datatype == "urllist") {
+        if($datatype == "urllist" || $datatype == "corpus") {
             if($filetype == "text" || $filetype == "spreadsheet") {
                 // options for exporting URL list to text file or spreadsheet
                 echo "<div class=\"entry-row\">\n";
