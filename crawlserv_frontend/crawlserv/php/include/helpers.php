@@ -530,31 +530,31 @@ function rowCorpusSelect($delete = false) {
     else {
         while($row = $result->fetch_assoc()) {
             $id = $row["id"];
-            $source = "";
+            $name = "";
             
             switch($row["source_type"]) {
                 case 0:
-                    $source = "parsed from ";
+                    $name = "parsed from ";
                     
                     break;
                     
                 case 1:
-                    $source = "extracted from ";
+                    $name = "extracted from ";
                     
                     break;
                     
                 case 2:
-                    $source = "analyzed from ";
+                    $name = "analyzed from ";
                     
                     break;
                     
                 case 3:
-                    $source = "crawled from";
+                    $name = "crawled from";
                     
                     break;
             }
             
-            $source .= $row["source_table"].".".$row["source_field"];
+            $name .= $row["source_table"].".".$row["source_field"];
             $created = $row["created"];
             
             $html .= "<option value=\"".$id."\">$name – created on ".$created."</option>\n";
