@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -86,6 +86,7 @@
 #include "../Data/Compression/Gzip.hpp"
 #include "../Data/Compression/Zip.hpp"
 #include "../Data/Compression/Zlib.hpp"
+#include "../Data/Corpus.hpp"
 #include "../Data/File.hpp"
 #include "../Data/ImportExport/OpenDocument.hpp"
 #include "../Data/ImportExport/Text.hpp"
@@ -138,6 +139,7 @@
 #include <string>		// std::string, std::to_string
 #include <string_view>	// std::string_view, std::string_view_literals
 #include <thread>		// std::thread
+#include <set>			// std::set
 #include <utility>		// std::pair
 #include <vector>		// std::vector
 
@@ -595,6 +597,12 @@ namespace crawlservpp::Main {
 				bool& isColumnNamesTo,
 				ServerCommandResponse& responseTo
 		);
+		static bool cmdExportRetrieveCorpus(
+				const rapidjson::Document& json,
+				Module::Database& db,
+				std::queue<std::string>& urlsTo,
+				ServerCommandResponse& responseTo
+		);
 		static bool cmdExportGetUrlListArguments(
 				const rapidjson::Document& json,
 				std::uint64_t& websiteTo,
@@ -607,6 +615,12 @@ namespace crawlservpp::Main {
 				std::uint64_t& urlListTo,
 				std::uint64_t& sourceTableTo,
 				bool& isColumnNamesTo,
+				ServerCommandResponse& responseTo
+		);
+		static bool cmdExportGetCorpusArguments(
+				const rapidjson::Document& json,
+				std::uint64_t& corpusTo,
+				std::string& whatTo,
 				ServerCommandResponse& responseTo
 		);
 		static bool cmdExportCheckWebsiteUrlList(
@@ -623,6 +637,12 @@ namespace crawlservpp::Main {
 				std::uint64_t tableId,
 				ServerCommandResponse& responseTo
 		);
+		static bool cmdExportCheckCorpus(
+				Module::Database& db,
+				std::uint64_t firstId,
+				std::string_view what,
+				ServerCommandResponse& responseTo
+		);
 		static void cmdExportGetTableContent(
 				Module::Database& db,
 				std::string_view dataType,
@@ -632,6 +652,19 @@ namespace crawlservpp::Main {
 				std::string& nameTo,
 				std::vector<std::vector<std::string>>& contentTo,
 				bool isIncludeColumnNames
+		);
+		[[nodiscard]] static std::string cmdExportGetCorpus(
+				Module::Database& db,
+				std::uint64_t firstChunkId
+		);
+		[[nodiscard]] static std::queue<std::string> cmdExportGetKeysFromCorpusMaps(
+				Module::Database& db,
+				std::uint64_t firstChunkId,
+				std::string_view what
+		);
+		static void cmdExportGetKeysFromCorpusMap(
+				const std::string& map,
+				std::queue<std::string>& appendKeysTo
 		);
 		static void cmdExportRemoveColumnPrefixes(
 				std::string_view type,
@@ -644,13 +677,13 @@ namespace crawlservpp::Main {
 				std::string_view listType,
 				std::uint64_t entryNum
 		);
-		static bool cmdExportUrlListAsText(
+		static bool cmdExportListAsText(
 				const rapidjson::Document& json,
 				std::queue<std::string>& data,
 				std::string& contentTo,
 				ServerCommandResponse& responseTo
 		);
-		static bool cmdExportUrlListAsSpreadsheet(
+		static bool cmdExportListAsSpreadsheet(
 				const rapidjson::Document& json,
 				std::queue<std::string>& data,
 				std::string& contentTo,
@@ -886,6 +919,34 @@ namespace crawlservpp::Main {
 					+ std::to_string(website)
 					+ " not found."
 			);
+
+			return false;
+		}
+
+		template<typename DB> static bool checkCorpus(
+				DB& db,
+				std::uint64_t firstId,
+				bool requireArticleMap,
+				bool requireDateMap,
+				ServerCommandResponse& responseTo
+		) {
+			if(db.isCorpus(firstId, requireArticleMap, requireDateMap)) {
+				return true;
+			}
+
+			auto error{"Corpus starting at #" + std::to_string(firstId)};
+
+			if(requireArticleMap && db.isCorpus(firstId, false, false)) {
+				error += " does not include articles.";
+			}
+			else if(requireDateMap && db.isCorpus(firstId, false, false)) {
+				error += " does not include dates.";
+			}
+			else {
+				error += " not found.";
+			}
+
+			responseTo = ServerCommandResponse::failed(error);
 
 			return false;
 		}

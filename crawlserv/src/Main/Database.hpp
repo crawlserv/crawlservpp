@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -565,6 +565,7 @@ namespace crawlservpp::Main {
 		[[nodiscard]] bool isUrlList(std::uint64_t websiteId, std::uint64_t urlListId);
 		[[nodiscard]] bool isQuery(std::uint64_t queryId);
 		[[nodiscard]] bool isQuery(std::uint64_t websiteId, std::uint64_t queryId);
+		[[nodiscard]] bool isCorpus(std::uint64_t firstId, bool requireArticles, bool requireDates);
 		[[nodiscard]] bool isConfiguration(std::uint64_t configId);
 		[[nodiscard]] bool isConfiguration(std::uint64_t websiteId, std::uint64_t configId);
 		[[nodiscard]] bool isTargetTable(
@@ -600,6 +601,12 @@ namespace crawlservpp::Main {
 				const std::string& tableName,
 				std::vector<std::vector<std::string>>& contentsTo,
 				bool includeColumnNames
+		);
+		void readColumnAsStrings(
+				const std::string& tableName,
+				const std::string& columnName,
+				const std::string& condition,
+				std::vector<std::string>& contentsTo
 		);
 		void lockTables(std::queue<TableNameWriteAccess>& tableLocks);
 		void unlockTables();

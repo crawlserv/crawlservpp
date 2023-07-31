@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -5596,14 +5596,14 @@ namespace crawlservpp::Main {
 			std::string& contentTo,
 			ServerCommandResponse& responseTo
 	) {
-		std::queue<std::string> urls;
+		std::queue<std::string> strings;
 		std::string tableName;
 		std::vector<std::vector<std::string>> tableContent;
 		bool isColumnNames{true};
 
 		// get data according to its type
 		if(dataType == "urllist") {
-			if(!Server::cmdExportRetrieveUrlList(json, db, urls, responseTo)) {
+			if(!Server::cmdExportRetrieveUrlList(json, db, strings, responseTo)) {
 				return false;
 			}
 		}
@@ -5622,6 +5622,11 @@ namespace crawlservpp::Main {
 				return false;
 			}
 		}
+		else if(dataType == "corpus") {
+			if(!Server::cmdExportRetrieveCorpus(json, db, strings, responseTo)) {
+				return false;
+			}
+		}
 		else {
 			responseTo = ServerCommandResponse::failed(
 					"Unknown data type: '"
@@ -5634,11 +5639,11 @@ namespace crawlservpp::Main {
 
 		// create content according to file and data type
 		if(fileType == "text") {
-			if(dataType == "urllist") {
+			if(dataType == "urllist" || dataType == "corpus") {
 				if(
-						!Server::cmdExportUrlListAsText(
+						!Server::cmdExportListAsText(
 								json,
-								urls,
+								strings,
 								contentTo,
 								responseTo
 						)
@@ -5657,11 +5662,11 @@ namespace crawlservpp::Main {
 			}
 		}
 		else if(fileType == "spreadsheet") {
-			if(dataType == "urllist") {
+			if(dataType == "urllist" || dataType == "corpus") {
 				if(
-						!Server::cmdExportUrlListAsSpreadsheet(
+						!Server::cmdExportListAsSpreadsheet(
 								json,
-								urls,
+								strings,
 								contentTo,
 								responseTo
 						)
@@ -5899,6 +5904,41 @@ namespace crawlservpp::Main {
 		return false;
 	}
 
+	// retrieve corpus for export
+	bool Server::cmdExportRetrieveCorpus(
+			const rapidjson::Document& json,
+			Module::Database& db,
+			std::queue<std::string>& resultsTo,
+			ServerCommandResponse& responseTo
+	) {
+		std::uint64_t firstId{};
+		std::string what;
+
+		if(
+				Server::cmdExportGetCorpusArguments(
+						json,
+						firstId,
+						what,
+						responseTo
+				)
+				&& Server::cmdExportCheckCorpus(db, firstId, what, responseTo)
+		) {
+			if(what == "text") {
+				resultsTo.emplace(cmdExportGetCorpus(db, firstId));
+
+				return true;
+			}
+
+			if(what == "articles" || what == "dates") {
+				resultsTo = cmdExportGetKeysFromCorpusMaps(db, firstId, what);
+
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	// get arguments for exporting a URL list
 	bool Server::cmdExportGetUrlListArguments(
 			const rapidjson::Document& json,
@@ -5945,6 +5985,37 @@ namespace crawlservpp::Main {
 		return false;
 	}
 
+	// get arguments for exporting a corpus
+	bool Server::cmdExportGetCorpusArguments(
+			const rapidjson::Document& json,
+			std::uint64_t& corpusTo,
+			std::string& whatTo,
+			ServerCommandResponse& responseTo
+	) {
+		std::string error;
+
+		if(
+				Server::getArgument(json, "first-id", corpusTo, error)
+				&& Server::getArgument(json, "what", whatTo, false, false, error)
+		) {
+			if(whatTo == "text" || whatTo == "articles" || whatTo == "dates") {
+				return true;
+			}
+
+			responseTo = ServerCommandResponse::failed(
+					"Invalid argument: what=\""
+					+ whatTo
+					+ "\"."
+			);
+		}
+		else {
+			responseTo = ServerCommandResponse::failed(error);
+		}
+
+		return false;
+	}
+
+	// check the existence of a URL list belonging to a specific website
 	bool Server::cmdExportCheckWebsiteUrlList(
 			Module::Database& db,
 			std::uint64_t websiteId,
@@ -5975,6 +6046,16 @@ namespace crawlservpp::Main {
 		return false;
 	}
 
+	// check the existence and validity of a corpus given the type of data to extract
+	bool Server::cmdExportCheckCorpus(
+			Module::Database& db,
+			std::uint64_t firstId,
+			std::string_view what,
+			ServerCommandResponse& responseTo
+	) {
+		return Server::checkCorpus(db, firstId, what == "articles", what == "dates", responseTo);
+	}
+
 	// get the content of a target table from the database
 	void Server::cmdExportGetTableContent(
 			Module::Database& db,
@@ -5999,6 +6080,140 @@ namespace crawlservpp::Main {
 
 		// get table columns and content
 		db.readTableAsStrings(fullTableName, contentTo, isIncludeColumnNames);
+	}
+
+	// get a corpus
+	inline std::string Server::cmdExportGetCorpus(
+			Module::Database& db,
+			std::uint64_t firstChunkId
+	) {
+		std::string result;
+		std::uint64_t lastId{firstChunkId};
+		std::vector<std::string> firstChunk;
+
+		// get first chunk
+		{
+			const auto firstCondition{"id=" + std::to_string(firstChunkId)};
+
+			db.readColumnAsStrings("crawlserv_corpora", "corpus", firstCondition, firstChunk);
+		}
+
+		if(firstChunk.empty()) {
+			return {};
+		}
+
+		result = firstChunk[0];
+
+		// get following chunks
+		while(true) {
+			Data::GetColumnsMixed getColumnsMixed;
+
+			getColumnsMixed.table = "crawlserv_corpora";
+			getColumnsMixed.columns_types.emplace_back("id", Data::Type::_uint64);
+			getColumnsMixed.columns_types.emplace_back("corpus", Data::Type::_string);
+			getColumnsMixed.condition = "previous=" + std::to_string(lastId);
+
+			db.getCustomData(getColumnsMixed);
+
+			if(getColumnsMixed.values.at(0).empty()) {
+				break; // no more chunks
+			}
+
+			lastId = getColumnsMixed.values.at(0).at(0)._ui64;
+			result += getColumnsMixed.values.at(1).at(0)._s;
+		}
+
+		return result;
+	}
+
+	// get keys from a corpus map (i.e., article or date map)
+	inline std::queue<std::string> Server::cmdExportGetKeysFromCorpusMaps(
+			Module::Database& db,
+			std::uint64_t firstChunkId,
+			std::string_view what
+	) {
+		std::string column;
+
+		if(what == "articles") {
+			column = "articlemap";
+		}
+		else if(what == "dates") {
+			column = "datemap";
+		}
+		else {
+			return {};
+		}
+
+		// retrieve maps
+		std::uint64_t lastId{firstChunkId};
+		std::vector<std::string> maps;
+
+		// get first chunk
+		{
+			const auto firstCondition{"id=" + std::to_string(firstChunkId)};
+
+			db.readColumnAsStrings("crawlserv_corpora", column, firstCondition, maps);
+		}
+
+		if(maps.empty()) {
+			return {};
+		}
+
+		// get following chunks
+		while(true) {
+			Data::GetColumnsMixed getColumnsMixed;
+
+			getColumnsMixed.table = "crawlserv_corpora";
+			getColumnsMixed.columns_types.emplace_back("id", Data::Type::_uint64);
+			getColumnsMixed.columns_types.emplace_back(column, Data::Type::_string);
+			getColumnsMixed.condition = "previous=" + std::to_string(lastId);
+
+			db.getCustomData(getColumnsMixed);
+
+			if(getColumnsMixed.values.at(0).empty()) {
+				break; // no more chunks
+			}
+
+			lastId = getColumnsMixed.values.at(0).at(0)._ui64;
+			maps.emplace_back(getColumnsMixed.values.at(1).at(0)._s);
+		}
+
+		// extract keys from maps
+		std::queue<std::string> result;
+
+		for(const auto& map : maps) {
+			Server::cmdExportGetKeysFromCorpusMap(map, result);
+		}
+
+		return result;
+	}
+
+	// extract keys from a corpus map
+	inline void Server::cmdExportGetKeysFromCorpusMap(
+			const std::string& map,
+			std::queue<std::string>& appendKeysTo
+	) {
+		auto json{Helper::Json::parseRapid(map)};
+
+		if(!json.IsArray()) {
+			return;
+		}
+
+		for(const auto& entry : json.GetArray()) {
+			if(!entry.IsObject()) {
+				continue;
+			}
+
+			for(const auto& pair : entry.GetObject()) {
+				if(std::string{pair.name.GetString()} != "v") {
+					continue;
+				}
+
+				appendKeysTo.emplace(pair.value.GetString());
+
+				break;
+			}
+		}
 	}
 
 	// remove column prefixes
@@ -6071,7 +6286,7 @@ namespace crawlservpp::Main {
 	}
 
 	// export URL list as plain text
-	bool Server::cmdExportUrlListAsText(
+	bool Server::cmdExportListAsText(
 			const rapidjson::Document& json,
 			std::queue<std::string>& data,
 			std::string& contentTo,
@@ -6091,7 +6306,7 @@ namespace crawlservpp::Main {
 	}
 
 	// export URL list as spreadsheet
-	bool Server::cmdExportUrlListAsSpreadsheet(
+	bool Server::cmdExportListAsSpreadsheet(
 			const rapidjson::Document& json,
 			std::queue<std::string>& data,
 			std::string& contentTo,

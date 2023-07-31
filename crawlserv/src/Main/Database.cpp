@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -7105,6 +7105,67 @@ namespace crawlservpp::Main {
 		return result;
 	}
 
+	//! Checks whether a corpus is valid.
+	/*!
+	 * \param firstId The ID of the first chunk
+	 *   belonging to the corpus.
+	 * \param requireArticle The corpus needs to
+	 *   include an article map.
+	 * \param requireDates The corpus needs to
+	 *   include a date map.
+	 */
+	bool Database::isCorpus(std::uint64_t firstId, bool requireArticles, bool requireDates) {
+		bool result{false};
+
+		// check connection
+		this->checkConnection();
+
+		try {
+			// create optional condition
+			std::string condition;
+
+			if(requireArticles) {
+				condition += " AND articlemap IS NOT NULL";
+			}
+
+			if(requireDates) {
+				condition += " AND datemap IS NOT NULL";
+			}
+
+			// prepare SQL statement
+			SqlPreparedStatementPtr sqlStatement{
+				this->connection->prepareStatement(
+						"SELECT EXISTS"
+						" ("
+							" SELECT *"
+							" FROM `crawlserv_corpora`"
+							" WHERE id = ?"
+								" AND previous IS NULL"
+								+ condition
+						+ " )"
+						" AS result"
+				)
+			};
+
+			// execute SQL statement
+			sqlStatement->setUInt64(sqlArg1, firstId);
+
+			SqlResultSetPtr sqlResultSet{
+				Database::sqlExecuteQuery(sqlStatement)
+			};
+
+			// get result
+			if(sqlResultSet && sqlResultSet->next()) {
+				result = sqlResultSet->getBoolean("result");
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Main::Database::isCorpus", e);
+		}
+
+		return result;
+	}
+
 	//! Checks whether a configuration ID is valid.
 	/*!
 	 * \param configId The configuration ID to
@@ -7705,7 +7766,7 @@ namespace crawlservpp::Main {
 	 * \param tableName Constant reference to
 	 *   a string containing the name of the
 	 *   table in the database from which the
-	 *   type of the column will be retrieved.
+	 *   contents will be retrieved.
 	 * \param contentsTo A reference to a
 	 *   vector of rows represented by vectors
 	 *   of strings to which to append the
@@ -7724,6 +7785,7 @@ namespace crawlservpp::Main {
 			std::vector<std::vector<std::string>>& contentsTo,
 			bool includeColumnNames
 	) {
+		// check table name
 		if(!Helper::Strings::checkSQLName(tableName)) {
 			std::string exceptionString{
 				"Main::Database::readTableAsStrings():"
@@ -7785,6 +7847,104 @@ namespace crawlservpp::Main {
 		}
 		catch(const sql::SQLException &e) {
 			Database::sqlException("Main::Database::readTableAsStrings", e);
+		}
+	}
+
+	//! Reads all rows of a table column as strings.
+	/*!
+	 * \param tableName Constant reference to
+	 *   a string containing the name of the
+	 *   table in the database from which the
+	 *   row contents will be retrieved.
+	 * \param columnName Constant reference to
+	 *   a string containing the name of the
+	 *   table column in the database from
+	 *   which the contents will be retrieved.
+	 * \param condition Constant reference to
+	 *   a string containing the SQL condition
+	 *   for a row to be returned. If it
+	 *   references an empty string, all rows
+	 *   will be returned.
+	 * \param contentsTo A reference to a
+	 *   vector of strings to which to append
+	 *   the values of all retrieved cells.
+	 *
+	 * \throws Main::Database::Exception if the
+	 *   table name or column is invalid, or a
+	 *   MySQL error occured while reading the
+	 *   column, e.g. if the specified table or
+	 *   column does not exist.
+	 */
+	void Database::readColumnAsStrings(
+			const std::string& tableName,
+			const std::string& columnName,
+			const std::string& condition,
+			std::vector<std::string>& contentsTo
+	) {
+		// check table and column name
+		if(!Helper::Strings::checkSQLName(tableName)) {
+			std::string exceptionString{
+				"Main::Database::readColumnAsStrings():"
+				" Invalid SQL table name `"
+			};
+
+			exceptionString += tableName;
+			exceptionString += '`';
+
+			throw Exception(exceptionString);
+		}
+
+		if(!Helper::Strings::checkSQLName(columnName)) {
+			std::string exceptionString{
+				"Main::Database::readColumnAsStrings():"
+				" Invalid SQL column name `"
+			};
+
+			exceptionString += columnName;
+			exceptionString += '`';
+
+			throw Exception(exceptionString);
+		}
+
+		// create SQL query
+		std::string query{"SELECT `"};
+
+		query += columnName;
+		query += "` FROM `";
+		query += tableName;
+		query += "`";
+
+		if(!condition.empty()) {
+			query += "WHERE (";
+			query += condition;
+			query += ")";
+		}
+
+		// check connection
+		this->checkConnection();
+
+		// execute SQL query and get results
+		try {
+			// create SQL statement
+			SqlStatementPtr sqlStatement{this->connection->createStatement()};
+
+			// execute SQL statement
+			SqlResultSetPtr sqlResultSet{
+				Database::sqlExecuteQuery(
+						sqlStatement,
+						query
+				)
+			};
+
+			// get results
+			if(sqlResultSet) {
+				while(sqlResultSet->next()) {
+					contentsTo.emplace_back(sqlResultSet->getString(columnName));
+				}
+			}
+		}
+		catch(const sql::SQLException &e) {
+			Database::sqlException("Main::Database::readColumnsAsStrings", e);
 		}
 	}
 
