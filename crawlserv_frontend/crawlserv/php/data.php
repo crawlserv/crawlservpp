@@ -288,7 +288,7 @@ if($action != "import") {
         echo rowCorpusSelect();
         
         echo "<div class=\"entry-row\">\n";
-        echo "<div class=\"entry-label\">Data:</div>";
+        echo "<div class=\"entry-label\">Data:</div><div class=\"entry-input\">\n";
         echo "<select id=\"what\" class=\"entry-input\">";
         echo "<option value=\"text\">Content</option>\n";
         echo "<option value=\"articles\">IDs</option>\n";
