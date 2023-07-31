@@ -296,6 +296,7 @@ add_executable(${PROJECT_NAME}
 		src/Module/Analyzer/Algo/Assoc.cpp
 		src/Module/Analyzer/Algo/AssocOverTime.cpp
 		src/Module/Analyzer/Algo/CorpusGenerator.cpp
+		src/Module/Analyzer/Algo/ExtractIds.cpp
 		src/Module/Analyzer/Algo/SentimentOverTime.cpp
 		src/Module/Analyzer/Algo/TermsOverTime.cpp
 		src/Module/Analyzer/Algo/TopicModelling.cpp

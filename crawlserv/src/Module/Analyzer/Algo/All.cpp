@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,6 +42,7 @@
 #include "Assoc.hpp"
 #include "AssocOverTime.hpp"
 #include "CorpusGenerator.hpp"
+#include "ExtractIds.hpp"
 #include "SentimentOverTime.hpp"
 #include "TermsOverTime.hpp"
 #include "TopicModelling.hpp"
@@ -86,6 +87,7 @@ namespace crawlservpp::Module::Analyzer::Algo {
 		REGISTER_ALGORITHM(45, TopicModelling);		// NOLINT(cppcoreguidelines-macro-usage)
 		REGISTER_ALGORITHM(46, AllTokens);			// NOLINT(cppcoreguidelines-macro-usage)
 		REGISTER_ALGORITHM(47, Assoc);				// NOLINT(cppcoreguidelines-macro-usage)
+		REGISTER_ALGORITHM(48, ExtractIds);			// NOLINT(cppcoreguidelines-macro-usage)
 		// </ADD REGISTRATION OF ALGORITHM HERE>
 
 		return nullptr;

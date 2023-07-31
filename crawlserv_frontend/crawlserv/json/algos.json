@@ -33,6 +33,10 @@
 		"Topic Modelling": {
 			"algo-id": 45,
 			"config-cats": [ "tokenizer", "topic", "topic-training", "topic-model", "topic-labeling", "filter-date", "filter-query", "upload" ]
+		},
+		"Extract IDs": {
+			"algo-id": 48,
+			"config-cats": [ "tokenizer", "group-date", "filter-date", "filter-query", "upload" ]
 		}
 	},
 	"Network Analyses": {
