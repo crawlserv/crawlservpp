@@ -515,7 +515,7 @@ function rowCorpusSelect($delete = false) {
         " WHERE website=$website".
         " AND urllist=$urllist".
         " AND previous=NULL".
-        " ORDER BY source_type, source_table, source_field, updated DESC"
+        " ORDER BY source_type, source_table, source_field, created DESC"
         );
     
     $html .= ">\n";
