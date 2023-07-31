@@ -521,11 +521,11 @@ function rowCorpusSelect($delete = false) {
     $html .= ">\n";
     
     if(!$result) {
-        die("ERROR: Could not get $type data from database.");
+        die("ERROR: Could not get corpus data from database.");
     }
     
     if($result->num_rows == 0) {
-        $html .= "<option disabled>No $type data available</option>\n";
+        $html .= "<option disabled>No corpus data available</option>\n";
     }
     else {
         while($row = $result->fetch_assoc()) {
