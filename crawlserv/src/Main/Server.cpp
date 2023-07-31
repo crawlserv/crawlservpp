@@ -6199,6 +6199,8 @@ namespace crawlservpp::Main {
 			return;
 		}
 
+		std::set<std::string> uniques;
+
 		for(const auto& entry : json.GetArray()) {
 			if(!entry.IsObject()) {
 				continue;
@@ -6209,7 +6211,11 @@ namespace crawlservpp::Main {
 					continue;
 				}
 
-				appendKeysTo.emplace(pair.value.GetString());
+				const auto value{pair.value.GetString()};
+
+				if(uniques.insert(value).second) {
+					appendKeysTo.emplace(value);
+				}
 
 				break;
 			}
