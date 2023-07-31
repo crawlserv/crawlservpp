@@ -514,7 +514,7 @@ function rowCorpusSelect($delete = false) {
         " FROM crawlserv_corpora".
         " WHERE website=$website".
         " AND urllist=$urllist".
-        " AND previous=NULL".
+        " AND previous IS NULL".
         " ORDER BY source_type, source_table, source_field, created DESC"
         );
     
