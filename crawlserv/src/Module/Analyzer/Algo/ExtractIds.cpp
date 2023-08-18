@@ -91,8 +91,6 @@ namespace crawlservpp::Module::Analyzer::Algo {
 
 		fields.emplace_back("id", "text");
 
-		this->database.setTargetFields(fields);
-
 		// initialize target table
 		this->database.setTargetFields(fields);
 
