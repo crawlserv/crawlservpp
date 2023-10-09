@@ -270,7 +270,6 @@ namespace crawlservpp::Main {
 			connectOptions["password"] = this->settings.password; // set password
 			connectOptions["schema"] = this->settings.name; // set schema
 			connectOptions["port"] = this->settings.port; // set port
-			connectOptions["OPT_RECONNECT"] = false; // don't automatically re-connect
 			connectOptions["OPT_CHARSET_NAME"] = "utf8mb4"; // set charset
 			connectOptions["characterSetResults"] = "utf8mb4"; // set charset for results
 			connectOptions["preInit"] = "SET NAMES utf8mb4"; // set charset for names
