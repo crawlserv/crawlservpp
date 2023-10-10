@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2022–2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -30,6 +30,8 @@
 
 #ifndef HELPER_JSON_HPP_
 #define HELPER_JSON_HPP_
+
+#include "Strings.hpp"
 
 #include "../Main/Exception.hpp"
 #include "../Struct/TextMap.hpp"
@@ -549,6 +551,11 @@ namespace crawlservpp::Helper::Json {
 
 	//! Parses JSON code using @c RapidJSON.
 	/*!
+	 * If the initial parsing fails and the JSON
+	 *  code contains backslashes, it tries again
+	 *  after escaping these backslashes – i.e.,
+	 *  replacing '\' with '\\'.
+	 *
 	 * For more information about @c RapidJSON,
 	 *  see its
 	 *  <a href="https://github.com/Tencent/rapidjson">
@@ -562,6 +569,8 @@ namespace crawlservpp::Helper::Json {
 	 *
 	 * \throws Json::Exception if an error occurs
 	 *   while parsing the given JSON code.
+	 *
+	 * \sa parseCons
 	 */
 	inline rapidjson::Document parseRapid(std::string_view json) {
 		// clean input
@@ -570,6 +579,13 @@ namespace crawlservpp::Helper::Json {
 		rapidjson::Document doc;
 
 		doc.Parse(cleanJson);
+
+		if(doc.HasParseError() && cleanJson.find('\\') != std::string::npos) {
+			// try again with escaped backslashes
+			Strings::replaceAll(cleanJson, "\\", "\\\\");
+
+			doc.Parse(cleanJson);
+		}
 
 		if(doc.HasParseError()) {
 			std::string exceptionStr{
@@ -605,6 +621,11 @@ namespace crawlservpp::Helper::Json {
 
 	//! Parses JSON code using @c jsoncons.
 	/*!
+	 * If the initial parsing fails and the JSON
+	 *  code contains backslashes, it tries again
+	 *  after escaping these backslashes – i.e.,
+	 *  replacing '\' with '\\'.
+	 *
 	 * For more information about @c jsoncons,
 	 *  see its
 	 *  <a href="https://github.com/danielaparker/jsoncons">
@@ -618,6 +639,8 @@ namespace crawlservpp::Helper::Json {
 	 *
 	 * \throws Json::Exception if an error occurs
 	 *   while parsing the given JSON code.
+	 *
+	 * \sa parseRapid
 	 */
 	inline jsoncons::json parseCons(std::string_view json) {
 		// clean input
@@ -628,11 +651,25 @@ namespace crawlservpp::Helper::Json {
 
 			return result;
 		}
-		catch(const jsoncons::json_exception& e) {
-			throw Exception(
-					"Json::parseCons(): "
-					+ std::string(e.what())
-			);
+		catch(const jsoncons::json_exception&) {
+			try {
+				if(cleanJson.find('\\') == std::string::npos) {
+					throw;
+				}
+
+				// try again with replaced backslashes
+				Strings::replaceAll(cleanJson, "\\", "\\\\");
+
+				jsoncons::json result{jsoncons::json::parse(cleanJson)};
+
+				return result;
+			}
+			catch(const jsoncons::json_exception& e2) {
+				throw Exception(
+						"Json::parseCons(): "
+						+ std::string(e2.what())
+				);
+			}
 		}
 	}
 
