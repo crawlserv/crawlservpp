@@ -166,9 +166,7 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::onTick() {
 		IdString url;
 
-		Timer::StartStop timerSelect;
-		Timer::StartStop timerArchives;
-		Timer::StartStop timerTotal;
+		Struct::CrawlTimersTick timers;
 
 		std::string customCookies;
 		std::vector<std::string> customHeaders;
@@ -206,8 +204,8 @@ namespace crawlservpp::Module::Crawler {
 
 		// start timers
 		if(this->config.crawlerTiming) {
-			timerTotal.start();
-			timerSelect.start();
+			timers.total.start();
+			timers.select.start();
 		}
 
 		// URL selection
@@ -217,7 +215,7 @@ namespace crawlservpp::Module::Crawler {
 			}
 
 			if(this->config.crawlerTiming) {
-				timerSelect.stop();
+				timers.select.stop();
 			}
 
 			// dynamic redirect on URL if necessary
@@ -258,7 +256,7 @@ namespace crawlservpp::Module::Crawler {
 
 			// get archive (also when crawling failed!)
 			if(this->config.crawlerTiming) {
-				timerArchives.start();
+				timers.archives.start();
 			}
 
 			if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive, !crawled)) {
@@ -268,8 +266,8 @@ namespace crawlservpp::Module::Crawler {
 
 					// stop timers
 					if(this->config.crawlerTiming) {
-						timerArchives.stop();
-						timerTotal.stop();
+						timers.archives.stop();
+						timers.total.stop();
 					}
 
 					// success!
@@ -290,12 +288,12 @@ namespace crawlservpp::Module::Crawler {
 						logStrStr << "finished " << url.second;
 
 						if(this->config.crawlerTiming) {
-							logStrStr	<< " after " << timerTotal.totalStr()
-										<< " (select: " << timerSelect.totalStr() << ", "
+							logStrStr	<< " after " << timers.total.totalStr()
+										<< " (select: " << timers.select.totalStr() << ", "
 										<< timerString;
 
 							if(this->config.crawlerArchives) {
-								logStrStr << ", archive: " << timerArchives.totalStr();
+								logStrStr << ", archive: " << timers.archives.totalStr();
 							}
 
 							logStrStr << ")";
@@ -1996,10 +1994,7 @@ namespace crawlservpp::Module::Crawler {
 			std::size_t& newUrlsTo,
 			std::string& timerStrTo
 	) {
-		Timer::StartStop sleepTimer;
-		Timer::StartStop httpTimer;
-		Timer::StartStop parseTimer;
-		Timer::StartStop updateTimer;
+		Struct::CrawlTimersContent timers;
 		std::string content;
 
 		timerStrTo = "";
@@ -2041,17 +2036,17 @@ namespace crawlservpp::Module::Crawler {
 				this->idleTime = std::chrono::steady_clock::now();
 
 				if(this->config.crawlerTiming) {
-					sleepTimer.start();
+					timers.sleep.start();
 				}
 
 				this->sleep(this->config.crawlerSleepHttp - httpElapsed);
 
 				if(this->config.crawlerTiming) {
-					sleepTimer.stop();
+					timers.sleep.stop();
 
 					timerStrTo = "sleep: ";
 
-					timerStrTo += sleepTimer.totalStr();
+					timerStrTo += timers.sleep.totalStr();
 				}
 
 				this->startTime += std::chrono::steady_clock::now() - this->idleTime;
@@ -2062,7 +2057,7 @@ namespace crawlservpp::Module::Crawler {
 
 		// start HTTP timer(s)
 		if(this->config.crawlerTiming) {
-			httpTimer.start();
+			timers.http.start();
 		}
 
 		if(this->config.crawlerSleepHttp > 0) {
@@ -2167,16 +2162,16 @@ namespace crawlservpp::Module::Crawler {
 
 		// update timer if necessary
 		if(this->config.crawlerTiming) {
-			httpTimer.stop();
+			timers.http.stop();
 
 			if(!timerStrTo.empty()) {
 				timerStrTo += ", ";
 			}
 
 			timerStrTo += "http: ";
-			timerStrTo += httpTimer.totalStr();
+			timerStrTo += timers.http.totalStr();
 
-			parseTimer.start();
+			timers.parse.start();
 		}
 
 		// set content as target for subsequent queries
@@ -2209,18 +2204,18 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(this->config.crawlerTiming) {
-			parseTimer.stop();
+			timers.parse.stop();
 
-			updateTimer.start();
+			timers.update.start();
 		}
 
 		// save content
 		this->crawlingSaveContent(url, responseCode, contentType, content);
 
 		if(this->config.crawlerTiming) {
-			updateTimer.stop();
+			timers.update.stop();
 
-			parseTimer.start();
+			timers.parse.start();
 		}
 
 		// extract URLs
@@ -2231,9 +2226,9 @@ namespace crawlservpp::Module::Crawler {
 		if(!urls.empty()) {
 			// update timer if necessary
 			if(this->config.crawlerTiming) {
-				parseTimer.stop();
+				timers.parse.stop();
 
-				updateTimer.start();
+				timers.update.start();
 			}
 
 			// parse and add URLs
@@ -2243,12 +2238,12 @@ namespace crawlservpp::Module::Crawler {
 
 			// update timer if necessary
 			if(this->config.crawlerTiming) {
-				updateTimer.stop();
+				timers.update.stop();
 
 				timerStrTo += ", parse: ";
-				timerStrTo += parseTimer.totalStr();
+				timerStrTo += timers.parse.totalStr();
 				timerStrTo +=  ", update: ";
-				timerStrTo += updateTimer.totalStr();
+				timerStrTo += timers.update.totalStr();
 			}
 		}
 
