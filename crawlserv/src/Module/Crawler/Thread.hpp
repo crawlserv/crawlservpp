@@ -47,6 +47,7 @@
 #include "../../Network/TorControl.hpp"
 #include "../../Parsing/URI.hpp"
 #include "../../Query/Container.hpp"
+#include "../../Struct/CrawlStatsTick.hpp"
 #include "../../Struct/CrawlTimersTick.hpp"
 #include "../../Struct/CrawlTimersContent.hpp"
 #include "../../Struct/NetworkSettings.hpp"
@@ -359,6 +360,7 @@ namespace crawlservpp::Module::Crawler {
 		);
 
 		// crawling functions
+		void crawlingJump();
 		bool crawlingUrlSelection(IdString& urlTo, bool& usePostTo);
 		void crawlingUrlSelectionManual(IdString& urlTo, bool& usePostTo);
 		bool crawlingUrlSelectionAuto(IdString& urlTo);
@@ -374,8 +376,7 @@ namespace crawlservpp::Module::Crawler {
 				const std::string& customCookies,
 				const std::vector<std::string>& customHeaders,
 				bool usePost,
-				std::size_t& checkedUrlsTo,
-				std::size_t& newUrlsTo,
+				Struct::CrawlStatsTick& statsTo,
 				std::string& timerStrTo
 		);
 		void crawlingDynamicRedirectUrl(
@@ -417,12 +418,7 @@ namespace crawlservpp::Module::Crawler {
 				std::size_t& newUrlsTo,
 				bool archived
 		);
-		bool crawlingArchive(
-				IdString& url,
-				std::size_t& checkedUrlsTo,
-				std::size_t& newUrlsTo,
-				bool crawlingFailed
-		);
+		bool crawlingArchive(IdString& url, Struct::CrawlStatsTick& statsTo, bool crawlingFailed);
 		void crawlingSuccess(const IdString& url);
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);

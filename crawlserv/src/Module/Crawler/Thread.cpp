@@ -166,16 +166,10 @@ namespace crawlservpp::Module::Crawler {
 	void Thread::onTick() {
 		IdString url;
 
+		Struct::CrawlStatsTick stats;
 		Struct::CrawlTimersTick timers;
 
-		std::string customCookies;
-		std::vector<std::string> customHeaders;
 		std::string timerString;
-
-		std::size_t checkedUrls{};
-		std::size_t newUrls{};
-		std::size_t checkedUrlsArchive{};
-		std::size_t newUrlsArchive{};
 
 		bool usePost{false};
 
@@ -183,24 +177,7 @@ namespace crawlservpp::Module::Crawler {
 		this->torControl.tick();
 
 		// check for jump in last ID ("time travel")
-		const auto jump{this->getWarpedOverAndReset()};
-
-		if(jump > 0) {
-			// unlock last URL if necessary
-			if(this->manualUrl.first > 0 && !(this->lockTime.empty())) {
-				this->database.unLockUrlIfOk(this->manualUrl.first, this->lockTime);
-			}
-			else if(this->nextUrl.first > 0 && !(this->lockTime.empty())) {
-				this->database.unLockUrlIfOk(this->nextUrl.first, this->lockTime);
-			}
-
-			// no retry
-			this->manualUrl = IdString();
-			this->nextUrl = IdString();
-
-			// adjust tick counter
-			this->tickCounter += jump;
-		}
+		this->crawlingJump();
 
 		// start timers
 		if(this->config.crawlerTiming) {
@@ -210,6 +187,9 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL selection
 		if(this->crawlingUrlSelection(url, usePost)) {
+			std::string customCookies;
+			std::vector<std::string> customHeaders;
+
 			if(!(this->isRunning())) {
 				return;
 			}
@@ -245,8 +225,7 @@ namespace crawlservpp::Module::Crawler {
 						customCookies,
 						customHeaders,
 						usePost,
-						checkedUrls,
-						newUrls,
+						stats,
 						timerString
 				)
 			};
@@ -259,7 +238,7 @@ namespace crawlservpp::Module::Crawler {
 				timers.archives.start();
 			}
 
-			if(this->crawlingArchive(url, checkedUrlsArchive, newUrlsArchive, !crawled)) {
+			if(this->crawlingArchive(url, stats, !crawled)) {
 				if(crawled) {
 					// clear memento cache
 					this->crawlingClearMementoCache();
@@ -299,16 +278,16 @@ namespace crawlservpp::Module::Crawler {
 							logStrStr << ")";
 						}
 
-						logStrStr << " - checked " << checkedUrls;
+						logStrStr << " - checked " << stats.checkedUrls;
 
-						if(checkedUrlsArchive > 0) {
-							logStrStr << " (+" << checkedUrlsArchive << " archived)";
+						if(stats.checkedUrlsArchive > 0) {
+							logStrStr << " (+" << stats.checkedUrlsArchive << " archived)";
 						}
 
-						logStrStr << ", added " << newUrls;
+						logStrStr << ", added " << stats.newUrls;
 
-						if(newUrlsArchive > 0) {
-							logStrStr << " (+" << newUrlsArchive << " archived)";
+						if(stats.newUrlsArchive > 0) {
+							logStrStr << " (+" << stats.newUrlsArchive << " archived)";
 						}
 
 						logStrStr << " URL(s).";
@@ -1415,6 +1394,30 @@ namespace crawlservpp::Module::Crawler {
 	 * CRAWLING FUNCTIONS (private)
 	 */
 
+	// prepare jumping to a URL, if necessary
+	void Thread::crawlingJump() {
+		const auto jump{this->getWarpedOverAndReset()};
+
+		if(jump == 0) {
+			return; /* no jump necessary */
+		}
+
+		// unlock last URL if necessary
+		if(this->manualUrl.first > 0 && !(this->lockTime.empty())) {
+			this->database.unLockUrlIfOk(this->manualUrl.first, this->lockTime);
+		}
+		else if(this->nextUrl.first > 0 && !(this->lockTime.empty())) {
+			this->database.unLockUrlIfOk(this->nextUrl.first, this->lockTime);
+		}
+
+		// no retry
+		this->manualUrl = IdString();
+		this->nextUrl = IdString();
+
+		// adjust tick counter
+		this->tickCounter += jump;
+	}
+
 	// URL selection (includes locking the URL), return false if there are no URLs left to crawl
 	bool Thread::crawlingUrlSelection(IdString& urlTo, bool& usePostTo) {
 		// use GET by default
@@ -1990,8 +1993,7 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& customCookies,
 			const std::vector<std::string>& customHeaders,
 			bool usePost,
-			std::size_t& checkedUrlsTo,
-			std::size_t& newUrlsTo,
+			Struct::CrawlStatsTick& statsTo,
 			std::string& timerStrTo
 	) {
 		Struct::CrawlTimersContent timers;
@@ -2232,9 +2234,9 @@ namespace crawlservpp::Module::Crawler {
 			}
 
 			// parse and add URLs
-			checkedUrlsTo += urls.size();
+			statsTo.checkedUrls += urls.size();
 
-			this->crawlingParseAndAddUrls(url.second, urls, newUrlsTo, false);
+			this->crawlingParseAndAddUrls(url.second, urls, statsTo.newUrls, false);
 
 			// update timer if necessary
 			if(this->config.crawlerTiming) {
@@ -3645,12 +3647,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// crawl archives, throws Thread::Exception
-	bool Thread::crawlingArchive(
-			IdString& url,
-			std::size_t& checkedUrlsTo,
-			std::size_t& newUrlsTo,
-			bool crawlingFailed
-	) {
+	bool Thread::crawlingArchive(IdString& url, Struct::CrawlStatsTick& statsTo, bool crawlingFailed) {
 		// check arguments
 		if(url.first == 0) {
 			throw Exception(
@@ -4009,12 +4006,12 @@ namespace crawlservpp::Module::Crawler {
 													Parsing::URI::makeAbsolute(mementos.front().url, urls);
 
 													// parse and add URLs
-													checkedUrlsTo += urls.size();
+													statsTo.checkedUrls += urls.size();
 
 													this->crawlingParseAndAddUrls(
 															url.second,
 															urls,
-															newUrlsTo,
+															statsTo.newUrls,
 															true
 													);
 												}
