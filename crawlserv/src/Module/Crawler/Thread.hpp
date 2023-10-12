@@ -431,6 +431,15 @@ namespace crawlservpp::Module::Crawler {
 				bool crawlingFailed,
 				const std::string& timerString
 		);
+		bool crawlingArchive(
+				std::size_t archiveIndex,
+				const IdString& url,
+				CrawlStatsTick& statsTo,
+				bool crawlingFailed,
+				bool& successTo,
+				Timer::Simple& timer,
+				std::uint64_t& elapsedTo
+		);
 		void crawlingSuccess(const IdString& url);
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
