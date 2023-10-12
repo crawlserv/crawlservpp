@@ -164,13 +164,8 @@ namespace crawlservpp::Module::Crawler {
 	 *  or retried in the next tick.
 	 */
 	void Thread::onTick() {
+		CrawlTimersTick timers;
 		IdString url;
-
-		Struct::CrawlStatsTick stats;
-		Struct::CrawlTimersTick timers;
-
-		std::string timerString;
-
 		bool usePost{false};
 
 		// check whether a new TOR identity needs to be requested
@@ -187,171 +182,10 @@ namespace crawlservpp::Module::Crawler {
 
 		// URL selection
 		if(this->crawlingUrlSelection(url, usePost)) {
-			std::string customCookies;
-			std::vector<std::string> customHeaders;
-
-			if(!(this->isRunning())) {
-				return;
-			}
-
-			if(this->config.crawlerTiming) {
-				timers.select.stop();
-			}
-
-			// dynamic redirect on URL if necessary
-			this->crawlingDynamicRedirectUrl(url.second, customCookies, customHeaders, usePost);
-
-			// add parameters to URL if necessary
-			this->crawlingUrlParams(url.second);
-
-			if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
-				// idling stopped
-				this->startTime += std::chrono::steady_clock::now() - this->idleTime;
-
-				this->pauseTime = std::chrono::steady_clock::time_point::min();
-				this->idleTime = std::chrono::steady_clock::time_point::min();
-			}
-
-			// increase tick counter
-			++(this->tickCounter);
-
-			// start crawling
-			this->log(crawlerLoggingExtended, "crawls " + url.second + "...");
-
-			// crawl content
-			const bool crawled{
-				this->crawlingContent(
-						url,
-						customCookies,
-						customHeaders,
-						usePost,
-						stats,
-						timerString
-				)
-			};
-
-			// clear query target
-			this->clearQueryTarget();
-
-			// get archive (also when crawling failed!)
-			if(this->config.crawlerTiming) {
-				timers.archives.start();
-			}
-
-			if(this->crawlingArchive(url, stats, !crawled)) {
-				if(crawled) {
-					// clear memento cache
-					this->crawlingClearMementoCache();
-
-					// stop timers
-					if(this->config.crawlerTiming) {
-						timers.archives.stop();
-						timers.total.stop();
-					}
-
-					// success!
-					this->crawlingSuccess(url);
-
-					// log if necessary
-					const auto logLevel{
-						this->config.crawlerTiming ?
-								crawlerLoggingDefault
-								: crawlerLoggingExtended
-					};
-
-					if(this->isLogLevel(logLevel)) {
-						std::ostringstream logStrStr;
-
-						logStrStr.imbue(Helper::CommaLocale::locale());
-
-						logStrStr << "finished " << url.second;
-
-						if(this->config.crawlerTiming) {
-							logStrStr	<< " after " << timers.total.totalStr()
-										<< " (select: " << timers.select.totalStr() << ", "
-										<< timerString;
-
-							if(this->config.crawlerArchives) {
-								logStrStr << ", archive: " << timers.archives.totalStr();
-							}
-
-							logStrStr << ")";
-						}
-
-						logStrStr << " - checked " << stats.checkedUrls;
-
-						if(stats.checkedUrlsArchive > 0) {
-							logStrStr << " (+" << stats.checkedUrlsArchive << " archived)";
-						}
-
-						logStrStr << ", added " << stats.newUrls;
-
-						if(stats.newUrlsArchive > 0) {
-							logStrStr << " (+" << stats.newUrlsArchive << " archived)";
-						}
-
-						logStrStr << " URL(s).";
-
-						this->log(logLevel, logStrStr.str());
-					}
-				}
-				else if(this->nextUrl.first == 0) {
-					// skipping URL after successfully crawling archives: clear memento cache
-					this->crawlingClearMementoCache();
-				}
-			}
-			else if(!crawled) {
-				// if crawling and getting archives failed, retry both (not only archives)
-				this->archiveRetry = false;
-			}
-
-			if(
-					url.first > 0
-					&& !(this->lockTime.empty())
-					&& !(this->isRunning())
-			) {
-				// unlock URL if the thread is quitting
-				this->database.unLockUrlIfOk(url.first, this->lockTime);
-
-				this->lockTime = "";
-			}
+			this->crawlingUrl(url, usePost, timers);
 		}
 		else {
-			// no URLs to crawl: set idle timer and sleep
-			if(this->idleTime == std::chrono::steady_clock::time_point::min()) {
-				this->idleTime = std::chrono::steady_clock::now();
-			}
-
-			if(this->idleStart == std::chrono::time_point<std::chrono::steady_clock>{}) {
-				this->idleStart = std::chrono::steady_clock::now();
-			}
-
-			// re-crawl custom URLs?
-			if(
-					this->config.crawlerRestartAfter >= 0
-					&& std::chrono::duration_cast<std::chrono::seconds>(
-							std::chrono::steady_clock::now()
-							- this->idleStart
-					).count() >= this->config.crawlerRestartAfter
-			) {
-				this->restore = this->getLast();
-
-				this->setLast(0);
-				this->setProgress(0.f);
-
-				// reset
-				this->manualUrl = IdString();
-				this->manualCounter = 0;
-				this->nextUrl = IdString();
-				this->tickCounter = 0;
-				this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
-				this->startCrawled = false;
-				this->manualOff = false;
-			}
-			else {
-				// sleep
-				this->sleep(this->config.crawlerSleepIdle);
-			}
+			this->crawlingWait();
 		}
 	}
 
@@ -1726,6 +1560,179 @@ namespace crawlservpp::Module::Crawler {
 		return true;
 	}
 
+	// crawl URL
+	void Thread::crawlingUrl(IdString& url, bool usePost, CrawlTimersTick& timers) {
+		CrawlStatsTick stats;
+		std::string customCookies;
+		std::vector<std::string> customHeaders;
+
+		if(!(this->isRunning())) {
+			return; /* cancel crawling */
+		}
+
+		if(this->config.crawlerTiming) {
+			timers.select.stop();
+		}
+
+		// dynamic redirect on URL if necessary
+		this->crawlingDynamicRedirectUrl(url.second, customCookies, customHeaders, usePost);
+
+		// add parameters to URL if necessary
+		this->crawlingUrlParams(url.second);
+
+		if(this->idleTime > std::chrono::steady_clock::time_point::min()) {
+			// idling stopped
+			this->startTime += std::chrono::steady_clock::now() - this->idleTime;
+
+			this->pauseTime = std::chrono::steady_clock::time_point::min();
+			this->idleTime = std::chrono::steady_clock::time_point::min();
+		}
+
+		// increase tick counter
+		++(this->tickCounter);
+
+		// start crawling
+		this->log(crawlerLoggingExtended, "crawls " + url.second + "...");
+
+		// crawl content
+		std::string timerString;
+
+		const bool crawled{
+			this->crawlingContent(
+					url,
+					customCookies,
+					customHeaders,
+					usePost,
+					stats,
+					timerString
+			)
+		};
+
+		// clear query target
+		this->clearQueryTarget();
+
+		// get archive (also when crawling failed!)
+		if(this->config.crawlerTiming) {
+			timers.archives.start();
+		}
+
+		if(this->crawlingArchive(url, stats, !crawled)) {
+			if(crawled) {
+				// clear memento cache
+				this->crawlingClearMementoCache();
+
+				// stop timers
+				if(this->config.crawlerTiming) {
+					timers.archives.stop();
+					timers.total.stop();
+				}
+
+				// success!
+				this->crawlingSuccess(url);
+
+				// log if necessary
+				const auto logLevel{
+					this->config.crawlerTiming ?
+							crawlerLoggingDefault
+							: crawlerLoggingExtended
+				};
+
+				if(this->isLogLevel(logLevel)) {
+					std::ostringstream logStrStr;
+
+					logStrStr.imbue(Helper::CommaLocale::locale());
+
+					logStrStr << "finished " << url.second;
+
+					if(this->config.crawlerTiming) {
+						logStrStr	<< " after " << timers.total.totalStr()
+									<< " (select: " << timers.select.totalStr() << ", "
+									<< timerString;
+
+						if(this->config.crawlerArchives) {
+							logStrStr << ", archive: " << timers.archives.totalStr();
+						}
+
+						logStrStr << ")";
+					}
+
+					logStrStr << " - checked " << stats.checkedUrls;
+
+					if(stats.checkedUrlsArchive > 0) {
+						logStrStr << " (+" << stats.checkedUrlsArchive << " archived)";
+					}
+
+					logStrStr << ", added " << stats.newUrls;
+
+					if(stats.newUrlsArchive > 0) {
+						logStrStr << " (+" << stats.newUrlsArchive << " archived)";
+					}
+
+					logStrStr << " URL(s).";
+
+					this->log(logLevel, logStrStr.str());
+				}
+			}
+			else if(this->nextUrl.first == 0) {
+				// skipping URL after successfully crawling archives: clear memento cache
+				this->crawlingClearMementoCache();
+			}
+		}
+		else if(!crawled) {
+			// if crawling and getting archives failed, retry both (not only archives)
+			this->archiveRetry = false;
+		}
+
+		if(
+				url.first > 0
+				&& !(this->lockTime.empty())
+				&& !(this->isRunning())
+		) {
+			// unlock URL if the thread is quitting
+			this->database.unLockUrlIfOk(url.first, this->lockTime);
+
+			this->lockTime = "";
+		}
+	}
+
+	// no URLs to crawl: set idle timer and sleep
+	void Thread::crawlingWait() {
+		if(this->idleTime == std::chrono::steady_clock::time_point::min()) {
+			this->idleTime = std::chrono::steady_clock::now();
+		}
+
+		if(this->idleStart == std::chrono::time_point<std::chrono::steady_clock>{}) {
+			this->idleStart = std::chrono::steady_clock::now();
+		}
+
+		// re-crawl custom URLs?
+		if(
+				this->config.crawlerRestartAfter >= 0
+				&& std::chrono::duration_cast<std::chrono::seconds>(
+						std::chrono::steady_clock::now()
+						- this->idleStart
+				).count() >= this->config.crawlerRestartAfter
+		) {
+			this->restore = this->getLast();
+
+			this->setLast(0);
+			this->setProgress(0.f);
+
+			// reset
+			this->manualUrl = IdString();
+			this->manualCounter = 0;
+			this->nextUrl = IdString();
+			this->tickCounter = 0;
+			this->idleStart = std::chrono::time_point<std::chrono::steady_clock>{};
+			this->startCrawled = false;
+			this->manualOff = false;
+		}
+		else {
+			// sleep
+			this->sleep(this->config.crawlerSleepIdle);
+		}
+	}
+
 	// replace token variables in custom URL
 	Thread::IdString Thread::crawlingReplaceTokens(const IdString& url) {
 		// check whether token variables exist
@@ -1993,10 +2000,10 @@ namespace crawlservpp::Module::Crawler {
 			const std::string& customCookies,
 			const std::vector<std::string>& customHeaders,
 			bool usePost,
-			Struct::CrawlStatsTick& statsTo,
+			CrawlStatsTick& statsTo,
 			std::string& timerStrTo
 	) {
-		Struct::CrawlTimersContent timers;
+		CrawlTimersContent timers;
 		std::string content;
 
 		timerStrTo = "";
@@ -3647,7 +3654,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// crawl archives, throws Thread::Exception
-	bool Thread::crawlingArchive(IdString& url, Struct::CrawlStatsTick& statsTo, bool crawlingFailed) {
+	bool Thread::crawlingArchive(IdString& url, CrawlStatsTick& statsTo, bool crawlingFailed) {
 		// check arguments
 		if(url.first == 0) {
 			throw Exception(

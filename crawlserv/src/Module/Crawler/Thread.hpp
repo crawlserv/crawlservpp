@@ -158,6 +158,9 @@ namespace crawlservpp::Module::Crawler {
 
 		using QueryException = Query::Container::Exception;
 
+		using CrawlStatsTick = Struct::CrawlStatsTick;
+		using CrawlTimersContent = Struct::CrawlTimersContent;
+		using CrawlTimersTick = Struct::CrawlTimersTick;
 		using NetworkSettings = Struct::NetworkSettings;
 		using QueryProperties = Struct::QueryProperties;
 		using QueryStruct = Struct::QueryStruct;
@@ -368,6 +371,8 @@ namespace crawlservpp::Module::Crawler {
 		void crawlingUrlSelectionManualNext(IdString& urlTo, bool& usePostTo);
 		void crawlingUrlSelectionAutoStart();
 		bool crawlingUrlSelectionAutoRetry(IdString& urlTo);
+		void crawlingUrl(IdString& url, bool usePost, CrawlTimersTick& timers);
+		void crawlingWait();
 		IdString crawlingReplaceTokens(const IdString& url);
 		std::string crawlingGetTokenValue(std::size_t index, const std::string& name);
 		void crawlingUrlParams(std::string& url);
@@ -376,7 +381,7 @@ namespace crawlservpp::Module::Crawler {
 				const std::string& customCookies,
 				const std::vector<std::string>& customHeaders,
 				bool usePost,
-				Struct::CrawlStatsTick& statsTo,
+				CrawlStatsTick& statsTo,
 				std::string& timerStrTo
 		);
 		void crawlingDynamicRedirectUrl(
@@ -418,7 +423,7 @@ namespace crawlservpp::Module::Crawler {
 				std::size_t& newUrlsTo,
 				bool archived
 		);
-		bool crawlingArchive(IdString& url, Struct::CrawlStatsTick& statsTo, bool crawlingFailed);
+		bool crawlingArchive(IdString& url, CrawlStatsTick& statsTo, bool crawlingFailed);
 		void crawlingSuccess(const IdString& url);
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
