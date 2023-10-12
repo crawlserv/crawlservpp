@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2020 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -44,7 +44,6 @@ namespace crawlservpp::Struct {
 
 	//! Properties of an algorithm thread.
 	struct AlgoThreadProperties {
-	public:
 		///@name Properties
 		///@{
 
