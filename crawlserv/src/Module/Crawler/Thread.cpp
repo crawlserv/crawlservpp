@@ -1597,14 +1597,16 @@ namespace crawlservpp::Module::Crawler {
 		// crawl content
 		std::string timerString;
 
-		const bool crawled{
-			this->crawlingContent(
-					url,
-					customCookies,
-					customHeaders,
-					usePost,
-					stats,
-					timerString
+		const bool crawlingFailed{
+			!(
+					this->crawlingContent(
+							url,
+							customCookies,
+							customHeaders,
+							usePost,
+						stats,
+						timerString
+					)
 			)
 		};
 
@@ -1616,69 +1618,10 @@ namespace crawlservpp::Module::Crawler {
 			timers.archives.start();
 		}
 
-		if(this->crawlingArchive(url, stats, !crawled)) {
-			if(crawled) {
-				// clear memento cache
-				this->crawlingClearMementoCache();
-
-				// stop timers
-				if(this->config.crawlerTiming) {
-					timers.archives.stop();
-					timers.total.stop();
-				}
-
-				// success!
-				this->crawlingSuccess(url);
-
-				// log if necessary
-				const auto logLevel{
-					this->config.crawlerTiming ?
-							crawlerLoggingDefault
-							: crawlerLoggingExtended
-				};
-
-				if(this->isLogLevel(logLevel)) {
-					std::ostringstream logStrStr;
-
-					logStrStr.imbue(Helper::CommaLocale::locale());
-
-					logStrStr << "finished " << url.second;
-
-					if(this->config.crawlerTiming) {
-						logStrStr	<< " after " << timers.total.totalStr()
-									<< " (select: " << timers.select.totalStr() << ", "
-									<< timerString;
-
-						if(this->config.crawlerArchives) {
-							logStrStr << ", archive: " << timers.archives.totalStr();
-						}
-
-						logStrStr << ")";
-					}
-
-					logStrStr << " - checked " << stats.checkedUrls;
-
-					if(stats.checkedUrlsArchive > 0) {
-						logStrStr << " (+" << stats.checkedUrlsArchive << " archived)";
-					}
-
-					logStrStr << ", added " << stats.newUrls;
-
-					if(stats.newUrlsArchive > 0) {
-						logStrStr << " (+" << stats.newUrlsArchive << " archived)";
-					}
-
-					logStrStr << " URL(s).";
-
-					this->log(logLevel, logStrStr.str());
-				}
-			}
-			else if(this->nextUrl.first == 0) {
-				// skipping URL after successfully crawling archives: clear memento cache
-				this->crawlingClearMementoCache();
-			}
+		if(this->crawlingArchive(url, stats, crawlingFailed)) {
+			this->crawlingArchiveDone(url, timers, stats, crawlingFailed, timerString);
 		}
-		else if(!crawled) {
+		else if(crawlingFailed) {
 			// if crawling and getting archives failed, retry both (not only archives)
 			this->archiveRetry = false;
 		}
@@ -1994,7 +1937,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 	}
 
-	// crawl content, throws Thread::Exception
+	// crawl content, returns false if crawling failed, throws Thread::Exception
 	bool Thread::crawlingContent(
 			IdString& url,
 			const std::string& customCookies,
@@ -3653,8 +3596,8 @@ namespace crawlservpp::Module::Crawler {
 		this->setStatusMessage(statusMessage);
 	}
 
-	// crawl archives, throws Thread::Exception
-	bool Thread::crawlingArchive(IdString& url, CrawlStatsTick& statsTo, bool crawlingFailed) {
+	// crawl archives, returns whether crawling was successful, throws Thread::Exception
+	bool Thread::crawlingArchive(const IdString& url, CrawlStatsTick& statsTo, bool crawlingFailed) {
 		// check arguments
 		if(url.first == 0) {
 			throw Exception(
@@ -4187,7 +4130,7 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		if(this->isRunning()) {
-			return true;
+			return true; /* cancel crawling */
 		}
 
 		// thread cancelled while crawling archives: undo setting last URL to current URL, if necessary
@@ -4196,6 +4139,79 @@ namespace crawlservpp::Module::Crawler {
 		}
 
 		return false;
+	}
+
+	// crawling of archive done
+	void Thread::crawlingArchiveDone(
+			const IdString& url,
+			CrawlTimersTick& timers,
+			const CrawlStatsTick& stats,
+			bool crawlingFailed,
+			const std::string& timerString
+	) {
+		if(crawlingFailed) {
+			if(this->nextUrl.first == 0) {
+				// skipping URL after successfully crawling archives: clear memento cache
+				this->crawlingClearMementoCache();
+			}
+
+			return;
+		}
+
+		// clear memento cache
+		this->crawlingClearMementoCache();
+
+		// stop timers
+		if(this->config.crawlerTiming) {
+			timers.archives.stop();
+			timers.total.stop();
+		}
+
+		// success!
+		this->crawlingSuccess(url);
+
+		// log if necessary
+		const auto logLevel{
+			this->config.crawlerTiming ?
+					crawlerLoggingDefault
+					: crawlerLoggingExtended
+		};
+
+		if(this->isLogLevel(logLevel)) {
+			std::ostringstream logStrStr;
+
+			logStrStr.imbue(Helper::CommaLocale::locale());
+
+			logStrStr << "finished " << url.second;
+
+			if(this->config.crawlerTiming) {
+				logStrStr	<< " after " << timers.total.totalStr()
+							<< " (select: " << timers.select.totalStr() << ", "
+							<< timerString;
+
+				if(this->config.crawlerArchives) {
+					logStrStr << ", archive: " << timers.archives.totalStr();
+				}
+
+				logStrStr << ")";
+			}
+
+			logStrStr << " - checked " << stats.checkedUrls;
+
+			if(stats.checkedUrlsArchive > 0) {
+				logStrStr << " (+" << stats.checkedUrlsArchive << " archived)";
+			}
+
+			logStrStr << ", added " << stats.newUrls;
+
+			if(stats.newUrlsArchive > 0) {
+				logStrStr << " (+" << stats.newUrlsArchive << " archived)";
+			}
+
+			logStrStr << " URL(s).";
+
+			this->log(logLevel, logStrStr.str());
+		}
 	}
 
 	// crawling successfull, throws Thread::Exception
