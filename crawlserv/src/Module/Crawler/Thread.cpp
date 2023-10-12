@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1417,264 +1417,27 @@ namespace crawlservpp::Module::Crawler {
 	 * CRAWLING FUNCTIONS (private)
 	 */
 
-	// URL selection (includes locking the URL), return whether there are any URLs to crawl left
+	// URL selection (includes locking the URL), return false if there are no URLs left to crawl
 	bool Thread::crawlingUrlSelection(IdString& urlTo, bool& usePostTo) {
-		bool result{true};
-
 		// use GET by default
 		usePostTo = false;
 
 		// MANUAL CRAWLING MODE (get URL from configuration)
-		if(this->getLast() == 0) {
-			if(this->manualUrl.first > 0) {
-				// renew URL lock on manual URL (custom URL or start page) for retry
-				this->lockTime = this->database.lockUrlIfOk(
-						this->manualUrl.first,
-						this->lockTime,
-						this->config.crawlerLock
-				);
+		this->crawlingUrlSelectionManual(urlTo, usePostTo);
 
-				if(this->lockTime.empty()) {
-					// skip locked URL
-					this->log(
-							crawlerLoggingExtended,
-							"URL lock active - "
-							+ this->manualUrl.second
-							+ " skipped."
-					);
-
-					this->manualUrl = IdString();
-				}
-				else {
-					// use custom URL
-					urlTo = this->crawlingReplaceTokens(this->manualUrl);
-
-					usePostTo = this->config.customUsePost;
-
-					if(!(this->isRunning())) {
-						return true;
-					}
-				}
-			}
-
-			if(this->manualUrl.first == 0) {
-				// no retry: check custom URLs
-				if(!(this->customPages.empty())) {
-					if(this->manualCounter == 0) {
-						// start manual crawling with custom URLs
-						this->log(
-								crawlerLoggingDefault,
-								"starts crawling in non-recoverable MANUAL mode."
-						);
-					}
-
-					// check for custom URLs to crawl
-					if(this->manualCounter < this->customPages.size()) {
-						while(this->manualCounter < this->customPages.size()) {
-							// check whether custom URL was already crawled if re-crawling is not enabled
-							if(!(this->config.customReCrawl)
-									&& this->database.isUrlCrawled(
-											this->customPages.at(this->manualCounter).first
-									)
-							) {
-								// skip custom URL
-								++(this->manualCounter);
-
-								continue;
-							}
-
-							// set current manual URL to custom URL
-							this->manualUrl = this->customPages.at(this->manualCounter);
-
-							// lock custom URL if possible
-							this->lockTime = this->database.lockUrlIfOk(
-									this->manualUrl.first,
-									this->lockTime,
-									this->config.crawlerLock
-							);
-
-							if(this->lockTime.empty()) {
-								// skip locked custom URL
-								this->log(
-										crawlerLoggingExtended,
-										"URL lock active - "
-										+ this->manualUrl.second
-										+ " skipped."
-								);
-
-								++(this->manualCounter);
-
-								this->manualUrl = IdString();
-							}
-							else {
-								// use custom URL
-								urlTo = this->crawlingReplaceTokens(this->manualUrl);
-
-								usePostTo = this->config.customUsePost;
-
-								if(!(this->isRunning())) {
-									return true;
-								}
-
-								break;
-							}
-						}
-					}
-				}
-
-				if(this->manualCounter == this->customPages.size()) {
-					// no more custom URLs to go: get start page (if not crawled, not ignored and lockable)
-					if(!(this->config.crawlerStartIgnore) && !(this->startCrawled)) {
-						if(this->customPages.empty()) {
-							// start manual crawling with start page
-							this->log(crawlerLoggingDefault, "starts crawling in non-recoverable MANUAL mode.");
-						}
-
-						// check whether start page was already crawled (or needs to be re-crawled anyway)
-						if(this->config.crawlerReCrawlStart	|| !(this->database.isUrlCrawled(this->startPage.first))) {
-							// check whether start page is lockable
-							this->lockTime = this->database.lockUrlIfOk(
-									this->startPage.first,
-									this->lockTime,
-									this->config.crawlerLock
-							);
-
-							if(this->lockTime.empty()) {
-								// skip start page, because it is locked
-								this->log(
-										crawlerLoggingExtended,
-										"URL lock active - "
-										+ this->startPage.second
-										+ " skipped."
-								);
-
-								// start page is done
-								this->startCrawled = true;
-							}
-							else {
-								// select start page
-								urlTo = this->startPage;
-
-								this->manualUrl = this->startPage;
-							}
-						}
-						else {
-							// start page is done
-							this->startCrawled = true;
-						}
-
-						// reset manual URL if start page has been skipped
-						if(this->startCrawled) {
-							this->manualUrl = IdString();
-						}
-					}
-				}
-			}
+		if(!(this->isRunning())) {
+			return true; /* cancelled */
 		}
 
 		// AUTOMATIC CRAWLING MODE (get URL directly from database)
-		if(this->manualUrl.first == 0) {
-			// check whether manual crawling mode was already set off
-			if(!(this->manualOff)) {
-				// start automatic crawling
-				this->log(crawlerLoggingDefault, "switches to recoverable AUTOMATIC mode.");
-
-				this->manualOff = true;
-
-				// reset last URL (start from the beginning)
-				this->nextUrl = IdString();
-
-				// restore last finish, if necessary
-				if(this->restore > 0) {
-					this->setLast(this->restore);
-
-					// adjust tick counter
-					this->tickCounter += this->restore;
-
-					this->restore = 0;
-				}
-			}
-
-			// check for retry
-			bool retry{false};
-
-			if(this->nextUrl.first > 0) {
-				// try to renew URL lock on automatic URL for retry
-				this->lockTime = this->database.lockUrlIfOk(
-						this->nextUrl.first,
-						this->lockTime,
-						this->config.crawlerLock
-				);
-
-				if(!(this->lockTime.empty())) {
-					// log retry
-					this->log(
-							crawlerLoggingDefault,
-							"retries "
-							+ this->nextUrl.second + "..."
-					);
-
-					// set URL to last URL
-					urlTo = this->nextUrl;
-
-					// do retry
-					retry = true;
-				}
-			}
-
-			if(!retry) {
-				// log failed retry if necessary
-				if(this->nextUrl.first > 0) {
-					this->log(
-							crawlerLoggingExtended,
-							"could not retry "
-							+ this->nextUrl.second
-							+ ", because it is locked."
-					);
-				}
-
-				while(true) {
-					// get next URL
-					this->nextUrl = this->database.getNextUrl(this->getLast());
-
-					if(this->nextUrl.first > 0) {
-						// try to lock next URL
-						this->lockTime = this->database.lockUrlIfOk(
-										this->nextUrl.first,
-										this->lockTime,
-										this->config.crawlerLock
-						);
-
-						if(this->lockTime.empty()) {
-							// skip locked URL
-							this->log(
-									crawlerLoggingExtended,
-									"skipped "
-									+ this->nextUrl.second
-									+ ", because it is locked."
-							);
-						}
-						else {
-							urlTo = this->nextUrl;
-
-							break;
-						}
-					}
-					else {
-						// no more URLs
-						result = false;
-
-						break;
-					}
-				}
-			}
-		}
-
-		// set thread status
-		if(result) {
+		if(this->crawlingUrlSelectionAuto(urlTo)) {
 			this->setStatusMessage(urlTo.second);
 
 			return true;
+		}
+
+		if(!(this->isRunning())) {
+			return true; /* cancelled */
 		}
 
 		this->setStatusMessage("IDLE Waiting for new URLs to crawl.");
@@ -1683,6 +1446,283 @@ namespace crawlservpp::Module::Crawler {
 		this->log(crawlerLoggingDefault, "is done.");
 
 		return false;
+	}
+
+	// crawl URLs manually (get URLs from configuration)
+	void Thread::crawlingUrlSelectionManual(IdString& urlTo, bool& usePostTo) {
+		if(this->getLast() > 0) {
+			return; /* already in automatic crawling mode */
+		}
+
+		this->crawlingUrlSelectionManualRetry(urlTo, usePostTo);
+		this->crawlingUrlSelectionManualNext(urlTo, usePostTo);
+	}
+
+	// crawl URLs automatically (get URLs from database), returns whether a URL has been found
+	bool Thread::crawlingUrlSelectionAuto(IdString& urlTo) {
+		// check whether manual crawling is still active
+		if(this->manualUrl.first > 0) {
+			return true; /* use URL from configuration */
+		}
+
+		this->crawlingUrlSelectionAutoStart();
+
+		// check for retry
+		if(this->crawlingUrlSelectionAutoRetry(urlTo)) {
+			return true;
+		}
+
+		while(true) {
+			// get next URL
+			this->nextUrl = this->database.getNextUrl(this->getLast());
+
+			if(this->nextUrl.first == 0) {
+				return false;
+			}
+
+			// try to lock next URL
+			this->lockTime = this->database.lockUrlIfOk(
+							this->nextUrl.first,
+							this->lockTime,
+							this->config.crawlerLock
+			);
+
+			if(this->lockTime.empty()) {
+				// skip locked URL
+				this->log(
+						crawlerLoggingExtended,
+						"skipped "
+						+ this->nextUrl.second
+						+ ", because it is locked."
+				);
+			}
+			else {
+				urlTo = this->nextUrl;
+
+				break;
+			}
+		}
+
+		return true;
+	}
+
+	// retries to crawl an URL from the configuration, if necessary
+	void Thread::crawlingUrlSelectionManualRetry(IdString& urlTo, bool& usePostTo) {
+		// check for retry
+		if(this->manualUrl.first == 0) {
+			// no retry
+			return;
+		}
+
+		// renew URL lock on manual URL (custom URL or start page) for retry
+		this->lockTime = this->database.lockUrlIfOk(
+				this->manualUrl.first,
+				this->lockTime,
+				this->config.crawlerLock
+		);
+
+		if(this->lockTime.empty()) {
+			// skip locked URL
+			this->log(
+					crawlerLoggingExtended,
+					"URL lock active - "
+					+ this->manualUrl.second
+					+ " skipped."
+			);
+
+			this->manualUrl = IdString();
+
+			return;
+		}
+
+		// use custom URL
+		urlTo = this->crawlingReplaceTokens(this->manualUrl);
+
+		usePostTo = this->config.customUsePost;
+	}
+
+	// selects the next URL to crawl from the configuration
+	void Thread::crawlingUrlSelectionManualNext(IdString& urlTo, bool& usePostTo) {
+		if(this->manualUrl.first > 0) {
+			// already retrying
+			return;
+		}
+
+		// check custom URLs
+		if(!(this->customPages.empty())) {
+			if(this->manualCounter == 0) {
+				// start manual crawling with custom URLs
+				this->log(
+						crawlerLoggingDefault,
+						"starts crawling in non-recoverable MANUAL mode."
+				);
+			}
+
+			// check for custom URLs to crawl
+			if(this->manualCounter < this->customPages.size()) {
+				while(this->manualCounter < this->customPages.size()) {
+					// check whether custom URL was already crawled if re-crawling is not enabled
+					if(!(this->config.customReCrawl)
+							&& this->database.isUrlCrawled(
+									this->customPages.at(this->manualCounter).first
+							)
+					) {
+						// skip custom URL
+						++(this->manualCounter);
+
+						continue;
+					}
+
+					// set current manual URL to custom URL
+					this->manualUrl = this->customPages.at(this->manualCounter);
+
+					// lock custom URL if possible
+					this->lockTime = this->database.lockUrlIfOk(
+							this->manualUrl.first,
+							this->lockTime,
+							this->config.crawlerLock
+					);
+
+					if(this->lockTime.empty()) {
+						// skip locked custom URL
+						this->log(
+								crawlerLoggingExtended,
+								"URL lock active - "
+								+ this->manualUrl.second
+								+ " skipped."
+						);
+
+						++(this->manualCounter);
+
+						this->manualUrl = IdString();
+					}
+					else {
+						// use custom URL
+						urlTo = this->crawlingReplaceTokens(this->manualUrl);
+
+						usePostTo = this->config.customUsePost;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if(!(this->isRunning())) {
+			return;
+		}
+
+		if(this->manualCounter == this->customPages.size()) {
+			// no more custom URLs to go: get start page (if not crawled, not ignored and lockable)
+			if(!(this->config.crawlerStartIgnore) && !(this->startCrawled)) {
+				if(this->customPages.empty()) {
+					// start manual crawling with start page
+					this->log(crawlerLoggingDefault, "starts crawling in non-recoverable MANUAL mode.");
+				}
+
+				// check whether start page was already crawled (or needs to be re-crawled anyway)
+				if(this->config.crawlerReCrawlStart	|| !(this->database.isUrlCrawled(this->startPage.first))) {
+					// check whether start page is lockable
+					this->lockTime = this->database.lockUrlIfOk(
+							this->startPage.first,
+							this->lockTime,
+							this->config.crawlerLock
+					);
+
+					if(this->lockTime.empty()) {
+						// skip start page, because it is locked
+						this->log(
+								crawlerLoggingExtended,
+								"URL lock active - "
+								+ this->startPage.second
+								+ " skipped."
+						);
+
+						// start page is done
+						this->startCrawled = true;
+					}
+					else {
+						// select start page
+						urlTo = this->startPage;
+
+						this->manualUrl = this->startPage;
+					}
+				}
+				else {
+					// start page is done
+					this->startCrawled = true;
+				}
+
+				// reset manual URL if start page has been skipped
+				if(this->startCrawled) {
+					this->manualUrl = IdString();
+				}
+			}
+		}
+	}
+
+	// start automatic crawling
+	void Thread::crawlingUrlSelectionAutoStart() {
+		if(this->manualOff) {
+			// automatic crawling has already started
+			return;
+		}
+
+		this->log(crawlerLoggingDefault, "switches to recoverable AUTOMATIC mode.");
+
+		this->manualOff = true;
+
+		// reset last URL (start from the beginning)
+		this->nextUrl = IdString();
+
+		// restore last finish, if necessary
+		if(this->restore > 0) {
+			this->setLast(this->restore);
+
+			// adjust tick counter
+			this->tickCounter += this->restore;
+
+			this->restore = 0;
+		}
+	}
+
+	// retry URL from database, returns true if retry is necessary and URL lock was successful
+	bool Thread::crawlingUrlSelectionAutoRetry(IdString& urlTo) {
+		if(this->nextUrl.first == 0) {
+			// no retry
+			return false;
+		}
+
+		// try to renew URL lock on automatic URL for retry
+		this->lockTime = this->database.lockUrlIfOk(
+				this->nextUrl.first,
+				this->lockTime,
+				this->config.crawlerLock
+		);
+
+		if(this->lockTime.empty()) {
+			// failed retry
+			this->log(
+					crawlerLoggingExtended,
+					"could not retry "
+					+ this->nextUrl.second
+					+ ", because it is locked."
+			);
+
+			return false;
+		}
+
+		// retry
+		this->log(
+				crawlerLoggingDefault,
+				"retries "
+				+ this->nextUrl.second + "..."
+		);
+
+		// set URL to last URL
+		urlTo = this->nextUrl;
+
+		return true;
 	}
 
 	// replace token variables in custom URL

@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2022 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -359,6 +359,12 @@ namespace crawlservpp::Module::Crawler {
 
 		// crawling functions
 		bool crawlingUrlSelection(IdString& urlTo, bool& usePostTo);
+		void crawlingUrlSelectionManual(IdString& urlTo, bool& usePostTo);
+		bool crawlingUrlSelectionAuto(IdString& urlTo);
+		void crawlingUrlSelectionManualRetry(IdString& urlTo, bool& usePostTo);
+		void crawlingUrlSelectionManualNext(IdString& urlTo, bool& usePostTo);
+		void crawlingUrlSelectionAutoStart();
+		bool crawlingUrlSelectionAutoRetry(IdString& urlTo);
 		IdString crawlingReplaceTokens(const IdString& url);
 		std::string crawlingGetTokenValue(std::size_t index, const std::string& name);
 		void crawlingUrlParams(std::string& url);
