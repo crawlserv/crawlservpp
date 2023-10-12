@@ -1618,8 +1618,8 @@ namespace crawlservpp::Module::Crawler {
 			timers.archives.start();
 		}
 
-		if(this->crawlingArchive(url, stats, crawlingFailed)) {
-			this->crawlingArchiveDone(url, timers, stats, crawlingFailed, timerString);
+		if(this->crawlingArchives(url, stats, crawlingFailed)) {
+			this->crawlingArchivesDone(url, timers, stats, crawlingFailed, timerString);
 		}
 		else if(crawlingFailed) {
 			// if crawling and getting archives failed, retry both (not only archives)
@@ -3597,18 +3597,18 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// crawl archives, returns whether crawling was successful, throws Thread::Exception
-	bool Thread::crawlingArchive(const IdString& url, CrawlStatsTick& statsTo, bool crawlingFailed) {
+	bool Thread::crawlingArchives(const IdString& url, CrawlStatsTick& statsTo, bool crawlingFailed) {
 		// check arguments
 		if(url.first == 0) {
 			throw Exception(
-					"Crawler::Thread::crawlingArchive():"
+					"Crawler::Thread::crawlingArchives():"
 					" No URL ID specified"
 			);
 		}
 
 		if(url.second.empty()) {
 			throw Exception(
-					"Crawler::Thread::crawlingArchive():"
+					"Crawler::Thread::crawlingArchives():"
 					" No URL specified"
 			);
 		}
@@ -4144,7 +4144,7 @@ namespace crawlservpp::Module::Crawler {
 	}
 
 	// crawling of archive done
-	void Thread::crawlingArchiveDone(
+	void Thread::crawlingArchivesDone(
 			const IdString& url,
 			CrawlTimersTick& timers,
 			const CrawlStatsTick& stats,

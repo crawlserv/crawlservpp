@@ -423,8 +423,8 @@ namespace crawlservpp::Module::Crawler {
 				std::size_t& newUrlsTo,
 				bool archived
 		);
-		bool crawlingArchive(const IdString& url, CrawlStatsTick& statsTo, bool crawlingFailed);
-		void crawlingArchiveDone(
+		bool crawlingArchives(const IdString& url, CrawlStatsTick& statsTo, bool crawlingFailed);
+		void crawlingArchivesDone(
 				const IdString& url,
 				CrawlTimersTick& timers,
 				const CrawlStatsTick& stats,
