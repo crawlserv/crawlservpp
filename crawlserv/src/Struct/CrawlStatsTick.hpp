@@ -52,6 +52,8 @@ namespace crawlservpp::Struct {
 		//! Number of URLs added from archived content.
 		std::size_t newUrlsArchive{};
 
+		//! The time since the current URL has been locked for crawling archived content (in ms).
+		std::size_t urlLockTimeArchiveMs{};
 		///@}
 	};
 

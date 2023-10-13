@@ -369,8 +369,13 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingUrlSelectionAuto(IdString& urlTo);
 		void crawlingUrlSelectionManualRetry(IdString& urlTo, bool& usePostTo);
 		void crawlingUrlSelectionManualNext(IdString& urlTo, bool& usePostTo);
+		void crawlingUrlSelectionManualNextCustom(IdString& urlTo, bool& usePostTo);
+		void crawlingUrlSelectionManualStartPage(IdString& urlTo);
+		bool crawlingUrlSelectionManualLock();
 		void crawlingUrlSelectionAutoStart();
 		bool crawlingUrlSelectionAutoRetry(IdString& urlTo);
+		bool crawlingUrlSelectionAutoLoop(IdString& urlTo);
+		bool crawlingUrlSelectionAutoLock();
 		void crawlingUrl(IdString& url, bool usePost, CrawlTimersTick& timers);
 		void crawlingWait();
 		IdString crawlingReplaceTokens(const IdString& url);
@@ -434,12 +439,58 @@ namespace crawlservpp::Module::Crawler {
 		bool crawlingArchive(
 				std::size_t archiveIndex,
 				const IdString& url,
-				CrawlStatsTick& statsTo,
 				bool crawlingFailed,
+				CrawlStatsTick& statsTo,
 				bool& successTo,
-				Timer::Simple& timer,
-				std::uint64_t& elapsedTo
+				Timer::Simple& timer
 		);
+		bool crawlingArchiveMementoPage(
+				std::size_t archiveIndex,
+				const IdString& url,
+				std::string& archivedUrl,
+				bool crawlingFailed,
+				CrawlStatsTick& statsTo,
+				bool& successTo,
+				bool& fatalTo,
+				Timer::Simple& timer
+		);
+		bool crawlingArchiveMemento(
+				std::size_t& counter,
+				std::size_t total,
+				std::size_t archiveIndex,
+				const IdString& url,
+				std::queue<Memento>& mementos,
+				std::string& content,
+				const std::string& statusMessage,
+				CrawlStatsTick& statsTo,
+				bool& successTo,
+				bool& skipTo,
+				bool& fatalTo,
+				Timer::Simple& timer
+		);
+		bool crawlingArchiveMementoEntry(
+				std::size_t archiveIndex,
+				const IdString& url,
+				Memento& memento,
+				std::string& timeStamp,
+				std::string& content,
+				CrawlStatsTick& statsTo,
+				bool& fatalTo
+		);
+		bool crawlingArchiveMementoReference(
+				std::size_t archiveIndex,
+				const IdString& url,
+				Memento& memento,
+				std::string& timeStamp,
+				std::string& content
+		);
+		void crawlingArchiveMementoFetch(
+				const IdString& url,
+				Memento& memento,
+				std::string& content,
+				CrawlStatsTick& statsTo
+		);
+
 		void crawlingSuccess(const IdString& url);
 		void crawlingSkip(const IdString& url, bool unlockUrl);
 		void crawlingRetry(const IdString& url, bool archiveOnly);
