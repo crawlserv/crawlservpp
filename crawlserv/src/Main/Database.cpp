@@ -68,20 +68,6 @@ namespace crawlservpp::Main {
 			if(Database::driver == nullptr) {
 				throw Database::Exception("Could not get database instance");
 			}
-
-			// check MySQL Connector/C++ version
-			if(Database::driver->getMajorVersion() < recommendedMySqlDriverMajorVer) {
-				std::cout	<< "\nNOTE: Using MySQL Connector/C++ v"
-							<< Database::driver->getMajorVersion()
-							<< "."
-							<< Database::driver->getMinorVersion()
-							<< "."
-							<< Database::driver->getPatchVersion()
-							<< ", version "
-							<< recommendedMySqlDriverMajorVer
-							<< " or higher is recommended."
-							<< std::endl;
-			}
 		}
 
 		// get MySQL Connector/C++ version

@@ -138,9 +138,6 @@ namespace crawlservpp::Main {
 	//! Sleep time in milliseconds before re-attempting to add a database lock.
 	inline constexpr auto sleepOnLockMs{250};
 
-	//! Recommended major MySQL Connector/C++ version.
-	inline constexpr auto recommendedMySqlDriverMajorVer{8};
-
 	//! Maximum size of database content in bytes (= 1 GiB).
 	inline constexpr auto maxContentSize{1073741824};
 
