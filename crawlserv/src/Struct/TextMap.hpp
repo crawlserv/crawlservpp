@@ -2,7 +2,7 @@
  *
  * ---
  *
- *  Copyright (C) 2021 Anselm Schmidt (ans[ät]ohai.su)
+ *  Copyright (C) 2023 Anselm Schmidt (ans[ät]ohai.su)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -130,6 +130,30 @@ namespace crawlservpp::Struct {
 			this->l = 0;
 
 			Helper::Memory::free(this->value);
+		}
+		
+		///@}
+		///@name String Conversion
+		///@{
+		
+		//! Converts the text map entry into a string.
+		/*!
+		 * \returns String representing the text
+		     map entry – containing its position,
+		     length, and value.
+		 *
+		 */
+		[[nodiscard]] std::string str() const {
+		        std::string result{"pos="};
+		        
+		        result += std::to_string(this->p);
+		        result += "; length=";
+		        result += std::to_string(this->l);
+		        result += "; value=\"";
+		        result += this->value;
+		        result += "\"";
+		        
+		        return result;
 		}
 
 		///@}
