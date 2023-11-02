@@ -289,33 +289,37 @@ namespace crawlservpp::Module::Analyzer::Algo {
 			}
 
 			// do not count empty tokens (and articles/sentences consisting of empty tokens)!
-			const auto end{TextMapEntry::end(date)};
+			const auto dateBegin{TextMapEntry::pos(date)};
+			const auto dateEnd{TextMapEntry::end(date)};
 			std::size_t articleEnd{};
 			std::size_t sentenceEnd{};
 			bool articleContent{false};
 			bool sentenceContent{false};
 
-			for(std::size_t tokenIndex{TextMapEntry::pos(date)}; tokenIndex < end; ++tokenIndex) {
+			for(auto tokenIndex{dateBegin}; tokenIndex < dateEnd; ++tokenIndex) {
 				if(
 						articleIndex < articleMap.size()
 						&& TextMapEntry::pos(articleMap[articleIndex]) == tokenIndex
 				) {
 					// new article
 					if(articleContent) {
+					        // add last article
 						dateIt->second.articles.emplace(articleMap.at(articleIndex - 1).value);
 
 						articleContent = false;
 					}
 
+                                        // get end of current article
 					articleEnd = TextMapEntry::end(articleMap[articleIndex]);
 
+                                        // set index to next article
 					++articleIndex;
 				}
 
 				if(tokenIndex == articleEnd) {
 					// end of article
 					if(articleContent) {
-						dateIt->second.articles.emplace(articleMap.at(articleIndex - 1).value);
+					        dateIt->second.articles.emplace(articleMap.at(articleIndex - 1).value);
 
 						articleContent = false;
 					}
@@ -334,8 +338,10 @@ namespace crawlservpp::Module::Analyzer::Algo {
 						sentenceContent = false;
 					}
 
+                                        // get end of current sentence
 					sentenceEnd = TextMapEntry::end(sentenceMap[sentenceIndex]);
 
+                                        // set index to next sentence
 					++sentenceIndex;
 				}
 
@@ -353,11 +359,11 @@ namespace crawlservpp::Module::Analyzer::Algo {
 				if(tokenIndex < tokens.size() && !(tokens[tokenIndex].empty())) {
 					++(dateIt->second.words);
 
-					if(articleEnd > 0) {
+					if(articleEnd > 0) { /* in article */
 						articleContent = true;
 					}
 
-					if(sentenceEnd > 0) {
+					if(sentenceEnd > 0) { /* in sentence */
 						sentenceContent = true;
 					}
 				}
