@@ -153,7 +153,7 @@ namespace crawlservpp::Helper::Json {
 	 *
 	 * \returns The copy of a string containing
 	 *   valid JSON code representing an array
-	 *   contining all strings in the given vector.
+	 *   containing all strings in the given vector.
 	 */
 	inline std::string stringify(const std::vector<std::string>& vectorToStringify) {
 		// create document as array and get reference to allocator
