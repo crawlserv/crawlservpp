@@ -278,9 +278,7 @@ namespace crawlservpp::Wrapper {
 	 *
 	 * \sa valid
 	 */
-	inline Curl::Curl(Curl&& other) noexcept {
-		this->ptr = other.ptr;
-
+	inline Curl::Curl(Curl&& other) noexcept : ptr(other.ptr) {
 		other.ptr = nullptr;
 	}
 
