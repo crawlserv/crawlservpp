@@ -47,7 +47,7 @@ namespace crawlservpp::Main {
 	 *  the command-and-control server.
 	 *
 	 * \param args Constant reference to a vector
-	 *   contining the program arguments passed
+	 *   containing the program arguments passed
 	 *   to the application, e.g. via the command
 	 *   line.
 	 */
